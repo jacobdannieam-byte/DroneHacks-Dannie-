@@ -1,0 +1,24 @@
+Environment
+Windows AMD64, Intel64 Family 6 Model 183 Stepping 1, GenuineIntel
+Python 3.11.9, NumPy 2.3.5, pytest 9.0.3
+
+Baseline at experimental feb55b6a2485fb9f1aedeada371e8ca2abf96cd6
+python -m pytest -q tests
+30 passed in 7.30s
+
+D0 source commit 6c0e3256cb0195a364450c0ec103bab0c0ea8eff
+python -m pytest -q tests/test_dynamics_schema.py tests/test_dynamics_physics.py tests/test_dynamics_rollout.py
+62 passed in 0.42s
+python -m pytest -q tests
+92 passed in 7.47s
+
+Semantic compatibility check in a detached temporary worktree
+Base b026465d1c57a056a423e51872164b7474abbf9a (PR #2, including PR #1)
+Applied the D0 source commit by cherry-pick. Temporary HEAD 63e5cdf1e175f42317b7ca6a71127c9cbbda5176
+python -m pytest -q tests
+222 passed in 10.30s
+
+Evaluation and benchmark
+python -m examples.adaptive_dynamics_d0_demo --output artifacts/adaptive_dynamics_d0 --repeats 200
+Exit code 0. Seven synthetic cases. Source hashes are in benchmark.json.
+All commands were offline Python tests and synthetic runs.

@@ -1,0 +1,16 @@
+{
+  "platform": "Windows-10-10.0.26200-SP0",
+  "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+  "python": "3.11.9",
+  "repeats": 100,
+  "candidate_count": 8,
+  "steps_per_candidate": 50,
+  "includes": "D0 prediction, semantic goal validation, swept-volume scoring and ranking",
+  "latency": {
+    "median_ms": 13.352799998756382,
+    "p95_ms": 14.092959999470622,
+    "worst_ms": 17.575600002601277,
+    "p99_ms": 15.880324002064308
+  },
+  "over_25ms": 0
+}

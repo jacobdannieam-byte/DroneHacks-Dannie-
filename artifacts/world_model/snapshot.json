@@ -1,0 +1,324 @@
+{
+  "schema_version": 1,
+  "frame_id": "odom",
+  "epoch": 0,
+  "clock_id": "replay",
+  "timestamp": 7.4,
+  "reset_required": false,
+  "entities": [
+    {
+      "entity_id": "opening_0003",
+      "semantic_type": "opening",
+      "geometry": {
+        "center": [
+          3.999999999329085,
+          0.0018438115163357872,
+          1.2
+        ],
+        "normal": [
+          1.0,
+          1.3105474861894917e-08,
+          0.0
+        ],
+        "width_m": 1.2222859700915494,
+        "height_m": null,
+        "uncertainty_m": 0.11821100894826611
+      },
+      "frame_id": "odom",
+      "epoch": 0,
+      "source_timestamp": 0.2,
+      "last_observed": 7.4,
+      "geometric_confidence": 0.15814678926208067,
+      "semantic_confidence": 0.12651743140966454,
+      "status": "invalidated",
+      "observations": 3,
+      "contradictions": 1,
+      "evidence": [
+        {
+          "observation_id": "frame_0.200000",
+          "source": "synthetic_depth",
+          "stamp": 0.2,
+          "pose_stamp": 0.2,
+          "position_sigma_m": 0.02,
+          "angle_sigma_rad": 0.005,
+          "kind": "support",
+          "support": {
+            "rays": 105,
+            "observed_fraction": 1.0,
+            "behind_fraction": 1.0,
+            "blocked_fraction": 0.0
+          }
+        },
+        {
+          "observation_id": "frame_0.400000",
+          "source": "synthetic_depth",
+          "stamp": 0.4,
+          "pose_stamp": 0.4,
+          "position_sigma_m": 0.02,
+          "angle_sigma_rad": 0.005,
+          "kind": "support",
+          "support": {
+            "rays": 112,
+            "observed_fraction": 1.0,
+            "behind_fraction": 1.0,
+            "blocked_fraction": 0.0
+          }
+        },
+        {
+          "observation_id": "frame_7.200000",
+          "source": "synthetic_depth",
+          "stamp": 7.2,
+          "pose_stamp": 7.2,
+          "position_sigma_m": 0.02,
+          "angle_sigma_rad": 0.005,
+          "kind": "support",
+          "support": {
+            "rays": 105,
+            "observed_fraction": 1.0,
+            "behind_fraction": 1.0,
+            "blocked_fraction": 0.0
+          }
+        },
+        {
+          "observation_id": "frame_7.400000",
+          "source": "synthetic_depth",
+          "stamp": 7.4,
+          "pose_stamp": 7.4,
+          "position_sigma_m": 0.02,
+          "angle_sigma_rad": 0.005,
+          "kind": "blocking_evidence",
+          "support": {
+            "rays": 105,
+            "observed_fraction": 1.0,
+            "behind_fraction": 0.0,
+            "blocked_fraction": 1.0
+          }
+        }
+      ],
+      "missing_evidence": [
+        "upper_boundary",
+        "lower_boundary",
+        "full_volume_coverage",
+        "region_connectivity"
+      ],
+      "relations": [
+        {
+          "type": "bounded_by",
+          "target": "wall_0001",
+          "status": "observed_geometry"
+        },
+        {
+          "type": "bounded_by",
+          "target": "wall_0002",
+          "status": "observed_geometry"
+        }
+      ],
+      "connected_regions": [],
+      "age_s": 0.0
+    },
+    {
+      "entity_id": "wall_0001",
+      "semantic_type": "wall",
+      "geometry": {
+        "center": [
+          3.9999999759438483,
+          1.7862306399493568,
+          1.2
+        ],
+        "normal": [
+          1.0,
+          1.3105474861894917e-08,
+          0.0
+        ],
+        "width_m": 2.3464876867744926,
+        "height_m": 3.545201392041193,
+        "uncertainty_m": 0.12003356012252295
+      },
+      "frame_id": "odom",
+      "epoch": 0,
+      "source_timestamp": 0.0,
+      "last_observed": 7.2,
+      "geometric_confidence": 0.399585225211217,
+      "semantic_confidence": 0.34963707205981487,
+      "status": "confirmed",
+      "observations": 4,
+      "contradictions": 0,
+      "evidence": [
+        {
+          "observation_id": "frame_0.000000",
+          "source": "synthetic_depth",
+          "stamp": 0.0,
+          "pose_stamp": 0.0,
+          "position_sigma_m": 0.02,
+          "angle_sigma_rad": 0.005,
+          "kind": "support",
+          "support": {
+            "points": 1568
+          }
+        },
+        {
+          "observation_id": "frame_0.200000",
+          "source": "synthetic_depth",
+          "stamp": 0.2,
+          "pose_stamp": 0.2,
+          "position_sigma_m": 0.02,
+          "angle_sigma_rad": 0.005,
+          "kind": "support",
+          "support": {
+            "points": 1568
+          }
+        },
+        {
+          "observation_id": "frame_0.400000",
+          "source": "synthetic_depth",
+          "stamp": 0.4,
+          "pose_stamp": 0.4,
+          "position_sigma_m": 0.02,
+          "angle_sigma_rad": 0.005,
+          "kind": "support",
+          "support": {
+            "points": 1640
+          }
+        },
+        {
+          "observation_id": "frame_7.200000",
+          "source": "synthetic_depth",
+          "stamp": 7.2,
+          "pose_stamp": 7.2,
+          "position_sigma_m": 0.02,
+          "angle_sigma_rad": 0.005,
+          "kind": "support",
+          "support": {
+            "points": 1643
+          }
+        }
+      ],
+      "missing_evidence": [
+        "full_surface_extent"
+      ],
+      "relations": [],
+      "connected_regions": [],
+      "age_s": 0.20000000000000018
+    },
+    {
+      "entity_id": "wall_0002",
+      "semantic_type": "wall",
+      "geometry": {
+        "center": [
+          4.0000000173768315,
+          -1.3752712107740417,
+          1.2
+        ],
+        "normal": [
+          1.0,
+          1.3105474861894917e-08,
+          0.0
+        ],
+        "width_m": 1.5319440744892059,
+        "height_m": 3.3016412038047775,
+        "uncertainty_m": 0.11966446100719622
+      },
+      "frame_id": "odom",
+      "epoch": 0,
+      "source_timestamp": 0.2,
+      "last_observed": 7.2,
+      "geometric_confidence": 0.40072003011363744,
+      "semantic_confidence": 0.35063002634943274,
+      "status": "confirmed",
+      "observations": 3,
+      "contradictions": 0,
+      "evidence": [
+        {
+          "observation_id": "frame_0.200000",
+          "source": "synthetic_depth",
+          "stamp": 0.2,
+          "pose_stamp": 0.2,
+          "position_sigma_m": 0.02,
+          "angle_sigma_rad": 0.005,
+          "kind": "support",
+          "support": {
+            "points": 1519
+          }
+        },
+        {
+          "observation_id": "frame_0.400000",
+          "source": "synthetic_depth",
+          "stamp": 0.4,
+          "pose_stamp": 0.4,
+          "position_sigma_m": 0.02,
+          "angle_sigma_rad": 0.005,
+          "kind": "support",
+          "support": {
+            "points": 1050
+          }
+        },
+        {
+          "observation_id": "frame_7.200000",
+          "source": "synthetic_depth",
+          "stamp": 7.2,
+          "pose_stamp": 7.2,
+          "position_sigma_m": 0.02,
+          "angle_sigma_rad": 0.005,
+          "kind": "support",
+          "support": {
+            "points": 1250
+          }
+        }
+      ],
+      "missing_evidence": [
+        "full_surface_extent"
+      ],
+      "relations": [],
+      "connected_regions": [],
+      "age_s": 0.20000000000000018
+    },
+    {
+      "entity_id": "wall_0004",
+      "semantic_type": "wall",
+      "geometry": {
+        "center": [
+          3.9999999141691895,
+          0.03622638621420293,
+          1.2
+        ],
+        "normal": [
+          1.0,
+          -2.042360866096043e-29,
+          0.0
+        ],
+        "width_m": 5.72377359948068,
+        "height_m": 3.4777358231454514,
+        "uncertainty_m": 0.11920085394707586
+      },
+      "frame_id": "odom",
+      "epoch": 0,
+      "source_timestamp": 7.4,
+      "last_observed": 7.4,
+      "geometric_confidence": 0.4185572673693573,
+      "semantic_confidence": 0.3662376089481876,
+      "status": "provisional",
+      "observations": 1,
+      "contradictions": 0,
+      "evidence": [
+        {
+          "observation_id": "frame_7.400000",
+          "source": "synthetic_depth",
+          "stamp": 7.4,
+          "pose_stamp": 7.4,
+          "position_sigma_m": 0.02,
+          "angle_sigma_rad": 0.005,
+          "kind": "support",
+          "support": {
+            "points": 3920
+          }
+        }
+      ],
+      "missing_evidence": [
+        "full_surface_extent"
+      ],
+      "relations": [],
+      "connected_regions": [],
+      "age_s": 0.0
+    }
+  ]
+}

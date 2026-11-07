@@ -1,0 +1,44 @@
+
+{
+  "version": 1,
+  "layouts": ["supplied_course", "offset_gates", "narrow_corridor"],
+  "seeds": [17011, 17027, 17033, 17041, 17047],
+  "arms": {
+    "reactive_geometry": "Reactive metric geometry with straight candidates",
+    "semantic_geometry": "Same geometric candidates plus validated semantic memory",
+    "d0_predictive": "Same candidate producer plus D0 predictive clearance and ranking",
+    "ridge_predictive": "Same candidate producer plus causal D2 ridge",
+    "full_planner": "Phase 6 bounded candidate fan, validated semantics and selected D0"
+  },
+  "perturbation_ranges": {
+    "initial_horizontal_offset_m": [-0.10, 0.10],
+    "initial_heading_offset_deg": [-5, 5],
+    "added_sensor_latency_ms": [0, 15]
+  },
+  "fault_layout": "supplied_course",
+  "faults": {
+    "no_route": "safe_stop",
+    "stale_geometry": "safe_stop",
+    "vio_loss": "safe_stop",
+    "planner_deadline": "safe_stop",
+    "operator_takeover": "yielded"
+  },
+  "thresholds": {
+    "nominal_success_fraction": 0.90,
+    "minimum_clearance_m": 0.10,
+    "minimum_moving_rtf": 0.90,
+    "state_age_ms": 100,
+    "geometry_age_ms": 250,
+    "latency_p95_ms": 25,
+    "latency_p99_ms": 50,
+    "decision_budget_ms": 25,
+    "max_deadline_miss_fraction": 0.01,
+    "fault_response_ms": {
+      "no_route": 100,
+      "stale_geometry": 100,
+      "vio_loss": 1200,
+      "planner_deadline": 100,
+      "operator_takeover": 100
+    }
+  }
+}

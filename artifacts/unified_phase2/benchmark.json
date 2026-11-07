@@ -1,0 +1,25 @@
+{
+  "hardware": {
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+    "python": "3.11.9",
+    "numpy": "2.3.5"
+  },
+  "measurement": "pose ingestion plus metric and semantic frame processing, synthetic offline host",
+  "results": {
+    "160x100": {
+      "frames": 40,
+      "median_ms": 17.254700000194134,
+      "p95_ms": 18.79675999898609,
+      "worst_ms": 19.681899997522123,
+      "over_15hz_period": 0
+    },
+    "640x400": {
+      "frames": 40,
+      "median_ms": 29.867299999750685,
+      "p95_ms": 30.848035001145035,
+      "worst_ms": 33.69109999766806,
+      "over_15hz_period": 0
+    }
+  }
+}

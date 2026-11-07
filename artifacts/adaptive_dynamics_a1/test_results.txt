@@ -1,0 +1,35 @@
+A1 offline predictor-selection evidence
+Base ed029018d08ae91c4fb173c6b50f5b076e048bec (D2, PR #5)
+Windows AMD64, Intel64 Family 6 Model 183, Python 3.11.9, NumPy 2.3.5
+OPENBLAS_NUM_THREADS=1, OMP_NUM_THREADS=1
+
+Before changes: python -m pytest -q tests
+111 passed in 7.85s
+
+A1 focused tests: python -m pytest -q tests/test_dynamics_a1.py
+9 passed in 3.43s
+
+Final branch: python -m pytest -q tests
+120 passed in 9.66s
+
+Combined test: archived semantic tip b026465d1c57a056a423e51872164b7474abbf9a,
+overlaid the D0-D2 and A1 runtime/test paths in a separate directory, then ran
+python -B -m pytest -q -p no:cacheprovider tests
+250 passed in 13.12s
+
+Replay: python -m examples.evaluate_adaptive_dynamics_a1 --output <output> --repeats 100 --plot
+The split guard rejected the first attempt due to reuse of the switched
+test seed in calibration. The corrected run used a separate calibration seed
+and verified response settings, pre/post regimes and trace fingerprints.
+Both subsequent runs completed all 15 cohorts. Accuracy and split JSON
+matched exactly after excluding host/timing. CSV and SVG matched byte for byte.
+Both published D2 cohorts passed the built-in 1-second position parity check
+for all six predictors. The stored timing is from the final replay.
+
+SHA-256 of uncompressed outputs
+evaluation.json 690dcf18d6f83f88a7059087a503f962ecc2d2ed82c1b77cba20a86e45fb73f7
+rollouts.csv b8b37b8479650a921ae5b3889f4a938e6439290dc2729b73a7a644d267f76ffb
+rollout_summary.svg 864422236ec77da0306ce457b07639e4fbcd6ff123241501e6000edc2d3d2e42
+
+All tests and evaluations ran offline. No ROS node, mission, SITL session or
+aircraft was run.

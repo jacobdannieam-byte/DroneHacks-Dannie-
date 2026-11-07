@@ -1,0 +1,30 @@
+Unified Phase 3 verification
+Base c36918e44c0cfa6712e71bf2240683b44ed55b13 (A1, PR #6).
+Windows AMD64, Intel Family 6 Model 183, Python 3.11.9, NumPy 2.3.5.
+Training used PyTorch 2.11.0.dev20260208+cu128 in CPU mode with one thread.
+OPENBLAS_NUM_THREADS=1 and OMP_NUM_THREADS=1.
+
+python -m pytest -q tests
+A1 baseline before changes: 120 passed in 10.37 s.
+Phase 3 branch: 129 passed in 9.20 s (9 added).
+
+Compatibility: archived A1 and overlaid the Phase 2 semantic and Phase 1
+native diagnostics stacks, then overlaid the Phase 3 source and tests.
+python -B -m pytest -q -p no:cacheprovider tests
+295 passed in 13.77 s. This was an isolated test overlay, not a merge.
+
+python -m examples.train_adaptive_dynamics_a2 --output <new-training-dir>
+Two runs produced byte-identical NPZ and manifest. Selected epoch 12,
+validation normalized MSE 0.0151537633 versus 0.0161316826 linear-only.
+Training/validation samples 17040/3408. Checkpoint SHA-256:
+4cac451f2821858bbff237de70540e0e0576c993e3467178ff0c1aa53328df08
+The D2 training manifest hash is computed over canonical JSON so checkout
+line endings cannot invalidate the candidate. The evaluated checkpoint
+hash matches the final portable manifest.
+
+python -m examples.evaluate_adaptive_dynamics_a2 --checkpoint-dir <training-dir> --output <new-evidence-dir> --repeats 100
+Scored all 15 A1 cohorts, fixed A1 calibration, and six unseen holdout
+cohorts. All published A1 baseline accuracy payloads and fixture splits
+matched exactly. Active A2 eight-candidate latency was 26.40 ms p95,
+29.86 ms p99, and 35.54 ms worst on the Windows host. This was synthetic
+offline timing. No SITL, ROS graph, aircraft or Orin profiling was run.

@@ -1,0 +1,47 @@
+{
+  "evidence_type": "synthetic_observer_metadata",
+  "healthy": {
+    "exit": 0,
+    "issues": [],
+    "clock": {
+      "rtf": 0.9966666666666667,
+      "one_second_rtf_min": 0.9,
+      "max_progress_gap_s": 0.1
+    },
+    "stereo": {
+      "matched": 300,
+      "fraction": 1.0,
+      "evicted_unmatched": 0,
+      "pending_unmatched": 0
+    },
+    "external_vision": {
+      "matched_sample_stamps": 300,
+      "ev_samples": 300,
+      "ev_in_vio_capture_span": 300,
+      "stamp_match_fraction": 1.0
+    }
+  },
+  "slow": {
+    "exit": 1,
+    "issues": [
+      "clock:rtf_below_target_or_unknown"
+    ],
+    "clock": {
+      "rtf": 0.5282333333333333,
+      "one_second_rtf_min": 0.477,
+      "max_progress_gap_s": 0.1
+    },
+    "stereo": {
+      "matched": 300,
+      "fraction": 1.0,
+      "evicted_unmatched": 0,
+      "pending_unmatched": 0
+    },
+    "external_vision": {
+      "matched_sample_stamps": 300,
+      "ev_samples": 300,
+      "ev_in_vio_capture_span": 300,
+      "stamp_match_fraction": 1.0
+    }
+  }
+}

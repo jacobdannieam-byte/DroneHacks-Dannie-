@@ -1,0 +1,128 @@
+{
+  "machine": {
+    "platform": "Windows-10-10.0.26200-SP0",
+    "architecture": "AMD64",
+    "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+    "python": "3.11.9",
+    "numpy": "2.3.5"
+  },
+  "method": "Five warmup calls, then wall-clock timings with perf_counter_ns. Separate CPU and allocation passes.",
+  "backend": "Scalar Python on host CPU. GPU utilization telemetry was unavailable for this CPU workload.",
+  "fixture_generation_in_timed_regions": false,
+  "source_sha256_lf": {
+    "refnav/dynamics/__init__.py": "5a0e55f3d0911d6d09eb26e0d09db673dab025b54710bda025bd50c68cac0201",
+    "refnav/dynamics/physics.py": "cc382a495d8baf442fbb87612ead2c9a7b6e661873c73ee7d8f916853ae8a0f0",
+    "refnav/dynamics/schema.py": "3614b5583779571ee040c5904f6bd3d24df6368ff0fc1d72fd0d34ebb2b4bc26",
+    "refnav/dynamics/validation.py": "5f194ee774031987b5de730b4e179996467dd2bc2c2ee6a10b5ac4712f1581aa",
+    "examples/adaptive_dynamics_d0_demo.py": "76b2ce3e8abd3daaa49d04873bbe01fbdffe89b9fa34c92c0d20a328d68ebbb0",
+    "examples/d0_synthetic.py": "54f0ecf5e9eb86eeed41dc1e1cdbff430205755cb508c9d1eeaacb0e24e7caa6"
+  },
+  "single_prediction": {
+    "median_ms": 0.0172,
+    "p95_ms": 0.018,
+    "worst_observed_ms": 0.1273,
+    "samples": 2000,
+    "process_cpu_percent_of_one_core": 99.99836002689555,
+    "cpu_sample_wall_s": 0.5000082,
+    "traced_retained_bytes_including_result": 408,
+    "traced_peak_bytes": 1392
+  },
+  "rollouts": [
+    {
+      "steps": 10,
+      "horizon_s": 0.2,
+      "median_ms": 0.1657,
+      "p95_ms": 0.1779,
+      "worst_observed_ms": 0.2925,
+      "samples": 200,
+      "process_cpu_percent_of_one_core": 99.99538021343415,
+      "cpu_sample_wall_s": 0.5000231,
+      "traced_retained_bytes_including_result": 5280,
+      "traced_peak_bytes": 6392
+    },
+    {
+      "steps": 50,
+      "horizon_s": 1.0,
+      "median_ms": 0.8193,
+      "p95_ms": 0.919,
+      "worst_observed_ms": 1.1023,
+      "samples": 200,
+      "process_cpu_percent_of_one_core": 96.7972524468347,
+      "cpu_sample_wall_s": 0.5004016,
+      "traced_retained_bytes_including_result": 37208,
+      "traced_peak_bytes": 38288
+    },
+    {
+      "steps": 100,
+      "horizon_s": 2.0,
+      "median_ms": 1.6276,
+      "p95_ms": 1.694,
+      "worst_observed_ms": 2.0954,
+      "samples": 200,
+      "process_cpu_percent_of_one_core": 96.63013922719828,
+      "cpu_sample_wall_s": 0.501267,
+      "traced_retained_bytes_including_result": 77208,
+      "traced_peak_bytes": 78336
+    },
+    {
+      "steps": 250,
+      "horizon_s": 5.0,
+      "median_ms": 4.12425,
+      "p95_ms": 4.4008,
+      "worst_observed_ms": 7.666,
+      "samples": 200,
+      "process_cpu_percent_of_one_core": 99.99448030468719,
+      "cpu_sample_wall_s": 0.5000276,
+      "traced_retained_bytes_including_result": 200544,
+      "traced_peak_bytes": 202736
+    }
+  ],
+  "eight_one_second_rollouts": {
+    "median_ms": 6.5791,
+    "p95_ms": 7.5239,
+    "worst_observed_ms": 10.2039,
+    "samples": 200,
+    "process_cpu_percent_of_one_core": 102.04198756913375,
+    "cpu_sample_wall_s": 0.5053067,
+    "traced_retained_bytes_including_result": 315672,
+    "traced_peak_bytes": 317216
+  },
+  "effective_input_window_checks": {
+    "current": {
+      "accepted": true
+    },
+    "not_yet_effective": {
+      "accepted": false,
+      "reason": "command interval does not cover the prediction step"
+    },
+    "expires_inside_step": {
+      "accepted": false,
+      "reason": "command interval does not cover the prediction step"
+    },
+    "expired": {
+      "accepted": false,
+      "reason": "command interval does not cover the prediction step"
+    }
+  },
+  "paced_host_sample": {
+    "cycles": 40,
+    "target_rate_hz": 20,
+    "deadline_misses": 0,
+    "process_cpu_percent_of_one_core": 5.604389106471556,
+    "release_lateness": {
+      "median_ms": 0.30645,
+      "p95_ms": 0.5587,
+      "worst_observed_ms": 0.6369
+    },
+    "in_process_synthetic_capture_age": {
+      "median_ms": 0.0563,
+      "p95_ms": 0.0829,
+      "worst_observed_ms": 0.1497
+    },
+    "one_second_rollout": {
+      "median_ms": 0.91795,
+      "p95_ms": 1.3924,
+      "worst_observed_ms": 1.5848
+    }
+  }
+}

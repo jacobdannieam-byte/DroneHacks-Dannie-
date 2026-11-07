@@ -1,0 +1,111 @@
+{
+  "provenance": {
+    "os": "Windows-10-10.0.26200-SP0",
+    "machine": "AMD64",
+    "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+    "python": "3.11.9",
+    "numpy": "2.3.5",
+    "hardware_class": "available Windows host; not Jetson",
+    "sensor": "160x100 ideal synthetic optical-z; stride >=2",
+    "repeats": 40,
+    "clock": "perf_counter wall latency; replay seconds for data",
+    "source_sha256": {
+      "examples/semantic_world_model_demo.py": "b768f39e0e8d20dcf7a37556b2f781d7e552bb9cdad2c90431caf4feb922ca0e",
+      "refnav/world_model/__init__.py": "13329b6b902372af3f616df53c637b59ae91b304dccdc7349b83829a3ed8892b",
+      "refnav/world_model/geometry.py": "7a700b42377f9e02740859f78cd687a8be8ffd62cb0ac67abf0bafc8deb96e2d",
+      "refnav/world_model/observations.py": "b58cd62c19c1197bb93278e5f8d76206006a2fadbe6000b75d5f43154d895bfa",
+      "refnav/world_model/queries.py": "d996641146dbdab19c6677a2571b790a4347912c707cde01d7185f30d3498c7c",
+      "refnav/world_model/state.py": "530add70756bbf8aad38d66e1665d6fdc72de8530d344a15f2c82325e915c604"
+    }
+  },
+  "geometry": {
+    "median_ms": 5.973249999442487,
+    "p95_ms": 6.622314999640366,
+    "worst_ms": 8.60240000019985
+  },
+  "semantic_update": {
+    "median_ms": 0.5811500000163505,
+    "p95_ms": 0.6948099999590339,
+    "worst_ms": 0.7426000001942157
+  },
+  "query": {
+    "median_ms": 1.0425499999655585,
+    "p95_ms": 1.1492150000776744,
+    "worst_ms": 1.2227999995957362
+  },
+  "checkpoint_utf8_bytes": 1676853,
+  "beam_array_bytes": 348072,
+  "estimated_entity_store_python_bytes": 20091,
+  "replay_peak_traced_python_bytes": 5043889,
+  "process_peak_resident_bytes": 46927872,
+  "scaling": [
+    {
+      "initial_entities": 1,
+      "final_entities": 3,
+      "query": {
+        "median_ms": 0.865949999933946,
+        "p95_ms": 1.0383700000147655,
+        "worst_ms": 1.048099999934493
+      },
+      "update_including_association": {
+        "median_ms": 0.5949000001237437,
+        "p95_ms": 0.7732399998985784,
+        "worst_ms": 0.787799999670824
+      }
+    },
+    {
+      "initial_entities": 32,
+      "final_entities": 34,
+      "query": {
+        "median_ms": 11.51380000055724,
+        "p95_ms": 14.71129000010478,
+        "worst_ms": 15.956799999912619
+      },
+      "update_including_association": {
+        "median_ms": 7.30745000009847,
+        "p95_ms": 8.565620000035779,
+        "worst_ms": 8.811599999717146
+      }
+    },
+    {
+      "initial_entities": 128,
+      "final_entities": 128,
+      "query": {
+        "median_ms": 45.68600000038714,
+        "p95_ms": 49.54599500019867,
+        "worst_ms": 50.39310000029218
+      },
+      "update_including_association": {
+        "median_ms": 28.443700000025274,
+        "p95_ms": 30.903320000334134,
+        "worst_ms": 31.633700000384124
+      }
+    }
+  ],
+  "evaluation": {
+    "fixture_truth": "opening center horizontal (4,0), width 1.2m; height intentionally not certified",
+    "opening_location_xy_error_m": [
+      8.583080379764851e-08,
+      0.02382357387497466,
+      0.0018438115163359092
+    ],
+    "width_absolute_error_m": [
+      0.10415093367954431,
+      0.051992174115620404,
+      0.022285970091549423
+    ],
+    "height_error_m": null,
+    "false_opening_count_four_negative_cases": 0,
+    "duplicate_openings_on_reobservation": 0,
+    "false_confirmed_passages": 0,
+    "occlusion_retains_id": true,
+    "stale_status": "stale",
+    "final_opening_status": "invalidated",
+    "final_traversability": "blocked",
+    "semantic_types_detected": [
+      "opening",
+      "wall"
+    ],
+    "evidence_scope": "ideal fixture cases only; no real sensor accuracy or navigation improvement measured"
+  }
+}
