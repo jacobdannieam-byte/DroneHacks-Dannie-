@@ -46,8 +46,10 @@ def test_observed_volume_and_occluded_space_are_distinct():
     world = SpatialWorld(REF, CAL)
     depth = render([(0, 3., (-3., 3.), (-1., 3.))])
     assert world.push_pose(pose(100))
-    assert world.process(capture(100, depth), now_ns=100 * MS).accepted
-    snapshot = world.snapshot(now_ns=100 * MS)
+    assert world.process(capture(100, depth, received=103), now_ns=104 * MS).accepted
+    snapshot = world.snapshot(now_ns=104 * MS)
+    assert snapshot.metric.capture_ns == 100 * MS
+    assert snapshot.metric.received_ns == 103 * MS
     assert sweep(snapshot).status == "verified_free"
     assert sweep(snapshot, ((3., .1, 1.3),)).status == "occupied"
     assert sweep(snapshot, ((3.5, .1, 1.3),)).status == "unknown"

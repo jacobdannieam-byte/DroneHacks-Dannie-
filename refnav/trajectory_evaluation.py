@@ -43,6 +43,7 @@ class FrameAlignment:
     position_error_m: float
     angle_error_rad: float
     provenance: str
+    estimator_reset_counter: int | None = None
 
     def __post_init__(self):
         if not isinstance(self.ned, LocalNED) or not isinstance(self.map, SpatialReference):
@@ -57,6 +58,9 @@ class FrameAlignment:
         object.__setattr__(self, "ned_origin_in_map_m", origin)
         _bounded(self.position_error_m, "alignment position error", 0., 1.)
         _bounded(self.angle_error_rad, "alignment angle error", 0., .5)
+        counter = self.estimator_reset_counter
+        if counter is not None and (type(counter) is not int or not 0 <= counter <= 255):
+            raise ValueError("estimator reset counter must be uint8")
 
 
 @dataclass(frozen=True)
@@ -182,6 +186,11 @@ class _Geometry:
         return int(np.count_nonzero(occupied)), int(np.count_nonzero(unknown))
 
 
+def state_capture_ns(state, alignment):
+    """Convert the relative dynamics stamp using the caller's clock origin."""
+    return alignment.time_origin_ns + round(state.timestamp_s * NS) if abs(state.timestamp_s) < 1e10 else -1
+
+
 def _shared_reasons(state, metric, alignment, now_ns, policy):
     if state.reference != alignment.ned or metric.reference != alignment.map:
         return ("frame_or_reference_mismatch",)
@@ -189,7 +198,7 @@ def _shared_reasons(state, metric, alignment, now_ns, policy):
         return ("clock_domain_mismatch",)
     if state.reference.reference_epoch != metric.reference.epoch:
         return ("reference_epoch_mismatch",)
-    stamp = alignment.time_origin_ns + round(state.timestamp_s * NS) if abs(state.timestamp_s) < 1e10 else -1
+    stamp = state_capture_ns(state, alignment)
     reasons = []
     if not stamp_ok(stamp) or not 0 <= now_ns - stamp <= policy.state_age_ns:
         reasons.append("stale_or_future_state")

@@ -56,6 +56,7 @@ class SpatialWorld:
         self._poses.clear()
         self._volume.clear()
         self._now = self._last_capture = self._last_id = self._time_origin = self._last_loss = None
+        self._last_received = None
         self._ready = self._reset_required = False
 
     def reset_reference(self, reference):
@@ -161,6 +162,7 @@ class SpatialWorld:
                 return SpatialUpdate(False, semantic["rejection"])
             self._volume.apply(prepared, frame.capture_ns)
             self._last_capture, self._last_id, self._time_origin = frame.capture_ns, frame.observation_id, origin
+            self._last_received = frame.received_ns
             self._ready = True
             return SpatialUpdate(True, "accepted", pose.bracket_ns, tuple(semantic["events"]))
 
@@ -169,6 +171,7 @@ class SpatialWorld:
             if not stamp_ok(now_ns) or (self._now is not None and now_ns < self._now):
                 raise ValueError("snapshot time precedes the current reference")
             metric = self._volume.snapshot(self._ref, now_ns, self._last_capture, self._last_id,
-                                           self._calibration.calibration_id, self._ready)
+                                           self._calibration.calibration_id, self._ready,
+                                           received_ns=self._last_received)
             semantic_time = None if self._time_origin is None else (now_ns - self._time_origin) / NS
             return SpatialSnapshot(metric, self._world.semantic_snapshot(semantic_time), self._time_origin)

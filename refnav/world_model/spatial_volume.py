@@ -66,6 +66,7 @@ class MetricSnapshot:
     available: bool
     _cells: np.ndarray
     _stamps: np.ndarray
+    received_ns: int | None = None
 
     def cells_at(self, now_ns, reference):
         """Detached voxel classes. Missing, invalid and expired evidence is unknown."""
@@ -235,7 +236,7 @@ class RollingVolume:
         self.cells[update] = classified[update]
         self.stamps[update] = stamp_ns
 
-    def snapshot(self, reference, now_ns, capture_ns, observation_id, calibration_id, available):
+    def snapshot(self, reference, now_ns, capture_ns, observation_id, calibration_id, available, *, received_ns=None):
         arrays = [np.frombuffer(a.tobytes(), dtype=a.dtype).reshape(a.shape) for a in (self.cells, self.stamps)]
         return MetricSnapshot(reference, self.policy, tuple(map(int, self.origin)), now_ns, capture_ns,
-                              observation_id, calibration_id, available, *arrays)
+                              observation_id, calibration_id, available, *arrays, received_ns=received_ns)
