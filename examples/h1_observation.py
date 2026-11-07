@@ -279,9 +279,9 @@ class HybridBagReplay(RecordedSpatialReplay):
         if not self.continuous:
             row["hybrid"] = self.diagnostic() if row["accepted"] else {"reason": row["reason"]}
 
-    def _select_goal(self, snapshot):
+    def select_goal(self, snapshot, mission_goal):
         ref = self.hybrid.alignment.map
-        context = build_context(snapshot.semantic, self.hybrid.mission_goal,
+        context = build_context(snapshot.semantic, mission_goal,
                                 now=snapshot.semantic["query_timestamp"],
                                 reference=WorldReference(ref.frame_id, ref.epoch, ref.clock_id))
         return GoalBinding(context, DeterministicReasoner().propose(context))
@@ -321,7 +321,7 @@ class HybridBagReplay(RecordedSpatialReplay):
             return "stale_state_or_clock_mapping", None
         alignment = replace(self.hybrid.alignment, capture_ns=capture)
         if self._goal is None and self.hybrid.mission_goal is not None:
-            self._goal = measure(self.timings, "semantic_goal", self._select_goal, snapshot)
+            self._goal = measure(self.timings, "semantic_goal", self.select_goal, snapshot, self.hybrid.mission_goal)
         return None, dict(state=state, snapshot=snapshot, now_ns=now_ns, alignment=alignment,
                           vehicle=self.hybrid.vehicle, objective=self.hybrid.objective, goal=self._goal,
                           state_received_ns=received, estimator_reset_counter=alignment.estimator_reset_counter,

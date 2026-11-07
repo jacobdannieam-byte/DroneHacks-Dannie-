@@ -37,6 +37,7 @@ from . import depth as D
 
 NAV_OFFBOARD = 14
 NAV_AUTO_LAND = 18
+HYBRID_COMPLETE = "hybrid mission complete"
 AIRBORNE = ("climb", "hover", "turn", "check", "go", "hold")
 
 
@@ -146,8 +147,9 @@ def _wrap(a):
 
 
 class Mission:
-    def __init__(self, params: Params):
+    def __init__(self, params: Params, *, hybrid_navigation=False):
         self.p = params
+        self.hybrid_navigation = hybrid_navigation is True
         self.health = Health(params.health_quiet_s, params.health_stale_s)
         self.phase = "wait"
         self.why = ""
@@ -189,6 +191,13 @@ class Mission:
         """An outside request to end the flight through the mission's own landing (no second controller)."""
         if self.land_request is None:
             self.land_request = str(why) or "requested"
+
+    def yield_hybrid_authority(self, now, why):
+        if not self.hybrid_navigation:
+            raise ValueError("cannot yield through a non-Hybrid owner")
+        out = Output("done")
+        self._end(now, out, f"yielded: {why}")
+        return out
 
     def depth_refused(self, key, detail):
         """A depth frame was refused (here, or before it reached the mission: no calibration, no
@@ -284,7 +293,7 @@ class Mission:
         self.sp, self.home, self.targets = None, None, []
         self._set("wait", now, out, why)
 
-    def step(self, now, v: Vehicle) -> Output:
+    def step(self, now, v: Vehicle, *, hybrid_ready=False) -> Output:
         p = self.p
         out = Output(self.phase)
         dt = 0.0 if self.t_last is None else min(max(now - self.t_last, 0.0), 0.25)
@@ -317,6 +326,11 @@ class Mission:
             why = f"landing requested: {self.land_request}"
             if self.phase == "wait":
                 self._end(now, out, f"refused: {why} before arming")
+            elif self.phase == "arm" and self.hybrid_navigation and v.armed is True and v.landed is not True:
+                if v.nav_state == NAV_OFFBOARD:
+                    self._land(now, out, why)
+                else:
+                    self._end(now, out, f"yielded: {why}; airborne state or authority unconfirmed")
             elif self.phase == "arm":
                 if v.armed:
                     out.commands.append("disarm")          # a normal, checked disarm: on the ground, never forced
@@ -339,6 +353,8 @@ class Mission:
             ok, why = self.health.arm_ok(now)
             if now - self.t_started > p.wait_s:
                 self._end(now, out, f"refused: {self.why or 'not ready'} after {p.wait_s:.0f} s")
+            elif self.hybrid_navigation and hybrid_ready is not True:
+                self.why = "waiting for reviewed Hybrid inputs and owner admission"
             elif v.armed is not False:
                 self.why = "waiting for an explicit disarmed PX4 report"
             elif not v.pos_ok or v.pos is None or v.heading is None:
@@ -361,7 +377,9 @@ class Mission:
                 self._set("arm", now, out)
         elif ph == "arm":
             ok, why = self.health.arm_ok(now)
-            if not ok:
+            if self.hybrid_navigation and hybrid_ready is not True and self.t_cmd is None and v.armed is False:
+                self._requalify(now, out, "waiting for reviewed Hybrid inputs and owner admission")
+            elif not ok:
                 if self.t_cmd is None and v.armed is False:
                     self._requalify(now, out, f"{why}; requalifying before any control request")
                 else:
@@ -411,7 +429,7 @@ class Mission:
                     else:
                         self.s = 0.0
                         self._set("go", now, out)
-        elif ph == "go":
+        elif ph == "go" and not self.hybrid_navigation:
             self._go(now, dt, out, v)
         elif ph == "hold":
             if now - self.t_phase >= p.hold_s:
@@ -426,7 +444,9 @@ class Mission:
                 out.commands.append("land")
             if self.land_auto_seen and v.armed is False:
                 why = self.land_reason or ""
-                self._end(now, out, "complete" if why == "route complete" else f"landed: {why}")
+                complete = why == "route complete" or (self.hybrid_navigation and v.landed is True
+                                                       and why == f"landing requested: {HYBRID_COMPLETE}")
+                self._end(now, out, "complete" if complete else f"landed: {why}")
             elif now - self.t_phase > p.land_timeout_s:
                 self._end(now, out, f"landed: {self.land_reason}; landing not confirmed within {p.land_timeout_s:.0f} s")
 
@@ -434,9 +454,16 @@ class Mission:
         out.setpoint = tuple(self.sp) if self.sp is not None else None
         # PX4 owns the landing once AUTO_LAND is seen: nothing streams from then on
         out.stream = self.phase in ("arm",) + AIRBORNE or (self.phase == "land" and not self.land_auto_seen)
+        if self.hybrid_navigation and self.phase in ("go", "land"):
+            # Only the verified Hybrid executor may supply navigation targets.
+            # During landing PX4 receives the existing mode command, no old target.
+            out.setpoint, out.stream = None, False
         return out
 
     def _next_leg(self, now, out, v):
+        if self.hybrid_navigation:
+            self._set("go", now, out, "hybrid navigation ready")
+            return
         if self.leg >= len(self.targets):
             self._land(now, out, "route complete")
             return

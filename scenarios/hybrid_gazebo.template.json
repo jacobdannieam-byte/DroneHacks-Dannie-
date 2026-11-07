@@ -1,0 +1,78 @@
+{
+  "strategy": "hybrid_shadow",
+  "review_status": "incomplete",
+  "profile_id": null,
+  "h1_profile": null,
+  "mission_profile": "hybrid_course.template.json",
+  "runtime": {
+    "plan_hz": 8,
+    "semantic_hz": 5,
+    "budget_s": 0.025,
+    "lease_s": 0.25
+  },
+  "logging": {
+    "record_limit": 2048
+  },
+  "sources": {
+    "/clock": {
+      "topic": null,
+      "type": "rosgraph_msgs/msg/Clock",
+      "provenance": null
+    },
+    "/tf_static": {
+      "topic": null,
+      "type": "tf2_msgs/msg/TFMessage",
+      "provenance": null
+    },
+    "/camera/depth/image_raw": {
+      "topic": null,
+      "type": "sensor_msgs/msg/Image",
+      "provenance": null
+    },
+    "/camera/depth/camera_info": {
+      "topic": null,
+      "type": "sensor_msgs/msg/CameraInfo",
+      "provenance": null
+    },
+    "/visual_slam/tracking/odometry": {
+      "topic": null,
+      "type": "nav_msgs/msg/Odometry",
+      "provenance": null
+    },
+    "/visual_slam/processing_status": {
+      "topic": null,
+      "type": "diagnostic_msgs/msg/DiagnosticArray",
+      "provenance": null
+    },
+    "/estimator/healthy": {
+      "topic": null,
+      "type": "std_msgs/msg/Bool",
+      "provenance": null
+    },
+    "/fmu/in/vehicle_visual_odometry": {
+      "topic": null,
+      "type": "px4_msgs/msg/VehicleOdometry",
+      "provenance": null
+    },
+    "/fmu/out/vehicle_odometry": {
+      "topic": null,
+      "type": "px4_msgs/msg/VehicleOdometry",
+      "provenance": null
+    },
+    "/fmu/out/vehicle_local_position_v1": {
+      "topic": null,
+      "type": "px4_msgs/msg/VehicleLocalPosition",
+      "provenance": null
+    },
+    "/fmu/out/estimator_status_flags": {
+      "topic": null,
+      "type": "px4_msgs/msg/EstimatorStatusFlags",
+      "provenance": null
+    }
+  },
+  "owner_topics": {
+    "vehicle_attitude": null,
+    "vehicle_status": null,
+    "vehicle_land_detected": null
+  }
+}

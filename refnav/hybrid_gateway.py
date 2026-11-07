@@ -28,9 +28,10 @@ class GatewayDecision:
 class HybridGateway:
     """Return a position/yaw tuple for one owner tick, with classical fallback."""
 
-    def __init__(self, *, enabled=False, monotonic=perf_counter, timings=None):
+    def __init__(self, *, enabled=False, monotonic=perf_counter, timings=None, fallback_to_owner=True):
         self.enabled = enabled is True
         self.monotonic = monotonic
+        self.fallback_to_owner = fallback_to_owner
         self.timings = timings
         self._pending = None
 
@@ -54,7 +55,7 @@ class HybridGateway:
                        owner_output, vehicle, owner_ready, owner_generation, simulation)
 
     def _choose(self, pending, inputs, now_ns, out, vehicle, owner_ready, generation, simulation):
-        fallback = out.setpoint
+        fallback = out.setpoint if self.fallback_to_owner else None
         if not self.enabled or simulation is not True:
             return GatewayDecision("gateway_disabled", fallback)
         if pending is None:
@@ -112,18 +113,23 @@ class HybridGateway:
         target = candidate.schedule[0]
         # D0's horizon can end short of the held target. Check the entire
         # requested displacement as well as the predicted curved sweep.
-        points = np.asarray((state.position_m, target.position_m))
-        transform = rot_z(alignment.map_from_enu_yaw_rad) @ R_ENU_NED
-        margin = (bounds.state_position_error_m + bounds.tracking_error_m + alignment.position_error_m
-                  + 2 * math.sin(alignment.angle_error_rad / 2) * np.linalg.norm(points, axis=1).max())
-        mapped = points @ transform.T + alignment.ned_origin_in_map_m
-        if margin > 2 or bounds.radius_m + CLEARANCE_PROBE_M > 2 or np.max(np.abs(mapped)) > MAX_LOCAL_M:
-            return GatewayDecision("target_uncertainty_outside_bound", fallback)
-        sweep = snapshot.metric.check_sweep(mapped,
-                                           reference=alignment.map, now_ns=now_ns,
-                                           vehicle_radius_m=bounds.radius_m + CLEARANCE_PROBE_M, margin_m=margin)
+        reason = target_sweep(state, target.position_m, snapshot, alignment, bounds, now_ns)
         if self.monotonic() >= deadline:
             return GatewayDecision("handoff_deadline_exceeded", fallback)
-        if sweep.status != "verified_free":
-            return GatewayDecision("target_sweep_rejected:" + sweep.status, fallback)
+        if reason:
+            return GatewayDecision(reason, fallback)
         return GatewayDecision("hybrid_position_selected", (*target.position_m, target.yaw_rad))
+
+
+def target_sweep(state, target, snapshot, alignment, bounds, now_ns):
+    """Independently check the whole displacement to a held target."""
+    points = np.asarray((state.position_m, target))
+    transform = rot_z(alignment.map_from_enu_yaw_rad) @ R_ENU_NED
+    margin = (bounds.state_position_error_m + bounds.tracking_error_m + alignment.position_error_m
+              + 2 * math.sin(alignment.angle_error_rad / 2) * np.linalg.norm(points, axis=1).max())
+    mapped = points @ transform.T + alignment.ned_origin_in_map_m
+    if margin > 2 or bounds.radius_m + CLEARANCE_PROBE_M > 2 or np.max(np.abs(mapped)) > MAX_LOCAL_M:
+        return "target_uncertainty_outside_bound"
+    sweep = snapshot.metric.check_sweep(mapped, reference=alignment.map, now_ns=now_ns,
+                                        vehicle_radius_m=bounds.radius_m + CLEARANCE_PROBE_M, margin_m=margin)
+    return None if sweep.status == "verified_free" else "target_sweep_rejected:" + sweep.status

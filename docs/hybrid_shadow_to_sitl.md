@@ -202,6 +202,9 @@ and [NVIDIA SMI documentation](https://docs.nvidia.com/deploy/nvidia-smi/index.h
 
 ## H3 activation and rollback for a later isolated SITL trial
 
+For the current owner composition, consult the [Hybrid Gazebo runtime runbook](hybrid_gazebo_runtime.md).
+The steps below describe the earlier H3 draft boundary.
+
 1. Record acceptance of native H1 and continuous H2, the H3 offline
    gateway/fallback results, and team approval of the exact trial.
    Confirm the tested operator takeover and existing watchdog/landing

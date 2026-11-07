@@ -47,8 +47,13 @@ class ShadowTick:
             row["depth_receipt_to_decision_wall_ns"] = self.completion_wall_ns - self.depth_receipt_wall_ns
         if plan.evaluation is not None:
             row["goal_id"] = plan.evaluation.goal_proposal_id
-            row["candidates"] = [{"id": entry.candidate_id, "status": entry.status, "reasons": entry.reasons}
-                                 for entry in plan.evaluation.candidates]
+            row["candidates"] = [
+                {"id": entry.candidate_id, "status": entry.status, "reasons": entry.reasons,
+                 "clearance_lower_bound_m": entry.clearance_lower_bound_m,
+                 "occupied_segments": entry.occupied_segments, "unknown_segments": entry.unknown_segments,
+                 "predicted_end_position_ned_m": entry.predicted_end_position_ned_m,
+                 "predicted_end_velocity_ned_mps": entry.predicted_end_velocity_ned_mps}
+                for entry in plan.evaluation.candidates]
         return row
 
 
@@ -75,6 +80,7 @@ class ShadowLoop:
         self._fault = None
         self._closed = False
         self.skipped_ticks = 0
+        self.filtered = False
 
     @property
     def fault(self):
@@ -105,8 +111,18 @@ class ShadowLoop:
     def close(self):
         self._closed = True
 
-    def poll(self, now_ns, wall_ns):
+    def observation_reason(self, now_ns, wall_ns):
+        if self._closed or self._fault is not None:
+            return "shadow_closed" if self._closed else self._fault
+        if self._clock_wall_ns is None or not 0 <= wall_ns - self._clock_wall_ns <= 300_000_000:
+            return "shadow_clock_stalled"
+        if abs(now_ns - self._clock_ns) > CLOCK_SKEW_NS:
+            return "shadow_clock_unbound"
+        return None
+
+    def poll(self, now_ns, wall_ns, *, inputs_filter=None):
         """Return the next diagnostic tick when due, including reason-only stops."""
+        self.filtered = False
         if not stamp_ok(now_ns) or not stamp_ok(wall_ns):
             self._fault = "invalid_tick_time"
             return ShadowTick(now_ns if stamp_ok(now_ns) else 0, self._fault)
@@ -121,13 +137,17 @@ class ShadowLoop:
                 return None
             self.skipped_ticks += elapsed // self.period_ns - 1
         self._last_poll_wall, self._last_tick_ns = wall_ns, now_ns
-        if self._clock_wall_ns is None or not 0 <= wall_ns - self._clock_wall_ns <= 300_000_000:
-            return ShadowTick(now_ns, "shadow_clock_stalled")
-        if abs(now_ns - self._clock_ns) > CLOCK_SKEW_NS:
-            return ShadowTick(now_ns, "shadow_clock_unbound")
+        clock_reason = self.observation_reason(now_ns, wall_ns)
+        if clock_reason:
+            return ShadowTick(now_ns, clock_reason)
         reason, inputs = self.replay.prepare(now_ns)
         if inputs is None:
             return ShadowTick(now_ns, reason)
+        if inputs_filter is not None:
+            self.filtered = True
+            reason, inputs = inputs_filter(inputs, now_ns)
+            if inputs is None:
+                return ShadowTick(now_ns, reason)
         result = measure(self.timings, "h0_total", assess, **inputs, budget_s=self.budget_s,
                          monotonic=self.monotonic, timings=self.timings,
                          cancelled=lambda: self._closed or self._fault is not None)

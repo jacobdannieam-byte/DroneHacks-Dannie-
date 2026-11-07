@@ -139,6 +139,8 @@ class CandidateDiagnostic:
     rank: int | None = None
     occupied_segments: int = 0
     unknown_segments: int = 0
+    predicted_end_position_ned_m: tuple | None = None
+    predicted_end_velocity_ned_mps: tuple | None = None
 
 
 @dataclass(frozen=True)
@@ -272,13 +274,13 @@ def _forecast(candidate, state, predictor, history, timings):
     points = np.asarray(positions)
     if not math.isfinite(effort) or np.max(np.abs(points)) > MAX_LOCAL_M:
         raise ValueError("forecast outside local bounds")
-    return points, effort
+    return points, effort, trajectory[-1].state
 
 
 def _evaluate_one(candidate, state, predictor, history, transform, alignment, vehicle, geometry, goal_point,
                   timings):
     try:
-        points, effort = _forecast(candidate, state, predictor, history, timings)
+        points, effort, predicted_end = _forecast(candidate, state, predictor, history, timings)
     except (TypeError, ValueError, OverflowError):
         return CandidateDiagnostic(candidate.candidate_id, "rejected", ("invalid_schedule_or_prediction",), "invalid")
     margin = (vehicle.state_position_error_m + vehicle.tracking_error_m + alignment.position_error_m
@@ -291,7 +293,9 @@ def _evaluate_one(candidate, state, predictor, history, transform, alignment, ve
     progress = 0. if goal_point is None else float(np.linalg.norm(mapped[0] - goal_point)
                                                   - np.linalg.norm(mapped[-1] - goal_point))
     details = {"inflation_m": float(margin), "progress_m": progress, "effort": effort,
-               "occupied_segments": occupied, "unknown_segments": unknown}
+               "occupied_segments": occupied, "unknown_segments": unknown,
+               "predicted_end_position_ned_m": predicted_end.position_m,
+               "predicted_end_velocity_ned_mps": predicted_end.velocity_mps}
     if occupied:
         return CandidateDiagnostic(candidate.candidate_id, "rejected", ("occupied_swept_volume",), "occupied", **details)
     if unknown:

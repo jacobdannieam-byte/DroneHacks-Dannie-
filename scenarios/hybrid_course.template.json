@@ -1,0 +1,65 @@
+{
+  "reference": {
+    "frame_id": null,
+    "clock_id": null,
+    "epoch": null
+  },
+  "route_review": null,
+  "recovery": {
+    "failure_limit": 4,
+    "no_progress_s": 5,
+    "observation_s": 2
+  },
+  "stages": [
+    {
+      "stage_id": "first_corridor",
+      "kind": "corridor",
+      "position_m": null,
+      "arrival_m": 0.2,
+      "timeout_s": 30
+    },
+    {
+      "stage_id": "maze_approach",
+      "kind": "maze",
+      "position_m": null,
+      "arrival_m": 0.2,
+      "timeout_s": 30
+    },
+    {
+      "stage_id": "gate_a",
+      "kind": "gate",
+      "position_m": null,
+      "arrival_m": 0.2,
+      "timeout_s": 30
+    },
+    {
+      "stage_id": "tunnel_approach",
+      "kind": "tunnel_approach",
+      "position_m": null,
+      "arrival_m": 0.2,
+      "timeout_s": 30
+    },
+    {
+      "stage_id": "tunnel_exit",
+      "kind": "tunnel",
+      "position_m": null,
+      "arrival_m": 0.2,
+      "timeout_s": 30
+    },
+    {
+      "stage_id": "chicane",
+      "kind": "chicane",
+      "position_m": null,
+      "arrival_m": 0.2,
+      "timeout_s": 30
+    },
+    {
+      "stage_id": "landing",
+      "kind": "landing",
+      "position_m": null,
+      "arrival_m": 0.2,
+      "timeout_s": 30,
+      "landing_site_review": null
+    }
+  ]
+}
