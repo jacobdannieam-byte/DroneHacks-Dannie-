@@ -66,7 +66,7 @@ class Node:
         self.log_lines = []
         self.parameters = {}
 
-    def declare_parameter(self, name, default):
+    def declare_parameter(self, name, default, descriptor=None):
         value = Node.parameter_overrides.get(name, default)
         self.parameters[name] = value
         return Parameter(value)
@@ -155,6 +155,11 @@ class VehicleLocalPosition:
         self.dist_bottom_valid = False
 
 
+class ParameterDescriptor:
+    def __init__(self, dynamic_typing=False):
+        self.dynamic_typing = dynamic_typing
+
+
 class QoSProfile:
     def __init__(self, **settings):
         self.settings = settings
@@ -176,7 +181,8 @@ def module(name, **contents):
 
 
 STAND_IN_MODULES = ("rclpy", "rclpy.node", "rclpy.qos", "geometry_msgs", "geometry_msgs.msg", "nav_msgs",
-                    "nav_msgs.msg", "std_msgs", "std_msgs.msg", "px4_msgs", "px4_msgs.msg")
+                    "nav_msgs.msg", "std_msgs", "std_msgs.msg", "px4_msgs", "px4_msgs.msg", "rcl_interfaces",
+                    "rcl_interfaces.msg")
 
 
 def uninstall():
@@ -198,3 +204,5 @@ def install():
     sys.modules["std_msgs.msg"] = module("std_msgs.msg", String=String)
     sys.modules["px4_msgs"] = module("px4_msgs")
     sys.modules["px4_msgs.msg"] = module("px4_msgs.msg", VehicleLocalPosition=VehicleLocalPosition)
+    sys.modules["rcl_interfaces"] = module("rcl_interfaces")
+    sys.modules["rcl_interfaces.msg"] = module("rcl_interfaces.msg", ParameterDescriptor=ParameterDescriptor)

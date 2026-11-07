@@ -120,6 +120,35 @@ def test_every_setting_is_a_ros_parameter_and_cruise_height_can_be_changed(build
     assert "/fmu/out/vehicle_local_position_v1" in node.subscriptions
 
 
+def test_the_px4_topic_defaults_to_the_name_measured_on_drone_16(build_node):
+    assert build_node().parameters["px4_local_position_topic"] == "/fmu/out/vehicle_local_position"
+
+
+def test_an_empty_px4_topic_asks_the_organizers_code_for_the_name(build_node):
+    organizers_topics = types.ModuleType("skybeta_flight_interface.topics")
+    organizers_topics.fmu_topic = lambda direction, name: f"/fmu/{direction}/{name}_v7"
+    sys.modules["skybeta_flight_interface"] = types.ModuleType("skybeta_flight_interface")
+    sys.modules["skybeta_flight_interface.topics"] = organizers_topics
+    try:
+        assert "/fmu/out/vehicle_local_position_v7" in build_node(px4_local_position_topic="").subscriptions
+    finally:
+        sys.modules.pop("skybeta_flight_interface", None)
+        sys.modules.pop("skybeta_flight_interface.topics", None)
+
+
+def test_an_empty_px4_topic_without_the_organizers_code_uses_the_plain_name(build_node):
+    assert PX4_LOCAL_POSITION_TOPIC in build_node(px4_local_position_topic="").subscriptions
+
+
+def test_launch_values_are_converted_to_each_settings_type(build_node):
+    node = build_node(cruise_height_metres=1, tunnel_enabled="true", sightings_to_confirm=4.0)
+    assert node.mission.settings.cruise_height_metres == 1.0
+    assert isinstance(node.mission.settings.cruise_height_metres, float)
+    assert node.mission.settings.tunnel_enabled is True and node.mission.settings.sightings_to_confirm == 4
+    with pytest.raises(ValueError, match="cruise_height_metres is 'high'"):
+        build_node(cruise_height_metres="high")
+
+
 def test_the_laser_distance_is_read_even_though_px4_marks_it_invalid(build_node):
     node = build_node()
     report = fake_ros.VehicleLocalPosition()

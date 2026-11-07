@@ -15,9 +15,8 @@ Topics:
 It never publishes to /fmu/in/*: the organizers' rules say only their flight interface talks to
 PX4. It does not arm the drone, ask for Offboard, or call /skybeta/hold.
 
-Run it on the drone with:  ros2 run team_nav mission
-It is not started by team_nav.launch.py yet: adding it there, and turning on auto_offboard_on_arm,
-is the step the team approves before the first flight.
+team_nav.launch.py starts it on the drone, next to the organizers' flight interface. To run it by
+hand instead:  ros2 run team_nav mission
 """
 import json
 import math
@@ -27,6 +26,7 @@ import rclpy
 from geometry_msgs.msg import PoseStamped, TwistStamped
 from nav_msgs.msg import Odometry
 from px4_msgs.msg import VehicleLocalPosition
+from rcl_interfaces.msg import ParameterDescriptor
 from rclpy.node import Node
 from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
 from std_msgs.msg import String
@@ -37,6 +37,7 @@ from .mission_settings import MissionSettings
 # From the team plan (appendix) and the organizers' code.
 DEFAULT_POSITION_TOPIC = "/visual_slam/tracking/odometry"
 DEFAULT_FLIGHT_STATE_TOPIC = "/skybeta/state"
+# Measured on drone 16: this topic has no version suffix there (vehicle_status does: _v1).
 DEFAULT_PX4_LOCAL_POSITION_TOPIC = "/fmu/out/vehicle_local_position"
 POSE_TARGET_TOPIC = "/skybeta/setpoint/pose"
 VELOCITY_COMMAND_TOPIC = "/skybeta/setpoint/twist"
@@ -51,8 +52,10 @@ def heading_from_quaternion(orientation):
 
 
 def px4_local_position_topic(requested_topic):
-    """The topic to read PX4's position report from. PX4 1.16 may add a version suffix such as
-    _v1 to the name; when no topic is given, ask the organizers' code, which knows the rule."""
+    """The topic to read PX4's position report from. By default the name measured on drone 16.
+    PX4 adds a version suffix such as _v1 to some topic names, depending on its version; if the
+    parameter is set empty, ask the organizers' code, which reads the rule from the installed PX4
+    messages, and use the plain name if that code is not installed."""
     if requested_topic:
         return requested_topic
     try:
@@ -62,13 +65,31 @@ def px4_local_position_topic(requested_topic):
         return DEFAULT_PX4_LOCAL_POSITION_TOPIC
 
 
+def setting_value(name, default, value):
+    """The parameter value converted to the type of the setting's default. A launch file writes
+    numbers without a type, so 1 must become 1.0 for a setting in metres."""
+    if isinstance(default, bool):
+        if isinstance(value, bool):
+            return value
+        if str(value).lower() in ("true", "false"):
+            return str(value).lower() == "true"
+    else:
+        try:
+            return type(default)(value)
+        except (TypeError, ValueError):
+            pass
+    raise ValueError(f"The ROS parameter {name} is {value!r}, which cannot be used as a "
+                     f"{type(default).__name__} like its default {default!r}. Fix it in the launch command.")
+
+
 class MissionNode(Node):
     def __init__(self):
         super().__init__("team_nav_mission")
         self.mission = Mission(self.read_settings())
         position_topic = self.declare_parameter("position_topic", DEFAULT_POSITION_TOPIC).value
         flight_state_topic = self.declare_parameter("flight_state_topic", DEFAULT_FLIGHT_STATE_TOPIC).value
-        local_position_topic = px4_local_position_topic(self.declare_parameter("px4_local_position_topic", "").value)
+        local_position_topic = px4_local_position_topic(
+            self.declare_parameter("px4_local_position_topic", DEFAULT_PX4_LOCAL_POSITION_TOPIC).value)
         # PX4's reports arrive "best effort" and keep the latest message for late listeners; a
         # listener that asks for anything else never receives them.
         px4_reports = QoSProfile(reliability=QoSReliabilityPolicy.BEST_EFFORT,
@@ -86,12 +107,14 @@ class MissionNode(Node):
             f"{self.mission.settings.cruise_height_metres:g} m. It waits for Offboard before flying.")
 
     def read_settings(self):
-        """Every MissionSettings value becomes a ROS parameter with the same name and default."""
+        """Every MissionSettings value becomes a ROS parameter with the same name and default.
+        Dynamic typing lets a launch value like 1 stand for 1.0; setting_value converts it."""
         settings = MissionSettings()
+        any_type = ParameterDescriptor(dynamic_typing=True)
         for setting in fields(MissionSettings):
             default = getattr(settings, setting.name)
-            value = self.declare_parameter(setting.name, default).value
-            setattr(settings, setting.name, type(default)(value))
+            value = self.declare_parameter(setting.name, default, any_type).value
+            setattr(settings, setting.name, setting_value(setting.name, default, value))
         return settings
 
     def now_seconds(self):

@@ -2,7 +2,13 @@
 
 This is our team's ROS 2 package for the real drone. It holds the mission program, which flies the course stages and lands with the bottom laser sensor (section 7 of [`docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md)).
 
-**The drone does not run the mission yet.** [`launch/team_nav.launch.py`](launch/team_nav.launch.py) still starts only the organizers' flight interface, with `auto_offboard_on_arm` off, so nothing can take control of the drone. The team approves the mission before anyone adds it to that file and turns the setting on. Until then you can start it by hand with `ros2 run team_nav mission`. It hears topics and publishes targets, but those targets do nothing unless the drone hands over control.
+[`launch/team_nav.launch.py`](launch/team_nav.launch.py) starts two programs on the drone, the same way the organizers' example launch file does:
+- the organizers' flight interface, with `auto_offboard_on_arm` on;
+- our mission program.
+
+Nothing moves until a person acts. Only the pilot can arm the drone, on the remote control. Control passes to the mission only after the pilot arms on the ground and then flips the switch to Position. The pilot can take the drone back at any moment, and the mission then stops sending targets. Rehearse the start with the propellers off before the first flight.
+
+To bring up only the flight interface, launch with `mission:=false`. To change the cruise height, launch with `cruise_height_metres:=0.6`.
 
 ## Reading order
 
@@ -14,6 +20,7 @@ All flight decisions are plain Python with no ROS in them, so they run and are t
 4. [`team_nav/mission_inputs.py`](team_nav/mission_inputs.py) holds what the detectors report, and decides whether each report can still be trusted.
 5. [`team_nav/mission_settings.py`](team_nav/mission_settings.py) has every number, with its unit and where it came from.
 6. [`team_nav/mission_node.py`](team_nav/mission_node.py) is the thin ROS 2 program that passes messages in and out.
+7. [`launch/team_nav.launch.py`](launch/team_nav.launch.py) says what starts on the drone, and why that is safe.
 
 ## What it hears and sends
 
@@ -21,7 +28,7 @@ All flight decisions are plain Python with no ROS in them, so they run and are t
 |---|---|---|
 | hears | `/visual_slam/tracking/odometry` | The drone's position and heading from camera tracking. |
 | hears | `/skybeta/state` | Whether Offboard is active and whether the drone is armed or landed. This is JSON from the organizers' code. |
-| hears | `/fmu/out/vehicle_local_position` | Only `dist_bottom`, the bottom laser distance. It is read only. |
+| hears | `/fmu/out/vehicle_local_position` | Only `dist_bottom`, the bottom laser distance. It is read only. This name has no version suffix on drone 16 (measured). Set the parameter `px4_local_position_topic` to empty, and the organizers' code works the name out. |
 | sends | `/skybeta/setpoint/pose` | Position targets while waiting, climbing and cruising. |
 | sends | `/skybeta/setpoint/twist` | Velocity commands while landing, because position targets can't go below 0.3 m. |
 
@@ -46,7 +53,7 @@ From the top of the repository, run:
 python3 -m pytest drone_code/team_nav/test
 ```
 
-Four helper files in `test/` exist only for the tests and never run on the drone. `fake_drone.py` stands in for PX4 and the organizers' flight interface. `fake_ros.py` stands in for ROS 2, so `mission_node.py` can be tested without ROS. `conftest.py` lets the tests find the package. A real flight check still has to happen in the simulator and then on the drone. None of this has flown yet.
+Four helper files in `test/` exist only for the tests and never run on the drone. `fake_drone.py` stands in for PX4 and the organizers' flight interface. `fake_ros.py` stands in for ROS 2, so `mission_node.py` can be tested without ROS. `fake_launch.py` does the same for the launch file. `conftest.py` lets the tests find the package. A real flight check still has to happen in the simulator and then on the drone. None of this has flown yet.
 
 ## Other files
 
