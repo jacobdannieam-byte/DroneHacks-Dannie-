@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import re
 from types import MappingProxyType
 
+from examples.gazebo_sensor_contract import SIM_BINDINGS, SIM_DEPTH, SIM_ESTIMATOR, SIM_INFO
 from examples.h1_observation import TF, TRACKING, PX4_TYPES
 from examples.spatial_bag_input import TOPICS
 
@@ -29,16 +30,23 @@ class GazeboObservations:
         bindings = {}
         for canonical, fields in sources.items():
             name, kind, provenance = (fields[k] for k in ("topic", "type", "provenance"))
+            sim = profile.tracking_source == SIM_ESTIMATOR
+            permitted_sim_image = sim and (canonical, name) in (
+                ("/camera/depth/image_raw", SIM_DEPTH), ("/camera/depth/camera_info", SIM_INFO))
             if (not _topic(name) or kind != expected[canonical]
+                    or (sim and canonical in SIM_BINDINGS and SIM_BINDINGS[canonical] != name)
                     or not isinstance(provenance, str) or not provenance.strip() or len(provenance) > 240
-                    or any(s in name.lower() for s in ("ground_truth", "groundtruth", "simulator_only",
+                    or any(s in name.lower() for s in ("ground_truth", "groundtruth",
                                                       "referee", "/truth", "model_states", "/score"))
+                    or ("simulator_only" in name.lower() and not permitted_sim_image)
+                    or (name.startswith("/gazebo_hybrid/") and not sim)
                     or name in bindings or (name.startswith("/fmu/") and not canonical.startswith("/fmu/"))):
                 raise ValueError(f"invalid observation binding: {canonical}")
             if (canonical in ("/clock", TF) or canonical.startswith("/fmu/")) and name != canonical:
                 raise ValueError(f"canonical clock, static TF and PX4 interfaces required: {canonical}")
             bindings[name] = (canonical, kind)
         self.profile_id = profile_id
+        self.simulated_estimator = profile.tracking_source == SIM_ESTIMATOR
         self.topics = MappingProxyType({name: kind for name, (_, kind) in bindings.items()})
         self._canonical = MappingProxyType({name: canonical for name, (canonical, _) in bindings.items()})
         self._native = MappingProxyType({canonical: name for name, canonical in self._canonical.items()})

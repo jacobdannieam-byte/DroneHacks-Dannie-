@@ -144,6 +144,9 @@ class RecordedSpatialReplay:
         if self._clock is None or abs(received_ns - self._clock) > CLOCK_SKEW_NS:
             raise ValueError("bag record time is unbound to the observed simulation clock")
 
+    def _health_for_pose(self, stamp):
+        return 0 <= stamp - self._health[0] <= HEALTH_AGE_NS
+
     def _feed_pose(self, msg, received_ns):
         ref = self.profile.reference
         if msg.header.frame_id != ref.frame_id or msg.child_frame_id != ref.body_frame:
@@ -151,7 +154,7 @@ class RecordedSpatialReplay:
         stamp = _ns(msg.header.stamp)
         healthy = (self._health is not None and self._health[1] and self._ev_received is not None
                    and received_ns - self._ev_received <= HEALTH_AGE_NS
-                   and 0 <= stamp - self._health[0] <= HEALTH_AGE_NS
+                   and self._health_for_pose(stamp)
                    and _covariance_consistent(msg.pose.covariance, self.profile))
         p, q = msg.pose.pose.position, msg.pose.pose.orientation
         sample = PoseSample(ref, stamp, received_ns, bool(healthy), (p.x, p.y, p.z),
@@ -200,5 +203,8 @@ def read_bag(path: Path, replay):
                 raise ValueError("bag exceeds event or serialized payload budget")
             replay.feed(topic, deserialize_message(data, classes[topic]), received_ns)
     finally:
-        reader.close()
+        close = getattr(reader, "close", None)
+        if close is not None:
+            close()
+        del reader  # Humble releases its SequentialReader in the destructor.
     return replay.finish()

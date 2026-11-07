@@ -5,6 +5,7 @@ __pycache__/
 
 # Onboard service runtime logs, locks, and state receipts
 .onboard/
+simulator/generated_files/
 
 # Logs and scratch text files
 *.log

@@ -1,5 +1,9 @@
 # Hybrid runtime and Gazebo integration
 
+For the imported Gazebo assets and the integrated container launcher, use
+[the current Gazebo trial runbook](gazebo_hybrid_trial.md). The earlier
+runtime design and Windows-only evidence are retained below.
+
 **Ready for offline review. Gazebo/PX4 flight remains unverified and disabled
 in the shipped launch configuration.** The default mission is still classical.
 No standalone Hybrid command publisher was added.

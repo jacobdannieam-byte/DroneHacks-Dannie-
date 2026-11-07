@@ -27,8 +27,14 @@ def run(loop, *, seconds, report_tick):
 
     import rclpy
     from rclpy.executors import ExternalShutdownException
-    from rclpy.event_handler import SubscriptionEventCallbacks, UnsupportedEventTypeError
+    try:
+        from rclpy.event_handler import SubscriptionEventCallbacks, UnsupportedEventTypeError
+    except ModuleNotFoundError as error:
+        if error.name != "rclpy.event_handler":
+            raise
+        from rclpy.qos_event import SubscriptionEventCallbacks, UnsupportedEventTypeError
     from rclpy.parameter import Parameter
+    from rclpy.utilities import try_shutdown
     from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
     from rosidl_runtime_py.utilities import get_message
 
@@ -96,7 +102,8 @@ def run(loop, *, seconds, report_tick):
                     first_clock = (now, wall)
                 last_clock = (now, wall)
                 if wall - last_graph >= 1_000_000_000:
-                    graphs.append(inspect(node))
+                    strict = bool(getattr(getattr(loop, "adapter", None), "simulated_estimator", False))
+                    graphs.append(inspect(node, strict_motion=strict))
                     last_graph = wall
                 tick = loop.poll(now, wall)
                 if tick is not None:
@@ -135,4 +142,4 @@ def run(loop, *, seconds, report_tick):
         loop.close()
         if node is not None:
             node.destroy_node()
-        rclpy.try_shutdown()
+        try_shutdown()

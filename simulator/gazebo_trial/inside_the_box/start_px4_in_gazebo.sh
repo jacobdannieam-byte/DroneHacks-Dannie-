@@ -75,6 +75,9 @@ px4_settings() {
         env | grep '^PX4_PARAM_' | grep -Ev "$settings_left_out_pattern" | sed -e 's/^PX4_PARAM_//' -e 's/=/ /'
     )
     cat "$model_settings_file"
+    if [ "${GAZEBO_ISOLATED_DDS:-0}" = 1 ]; then
+        printf 'UXRCE_DDS_DOM_ID %s\nUXRCE_DDS_AG_IP 2130706433\nUXRCE_DDS_PTCFG 1\n' "$ROS_DOMAIN_ID"
+    fi
 }
 
 make_drone_model_and_world() {
@@ -142,10 +145,11 @@ record_the_settings_px4_uses() {
 
 start_camera_bridge() {
     python3 "$trial_folder/gazebo_camera_to_ros.py" > "$log_folder/camera_to_ros.txt" 2>&1 &
+    camera_process_id=$!
 }
 
 stop_everything() {
-    kill "${px4_process_id:-}" "${gazebo_process_id:-}" 2> /dev/null || true
+    kill "${px4_process_id:-}" "${gazebo_process_id:-}" "${camera_process_id:-}" 2> /dev/null || true
 }
 trap stop_everything EXIT
 
@@ -154,6 +158,8 @@ start_gazebo
 start_px4
 undo_the_x500_start_up_file
 record_the_settings_px4_uses
-start_camera_bridge
+if [ "${HYBRID_GAZEBO_RUN:-0}" != 1 ]; then
+    start_camera_bridge
+fi
 echo "Gazebo and PX4 are running."
 wait "$px4_process_id"

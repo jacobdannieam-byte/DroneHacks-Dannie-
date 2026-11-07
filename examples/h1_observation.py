@@ -52,6 +52,14 @@ class ClockMapping:
                 or self.valid_until_ns <= self.valid_from_ns):
             raise ValueError("invalid_clock_mapping")
 
+    def source_stamp_us(self, now_ns):
+        if not stamp_ok(now_ns) or not self.valid_from_ns <= now_ns <= self.valid_until_ns:
+            raise ValueError("cannot stamp command outside the reviewed Gazebo clock epoch")
+        stamp = (now_ns - self.offset_ns) // 1000
+        if stamp <= 0:
+            raise ValueError("Gazebo PX4 command stamp must be positive")
+        return stamp
+
     def capture(self, stamp_us, received_ns):
         if not stamp_ok(stamp_us) or stamp_us == 0:
             raise ValueError("invalid_px4_sample_stamp")
@@ -77,8 +85,11 @@ class HybridBagProfile:
     ev_reset_counter: int
     local_reset_counters: tuple
     mission_goal: MissionGoal | None = None
+    tracking_source: str = "visual"
 
     def __post_init__(self):
+        if self.tracking_source not in ("visual", "simulated_estimator"):
+            raise ValueError("invalid tracking source")
         ref = self.spatial.reference
         if (self.clock.ros_clock_id != ref.clock_id or self.alignment.map != ref
                 or self.alignment.ned.clock_id != ref.clock_id
@@ -101,7 +112,8 @@ class HybridBagProfile:
         return cls(spatial, ClockMapping(**data["clock"]), alignment, VehicleBounds(**data["vehicle"]),
                    MetricGoal(ref, data["objective_m"]), data["px4_topics"], data["ev_reset_counter"],
                    tuple(data["local_reset_counters"]),
-                   MissionGoal.from_dict(data["mission_goal"]) if data.get("mission_goal") is not None else None)
+                   MissionGoal.from_dict(data["mission_goal"]) if data.get("mission_goal") is not None else None,
+                   data.get("tracking_source", "visual"))
 
 
 class HybridBagReplay(RecordedSpatialReplay):
@@ -126,6 +138,7 @@ class HybridBagReplay(RecordedSpatialReplay):
         self._flags = self._local = self._tracking = self._state = self._last_px4 = None
         self._last_vio_capture = None
         self._visual = deque(maxlen=64)
+        self._health_history = deque(maxlen=64)
         self._state_reason = "missing_px4_state"
         self.fault = None
 
@@ -134,6 +147,8 @@ class HybridBagReplay(RecordedSpatialReplay):
             raise ValueError(self.fault)
         try:
             if topic in TOPICS:
+                if topic == "/estimator/healthy" and self.hybrid.tracking_source == "simulated_estimator":
+                    self._health_history.append((received_ns, bool(msg.data)))
                 if topic == "/fmu/in/vehicle_visual_odometry" and msg.reset_counter != self.hybrid.ev_reset_counter:
                     raise ValueError("ev_reset_requires_new_epoch")
                 if topic == "/camera/depth/image_raw":
@@ -168,6 +183,15 @@ class HybridBagReplay(RecordedSpatialReplay):
             self._state = self._pending = None
             raise
 
+    def _health_for_pose(self, stamp):
+        if self.hybrid.tracking_source == "visual":
+            return super()._health_for_pose(stamp)
+        # A delayed simulated sample needs health at capture and at receipt.
+        # Do not reuse a pose across any intervening loss.
+        prior = next((row for row in reversed(self._health_history) if row[0] <= stamp), None)
+        return (prior is not None and prior[1] and stamp - prior[0] <= HEALTH_MAX_AGE_NS
+                and all(ok for seen, ok in self._health_history if seen >= stamp))
+
     def _feed_pose(self, msg, received_ns):
         capture = _ns(msg.header.stamp)
         if self._last_vio_capture is not None and capture < self._last_vio_capture:
@@ -198,7 +222,7 @@ class HybridBagReplay(RecordedSpatialReplay):
     def _feed_tracking(self, msg):
         row, = payloads("processing", msg)
         stamp = row["stamp_ns"]
-        good = (row["valid"] and row["result"] == "visual" and not row["covariance_rejected"]
+        good = (row["valid"] and row["result"] == self.hybrid.tracking_source and not row["covariance_rejected"]
                 and 0 <= self.now - stamp <= HEALTH_MAX_AGE_NS)
         if self._tracking is not None and stamp < self._tracking[0]:
             raise ValueError("vio_tracking_capture_rewind")

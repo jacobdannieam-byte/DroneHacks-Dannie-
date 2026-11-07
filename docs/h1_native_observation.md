@@ -72,6 +72,11 @@ flight-control entry point.
 
 ## Native capture and replay
 
+The local Gazebo test path has an explicit simulated-estimator profile,
+separate from the native visual-tracking configuration below. Use the
+[Gazebo trial runbook](gazebo_hybrid_trial.md) for its clock, bindings,
+provenance and launch commands.
+
 Use the signed-in, approved Workbench with the aircraft landed and disarmed
 and flight programs stopped. Keep the SHA, simulator build and course,
 ROS domain and package versions, camera configuration, reset evidence and

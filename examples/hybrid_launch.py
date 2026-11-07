@@ -69,6 +69,7 @@ def run_reviewed_sitl(runtime, approval, *, ros_args, output):
         raise ValueError("choose a new runtime log output")
     import rclpy
     from rclpy.executors import ExternalShutdownException, SingleThreadedExecutor
+    from rclpy.utilities import try_shutdown
     from onboard.diagnostics.sitl_graph import inspect as inspect_command_graph
     from refnav.node import RefNav
 
@@ -83,7 +84,7 @@ def run_reviewed_sitl(runtime, approval, *, ros_args, output):
             until = monotonic() + 4.
             while rclpy.ok() and monotonic() < until:
                 rclpy.spin_once(probe, timeout_sec=.1)
-            if not rclpy.ok() or inspect_command_graph(probe)["issues"]:
+            if not rclpy.ok() or inspect_command_graph(probe, strict_motion=runtime.adapter.simulated_estimator)["issues"]:
                 raise ValueError("command graph is not idle")
         finally:
             probe.destroy_node()
@@ -99,7 +100,7 @@ def run_reviewed_sitl(runtime, approval, *, ros_args, output):
         executor.shutdown()
         if node is not None:
             node.destroy_node()
-        rclpy.try_shutdown()
+        try_shutdown()
         with output.open("x", encoding="utf-8") as log:
             json.dump({"strategy": runtime.strategy, "records": list(runtime.records),
                        "status": runtime.status(), "timing": runtime.timings.summary(),

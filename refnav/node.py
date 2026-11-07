@@ -287,6 +287,12 @@ class RefNav(Node):
 
     # ------------------------------------------------------------------ outputs
     def _sys_us(self):
+        if self._hybrid_runtime is not None and self._hybrid_runtime.adapter.simulated_estimator:
+            clock = self._hybrid_runtime.loop.replay.hybrid.clock
+            now = self.get_clock().now().nanoseconds
+            # This isolated Gazebo image disables XRCE time synchronization.
+            # Convert back to the reviewed PX4 simulation clock only here.
+            return clock.source_stamp_us(now)
         return self.sys_clock.now().nanoseconds // 1000
 
     def _command(self, cmd, p1=0.0, p2=0.0):
@@ -304,7 +310,13 @@ class RefNav(Node):
         try:
             admission = (self.get_parameter("use_sim_time").value is True
                          and self._hybrid_approval.permits(runtime.adapter, os.environ.get("ROS_DOMAIN_ID"))
-                         and not inspect_command_graph(self, self.get_fully_qualified_name())["issues"])
+                         and not inspect_command_graph(self, self.get_fully_qualified_name(),
+                                                       strict_motion=runtime.adapter.simulated_estimator)["issues"])
+            if admission and runtime.adapter.simulated_estimator:
+                try:
+                    runtime.loop.replay.hybrid.clock.source_stamp_us(now_ns)
+                except ValueError:
+                    admission = False
             authority = self._hybrid_reports.get("authority")
             if self.mission.t_cmd is not None or self.mission.phase in C.AIRBORNE + ("land",):
                 admission = admission and authority is not None and 0 <= now_ns - authority[0] <= 300_000_000

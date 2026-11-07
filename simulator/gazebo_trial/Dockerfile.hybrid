@@ -1,0 +1,7 @@
+# The classical images and Gazebo assets are unchanged. Add the native evidence recorder.
+FROM drone-simulator-gazebo
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ros-humble-rosbag2 ros-humble-rosbag2-storage-default-plugins \
+        ros-humble-diagnostic-msgs ros-humble-rosgraph-msgs procps \
+    && rm -rf /var/lib/apt/lists/*
+RUN /bin/bash -c 'source /opt/ros/humble/setup.bash && source /opt/px4_messages/install/setup.bash && python3 -c "import rclpy, rosbag2_py, px4_msgs.msg, gz.msgs10.clock_pb2, gz.transport13"'
