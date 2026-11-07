@@ -27,6 +27,10 @@ Safety behaviour (each one is a test in tests/test_refnav_core.py):
 * a landing REQUEST from outside (the interactive runtime's `land`, request_land) goes through this
   same landing: airborne it lands where it is; before arming it ends without arming; while arming it
   ends with a normal checked disarm. It never adds a controller.
+
+Params.use_stages (default off) replaces the route legs after the climb with refnav.stages' course
+stages (phase "course"), fed by Mission.inputs; every check above still applies, and the stages add
+a pose-jump fault and a flight time limit (tests/test_stages.py).
 """
 from __future__ import annotations
 
@@ -34,10 +38,11 @@ import math
 from dataclasses import dataclass, field
 
 from . import depth as D
+from . import stages as S
 
 NAV_OFFBOARD = 14
 NAV_AUTO_LAND = 18
-AIRBORNE = ("climb", "hover", "turn", "check", "go", "hold")
+AIRBORNE = ("climb", "hover", "turn", "check", "go", "hold", "course")
 
 
 @dataclass
@@ -74,6 +79,7 @@ class Params:
     arm_wait_s: float = 30.0
     cmd_resend_s: float = 1.0
     land_timeout_s: float = 60.0
+    use_stages: bool = False                    # fly refnav.stages' course after the climb instead of the route
 
 
 @dataclass
@@ -146,8 +152,10 @@ def _wrap(a):
 
 
 class Mission:
-    def __init__(self, params: Params):
+    def __init__(self, params: Params, course: S.CourseParams | None = None):
         self.p = params
+        self.inputs = S.Inputs()      # detector outputs for the course stages (the adapter fills them)
+        self.course = S.Course(course) if params.use_stages else None
         self.health = Health(params.health_quiet_s, params.health_stale_s)
         self.phase = "wait"
         self.why = ""
@@ -325,6 +333,14 @@ class Mission:
                 self._land(now, out, why)
             self.land_request = None
             out.phase = self.phase
+        if self.course is not None and (self.phase in AIRBORNE or (self.phase == "land" and not self.land_auto_seen)):
+            stop = self.course.supervise(now, v.pos)          # pose jump (latched fault) or flight time limit
+            if stop is not None:
+                if self.course.fault is not None and v.pos is not None and self.sp is not None:
+                    self.sp[:3] = list(v.pos)                 # drop every world-position goal: hold where it is
+                    self.targets = []
+                if self.phase in AIRBORNE:
+                    self._land(now, out, stop)
         if self.phase in AIRBORNE:
             bad = self.health.bad_for(now)
             if bad > p.health_bad_land_s:
@@ -413,6 +429,8 @@ class Mission:
                         self._set("go", now, out)
         elif ph == "go":
             self._go(now, dt, out, v)
+        elif ph == "course":
+            self._course(now, dt, out, v)
         elif ph == "hold":
             if now - self.t_phase >= p.hold_s:
                 self.legs_done += 1
@@ -426,7 +444,7 @@ class Mission:
                 out.commands.append("land")
             if self.land_auto_seen and v.armed is False:
                 why = self.land_reason or ""
-                self._end(now, out, "complete" if why == "route complete" else f"landed: {why}")
+                self._end(now, out, "complete" if why in ("route complete", S.COURSE_COMPLETE) else f"landed: {why}")
             elif now - self.t_phase > p.land_timeout_s:
                 self._end(now, out, f"landed: {self.land_reason}; landing not confirmed within {p.land_timeout_s:.0f} s")
 
@@ -437,6 +455,10 @@ class Mission:
         return out
 
     def _next_leg(self, now, out, v):
+        if self.course is not None:                   # refnav.stages flies the course from here
+            self.course.start(now, self.sp)
+            self._set("course", now, out, "course stages")
+            return
         if self.leg >= len(self.targets):
             self._land(now, out, "route complete")
             return
@@ -500,6 +522,21 @@ class Mission:
         if self.s >= self.leg_len - 1e-6 and math.hypot(v.pos[0] - tn, v.pos[1] - te) < p.arrive_m:
             self._set("hold", now, out, f"arrived leg {self.leg + 1}")
 
+    def _course(self, now, dt, out, v):
+        """Four clearances from each usable depth frame (rangefinder height for the low band), then
+        the stage's setpoint, reason and landing."""
+        p, inp = self.p, self.inputs
+        if self.frame is not None and inp.clear_t != self.depth_t:
+            inp.set_clearances(self.depth_t, D.four_clearances(
+                self.frame, self.course.floor_down(now, inp), points=self.depth_pts, at_m=p.stop_m + p.lead_max_m,
+                half_width_m=p.corridor_half_m, band_m=p.band_m, min_coverage=p.min_corridor_coverage,
+                min_valid_frac=p.min_valid_frac, min_hits=max(3, round(p.min_obstacle_px / p.depth_stride ** 2))))
+        d = self.course.step(now, dt, v.pos, v.heading, inp)
+        out.events += [f"course {e}" for e in d.events]
+        self.sp = list(d.setpoint)
+        if d.land:
+            self._land(now, out, d.reason)
+
     def status(self, now):
         return {"phase": self.phase, "why": self.why, "result": self.result, "started_t": self.t_started, "leg": self.leg,
                 "legs": len(self.targets), "legs_done": self.legs_done, "home": self.home,
@@ -512,4 +549,5 @@ class Mission:
                 "depth_valid_frac": None if self.last_valid_frac is None else round(self.last_valid_frac, 3),
                 "depth_reject": None if self.depth_reject is None else self.depth_reject[1],
                 "health_bad_s": (None if math.isinf(self.health.bad_for(now)) else round(self.health.bad_for(now), 2)),
+                "course": None if self.course is None else self.course.status(now),
                 **self.counts}
