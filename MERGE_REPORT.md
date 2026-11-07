@@ -48,8 +48,69 @@ branch integration in `main`.
 
 ## Validation
 
-The merge completed with no unresolved index conflicts. `git diff --check`
-passed. The available Python environment does not have `pytest` installed, so
-the test suite could not be executed here; it should be run in an environment
-with the required Python and ROS dependencies before using the new simulator
-or flight code. No flight program was run as part of this merge.
+The branches were rechecked after the reported push:
+
+- `origin/soham-depth` is an ancestor of `origin/main`.
+- `origin/soham-mission` is an ancestor of `origin/main`.
+- `origin/soham-stages` is an ancestor of `origin/main`.
+- No new commits were present on those branches after the previous merge.
+- `git diff --check` passed.
+- Python bytecode compilation passed for the merged Python trees.
+
+The available Python environment does not have `pytest` installed, so the
+repository test suite could not be executed here. No flight program was run.
+Run the tests in an environment with the required Python and ROS dependencies
+before using the simulator or flight code.
+
+## Detailed integration instructions
+
+### Normal update procedure
+
+1. Confirm the working tree is clean: `git status --short --branch`.
+2. Fetch only the approved branches:
+   `git fetch origin main soham-depth soham-mission soham-stages`.
+3. Inspect each branch before merging:
+   `git log --oneline origin/main..origin/<branch>`.
+4. Preview conflicts:
+   `git merge-tree $(git merge-base origin/main origin/<branch>) origin/main origin/<branch>`.
+5. Merge in dependency order:
+   `git switch main`
+   `git merge --no-ff origin/soham-depth`
+   `git merge --no-ff origin/soham-mission`
+   `git merge --no-ff origin/soham-stages`
+6. If a merge stops, do not use `git merge --abort` until any needed evidence
+   has been recorded. Resolve only files listed by `git status`, then run
+   `git add <resolved-files>` and `git commit` to complete that merge.
+7. Push only the integrated branch:
+   `git push origin main`.
+
+### Conflict-resolution requirements
+
+Do not resolve conflicts by blindly choosing `ours` or `theirs`. For
+`refnav/depth.py`, preserve both the 16UC1 invalid-depth handling and the
+`four_clearances` behavior. For `refnav/core.py`, preserve existing estimator
+and safety checks while incorporating the stage hook. For shared configuration
+or launch files, retain the current ROS/PX4 topic names, safety gates, and
+telemetry freshness checks. Never import simulator truth, private host paths,
+reset commands, or credentials into flight algorithms.
+
+For this integration, `soham-stages` is the trusted source for its simulator
+and `drone_code/team_nav` implementation. Trusting that branch does not waive
+combined-result validation or permit weakening the existing flight-safety and
+estimator contracts.
+
+After every conflict resolution, verify the combined result—not each branch
+in isolation:
+
+1. Run `git diff --check`.
+2. Run `python3 -m compileall -q refnav drone_code simulator`.
+3. Install or activate the project's declared test dependencies, then run
+   `python3 -m pytest tests drone_code/team_nav/test -q` where the ROS
+   environment supports it.
+4. Inspect the final diff and `git status --short`.
+5. For flight-related changes, perform the project's approved simulator
+   qualification procedure only after reviewing telemetry, estimator state,
+   landed/armed state, and mission approval. A passing unit test or simulator
+   run is not hardware qualification.
+
+Do not merge, rewrite, or delete any other branch as part of this procedure.
