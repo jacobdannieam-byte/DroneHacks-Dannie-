@@ -27,7 +27,7 @@ from refnav.dynamics.adaptive import ENCODERS, AdaptiveDynamicsModel, AdaptiveNe
 from refnav.dynamics.history import MotionHistory, STEP_SECONDS
 from refnav.dynamics.residual import ResidualDynamicsModel, ResidualMLP
 
-ADAPTIVE = ("online_fit", *ENCODERS)
+ADAPTIVE = ("online_fit", *ENCODERS, "adaptive_features", "gated_linear")
 D2_BASE_SHA = "ed029018d08ae91c4fb173c6b50f5b076e048bec"
 
 

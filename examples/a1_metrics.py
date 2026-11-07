@@ -141,9 +141,9 @@ def summarize(results, models, calibration):
     return output
 
 
-def _nominal_gate(summary, model):
+def _nominal_gate(summary, model, *, regimes=("matched_nominal", "legacy_nominal")):
     failures = []
-    for regime in ("matched_nominal", "legacy_nominal"):
+    for regime in regimes:
         rows = summary[regime]["models"]
         for horizon, baseline in rows["d0"]["rollouts"].items():
             for mode in ("endpoint", "pooled"):

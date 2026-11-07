@@ -58,39 +58,40 @@ def _nominal(case):
     return replace(case, states=states, response=asdict(response))
 
 
-def fixtures():
+def fixtures(*, test_seed=TEST_SEED, include_legacy=True):
     """Keep the published D2 anchor and use longer independent draws for 2 s horizons."""
     settings = {"steps": STEPS, "step_seconds": STEP_SECONDS}
-    clean = generate("test", seed=TEST_SEED, count=TEST_COUNT, **settings)
-    shifted = generate("shifted", seed=TEST_SEED, count=TEST_COUNT, **settings)
-    switched = generate("shifted", seed=TEST_SEED + 1, count=TEST_COUNT,
+    clean = generate("test", seed=test_seed, count=TEST_COUNT, **settings)
+    shifted = generate("shifted", seed=test_seed, count=TEST_COUNT, **settings)
+    switched = generate("shifted", seed=test_seed + 1, count=TEST_COUNT,
                         change_step=CHANGE_STEP, **settings)
     calibration = generate("shifted", seed=CALIBRATION_SEED, count=CALIBRATION_COUNT,
                            change_step=CHANGE_STEP, **settings)
     # Independent in-range dynamics. Add a constant position/yaw target response delay.
-    delayed = generate("test", seed=TEST_SEED + 3, count=TEST_COUNT,
+    delayed = generate("test", seed=test_seed + 3, count=TEST_COUNT,
                        position_delay_steps=6, yaw_delay_steps=9, **settings)
-    nominal_inputs = generate("test", seed=TEST_SEED + 4, count=8, **settings)
+    nominal_inputs = generate("test", seed=test_seed + 4, count=8, **settings)
     cohorts = {
-        "in_range": tuple(Replay(f"test:{TEST_SEED}:{ep.identifier}", ep, LONG_ANCHORS) for ep in clean),
-        "shifted": tuple(Replay(f"test:{TEST_SEED}:{ep.identifier}", ep, LONG_ANCHORS) for ep in shifted),
-        "switched": tuple(Replay(f"test:{TEST_SEED + 1}:{ep.identifier}", ep, LONG_ANCHORS) for ep in switched),
-        "delayed": tuple(Replay(f"test:{TEST_SEED + 3}:{ep.identifier}", ep, LONG_ANCHORS) for ep in delayed),
-        "matched_nominal": tuple(Replay(f"nominal:{TEST_SEED + 4}:{ep.identifier}", _nominal(ep), LONG_ANCHORS)
+        "in_range": tuple(Replay(f"test:{test_seed}:{ep.identifier}", ep, LONG_ANCHORS) for ep in clean),
+        "shifted": tuple(Replay(f"test:{test_seed}:{ep.identifier}", ep, LONG_ANCHORS) for ep in shifted),
+        "switched": tuple(Replay(f"test:{test_seed + 1}:{ep.identifier}", ep, LONG_ANCHORS) for ep in switched),
+        "delayed": tuple(Replay(f"test:{test_seed + 3}:{ep.identifier}", ep, LONG_ANCHORS) for ep in delayed),
+        "matched_nominal": tuple(Replay(f"nominal:{test_seed + 4}:{ep.identifier}", _nominal(ep), LONG_ANCHORS)
                                  for ep in nominal_inputs),
     }
     for fault in ("noisy", "missing_history", "dropped_samples", "stale_history", "epoch_reset",
                   "late_epoch_transition"):
         cohorts[fault] = tuple(
-            replace(replay, fault=fault, noise_seed=TEST_SEED + 1000 + i if fault == "noisy" else None)
+            replace(replay, fault=fault, noise_seed=test_seed + 1000 + i if fault == "noisy" else None)
             for i, replay in enumerate(cohorts["switched"])
         )
-    for split in ("test", "shifted"):
-        cohorts[f"legacy_d2_{split}"] = tuple(
-            Replay(f"d2:{ep.identifier}", ep, {"after_0.4s": CHANGE_STEP + 20}) for ep in episodes(split)
-        )
-    cohorts["legacy_nominal"] = (Replay("d2:nominal", nominal_episode(), {"control_0.3s": 15}),)
-    cohorts["equilibrium"] = (Replay("d2:equilibrium", nominal_episode(True), {"control_0.3s": 15}),)
+    if include_legacy:
+        for split in ("test", "shifted"):
+            cohorts[f"legacy_d2_{split}"] = tuple(
+                Replay(f"d2:{ep.identifier}", ep, {"after_0.4s": CHANGE_STEP + 20}) for ep in episodes(split)
+            )
+        cohorts["legacy_nominal"] = (Replay("d2:nominal", nominal_episode(), {"control_0.3s": 15}),)
+        cohorts["equilibrium"] = (Replay("d2:equilibrium", nominal_episode(True), {"control_0.3s": 15}),)
     calibrators = tuple(Replay(f"cal:{CALIBRATION_SEED}:{ep.identifier}", ep, LONG_ANCHORS)
                         for ep in calibration)
     return cohorts, calibrators
