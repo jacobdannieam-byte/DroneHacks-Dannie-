@@ -1,0 +1,25 @@
+You are Gemini 4 Argon, serving as Principal Autonomous Flight Systems Architect for DroneHacks.
+
+Your task is to generate the comprehensive course analysis and classical navigation plan report, and save it directly to:
+docs/COURSE_MODEL_COMPARISON_AND_PLAN.md
+
+Carefully inspect and analyze:
+1. The CAD model in simulator/course_model/dronehacks-course-v3.obj (the 40,796-vertex Onshape CAD model).
+2. The Scaniverse physical course scan in drone_course_sim_ready.usd (and docs/Isaacsim-hprc_stuff/dronehacks-course-scan-2026-11-06.ply).
+3. The classical flight architecture in docs/ARCHITECTURE.md and docs/READABLE_CODE.md.
+4. The physical drone hardware contracts on skybeta-16:
+   - skybeta_flight_interface (v0.3.2) owns all /fmu/in/* topics. Competitor code must publish /skybeta/setpoint/pose and /skybeta/setpoint/twist in ENU odom frame.
+   - Laser-gated rapid landing: 0.35 m/s descent until bottom laser confirms floor touchdown (within 3 cm of launch mark reading), then command 1.0 m/s downward velocity twist to trip PX4 disarm in ~1s.
+   - Speed control via carrot-on-a-stick lead distance (v ~= 0.95 * d_carrot), capped by clearance to nearest wall.
+   - The tunnel has normal lighting (passive stereo and cuVSLAM tracking work throughout; no blind dead-reckoning).
+
+Generate a complete, rigorous, and beautifully formatted markdown report in docs/COURSE_MODEL_COMPARISON_AND_PLAN.md that includes:
+- Executive Summary & Findings
+- CAD (.obj) vs. Physical Scan (.usd / .ply) In-Depth Geometric Comparison (dimensions, coordinate frames, tolerances, wall deflections, boulder placements, window sill height)
+- Sensor & Perception Grounding (OAK-D S2 stereo depth, cuVSLAM tracking stability, VL53L1X rangefinder interaction with obstacles)
+- The Classical Control Loop Architecture & State Machine for drone_code/team_nav
+- Stage-by-stage navigation strategy (Corridor -> Maze -> Tunnel -> Chicane/Window -> Pad)
+- Concrete implementation roadmap for drone_code/team_nav
+
+Strictly obey all guidelines in docs/READABLE_CODE.md (explicit physical units, named constants with provenance, plain English explanations, full-sentence error handling).
+Write the completed report to docs/COURSE_MODEL_COMPARISON_AND_PLAN.md and verify it is written.
