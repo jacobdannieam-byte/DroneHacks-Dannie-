@@ -39,6 +39,7 @@ native integration and course qualification.
 - [Target architecture](docs/repository_audit/TARGET_ARCHITECTURE.md) for strategy contracts and the command boundary.
 - [Migration plan](docs/repository_audit/MIGRATION_PLAN.md) for the proposed landing order and archival decisions.
 - [Simulation matrix](docs/repository_audit/SIMULATION_MATRIX.md) for entrypoints, observed results and runtime blockers.
+- Results, issues and retests for [classical](docs/simulation_results/classical.md) and [hybrid](docs/simulation_results/hybrid.md).
 - [Cleanup checklist](docs/repository_audit/CLEANUP_CHECKLIST.md) for remaining review and qualification tasks.
 
 The [canonical roadmap](https://app.notion.com/p/411f393aa76881c79ae2fb7f6d7d96f7)

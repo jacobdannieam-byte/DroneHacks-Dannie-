@@ -82,6 +82,24 @@ the prerequisite for a reviewed moving trial. Obtain clock, estimator and
 ownership evidence, a corresponding bag and PX4 ULog, and keep failures.
 For native and simulator grading, use the matching referee and log source.
 
+## Strategy results logs
+
+- [Classical](../simulation_results/classical.md) covers the managed reference
+  and the independent emulator in separate sections.
+- [Hybrid](../simulation_results/hybrid.md) covers predictive planning replay
+  and eventual native trials. Link shared evidence by run ID.
+
+Append a row for each attempt with its run ID, UTC date, strategy and runtime,
+scenario and course revision, exact Git SHA and config, reset state and seed
+when applicable, pass/fail outcome, metrics, and evidence links. Label the
+evidence as offline, emulator, or managed simulator. Keep bags, ULogs and
+other raw evidence in team-approved storage.
+
+Keep failed runs. Record each issue with its run ID, the proposed improvement
+and the fix revision when available. Repeat the same scenario and conditions
+where possible, then link the new run and compare the affected metrics. Record
+any changed conditions. Track the first baseline, fix and retest separately.
+
 ## Independent strategy acceptance
 
 Retain a separate emulator ref until one checkout reproduces its launch
