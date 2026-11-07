@@ -1,11 +1,13 @@
 """The whole flight, from waiting on the launch mark until the motors switch off.
 
 How it fits: mission_node.py passes in every report it hears (camera tracking position, the
-organizers' flight state, PX4's position report with the bottom laser distance) and calls step
-twenty times a second. step returns what to publish this time: a position target, a velocity
-command, or nothing. The course is flown by course_stages.py, the landing by landing.py, and
-position_watch.py spots position jumps and measures speed. This file never talks to ROS and never
-reads a clock, so the tests can run it on a laptop.
+organizers' flight state, PX4's position report with the bottom laser distance, PX4's status) and
+calls step twenty times a second. step returns what to publish this time: a position target, a
+velocity command, or nothing. Between takeoff and landing it flies either the course stages
+(course_stages.py, mission:=stages) or a list of waypoints (route_flight.py, mission:=route). The
+landing is landing.py; position_watchdog.py decides when the position can no longer be trusted;
+position_watch.py spots frozen tracking before a start and measures speed. This file never talks
+to ROS and never reads a clock, so the tests can run it on a laptop.
 
 Words used here:
 * "Offboard" is the PX4 mode in which the drone follows targets from a computer. The organizers'
@@ -21,12 +23,9 @@ Phases:
                      organizers' code only hands control over while it is hearing targets; it has no
                      effect before that. We also record the laser's floor reading (section 7, step 1).
   taking_off         From the first step with Offboard active: climb to cruise height.
-  flying_course      course_stages.py decides.
+  flying_course      course_stages.py decides (mission:=stages).
+  flying_route       route_flight.py decides (mission:=route).
   landing            landing.py decides.
-  faulted            The position jumped. Only a zero velocity is sent; the pilot recovers the drone.
-                     (If this program then died, the organizers' code would fly back to the last
-                     position target, which the jump has moved. The team accepts this: the pilot
-                     recovers the drone.)
   start_refused      Offboard began while camera tracking was frozen. A gentle descent is sent, so
                      the drone stays on the ground until PX4 switches the motors off.
   finished           PX4 switched the motors off after landing.
@@ -49,15 +48,20 @@ Safety rules (each one is a test in test/test_mission.py):
 * If Offboard stops being active, nothing more is published: we never fight the pilot or PX4.
 * The climb starts on the first step. If the drone has not left the ground 10 s after the start,
   we stop, because PX4 switches the motors off then anyway.
+* The position watchdog (position_watchdog.py) runs from takeoff until the motors stop. When one
+  of its rules trips - (a) camera tracking reports stopped for 0.2 s, (b) a jump between two
+  reports, (c) tracking frozen while a target asks for motion, (e) PX4 reset its position or
+  heading estimate - the drone lands at once, and the log names the rule. During a landing a trip
+  is only logged, because the landing is already the answer.
+* Watchdog rule (f): once PX4's own status has shown Offboard, a status that is no longer Offboard
+  means stop sending targets, and the log says so.
 * Nothing advances unless camera tracking reports and PX4's position reports are each freshly
   received, and the flight state is fresh and says the link to PX4 is up. (The flight state repeats
   old values, so it cannot vouch for the other two.) Otherwise hold, and land if that lasts 5 s.
-* Camera tracking that repeats a bit-identical position more than 10 times in a row has frozen, and
-  counts as unhealthy, like reports that stopped. While it is frozen before a start, no target is
-  sent, so control cannot be handed over; the reason is logged.
+* Camera tracking that repeats a bit-identical position more than 10 times in a row has frozen.
+  While it is frozen before a start, no target is sent, so control cannot be handed over; the reason
+  is logged. Frozen in flight while hovering, it is a hold, then a landing after 5 s.
 * Every position target stays within 0.5 m of the drone, sideways.
-* A position jump of more than 0.5 m between steps latches a fault: stop advancing, send nothing
-  but a zero velocity, and leave the recovery to the pilot.
 * 170 s after the start the landing begins. Nothing stops a landing except the motors switching
   off or Offboard ending.
 * Every decision has a reason. Each change of phase or reason is logged, and so is each new peak
@@ -66,18 +70,23 @@ Safety rules (each one is a test in test/test_mission.py):
 import math
 from dataclasses import dataclass, field
 
-from .course_stages import Course
+from .course_stages import Course, wrap_angle
 from .landing import Landing
 from .mission_inputs import MissionInputs, is_finite_number
 from .mission_settings import MissionSettings
 from .position_watch import PositionWatch
+from .position_watchdog import PositionWatchdog
+from .route_flight import RouteFlight
 
 # Our own choice: after a pause in the steps (a slow computer), move the carrot as if at most this
 # much time had passed, so it never jumps ahead.
 LONGEST_STEP_SECONDS = 0.25
 # Our own choice: log the peak horizontal speed each time it rises by this much.
 PEAK_SPEED_LOG_STEP_METRES_PER_SECOND = 0.1
-FLYING_PHASES = ("taking_off", "flying_course", "landing", "faulted")
+FLYING_PHASES = ("taking_off", "flying_course", "flying_route", "landing")
+MISSION_KINDS = ("stages", "route")
+# From PX4's VehicleStatus message: the number of the Offboard mode in nav_state.
+PX4_NAV_STATE_OFFBOARD = 14
 
 
 @dataclass
@@ -95,15 +104,24 @@ class Command:
 
 
 class Mission:
-    def __init__(self, settings=None, vision_check=True):
+    def __init__(self, settings=None, vision_check=True, mission_kind="stages", route_waypoints=None):
         """vision_check=False is for the simulator only (see fly_course); mission_node.py refuses it
-        anywhere else."""
+        anywhere else. mission_kind is "stages" or "route"; a route needs its waypoints, each
+        (forward, left) in metres from the takeoff spot."""
+        if mission_kind not in MISSION_KINDS:
+            raise ValueError(f"The mission must be one of {', '.join(MISSION_KINDS)}, not {mission_kind!r}. "
+                             "Fix the mission launch argument.")
+        if mission_kind == "route" and not route_waypoints:
+            raise ValueError("The route mission needs waypoints, and none were given. Check the route file.")
         self.settings = settings or MissionSettings()
         self.vision_check = vision_check
+        self.mission_kind = mission_kind
+        self.route_waypoints = route_waypoints
         self.inputs = MissionInputs()            # detector reports; all missing until detectors exist
-        self.position_watch = PositionWatch(self.settings.position_jump_limit_metres,
-                                            1.0 / self.settings.steps_per_second,
-                                            self.settings.frozen_tracking_identical_reports)
+        self.position_watch = PositionWatch(self.settings.frozen_tracking_identical_reports)
+        # The watchdog follows the report streams across runs; start_watching() restarts its rules.
+        self.watchdog = PositionWatchdog(self.settings)
+        self.nav_state = None                    # PX4's own mode, from its status report
         self.phase = "waiting_for_start"
         self.reason = ""
         self.history = []                        # [(seconds, phase, reason)] at every change
@@ -126,14 +144,17 @@ class Mission:
 
     def reset_run_state(self):
         """Forget everything worked out during a previous run: the course's memory (where the pad
-        is, what space was seen free, how many sightings were counted), the landing, the fault, the
-        timers, the position watch and the detector reports. There is no map correction yet; when
-        there is, it must be cleared here too."""
+        is, what space was seen free, how many sightings were counted), the route's progress, the
+        landing, the watchdog's trip, the timers, the position watch and the detector reports. There
+        is no map correction yet; when there is, it must be cleared here too."""
         self.course = Course(self.settings)
+        self.route = RouteFlight(self.settings, self.route_waypoints) if self.mission_kind == "route" else None
         self.landing = None
         self.position_watch.reset()
         self.inputs.clear()
-        self.fault = None
+        self.watchdog_trip_logged = False
+        self.offboard_seen_in_px4_status = False
+        self.last_command = None
         self.flight_time_limit_reached = False
         self.left_the_ground = False
         self.waiting_for_reports_since_seconds = None
@@ -147,11 +168,15 @@ class Mission:
         self.floor_reading_metres = None
 
     # ------------------------------------------------------------------ reports from mission_node.py
-    def observe_position(self, now_seconds, position, heading_radians):
+    def observe_position(self, now_seconds, position, heading_radians, stamp_seconds=None, orientation=None):
+        """A camera tracking report: when it arrived, and its own timestamp and orientation when known."""
         self.position = (float(position[0]), float(position[1]), float(position[2]))
         self.heading_radians = float(heading_radians)
         self.position_seconds = now_seconds
         self.position_watch.observe(now_seconds, self.position)
+        if orientation is None:
+            orientation = (self.heading_radians,)
+        self.watchdog.observe_report(now_seconds, stamp_seconds, self.position, orientation)
 
     def observe_flight_state(self, now_seconds, offboard_active, armed, landed, px4_link=None):
         """Each value is True, False, or None when the report did not say."""
@@ -161,9 +186,17 @@ class Mission:
         self.px4_link = px4_link if isinstance(px4_link, bool) else None
         self.flight_state_seconds = now_seconds
 
-    def observe_px4_position_report(self, now_seconds, laser_distance_metres):
-        """PX4's position report arrived; we use only its bottom laser distance (dist_bottom)."""
+    def observe_px4_status(self, now_seconds, nav_state):
+        """PX4's own status report: we use only nav_state, its current mode."""
+        self.nav_state = int(nav_state) if nav_state is not None else None
+
+    def observe_px4_position_report(self, now_seconds, laser_distance_metres, xy_reset_counter=None,
+                                    heading_reset_counter=None):
+        """PX4's position report arrived. We use its bottom laser distance (dist_bottom) and the
+        counters it raises each time it resets its position or heading estimate."""
         self.px4_report_seconds = now_seconds
+        if xy_reset_counter is not None and heading_reset_counter is not None:
+            self.watchdog.observe_reset_counters(int(xy_reset_counter), int(heading_reset_counter))
         if not is_finite_number(laser_distance_metres):
             return
         self.laser_metres = float(laser_distance_metres)
@@ -185,6 +218,7 @@ class Mission:
         self.log_new_peak_speed()
         if command.kind != "nothing":
             self.last_published_kind = command.kind
+            self.last_command = command
         command.log_lines = self.pending_log_lines
         self.pending_log_lines = []
         return command
@@ -205,16 +239,14 @@ class Mission:
             return ended
         if self.phase == "start_refused":
             return self.keep_on_the_ground()
-        if self.phase != "faulted":
-            self.check_for_position_jump(now_seconds)
-        if self.phase == "faulted":
-            return Command("velocity", velocity=(0.0, 0.0, 0.0),
-                           reason=f"{self.fault}: zero velocity only, waiting for the pilot to take over")
+        self.check_the_watchdog(now_seconds)
         self.check_flight_time(now_seconds)
         if self.phase == "taking_off":
             return self.take_off(now_seconds)
         if self.phase == "flying_course":
             return self.fly_course(now_seconds, seconds_since_last_step)
+        if self.phase == "flying_route":
+            return self.fly_route(now_seconds, seconds_since_last_step)
         return self.land(now_seconds)
 
     def note(self, now_seconds, reason):
@@ -238,6 +270,7 @@ class Mission:
     def end_flight(self, now_seconds, phase, reason):
         flew = self.start_seconds is not None
         self.phase = phase
+        self.watchdog.stop_watching()
         if flew:
             peak = self.position_watch.peak_horizontal_speed_metres_per_second
             reason = f"{reason} (peak horizontal speed {peak:.2f} m/s)"
@@ -324,6 +357,7 @@ class Mission:
             return self.refuse_start(now_seconds)
         floor_reading = self.median_floor_reading()
         self.reset_run_state()
+        self.watchdog.start_watching(now_seconds)
         self.start_seconds = now_seconds
         self.ground_height_metres = self.position[2]
         self.home = (self.position[0], self.position[1])
@@ -368,23 +402,42 @@ class Mission:
                 return self.end_flight(now_seconds, "finished", "landed: PX4 switched the motors off")
             return self.stop(now_seconds, f"the motors were switched off while {self.phase.replace('_', ' ')} "
                                           "(kill switch or PX4): not publishing any more")
+        if self.nav_state == PX4_NAV_STATE_OFFBOARD:
+            self.offboard_seen_in_px4_status = True
+        elif self.offboard_seen_in_px4_status and self.nav_state is not None:
+            return self.stop(now_seconds, f"watchdog rule (f): PX4 left Offboard (its status says nav_state "
+                                          f"{self.nav_state}; Offboard is {PX4_NAV_STATE_OFFBOARD}): stopped sending setpoints")
         if self.offboard_active is False:
             return self.stop(now_seconds, "PX4 left Offboard, so the pilot or a PX4 safety action has the drone: "
                                           "not publishing any more")
         return None
 
-    def check_for_position_jump(self, now_seconds):
-        if not self.position_is_usable(now_seconds):
+    def check_the_watchdog(self, now_seconds):
+        """Land at once when a watchdog rule trips; during a landing, only say so."""
+        tripped = self.watchdog.check(now_seconds, self.target_asks_for_motion())
+        if tripped is None or self.watchdog_trip_logged:
             return
-        if self.phase == "landing" and self.landing.touched_down:
-            return                               # on the floor, pushing down: position no longer used
-        jump = self.position_watch.jump_since_last_step(now_seconds, self.position)
-        if jump is None:
+        self.watchdog_trip_logged = True
+        rule, why = tripped
+        if self.phase == "landing":
+            self.log(now_seconds, f"watchdog rule ({rule}) tripped during the landing: {why}; the landing goes on")
             return
-        self.fault = f"position jumped {jump:.2f} m between steps"
         self.course.drop_world_goals()
-        self.log(now_seconds, f"{self.fault}: fault latched; no more targets, recovery is up to the pilot")
-        self.phase = "faulted"
+        self.begin_landing(now_seconds, f"watchdog rule ({rule}) tripped: {why}; landing now")
+
+    def target_asks_for_motion(self):
+        """Whether the last target sent asks the drone to move: a velocity, a position some way off,
+        or a heading some way round (watchdog rule c)."""
+        settings, command = self.settings, self.last_command
+        if command is None or self.position is None:
+            return False
+        if command.kind == "velocity":
+            speed = math.sqrt(sum(value * value for value in command.velocity))
+            return speed > settings.watchdog_motion_request_metres_per_second
+        distance = math.dist(command.position, self.position)
+        turn = abs(wrap_angle(command.heading_radians - self.heading_radians))
+        return (distance > settings.watchdog_motion_request_metres
+                or turn > math.radians(settings.watchdog_motion_request_degrees))
 
     def check_flight_time(self, now_seconds):
         """Only ever starts the landing; it never interrupts one."""
@@ -424,8 +477,12 @@ class Mission:
         if height >= settings.cruise_height_metres - settings.cruise_height_tolerance_metres:
             cruise = (self.home[0], self.home[1], self.ground_height_metres + settings.cruise_height_metres,
                       self.start_heading_radians)
-            self.course.start(now_seconds, cruise)
-            self.phase = "flying_course"
+            if self.route is not None:
+                self.route.start(now_seconds, cruise)
+                self.phase = "flying_route"
+            else:
+                self.course.start(now_seconds, cruise)
+                self.phase = "flying_course"
             return self.position_command(now_seconds, cruise, f"at cruise height {settings.cruise_height_metres:g} m")
         if elapsed > settings.takeoff_time_limit_seconds:
             self.begin_landing(now_seconds, f"did not reach cruise height within {settings.takeoff_time_limit_seconds:g} s, landing")
@@ -455,6 +512,18 @@ class Mission:
             self.begin_landing(now_seconds, f"{decision.stage}: {decision.reason}")
             return self.land(now_seconds)
         return self.position_command(now_seconds, decision.setpoint, f"{decision.stage}: {decision.reason}")
+
+    def fly_route(self, now_seconds, seconds_since_last_step):
+        held = self.hold_while_reports_stopped(now_seconds)
+        if held is not None:
+            return held
+        decision = self.route.step(now_seconds, seconds_since_last_step, self.position, self.heading_radians,
+                                   self.position_watch.latest_horizontal_speed_metres_per_second)
+        if decision.complete:
+            self.current_setpoint = decision.setpoint
+            self.begin_landing(now_seconds, f"route: {decision.reason}")
+            return self.land(now_seconds)
+        return self.position_command(now_seconds, decision.setpoint, f"route: {decision.reason}")
 
     def begin_landing(self, now_seconds, why):
         self.log(now_seconds, why)

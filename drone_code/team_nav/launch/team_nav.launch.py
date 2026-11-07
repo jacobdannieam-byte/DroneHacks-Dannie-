@@ -27,15 +27,16 @@ mission then stops sending anything. The team rehearses the start with the prope
 
 How to use it
 -------------
-    ros2 launch team_nav team_nav.launch.py
+    ros2 launch team_nav team_nav.launch.py                    # the course stages
+    ros2 launch team_nav team_nav.launch.py mission:=route     # the route in missions/route_waypoints.json
     ros2 launch team_nav team_nav.launch.py cruise_height_metres:=0.6
-    ros2 launch team_nav team_nav.launch.py mission:=false     # flight_interface only
+    ros2 launch team_nav team_nav.launch.py mission:=none      # flight_interface only
 
 With auto_offboard_on_arm:=false the drone never hands control to any program.
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.conditions import IfCondition
+from launch.conditions import LaunchConfigurationNotEquals
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
@@ -44,6 +45,18 @@ from launch_ros.actions import Node
 # addresses its Offboard request to target_system, which defaults to 1, so without this the request
 # would go to a system that is not there and the hand-over would never happen.
 DRONE_16_SYSTEM_ID = '16'
+
+# The position watchdog's thresholds (team_nav/position_watchdog.py), one launch argument each. The
+# defaults are the team's, and must match mission_settings.py (a test checks they do).
+WATCHDOG_ARGUMENTS = [
+    ('watchdog_odometry_timeout_seconds', '0.2', 'rule (a): land if no camera tracking report for this long'),
+    ('watchdog_jump_speed_metres_per_second', '1.5', 'rule (b): believable speed between two reports'),
+    ('watchdog_jump_margin_metres', '0.05', 'rule (b): plus this much, in metres'),
+    ('watchdog_frozen_seconds', '0.5', 'rule (c): land if the pose is bit-identical this long while moving'),
+    ('watchdog_motion_request_metres', '0.05', 'rule (c): a position target this far away asks for motion'),
+    ('watchdog_motion_request_degrees', '2.0', 'rule (c): a heading this far round asks for motion'),
+    ('watchdog_motion_request_metres_per_second', '0.02', 'rule (c): a velocity this fast asks for motion'),
+]
 
 # name -> (default, help). The flight interface values are the organizers' example defaults, so the
 # safety limits are exactly theirs unless someone tightens them on the command line.
@@ -69,8 +82,20 @@ ARGUMENTS = [
     ('vision_check', 'true',
      'SIMULATOR ONLY: false treats camera tracking health as OK, because the simulator has no camera '
      'images. The mission refuses false unless simulator/run_team_nav.sh started it'),
-    ('mission', 'true', 'also start our mission program'),
-]
+    ('mission', 'stages', 'our mission: stages (the course stages), route (missions/route_waypoints.json), '
+                          'or none (start only the flight interface)'),
+    ('route_speed_metres_per_second', '0.4', 'route mission: speed along each leg'),
+    ('route_turn_rate_degrees_per_second', '15.0', 'route mission: fastest turn in place at a corner'),
+] + WATCHDOG_ARGUMENTS
+
+
+
+def watchdog_parameters():
+    """Each watchdog threshold, passed from its launch argument to the mission node."""
+    parameters = {}
+    for name, _, _ in WATCHDOG_ARGUMENTS:
+        parameters[name] = LaunchConfiguration(name)
+    return parameters
 
 
 def generate_launch_description():
@@ -103,14 +128,17 @@ def generate_launch_description():
         name='team_nav_mission',
         output='screen',
         emulate_tty=True,
-        condition=IfCondition(LaunchConfiguration('mission')),
+        condition=LaunchConfigurationNotEquals('mission', 'none'),
         parameters=[{
+            'mission_kind': LaunchConfiguration('mission'),
             'cruise_height_metres': LaunchConfiguration('cruise_height_metres'),
+            'route_speed_metres_per_second': LaunchConfiguration('route_speed_metres_per_second'),
+            'route_turn_rate_degrees_per_second': LaunchConfiguration('route_turn_rate_degrees_per_second'),
             'tunnel_enabled': LaunchConfiguration('tunnel_enabled'),
             'window_enabled': LaunchConfiguration('window_enabled'),
             'vision_check': LaunchConfiguration('vision_check'),
             'position_topic': LaunchConfiguration('odometry_topic'),
-        }],
+        }, watchdog_parameters()],
     )
 
     return LaunchDescription(declared + [flight_interface, mission])

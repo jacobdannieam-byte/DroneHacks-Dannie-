@@ -43,17 +43,18 @@ Fly our real mission program, [`drone_code/team_nav`](../drone_code/team_nav/REA
 The mission accepts `vision_check:=false` only from this script, inside the box. The script then presses start through the pretend remote control and watches the flight.
 
 ```bash
-simulator/run_team_nav.sh
+simulator/run_team_nav.sh          # the course stages
+simulator/run_team_nav.sh route    # the route in drone_code/team_nav/missions/route_waypoints.json
 ```
 
-Today it should show these steps, in order:
+With the stages, today it should show these steps, in order:
 1. the hand-over;
 2. a climb to 0.8 m;
-3. a hold of about 5 s, because there is no line or route input yet;
+3. a hold of about 5 s, because there is no line input yet;
 4. the landing, with the push-down;
 5. the motors switching off.
 
-It ends with a RESULT line.
+With the route, it flies each waypoint in turn and then lands. The watcher measures, from the camera tracking reports, how close the drone came to each waypoint. Either way, it ends with a RESULT line.
 
 Draw the newest flight from above. The picture is saved next to the flight's record in `simulator/generated_files/flight_records/`.
 
@@ -148,5 +149,11 @@ All of this was run on 2026-11-06, on an M1 Mac.
   - no touches.
 
   PX4 also kept reporting Offboard after it disarmed, which the mission now expects. PX4's clock ran at only 0.59 of real time on that Mac, so these times are stretched, and the camera tracking reports had short gaps. The first run also found a real bug: `rclpy.parameter_client` doesn't exist in ROS 2 Humble, so the mission program crashed on startup. The camera exposure cap now calls the camera's parameter services directly. The simulator has no camera program, so the cap itself wasn't exercised here.
+
+- **The route mission** (2026-11-07, same Mac, PX4's clock at 0.90 of real time). We ran `run_team_nav.sh route` twice:
+  - **First run:** it reached waypoints 1 to 11, each within 4 cm by camera tracking. Then the simulator's camera tracking reports paused for 0.21 s. That tripped watchdog rule (a), whose limit is 0.2 s, so the drone landed there, with the push-down and the motors off. It was 1.7 m short of the last waypoint.
+  - **Second run:** it reached all 14 waypoints, the last within 7 cm, then landed with the push-down. The motors were off 162.8 s after the hand-over, close to the 170 s limit.
+
+  In both runs the referee credited the first corridor, Gate A and the tunnel. It also recorded touches: 2 in the first run, both at the corner of waypoint 9. In the second run there were 6: at waypoint 9's corner again, on the leg from waypoint 3, and on the legs from waypoints 11 and 12. The simulator adds slow drift to camera tracking, while the referee uses the true position, so the late touches may be partly drift. The corner at waypoint 9 needs more room.
 
 We have not tested a full run of the course, because the mission's detectors (the line, the pad and the depth clearances) don't exist yet. We also haven't tested the bottom edge of the window, the boulders, or lost camera tracking. No result here has been compared with a real flight.

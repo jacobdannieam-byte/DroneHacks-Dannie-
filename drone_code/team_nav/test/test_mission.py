@@ -223,8 +223,7 @@ def test_the_peak_horizontal_speed_is_logged():
 
 
 # ---------------------------------------------------------------- fresh reports before advancing
-@pytest.mark.parametrize("what_stops, expected", [
-    ("sends_position_reports", "camera tracking position reports stopped"),
+@pytest.mark.parametrize("what_stops, expected", [          # camera tracking stopping is watchdog rule (a)
     ("sends_px4_reports", "PX4 position reports stopped"),
     ("sends_flight_state", "flight state reports stopped"),
     ("px4_link", "the flight state says the link to PX4 is down"),
@@ -239,16 +238,6 @@ def test_each_report_must_be_fresh_on_its_own_before_anything_advances(what_stop
     held = [step.command for step in record if held_at + 0.1 <= step.seconds < held_at + 4.0]
     assert len({command.position for command in held}) == 1                 # the target stopped advancing
     assert first_time(mission, f"{expected} for 5 s, landing") - held_at == pytest.approx(5.0, abs=0.11)
-
-
-def test_position_reports_stopping_holds_then_lands_and_px4_finishes_the_landing():
-    def tracking_stops(now_seconds, mission, drone):
-        drone.sends_position_reports = now_seconds < 6.0
-    mission, drone = Mission(ENDLESS_COURSE), FakeDrone()
-    fly(mission, drone, 45.0, every_step=every_step_do(feed_course_inputs(), tracking_stops))
-    assert "camera tracking position reports stopped, holding" in reasons(mission)
-    assert "touchdown confirmed: pushing down" not in reasons(mission)    # no stillness measure: no push
-    assert "finished" in phases(mission) and not drone.armed               # PX4 landed it by itself
 
 
 # ---------------------------------------------------------------- frozen camera tracking
@@ -281,15 +270,18 @@ def test_offboard_beginning_while_frozen_refuses_the_start_and_keeps_the_drone_d
     assert max(step.drone_position[2] for step in record) == 0.0  # never left the ground
 
 
-def test_tracking_freezing_in_flight_holds_then_lands_without_trusting_the_frozen_position():
-    mission, drone = Mission(ENDLESS_COURSE), FakeDrone()
-    fly(mission, drone, 45.0, every_step=every_step_do(feed_course_inputs(), freeze_tracking_from(6.0)))
+def test_tracking_freezing_while_hovering_holds_then_lands():
+    def hover_then_freeze(now_seconds, mission, drone):
+        mission.inputs.set_vision(now_seconds, True)                   # no line: the stage holds still
+        drone.tracking_frozen = now_seconds >= 6.0
+    mission, drone = Mission(), FakeDrone()
+    fly(mission, drone, 45.0, every_step=hover_then_freeze)
     held_at = first_time(mission, "camera tracking frozen (the same position more than 10 times in a row), holding")
-    assert held_at == pytest.approx(7.0, abs=0.11)
-    assert first_time(mission, "camera tracking frozen (the same position more than 10 times in a row) for 5 s, "
-                               "landing") - held_at == pytest.approx(5.0, abs=0.11)
-    assert "touchdown confirmed: pushing down" not in reasons(mission)   # a frozen position shows no stillness
-    assert "finished" in phases(mission) and not drone.armed             # PX4 landed it by itself
+    assert held_at == pytest.approx(7.0, abs=0.11)                     # no motion asked: not watchdog rule (c)
+    assert "camera tracking frozen (the same position more than 10 times in a row) for 5 s, landing" in reasons(mission)
+    rule_c_lines = [reason for reason in reasons(mission) if "watchdog rule (c)" in reason]
+    assert all("during the landing" in line for line in rule_c_lines)   # only once the descent asked for motion
+    assert "finished" in phases(mission) and not drone.armed
 
 
 def test_tracking_freezing_during_the_descent_is_never_taken_for_stillness():
@@ -327,7 +319,7 @@ def test_the_kill_switch_stops_publishing():
     assert all(command.kind == "nothing" for command in commands_after(record, 5.0))
 
 
-# ---------------------------------------------------------------- position jumps
+# ---------------------------------------------------------------- the position watchdog
 class JumpOnce:
     """Moves the drone's reported position suddenly, once, the first time ready(now, mission) is true."""
 
@@ -351,55 +343,101 @@ def in_the_medium_descent(now_seconds, mission):
     return mission.phase == "landing" and mission.landing.step_name == "descending_medium"
 
 
-def pushing_down(now_seconds, mission):
-    return mission.phase == "landing" and mission.landing.step_name == "pushing_down"
+def watchdog_line(mission, rule):
+    return next(reason for reason in reasons(mission) if reason.startswith(f"watchdog rule ({rule}) tripped"))
 
 
-def test_a_position_jump_latches_a_fault_and_sends_only_a_zero_velocity():
+def test_watchdog_rule_a_lands_at_once_when_camera_tracking_reports_stop():
+    def tracking_stops(now_seconds, mission, drone):
+        drone.sends_position_reports = now_seconds < 6.0
     mission, drone = Mission(ENDLESS_COURSE), FakeDrone()
-    record = fly(mission, drone, 20.0, every_step=every_step_do(feed_course_inputs(), JumpOnce(at_six_seconds, east_metres=0.6)))
-    fault_at = first_time(mission, "position jumped")
-    assert fault_at == pytest.approx(6.0)
-    log_line = next(reason for reason in reasons(mission) if reason.startswith("position jumped"))
-    assert log_line.endswith("fault latched; no more targets, recovery is up to the pilot")
-    after = commands_after(record, fault_at)
-    assert all(command.kind == "velocity" and command.velocity == (0.0, 0.0, 0.0) for command in after)
-    assert all(command.position_before_velocity is None for command in after)   # no position hold
-    assert "landing" not in phases(mission) and mission.phase == "faulted"
-    assert mission.course.pad_position is None and mission.course.free_space_seen_until is None
+    fly(mission, drone, 45.0, every_step=every_step_do(feed_course_inputs(), tracking_stops))
+    tripped_at = first_time(mission, "watchdog rule (a) tripped")
+    assert tripped_at == pytest.approx(6.0 + 0.2, abs=0.11)            # the last report came at 5.9 s
+    assert watchdog_line(mission, "a").endswith("landing now")
+    assert phases(mission)[phases(mission).index("landing") - 1] == "flying_course"
+    assert "touchdown confirmed: pushing down" not in reasons(mission)  # no stillness measure: PX4 lands it
+    assert "finished" in phases(mission) and not drone.armed
 
 
-def test_after_a_fault_the_pilot_taking_over_ends_publishing():
-    def pilot_takes_over(now_seconds, mission, drone):
-        if now_seconds >= 9.0:
-            drone.offboard = False
+def test_watchdog_rule_b_lands_at_once_after_a_jump_and_never_resumes():
     mission, drone = Mission(ENDLESS_COURSE), FakeDrone()
-    record = fly(mission, drone, 12.0, every_step=every_step_do(feed_course_inputs(), JumpOnce(at_six_seconds, east_metres=0.6),
-                                                                pilot_takes_over))
+    record = fly(mission, drone, 40.0, every_step=every_step_do(feed_course_inputs(),
+                                                                JumpOnce(at_six_seconds, east_metres=0.6)))
+    assert first_time(mission, "watchdog rule (b) tripped") == pytest.approx(6.0)
+    assert "camera tracking moved 0.6" in watchdog_line(mission, "b")
+    assert watchdog_line(mission, "b").endswith("landing now")
+    assert all(step.phase in ("landing", "finished", "waiting_for_start") for step in record if step.seconds >= 6.0)
+    assert "finished" in phases(mission) and mission.course.pad_position is None
+
+
+def test_watchdog_rule_b_allows_for_a_late_report_by_its_timestamp():
+    def one_report_missing(now_seconds, mission, drone):
+        drone.sends_position_reports = now_seconds != pytest.approx(6.0)
+    mission, drone = Mission(ENDLESS_COURSE), FakeDrone()
+    fly(mission, drone, 9.0, every_step=every_step_do(feed_course_inputs(), one_report_missing))
+    assert mission.watchdog.tripped is None and mission.phase == "flying_course"
+
+
+def test_watchdog_rule_c_lands_at_once_when_tracking_freezes_while_moving():
+    mission, drone = Mission(ENDLESS_COURSE), FakeDrone()
+    fly(mission, drone, 45.0, every_step=every_step_do(feed_course_inputs(), freeze_tracking_from(6.0)))
+    tripped_at = first_time(mission, "watchdog rule (c) tripped")
+    assert tripped_at == pytest.approx(6.0 + 0.5, abs=0.11)
+    assert "bit-identical" in watchdog_line(mission, "c")
+    assert "finished" in phases(mission) and not drone.armed
+
+
+def test_watchdog_rule_e_lands_at_once_when_px4_resets_its_estimate_after_takeoff():
+    def px4_resets(now_seconds, mission, drone):
+        if now_seconds == pytest.approx(0.3):
+            drone.xy_reset_counter = 3                                 # before takeoff: does not count
+        if now_seconds == pytest.approx(6.0):
+            drone.heading_reset_counter += 1
+    mission, drone = Mission(ENDLESS_COURSE), FakeDrone()
+    fly(mission, drone, 40.0, every_step=every_step_do(feed_course_inputs(), px4_resets))
+    assert first_time(mission, "watchdog rule (e) tripped") == pytest.approx(6.0)
+    assert "heading_reset_counter 0 -> 1" in watchdog_line(mission, "e")
+    assert "finished" in phases(mission)
+
+
+def test_watchdog_rule_f_stops_sending_targets_when_px4_leaves_offboard():
+    def px4_leaves_offboard(now_seconds, mission, drone):
+        if now_seconds >= 6.0:
+            drone.px4_nav_state = lambda: 4                           # PX4 changed mode by itself
+    mission, drone = Mission(ENDLESS_COURSE), FakeDrone()
+    record = fly(mission, drone, 10.0, every_step=every_step_do(feed_course_inputs(), px4_leaves_offboard))
     assert mission.phase == "stopped"
-    assert all(command.kind == "nothing" for command in commands_after(record, 9.0))
+    assert mission.reason.startswith("watchdog rule (f): PX4 left Offboard (its status says nav_state 4")
+    assert all(command.kind == "nothing" for command in commands_after(record, 6.0))
 
 
-def test_a_jump_during_the_descent_also_faults():
-    mission, drone = Mission(), FakeDrone()
-    record = fly(mission, drone, 30.0, every_step=JumpOnce(in_the_medium_descent, north_metres=0.7))
-    fault_at = first_time(mission, "position jumped")
-    assert mission.phase == "faulted"
-    assert all(command.velocity == (0.0, 0.0, 0.0) for command in commands_after(record, fault_at))
-
-
-def test_a_jump_after_touchdown_is_ignored_because_position_is_no_longer_used():
-    mission, drone = Mission(), FakeDrone()
-    fly(mission, drone, 40.0, every_step=JumpOnce(pushing_down, north_metres=0.7))
-    assert mission.fault is None and "finished" in phases(mission)
-
-
-def test_the_jump_limit_allows_for_a_gap_in_position_reports():
-    def gap(now_seconds, mission, drone):
-        drone.sends_position_reports = not (6.0 <= now_seconds < 6.15)
+def test_watchdog_rule_f_waits_for_px4_status_to_show_offboard_before_judging():
+    def status_lags_behind(now_seconds, mission, drone):
+        if now_seconds < SWITCH_AT_SECONDS + 0.5:
+            drone.px4_nav_state = lambda: 2                           # the status report is a moment late
+        else:
+            drone.px4_nav_state = lambda: 14 if drone.offboard else 2
     mission, drone = Mission(ENDLESS_COURSE), FakeDrone()
-    fly(mission, drone, 9.0, every_step=every_step_do(feed_course_inputs(), gap))
-    assert mission.fault is None and mission.phase == "flying_course"
+    fly(mission, drone, 6.0, every_step=every_step_do(feed_course_inputs(), status_lags_behind))
+    assert mission.phase == "flying_course"
+
+
+def test_a_watchdog_trip_during_the_landing_is_logged_and_the_landing_goes_on():
+    mission, drone = Mission(), FakeDrone()
+    fly(mission, drone, 40.0, every_step=JumpOnce(in_the_medium_descent, north_metres=0.7))
+    logged = watchdog_line(mission, "b")
+    assert logged.endswith("the landing goes on") and "tripped during the landing" in logged
+    assert "finished" in phases(mission)
+
+
+def test_the_watchdog_only_watches_from_takeoff():
+    def moved_on_the_ground(now_seconds, mission, drone):
+        if now_seconds == pytest.approx(0.5):
+            drone.position[0] += 1.0                                   # someone moved the drone
+    mission, drone = Mission(), FakeDrone()
+    fly(mission, drone, 6.0, every_step=moved_on_the_ground)
+    assert mission.watchdog.tripped is None and mission.phase == "flying_course"
 
 
 # ---------------------------------------------------------------- the flight time limit
@@ -446,7 +484,7 @@ def test_a_second_run_starts_with_every_run_derived_memory_cleared():
     fly(mission, drone, 25.0, start_seconds=second_start, arm_at_seconds=second_start + 0.5,
         switch_at_seconds=second_start + 1.0, every_step=snapshot)
     assert snapshot.course is not old_course and snapshot.pad_position is None
-    assert snapshot.line_stamp is None and snapshot.fault is None and snapshot.peak_speed < 0.1
+    assert snapshot.line_stamp is None and snapshot.watchdog_trip is None and snapshot.peak_speed < 0.1
     assert phases(mission).count("finished") == 2                      # the second run landed too
     assert snapshot.home == pytest.approx((1.5, -0.5), abs=1e-5)       # re-anchored where it now stood
     new_runs = [reason for reason in reasons(mission) if reason.startswith("new run: home")]
@@ -477,7 +515,7 @@ class SnapshotAtTakeoff:
         self.course = mission.course
         self.pad_position = mission.course.pad_position
         self.line_stamp = mission.inputs.line_stamp_seconds
-        self.fault = mission.fault
+        self.watchdog_trip = mission.watchdog.tripped
         self.peak_speed = mission.position_watch.peak_horizontal_speed_metres_per_second
         self.home = mission.home
 

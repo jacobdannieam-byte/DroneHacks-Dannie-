@@ -22,6 +22,12 @@ class IfCondition:
         self.predicate = predicate
 
 
+class LaunchConfigurationNotEquals:
+    def __init__(self, launch_configuration_name, expected_value):
+        self.launch_configuration_name = launch_configuration_name
+        self.expected_value = expected_value
+
+
 class LaunchConfiguration:
     def __init__(self, name):
         self.name = name
@@ -46,7 +52,8 @@ def module(name, **contents):
 def install():
     sys.modules["launch"] = module("launch", LaunchDescription=LaunchDescription)
     sys.modules["launch.actions"] = module("launch.actions", DeclareLaunchArgument=DeclareLaunchArgument)
-    sys.modules["launch.conditions"] = module("launch.conditions", IfCondition=IfCondition)
+    sys.modules["launch.conditions"] = module("launch.conditions", IfCondition=IfCondition,
+                                              LaunchConfigurationNotEquals=LaunchConfigurationNotEquals)
     sys.modules["launch.substitutions"] = module("launch.substitutions", LaunchConfiguration=LaunchConfiguration)
     sys.modules["launch_ros"] = module("launch_ros")
     sys.modules["launch_ros.actions"] = module("launch_ros.actions", Node=Node)

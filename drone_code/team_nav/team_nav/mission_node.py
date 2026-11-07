@@ -2,14 +2,18 @@
 
 How it fits: this file only moves messages. It hands every report it hears to mission.py, and
 twenty times a second publishes whatever mission.py decides. It also starts camera_exposure.py,
-which caps the camera's automatic exposure. All flight decisions live in mission.py,
-course_stages.py and landing.py, which do not need ROS, so they can be tested on a laptop.
+which caps the camera's automatic exposure. All flight decisions live in mission.py and the files
+it uses, which do not need ROS, so they can be tested on a laptop.
 
 Topics:
-  hears  /visual_slam/tracking/odometry    camera tracking position and heading (nav_msgs/Odometry)
+  hears  /visual_slam/tracking/odometry    camera tracking position, heading and timestamp (nav_msgs/Odometry)
          /skybeta/state                    the organizers' flight state, as JSON text (std_msgs/String)
-         /fmu/out/vehicle_local_position   PX4's position report; we read only dist_bottom, the
-                                           bottom laser distance. Read only.
+         /fmu/out/vehicle_local_position   PX4's position report: dist_bottom, the bottom laser
+                                           distance, and its reset counters. Read only.
+         /fmu/out/vehicle_status_v1        PX4's status: nav_state, its current mode. Read only.
+         /visual_slam/status               camera tracking's own status (vo_state): logged only, never
+                                           used to land. On drone 16 it stayed 1 ("tracking") while the
+                                           camera was covered.
   sends  /skybeta/setpoint/pose            position targets while waiting, climbing and cruising
          /skybeta/setpoint/twist           velocity commands while landing (world directions)
   sets   the camera driver's exposure parameters (camera_exposure.py)
@@ -28,7 +32,7 @@ from dataclasses import fields
 import rclpy
 from geometry_msgs.msg import PoseStamped, TwistStamped
 from nav_msgs.msg import Odometry
-from px4_msgs.msg import VehicleLocalPosition
+from px4_msgs.msg import VehicleLocalPosition, VehicleStatus
 from rcl_interfaces.msg import ParameterDescriptor
 from rclpy.node import Node
 from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
@@ -38,11 +42,24 @@ from .camera_exposure import CameraExposureCap
 from .mission import Mission
 from .mission_settings import MissionSettings
 
+try:
+    from isaac_ros_visual_slam_interfaces.msg import VisualSlamStatus
+except ImportError:
+    # Its status is only logged, so the mission must not fail to start without this package.
+    VisualSlamStatus = None
+
 # From the team plan (appendix) and the organizers' code.
 DEFAULT_POSITION_TOPIC = "/visual_slam/tracking/odometry"
 DEFAULT_FLIGHT_STATE_TOPIC = "/skybeta/state"
-# Measured on drone 16: this topic has no version suffix there (vehicle_status does: _v1).
+# Measured on drone 16: this topic has no version suffix there.
 DEFAULT_PX4_LOCAL_POSITION_TOPIC = "/fmu/out/vehicle_local_position"
+# Measured on drone 16, and in the simulator: PX4's status message is at version 1, so its topic has
+# the suffix _v1.
+DEFAULT_PX4_STATUS_TOPIC = "/fmu/out/vehicle_status_v1"
+DEFAULT_VISUAL_SLAM_STATUS_TOPIC = "/visual_slam/status"
+# From the message definition read on drone 16 (VisualSlamStatus.msg).
+VO_STATE_NAMES = {0: "unknown", 1: "tracking", 2: "lost"}
+ROUTE_FILE_IN_PACKAGE = "missions/route_waypoints.json"
 POSE_TARGET_TOPIC = "/skybeta/setpoint/pose"
 VELOCITY_COMMAND_TOPIC = "/skybeta/setpoint/twist"
 # SIMULATOR ONLY. The simulator publishes no camera images, so nothing reports camera tracking
@@ -67,18 +84,33 @@ def heading_from_quaternion(orientation):
     return math.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
 
 
-def px4_local_position_topic(requested_topic):
-    """The topic to read PX4's position report from. By default the name measured on drone 16.
-    PX4 adds a version suffix such as _v1 to some topic names, depending on its version; if the
-    parameter is set empty, ask the organizers' code, which reads the rule from the installed PX4
-    messages, and use the plain name if that code is not installed."""
+def px4_topic(requested_topic, uorb_name, plain_topic):
+    """The topic to read a PX4 report from: the parameter's value, by default the name measured on
+    drone 16. PX4 adds a version suffix such as _v1 to some topic names, depending on its version;
+    if the parameter is set empty, ask the organizers' code, which reads the rule from the installed
+    PX4 messages, and use the plain name if that code is not installed."""
     if requested_topic:
         return requested_topic
     try:
         from skybeta_flight_interface.topics import fmu_topic
-        return fmu_topic("out", "vehicle_local_position")
+        return fmu_topic("out", uorb_name)
     except ImportError:
-        return DEFAULT_PX4_LOCAL_POSITION_TOPIC
+        return plain_topic
+
+
+def read_route_waypoints(route_file):
+    """The route mission's waypoints, [(forward, left), ...] in metres, from a JSON file. With no
+    file named, the one installed with this package."""
+    if not route_file:
+        from ament_index_python.packages import get_package_share_directory
+        route_file = os.path.join(get_package_share_directory("team_nav"), ROUTE_FILE_IN_PACKAGE)
+    try:
+        with open(route_file, encoding="utf-8") as opened:
+            waypoints = json.load(opened)["waypoints_forward_left_metres"]
+    except (OSError, ValueError, KeyError) as problem:
+        raise ValueError(f"Could not read the route's waypoints from {route_file} ({problem}). Check the "
+                         "route_file parameter, or that the package was built with its missions folder.")
+    return [(float(forward), float(left)) for forward, left in waypoints]
 
 
 def setting_value(name, default, value):
@@ -106,19 +138,14 @@ def vision_check_may_be_switched_off():
 class MissionNode(Node):
     def __init__(self):
         super().__init__("team_nav_mission")
-        self.mission = Mission(self.read_settings(), vision_check=self.read_vision_check())
-        position_topic = self.declare_parameter("position_topic", DEFAULT_POSITION_TOPIC).value
-        flight_state_topic = self.declare_parameter("flight_state_topic", DEFAULT_FLIGHT_STATE_TOPIC).value
-        local_position_topic = px4_local_position_topic(
-            self.declare_parameter("px4_local_position_topic", DEFAULT_PX4_LOCAL_POSITION_TOPIC).value)
-        # PX4's reports arrive "best effort" and keep the latest message for late listeners; a
-        # listener that asks for anything else never receives them.
-        px4_reports = QoSProfile(reliability=QoSReliabilityPolicy.BEST_EFFORT,
-                                 durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
-                                 history=QoSHistoryPolicy.KEEP_LAST, depth=5)
-        self.create_subscription(Odometry, position_topic, self.on_position_report, 10)
-        self.create_subscription(String, flight_state_topic, self.on_flight_state, 10)
-        self.create_subscription(VehicleLocalPosition, local_position_topic, self.on_px4_local_position, px4_reports)
+        settings = self.read_settings()
+        mission_kind = self.declare_parameter("mission_kind", "stages").value
+        route_file = self.declare_parameter("route_file", "").value
+        route_waypoints = read_route_waypoints(route_file) if mission_kind == "route" else None
+        self.mission = Mission(settings, vision_check=self.read_vision_check(), mission_kind=mission_kind,
+                               route_waypoints=route_waypoints)
+        self.last_vo_state = None
+        heard = self.listen_to_reports()
         self.pose_publisher = self.create_publisher(PoseStamped, POSE_TARGET_TOPIC, 10)
         self.twist_publisher = self.create_publisher(TwistStamped, VELOCITY_COMMAND_TOPIC, 10)
         self.create_timer(1.0 / self.mission.settings.steps_per_second, self.on_step)
@@ -130,9 +157,38 @@ class MissionNode(Node):
             self.camera_exposure.check()
             self.create_timer(settings.camera_check_seconds, self.camera_exposure.check)
         self.get_logger().info(
-            f"team_nav mission ready. Hears {position_topic}, {flight_state_topic}, {local_position_topic}; "
-            f"sends {POSE_TARGET_TOPIC} and {VELOCITY_COMMAND_TOPIC}; cruise height "
+            f"team_nav mission ready: the {mission_kind} mission. Hears {', '.join(heard)}; sends "
+            f"{POSE_TARGET_TOPIC} and {VELOCITY_COMMAND_TOPIC}; cruise height "
             f"{self.mission.settings.cruise_height_metres:g} m. It waits for Offboard before flying.")
+
+    def listen_to_reports(self):
+        """Subscribe to every report the mission uses. Returns the topic names, for the log."""
+        position_topic = self.declare_parameter("position_topic", DEFAULT_POSITION_TOPIC).value
+        flight_state_topic = self.declare_parameter("flight_state_topic", DEFAULT_FLIGHT_STATE_TOPIC).value
+        local_position_topic = px4_topic(self.declare_parameter("px4_local_position_topic",
+                                                                DEFAULT_PX4_LOCAL_POSITION_TOPIC).value,
+                                         "vehicle_local_position", DEFAULT_PX4_LOCAL_POSITION_TOPIC)
+        status_topic = px4_topic(self.declare_parameter("px4_status_topic", DEFAULT_PX4_STATUS_TOPIC).value,
+                                 "vehicle_status", DEFAULT_PX4_STATUS_TOPIC)
+        visual_slam_status_topic = self.declare_parameter("visual_slam_status_topic",
+                                                          DEFAULT_VISUAL_SLAM_STATUS_TOPIC).value
+        # PX4's reports arrive "best effort" and keep the latest message for late listeners; a
+        # listener that asks for anything else never receives them.
+        px4_reports = QoSProfile(reliability=QoSReliabilityPolicy.BEST_EFFORT,
+                                 durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
+                                 history=QoSHistoryPolicy.KEEP_LAST, depth=5)
+        self.create_subscription(Odometry, position_topic, self.on_position_report, 10)
+        self.create_subscription(String, flight_state_topic, self.on_flight_state, 10)
+        self.create_subscription(VehicleLocalPosition, local_position_topic, self.on_px4_local_position, px4_reports)
+        self.create_subscription(VehicleStatus, status_topic, self.on_px4_status, px4_reports)
+        heard = [position_topic, flight_state_topic, local_position_topic, status_topic]
+        if VisualSlamStatus is None:
+            self.get_logger().warn("The package isaac_ros_visual_slam_interfaces is not installed, so "
+                                   f"{visual_slam_status_topic} is not logged. Nothing else depends on it.")
+        else:
+            self.create_subscription(VisualSlamStatus, visual_slam_status_topic, self.on_visual_slam_status, 10)
+            heard.append(f"{visual_slam_status_topic} (logged only)")
+        return heard
 
     def read_settings(self):
         """Every MissionSettings value becomes a ROS parameter with the same name and default.
@@ -166,10 +222,14 @@ class MissionNode(Node):
     def on_position_report(self, message):
         point = message.pose.pose.position
         position = (float(point.x), float(point.y), float(point.z))
-        heading = heading_from_quaternion(message.pose.pose.orientation)
-        if not all(math.isfinite(value) for value in position + (heading,)):
+        quaternion = message.pose.pose.orientation
+        orientation = (float(quaternion.x), float(quaternion.y), float(quaternion.z), float(quaternion.w))
+        heading = heading_from_quaternion(quaternion)
+        if not all(math.isfinite(value) for value in position + orientation):
             return
-        self.mission.observe_position(self.now_seconds(), position, heading)
+        stamp = message.header.stamp
+        stamp_seconds = None if stamp is None else stamp.sec + stamp.nanosec * 1e-9
+        self.mission.observe_position(self.now_seconds(), position, heading, stamp_seconds, orientation)
 
     def on_flight_state(self, message):
         try:
@@ -187,7 +247,19 @@ class MissionNode(Node):
     def on_px4_local_position(self, message):
         # PX4 also sends dist_bottom_valid, but on drone 16 it stays false for the whole flight
         # (docs/ARCHITECTURE.md, section 7), so it is ignored on purpose.
-        self.mission.observe_px4_position_report(self.now_seconds(), float(message.dist_bottom))
+        self.mission.observe_px4_position_report(self.now_seconds(), float(message.dist_bottom),
+                                                 message.xy_reset_counter, message.heading_reset_counter)
+
+    def on_px4_status(self, message):
+        self.mission.observe_px4_status(self.now_seconds(), message.nav_state)
+
+    def on_visual_slam_status(self, message):
+        vo_state = int(message.vo_state)
+        if vo_state == self.last_vo_state:
+            return
+        self.last_vo_state = vo_state
+        self.get_logger().info(f"camera tracking status: vo_state {vo_state} ({VO_STATE_NAMES.get(vo_state, 'other')}). "
+                               "Logged only: it never makes the drone land.")
 
     # ------------------------------------------------------------------ what we send
     def on_step(self):

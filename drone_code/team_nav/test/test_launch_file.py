@@ -22,7 +22,11 @@ EXAMPLE_FLIGHT_INTERFACE_DEFAULTS = {
 # Measured on drone 16: MAV_SYS_ID is 16; flight_interface would otherwise address PX4 as system 1.
 DRONE_16_SYSTEM_ID = "16"
 MISSION_NODE_PARAMETERS_NOT_IN_SETTINGS = {"position_topic", "flight_state_topic", "px4_local_position_topic",
-                                           "vision_check"}
+                                           "px4_status_topic", "visual_slam_status_topic", "vision_check",
+                                           "mission_kind", "route_file"}
+WATCHDOG_THRESHOLDS = ["watchdog_odometry_timeout_seconds", "watchdog_jump_speed_metres_per_second",
+                       "watchdog_jump_margin_metres", "watchdog_frozen_seconds", "watchdog_motion_request_metres",
+                       "watchdog_motion_request_degrees", "watchdog_motion_request_metres_per_second"]
 
 
 @pytest.fixture
@@ -66,23 +70,52 @@ def test_the_hand_over_to_software_is_on_and_mode_requests_are_off(launched):
     assert arguments(launched)["allow_mode_request"] == "false"
 
 
-def test_our_mission_starts_too_unless_switched_off(launched):
+def mission_parameters(launched):
+    """Every parameter the launch file gives our mission node, from all its parameter groups."""
+    merged = {}
+    for group in node(launched, "mission")["parameters"]:
+        merged.update(group)
+    return merged
+
+
+def test_our_mission_starts_unless_mission_is_none(launched):
     mission = node(launched, "mission")
     assert mission["package"] == "team_nav"
-    assert mission["condition"].predicate.name == "mission" and arguments(launched)["mission"] == "true"
+    condition = mission["condition"]
+    assert (condition.launch_configuration_name, condition.expected_value) == ("mission", "none")
+    assert arguments(launched)["mission"] == "stages"                     # the course stages by default
+    assert mission_parameters(launched)["mission_kind"].name == "mission"
     assert arguments(launched)["cruise_height_metres"] == "0.8"
     known = {setting.name for setting in fields(MissionSettings)} | MISSION_NODE_PARAMETERS_NOT_IN_SETTINGS
-    assert set(mission["parameters"][0]) <= known                  # no misspelt parameter names
-    assert mission["parameters"][0]["position_topic"].name == "odometry_topic"   # same odometry as the interface
+    assert set(mission_parameters(launched)) <= known                    # no misspelt parameter names
+    assert mission_parameters(launched)["position_topic"].name == "odometry_topic"   # same odometry as the interface
+
+
+def test_every_watchdog_threshold_is_a_launch_argument_with_the_teams_default(launched):
+    defaults = MissionSettings()
+    for name in WATCHDOG_THRESHOLDS:
+        assert float(arguments(launched)[name]) == getattr(defaults, name), name
+        assert mission_parameters(launched)[name].name == name, name
+    team_defaults = {"watchdog_odometry_timeout_seconds": 0.2, "watchdog_jump_speed_metres_per_second": 1.5,
+                     "watchdog_jump_margin_metres": 0.05, "watchdog_frozen_seconds": 0.5}
+    for name, value in team_defaults.items():
+        assert getattr(defaults, name) == value, name
+
+
+def test_the_route_speeds_are_launch_arguments(launched):
+    assert float(arguments(launched)["route_speed_metres_per_second"]) == MissionSettings().route_speed_metres_per_second == 0.4
+    assert float(arguments(launched)["route_turn_rate_degrees_per_second"]) == MissionSettings().route_turn_rate_degrees_per_second == 15.0
+    assert mission_parameters(launched)["route_speed_metres_per_second"].name == "route_speed_metres_per_second"
 
 
 def test_the_vision_check_is_on_unless_the_simulator_script_switches_it_off(launched):
     assert arguments(launched)["vision_check"] == "true"
-    assert node(launched, "mission")["parameters"][0]["vision_check"].name == "vision_check"
+    assert mission_parameters(launched)["vision_check"].name == "vision_check"
 
 
 def test_the_mission_program_the_launch_file_names_is_installed():
     setup_text = (PACKAGE_FOLDER / "setup.py").read_text()
     assert re.search(r'"mission = team_nav\.mission_node:main"', setup_text)
     assert '"launch/team_nav.launch.py"' in setup_text
+    assert '"missions/route_waypoints.json"' in setup_text
     assert "install_scripts=$base/lib/team_nav" in (PACKAGE_FOLDER / "setup.cfg").read_text()

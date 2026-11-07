@@ -6,6 +6,7 @@ import math
 import sys
 import types
 from dataclasses import fields
+from pathlib import Path
 
 import pytest
 
@@ -16,6 +17,8 @@ from team_nav.mission_settings import MissionSettings
 POSITION_TOPIC = "/visual_slam/tracking/odometry"
 FLIGHT_STATE_TOPIC = "/skybeta/state"
 PX4_LOCAL_POSITION_TOPIC = "/fmu/out/vehicle_local_position"
+PX4_STATUS_TOPIC = "/fmu/out/vehicle_status_v1"
+VISUAL_SLAM_STATUS_TOPIC = "/visual_slam/status"
 POSE_TOPIC = "/skybeta/setpoint/pose"
 TWIST_TOPIC = "/skybeta/setpoint/twist"
 STEP_SECONDS = 1.0 / MissionSettings().steps_per_second           # the node's timer period: 20 Hz
@@ -43,6 +46,7 @@ def deliver(node, topic, message):
 
 def deliver_reports(node, drone):
     odometry = fake_ros.Odometry()
+    odometry.header.stamp = fake_ros.Clock().now().to_msg()
     position = odometry.pose.pose.position
     position.x, position.y, position.z = drone.reported_position()
     odometry.pose.pose.orientation = fake_ros.Quaternion(z=math.sin(drone.heading_radians / 2),
@@ -55,6 +59,7 @@ def deliver_reports(node, drone):
     local_position = fake_ros.VehicleLocalPosition()
     local_position.dist_bottom = drone.laser_reading()
     deliver(node, PX4_LOCAL_POSITION_TOPIC, local_position)
+    deliver(node, PX4_STATUS_TOPIC, fake_ros.VehicleStatus(drone.px4_nav_state()))
 
 
 def as_command(topic, message):
@@ -101,9 +106,10 @@ def logged(node):
 
 
 # ---------------------------------------------------------------- wiring
-def test_hears_three_topics_and_sends_only_on_the_two_setpoint_topics(build_node):
+def test_hears_five_topics_and_sends_only_on_the_two_setpoint_topics(build_node):
     node = build_node()
-    assert set(node.subscriptions) == {POSITION_TOPIC, FLIGHT_STATE_TOPIC, PX4_LOCAL_POSITION_TOPIC}
+    assert set(node.subscriptions) == {POSITION_TOPIC, FLIGHT_STATE_TOPIC, PX4_LOCAL_POSITION_TOPIC,
+                                       PX4_STATUS_TOPIC, VISUAL_SLAM_STATUS_TOPIC}
     assert set(node.publishers) == {POSE_TOPIC, TWIST_TOPIC}
     assert not any(topic.startswith("/fmu/in") for topic in node.publishers)
     assert node.timers[0][0] == pytest.approx(1.0 / MissionSettings().steps_per_second)
@@ -177,6 +183,48 @@ def test_vision_check_false_is_accepted_in_a_simulator_run(build_node, monkeypat
     node = build_node(vision_check="false")
     assert node.mission.vision_check is False
     assert any(level == "warn" and "SIMULATOR ONLY" in text for level, text in node.log_lines)
+
+
+def test_px4s_status_is_heard_on_its_versioned_topic(build_node):
+    node = build_node()
+    assert node.parameters["px4_status_topic"] == "/fmu/out/vehicle_status_v1"
+    deliver(node, PX4_STATUS_TOPIC, fake_ros.VehicleStatus(14))
+    assert node.mission.nav_state == 14
+
+
+def test_camera_trackings_own_status_is_logged_on_change_and_never_lands_the_drone(build_node):
+    node = build_node()
+    for vo_state in (1, 1, 2, 2, 1):
+        deliver(node, VISUAL_SLAM_STATUS_TOPIC, fake_ros.VisualSlamStatus(vo_state))
+    status_lines = [text for _, text in node.log_lines if text.startswith("camera tracking status")]
+    assert [line.split(" (")[0] for line in status_lines] == [
+        "camera tracking status: vo_state 1", "camera tracking status: vo_state 2", "camera tracking status: vo_state 1"]
+    assert all("never makes the drone land" in line for line in status_lines)
+    assert not any("vo_state" in reason for _, _, reason in node.mission.history)   # the mission never sees it
+
+
+def test_the_node_starts_without_the_visual_slam_package(build_node):
+    sys.modules.pop("isaac_ros_visual_slam_interfaces", None)
+    sys.modules.pop("isaac_ros_visual_slam_interfaces.msg", None)
+    sys.modules.pop("team_nav.mission_node", None)
+    node_module = importlib.import_module("team_nav.mission_node")
+    fake_ros.Node.parameter_overrides = {}
+    node = node_module.MissionNode()
+    assert VISUAL_SLAM_STATUS_TOPIC not in node.subscriptions
+    assert any(level == "warn" and "isaac_ros_visual_slam_interfaces is not installed" in text
+               for level, text in node.log_lines)
+
+
+def test_the_route_mission_reads_its_waypoints_from_the_route_file(build_node):
+    route_file = Path(__file__).resolve().parents[1] / "missions" / "route_waypoints.json"
+    node = build_node(mission_kind="route", route_file=str(route_file))
+    assert node.mission.mission_kind == "route" and len(node.mission.route_waypoints) == 14
+    assert node.mission.route_waypoints[0] == (1.613, -0.241)
+
+
+def test_a_route_file_that_cannot_be_read_is_a_clear_error(build_node):
+    with pytest.raises(ValueError, match="Could not read the route's waypoints from /no/such/route.json"):
+        build_node(mission_kind="route", route_file="/no/such/route.json")
 
 
 def test_the_laser_distance_is_read_even_though_px4_marks_it_invalid(build_node):

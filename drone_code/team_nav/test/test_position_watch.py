@@ -5,7 +5,7 @@ FROZEN_AFTER = 10
 
 
 def watch():
-    return PositionWatch(jump_limit_metres=0.5, step_seconds=0.05, frozen_after_identical_reports=FROZEN_AFTER)
+    return PositionWatch(frozen_after_identical_reports=FROZEN_AFTER)
 
 
 def test_more_than_ten_identical_positions_in_a_row_is_frozen():

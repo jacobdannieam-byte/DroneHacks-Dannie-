@@ -19,16 +19,22 @@ It checks, in order, and prints each moment as it happens:
 If a step takes too long, it stops with a sentence saying what did not happen. At the end it
 prints a RESULT line and exits with 0 only if everything expected happened.
 
-What to expect today: the hand-over, a climb to 0.8 m, a hold of about 5 s (there is no line or
-route input yet, so the first stage waits for one), then the landing with the push-down, and the
-motors switching off.
+    --mission stages   (the default) Expected today: the hand-over, a climb to 0.8 m, a hold of
+                       about 5 s (there is no line input yet, so the first stage waits for one),
+                       the landing with the push-down, and the motors switching off.
+    --mission route    The route in drone_code/team_nav/missions/route_waypoints.json. It also
+                       checks, from the camera tracking reports, how close the drone came to each
+                       waypoint, and whether it reached the last one before landing.
 """
+import argparse
+import math
 import json
 import sys
 import time
 
 import rclpy
 from geometry_msgs.msg import PoseStamped, TwistStamped
+from nav_msgs.msg import Odometry
 from px4_msgs.msg import VehicleLocalPosition
 from rclpy.node import Node
 from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
@@ -46,12 +52,18 @@ SECONDS_TO_SETTLE_BEFORE_START = 5.0
 OUR_TARGETS_COUNT_AS_LIVE_SECONDS = 0.5
 PUSH_DOWN_SEEN_AT_METRES_PER_SECOND = 0.9       # a command at least this fast downward
 
+# The route mission's waypoints, the same file the mission reads.
+ROUTE_FILE = "/repository/drone_code/team_nav/missions/route_waypoints.json"
+# Our own choice: the drone counts as having reached a waypoint within this distance (the mission
+# itself uses 0.15 m).
+WAYPOINT_REACHED_METRES = 0.2
+
 # How long each step may take before we call it a failure.
 LONGEST_WAIT_FOR_SIMULATOR_SECONDS = 180.0
 LONGEST_WAIT_FOR_OUR_MISSION_SECONDS = 60.0
 LONGEST_WAIT_FOR_HAND_OVER_SECONDS = 10.0
 LONGEST_CLIMB_SECONDS = 20.0
-LONGEST_WAIT_FOR_MOTORS_OFF_SECONDS = 90.0
+LONGEST_WAIT_FOR_MOTORS_OFF_SECONDS = {"stages": 90.0, "route": 300.0}
 
 PX4_MESSAGE_SETTINGS = QoSProfile(
     reliability=QoSReliabilityPolicy.BEST_EFFORT,
@@ -63,8 +75,13 @@ PX4_MESSAGE_SETTINGS = QoSProfile(
 
 class TeamNavFlightWatcher(Node):
 
-    def __init__(self):
+    def __init__(self, mission_kind):
         super().__init__("team_nav_flight_watcher")
+        self.mission_kind = mission_kind
+        self.tracked_position = None
+        self.tracked_heading_radians = None
+        self.waypoints = []                      # (x, y) in the camera tracking frame, set at the start
+        self.closest_approach_metres = []
         self.drone_state = None
         self.px4_position = None
         self.last_pose_target_seconds = None
@@ -74,6 +91,7 @@ class TeamNavFlightWatcher(Node):
                                  self.on_px4_position, PX4_MESSAGE_SETTINGS)
         self.create_subscription(PoseStamped, "/skybeta/setpoint/pose", self.on_pose_target, 10)
         self.create_subscription(TwistStamped, "/skybeta/setpoint/twist", self.on_velocity_command, 10)
+        self.create_subscription(Odometry, "/visual_slam/tracking/odometry", self.on_tracking_report, 10)
         self.start_service = self.create_client(Trigger, "/simulator_only/start_run")
 
     # ---- What we hear ------------------------------------------------------------------------
@@ -90,6 +108,15 @@ class TeamNavFlightWatcher(Node):
     def on_velocity_command(self, message):
         downward = -float(message.twist.linear.z)
         self.fastest_downward_command_metres_per_second = max(self.fastest_downward_command_metres_per_second, downward)
+
+    def on_tracking_report(self, message):
+        point, quaternion = message.pose.pose.position, message.pose.pose.orientation
+        self.tracked_position = (point.x, point.y)
+        self.tracked_heading_radians = math.atan2(2.0 * (quaternion.w * quaternion.z + quaternion.x * quaternion.y),
+                                                  1.0 - 2.0 * (quaternion.y ** 2 + quaternion.z ** 2))
+        for index, (east, north) in enumerate(self.waypoints):
+            distance = math.hypot(point.x - east, point.y - north)
+            self.closest_approach_metres[index] = min(self.closest_approach_metres[index], distance)
 
     def say(self, text):
         print(f"[{time.strftime('%H:%M:%S')}] {text}", flush=True)
@@ -151,7 +178,21 @@ class TeamNavFlightWatcher(Node):
                         "our mission (team_nav) to send its ready target")
         self.say("Our mission is sending its ready target.")
 
+    def remember_the_route(self):
+        """The route's waypoints in the camera tracking frame, from where the drone sits and the way
+        its nose points now, just as the mission works them out at takeoff."""
+        with open(ROUTE_FILE, encoding="utf-8") as opened:
+            route = json.load(opened)["waypoints_forward_left_metres"]
+        start_east, start_north = self.tracked_position
+        cos_heading, sin_heading = math.cos(self.tracked_heading_radians), math.sin(self.tracked_heading_radians)
+        self.waypoints = [(start_east + cos_heading * forward - sin_heading * left,
+                           start_north + sin_heading * forward + cos_heading * left) for forward, left in route]
+        self.closest_approach_metres = [math.inf] * len(self.waypoints)
+        self.say(f"The route has {len(self.waypoints)} waypoints.")
+
     def press_start(self):
+        if self.mission_kind == "route":
+            self.remember_the_route()
         self.start_height_metres = self.tracked_height_metres()
         reply = self.start_service.call_async(Trigger.Request())
         self.wait_until(reply.done, 5.0, "the start service to reply")
@@ -185,23 +226,39 @@ class TeamNavFlightWatcher(Node):
                 self.say(f"PX4 says landed, {self.landed_seconds - self.hand_over_seconds:.1f} s after the hand-over.")
             return self.drone_state["armed"] is False
 
-        self.wait_until(motors_are_off, LONGEST_WAIT_FOR_MOTORS_OFF_SECONDS, "the motors to switch off")
+        self.wait_until(motors_are_off, LONGEST_WAIT_FOR_MOTORS_OFF_SECONDS[self.mission_kind], "the motors to switch off")
         self.motors_off_seconds = time.monotonic()
         self.say(f"Motors off, {self.motors_off_seconds - self.hand_over_seconds:.1f} s after the hand-over.")
 
     def report(self):
         peak_ok = abs(self.peak_height_metres - CRUISE_HEIGHT_METRES) <= CRUISE_HEIGHT_TOLERANCE_METRES
         push_down_seen = self.fastest_downward_command_metres_per_second >= PUSH_DOWN_SEEN_AT_METRES_PER_SECOND
+        if self.mission_kind == "route":
+            return self.report_the_route(push_down_seen)
         self.say(f"RESULT: hand-over yes; peak height {self.peak_height_metres:.2f} m "
                  f"({'as expected' if peak_ok else 'NOT about ' + str(CRUISE_HEIGHT_METRES) + ' m'}); "
                  f"push-down {'seen' if push_down_seen else 'NOT seen'} (fastest downward command "
                  f"{self.fastest_downward_command_metres_per_second:.2f} m/s); motors off yes.")
         return peak_ok and push_down_seen
 
+    def report_the_route(self, push_down_seen):
+        for index, closest in enumerate(self.closest_approach_metres):
+            self.say(f"waypoint {index + 1}: closest approach {closest:.2f} m")
+        reached = [closest <= WAYPOINT_REACHED_METRES for closest in self.closest_approach_metres]
+        last_reached = reached[-1]
+        self.say(f"RESULT: reached {sum(reached)} of {len(reached)} waypoints within {WAYPOINT_REACHED_METRES} m; "
+                 f"last waypoint {'REACHED' if last_reached else 'NOT reached'} (closest "
+                 f"{self.closest_approach_metres[-1]:.2f} m); landed and motors off: yes; push-down "
+                 f"{'seen' if push_down_seen else 'not seen'}.")
+        return last_reached
+
 
 def main():
+    parser = argparse.ArgumentParser(description="Press start for team_nav in the simulator and watch it fly.")
+    parser.add_argument("--mission", choices=["stages", "route"], default="stages")
+    arguments = parser.parse_args()
     rclpy.init()
-    watcher = TeamNavFlightWatcher()
+    watcher = TeamNavFlightWatcher(arguments.mission)
     try:
         everything_expected = watcher.run()
     except TimeoutError as problem:

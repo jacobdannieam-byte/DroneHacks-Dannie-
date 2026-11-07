@@ -167,6 +167,21 @@ class VehicleLocalPosition:
     def __init__(self):
         self.dist_bottom = math.nan
         self.dist_bottom_valid = False
+        self.xy_reset_counter = 0
+        self.heading_reset_counter = 0
+
+
+class VehicleStatus:
+    def __init__(self, nav_state=0):
+        self.nav_state = nav_state
+
+
+class VisualSlamStatus:
+    """isaac_ros_visual_slam_interfaces/VisualSlamStatus, as read on drone 16."""
+
+    def __init__(self, vo_state=0):
+        self.header = Header()
+        self.vo_state = vo_state
 
 
 class ParameterDescriptor:
@@ -263,7 +278,8 @@ def module(name, **contents):
 
 STAND_IN_MODULES = ("rclpy", "rclpy.node", "rclpy.qos", "rclpy.parameter", "geometry_msgs", "geometry_msgs.msg", "nav_msgs",
                     "nav_msgs.msg", "std_msgs", "std_msgs.msg", "px4_msgs", "px4_msgs.msg", "rcl_interfaces",
-                    "rcl_interfaces.msg", "rcl_interfaces.srv")
+                    "rcl_interfaces.msg", "rcl_interfaces.srv", "isaac_ros_visual_slam_interfaces",
+                    "isaac_ros_visual_slam_interfaces.msg")
 
 
 def uninstall():
@@ -285,7 +301,11 @@ def install():
     sys.modules["std_msgs"] = module("std_msgs")
     sys.modules["std_msgs.msg"] = module("std_msgs.msg", String=String)
     sys.modules["px4_msgs"] = module("px4_msgs")
-    sys.modules["px4_msgs.msg"] = module("px4_msgs.msg", VehicleLocalPosition=VehicleLocalPosition)
+    sys.modules["px4_msgs.msg"] = module("px4_msgs.msg", VehicleLocalPosition=VehicleLocalPosition,
+                                         VehicleStatus=VehicleStatus)
+    sys.modules["isaac_ros_visual_slam_interfaces"] = module("isaac_ros_visual_slam_interfaces")
+    sys.modules["isaac_ros_visual_slam_interfaces.msg"] = module("isaac_ros_visual_slam_interfaces.msg",
+                                                                 VisualSlamStatus=VisualSlamStatus)
     sys.modules["rcl_interfaces"] = module("rcl_interfaces")
     sys.modules["rcl_interfaces.msg"] = module("rcl_interfaces.msg", ParameterDescriptor=ParameterDescriptor)
     sys.modules["rcl_interfaces.srv"] = module("rcl_interfaces.srv", SetParameters=SetParameters,

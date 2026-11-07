@@ -73,6 +73,9 @@ class FakeDrone:
         self.last_reported = (0.0, 0.0, 0.0)
         self.disarms_if_not_flown_after_seconds = disarms_if_not_flown_after_seconds
         self.armed_at_seconds = None
+        self.frozen_orientation = None
+        self.xy_reset_counter = 0                 # PX4 raises these when it resets its estimates
+        self.heading_reset_counter = 0
 
     # ------------------------------------------------------------------ what the mission hears
     def reported_position(self):
@@ -86,6 +89,22 @@ class FakeDrone:
         wobble = TRACKING_WOBBLE_METRES * (self.reports_made % 3 - 1)
         self.last_reported = (self.position[0] + wobble, self.position[1], self.position[2])
         return self.last_reported
+
+    def reported_orientation(self):
+        """Camera tracking's orientation (x, y, z, w) for the heading, frozen along with the position."""
+        if self.tracking_frozen:
+            if self.frozen_orientation is None:
+                self.frozen_orientation = self.orientation_now()
+            return self.frozen_orientation
+        self.frozen_orientation = None
+        return self.orientation_now()
+
+    def orientation_now(self):
+        return (0.0, 0.0, math.sin(self.heading_radians / 2), math.cos(self.heading_radians / 2))
+
+    def px4_nav_state(self):
+        """PX4's status: 14 is Offboard, 2 is Position."""
+        return 14 if self.offboard else 2
 
     def flight_state(self):
         return self.offboard, self.armed, self.landed, self.px4_link
@@ -217,11 +236,14 @@ def fly(mission, drone, seconds, step_seconds=0.1, arm_at_seconds=0.5, switch_at
             switched = True
             drone.switch_to_position_mode(now)
         if drone.sends_position_reports:
-            mission.observe_position(now, drone.reported_position(), drone.heading_radians)
+            mission.observe_position(now, drone.reported_position(), drone.heading_radians, now,
+                                     drone.reported_orientation())
+        mission.observe_px4_status(now, drone.px4_nav_state())
         if drone.sends_flight_state:
             mission.observe_flight_state(now, *drone.flight_state())
         if drone.sends_px4_reports:
-            mission.observe_px4_position_report(now, drone.laser_reading())
+            mission.observe_px4_position_report(now, drone.laser_reading(), drone.xy_reset_counter,
+                                                drone.heading_reset_counter)
         position_when_sent = tuple(drone.position)
         command = mission.step(now)
         drone.receive(now, command)

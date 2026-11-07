@@ -38,9 +38,34 @@ class MissionSettings:
     # From the rulebook: a run has 3 minutes (180 s). Our own choice: start landing at 170 s,
     # which leaves about 10 s for the landing itself (section 7 measured about 9 s).
     flight_time_limit_seconds: float = 170.0
-    # Our own choice: the drone cannot really move this far in one step (a twentieth of a second), so
-    # a jump this big means camera tracking has jumped, and every position goal is now wrong.
-    position_jump_limit_metres: float = 0.5
+
+    # ------------------------------------------------------------------ position watchdog
+    # (position_watchdog.py). Each one is also a launch argument of the same name.
+    # From the team (2026-11-07): rule (a), no new camera tracking report for this long.
+    watchdog_odometry_timeout_seconds: float = 0.2
+    # From the team: rule (b), a report may be at most this speed times the time between the two
+    # reports' timestamps, plus this margin, from the report before it.
+    watchdog_jump_speed_metres_per_second: float = 1.5
+    watchdog_jump_margin_metres: float = 0.05
+    # From the team: rule (c), position and orientation bit-identical this long while a target
+    # asks the drone to move.
+    watchdog_frozen_seconds: float = 0.5
+    # Our own choice: what counts as a target asking the drone to move (rule c): a position target
+    # this far from the drone, or a heading this far round, or a velocity this fast.
+    watchdog_motion_request_metres: float = 0.05
+    watchdog_motion_request_degrees: float = 2.0
+    watchdog_motion_request_metres_per_second: float = 0.02
+
+    # ------------------------------------------------------------------ route mission (route_flight.py)
+    # From the team (2026-11-07): fly each leg at this speed, and turn in place no faster than this.
+    route_speed_metres_per_second: float = 0.4
+    route_turn_rate_degrees_per_second: float = 15.0
+    # Our own choice: a waypoint counts as reached within this distance.
+    route_arrive_metres: float = 0.15
+    # Our own choice: at each corner, wait at most this long for the drone to stop.
+    route_corner_settle_time_limit_seconds: float = 3.0
+    # Our own choice: the turn is done when the nose is within this of the next leg's direction.
+    route_heading_tolerance_degrees: float = 3.0
 
     # ------------------------------------------------------------------ freshness of inputs
     # From the team plan (section 11): if position reports stop for more than 0.2 s, hold.

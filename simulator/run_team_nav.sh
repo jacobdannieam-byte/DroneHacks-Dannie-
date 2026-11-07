@@ -2,7 +2,8 @@
 # Flies our real mission program (drone_code/team_nav) once in the simulator, and saves the record.
 # SIMULATOR ONLY. Run this on the Mac, from anywhere:
 #
-#   simulator/run_team_nav.sh
+#   simulator/run_team_nav.sh            # the course stages (mission:=stages)
+#   simulator/run_team_nav.sh route      # the route in drone_code/team_nav/missions/route_waypoints.json
 #
 # What it does, in order:
 #   1. Starts the whole simulator, except the organizers' flight interface. Our own launch file
@@ -19,11 +20,18 @@
 #      (arm, then flip the switch to Position), watches the flight, and prints a RESULT line.
 #   4. Saves the records in simulator/generated_files/flight_records/ and prints the referee's summary.
 #
-# Expected today: the hand-over, a climb to 0.8 m, a hold (there is no line or route input yet), the
-# landing with the push-down, and the motors switching off.
+# Expected today with the stages: the hand-over, a climb to 0.8 m, a hold (there is no line input
+# yet), the landing with the push-down, and the motors switching off. With the route: the same start,
+# every waypoint in turn, then the landing; the watcher reports whether it reached the last waypoint.
 #
 # Each run gets a fresh simulator, because the pretend remote control starts a run only once.
 set -e
+
+mission_kind="${1:-stages}"
+if [ "$mission_kind" != "stages" ] && [ "$mission_kind" != "route" ]; then
+    echo "The mission must be 'stages' or 'route', not '$mission_kind'. For example: simulator/run_team_nav.sh route"
+    exit 1
+fi
 
 repository="$(cd "$(dirname "$0")/.." && pwd)"
 box_name=drone-simulator
@@ -73,7 +81,7 @@ save_the_records_and_stop() {
 }
 trap save_the_records_and_stop EXIT
 
-echo "Simulator starting. Our mission starts once our packages are built..."
+echo "Simulator starting. Our $mission_kind mission starts once our packages are built..."
 
 # Our launch file runs in the background inside the box. Its output is our mission's log.
 # TEAM_NAV_STARTED_BY is what lets the mission accept vision_check:=false. PYTHONUNBUFFERED makes
@@ -84,12 +92,12 @@ docker exec --detach \
     "$box_name" bash -c "
         until [ -f /tmp/our_packages_are_built ]; do sleep 1; done
         source /repository/simulator/inside_the_box/load_ros_environment.sh
-        ros2 launch team_nav team_nav.launch.py target_system:=1 vision_check:=false \
+        ros2 launch team_nav team_nav.launch.py target_system:=1 vision_check:=false mission:=$mission_kind \
             > /repository/simulator/generated_files/last_team_nav_log.txt 2>&1
     "
 
 docker exec "$box_name" bash -c "
     until [ -f /tmp/our_packages_are_built ]; do sleep 1; done
     source /repository/simulator/inside_the_box/load_ros_environment.sh
-    python3 /repository/simulator/test_flights/team_nav_flight.py
+    python3 /repository/simulator/test_flights/team_nav_flight.py --mission $mission_kind
 "
