@@ -1,0 +1,27 @@
+{
+  "mission_format_version": 1,
+  "name": "DroneHacks 2026 first competition run, side gap first",
+  "description": "The same checkpoint lines as dronehacks_2026.json, but the last checkpoint prefers the side gap into the landing area (the line called 'Gate B') to the window. Use this for the first run, to bank a safe finish. dronehacks_2026.json, which prefers the window, is for later runs.",
+  "source": "From the organizers' website (Dannie_Computer_Setup/Website_context.txt): five checkpoints, cleared in order, the fourth through Gate B or the window. The order of preference is the team's decision of 2026-11-07.",
+  "cruise_height_metres": 0.8,
+  "cruise_height_source": "Our own choice, agreed by the team on 2026-11-07. The same as in dronehacks_2026.json.",
+  "checkpoints": [
+    {
+      "name": "First corridor",
+      "cross_one_of": ["end of first corridor"]
+    },
+    {
+      "name": "Maze",
+      "cross_one_of": ["Gate A"]
+    },
+    {
+      "name": "Tunnel",
+      "cross_one_of": ["tunnel exit"]
+    },
+    {
+      "name": "Chicane",
+      "cross_one_of": ["Gate B", "through the window"],
+      "why_this_order": "The side gap is open down to the floor, so the bottom laser never passes over a wall edge there, and PX4's height estimate isn't put at risk (docs/ARCHITECTURE.md, section 7). Finishing is worth 35 points and the window only 5 more, so the first run takes the side gap. The window is only used if the side gap has no route."
+    }
+  ]
+}

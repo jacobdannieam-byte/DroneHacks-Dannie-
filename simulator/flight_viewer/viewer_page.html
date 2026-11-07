@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<!--
+  The 3D flight viewer page. SIMULATOR ONLY.
+
+  make_flight_viewer.py copies this file, puts one flight and the course model where the data
+  placeholder is (near the bottom), and saves the result as a new page. Opening this template
+  directly only shows a message, because it has no data in it.
+
+  It draws with three.js, a widely used library for 3D drawing in web pages, loaded from the
+  internet. In three.js, a "scene" holds everything to draw, a "camera" is the viewpoint, and a
+  "mesh" is a shape made of triangles.
+
+  Directions are the same as in the course model: x and y run along the floor, z points up, and
+  everything is in metres.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flight in 3D</title>
+<style>
+  :root { color-scheme: light; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #f4f4f2;
+    color: #1d1d1b;
+    font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  /* The 3D view fills the left, and the panel is a column on the right, so the panel never
+     covers any of the course. */
+  body { display: flex; }
+  #panel {
+    flex: 0 0 310px;
+    box-sizing: border-box;
+    height: 100%;
+    overflow-y: auto;
+    padding: 12px 14px;
+    background: #ffffff;
+    border-right: 1px solid #d6d6d0;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  #view { flex: 1 1 auto; min-width: 0; position: relative; }
+  /* On a narrow screen, such as a phone, the view goes on top and the panel below it. */
+  @media (max-width: 700px) {
+    body { flex-direction: column; }
+    #view { order: -1; flex: 1 1 55%; }
+    #panel { flex: 0 0 45%; height: auto; border-right: none; border-top: 1px solid #d6d6d0; }
+  }
+  h1 { font-size: 15px; margin: 0 0 4px; word-break: break-all; }
+  h2 { font-size: 13px; margin: 12px 0 4px; }
+  p { margin: 4px 0; }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 8px 0; }
+  button, select {
+    font: inherit;
+    padding: 4px 10px;
+    background: #ffffff;
+    border: 1px solid #b9b9b2;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  #time-slider { width: 100%; }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 8px 0; }
+  dt { color: #5b5b55; }
+  dd { margin: 0; font-variant-numeric: tabular-nums; }
+  label { display: block; margin: 4px 0; }
+  /* The bar's colours are filled in by drawTheLegend(), from the same colours as the path. */
+  .legend-bar { height: 8px; border-radius: 4px; }
+  .legend-ends { display: flex; justify-content: space-between; color: #5b5b55; font-size: 12px; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
+  .hint { color: #5b5b55; font-size: 12px; }
+  .touching { color: #c0392b; font-weight: 600; }
+  #loading {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: calc(100vw - 64px);
+    padding: 8px 12px;
+    background: #ffffff;
+    border: 1px solid #d6d6d0;
+    border-radius: 6px;
+  }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="view"></div>
+
+<div id="panel">
+  <h1 id="title">Flight</h1>
+  <p id="summary"></p>
+
+  <h2>Play the flight back</h2>
+  <div class="row">
+    <button id="play">Play</button>
+    <select id="speed" aria-label="Playback speed">
+      <option value="0.25">0.25 × speed</option>
+      <option value="0.5">0.5 × speed</option>
+      <option value="1" selected>Real speed</option>
+      <option value="2">2 × speed</option>
+      <option value="4">4 × speed</option>
+    </select>
+  </div>
+  <input type="range" id="time-slider" min="0" max="1" step="0.01" value="0" aria-label="Moment in the flight">
+  <dl>
+    <dt>Clock</dt><dd id="reading-clock"></dd>
+    <dt>Height</dt><dd id="reading-height"></dd>
+    <dt>Nearest obstacle</dt><dd id="reading-clearance"></dd>
+    <dt>Motors</dt><dd id="reading-motors"></dd>
+    <dt>PX4 says landed</dt><dd id="reading-landed"></dd>
+    <dt>Our program flying</dt><dd id="reading-automatic"></dd>
+  </dl>
+
+  <h2>View</h2>
+  <div class="row">
+    <button id="view-overview">Overview</button>
+    <button id="view-above">From above</button>
+    <button id="view-behind">Behind the drone</button>
+  </div>
+  <label><input type="checkbox" id="follow"> Follow the drone</label>
+  <label><input type="checkbox" id="see-through" checked> See-through obstacles</label>
+  <label><input type="checkbox" id="show-net"> Show the safety net</label>
+
+  <h2>Key</h2>
+  <p>Path colour shows height above the floor:</p>
+  <div class="legend-bar"></div>
+  <div class="legend-ends"><span>0 m</span><span>1.2 m and above</span></div>
+  <p><span class="dot" style="background:#2ca02c"></span>Start
+     <span class="dot" style="background:#d62728; margin-left:10px"></span>A propeller touched something</p>
+  <p class="hint">The drone is drawn level, because the record keeps which way it faces but not
+     how it tilts. Its propellers turn red while touching. "Nearest obstacle" is measured from
+     the edge of the closest propeller.</p>
+  <p class="hint">Drag to turn the view, scroll to zoom, and right-drag to slide it.</p>
+</div>
+
+<div id="loading">Loading the 3D drawing library from the internet. If this message stays, check
+the internet connection.</div>
+
+<script type="application/json" id="flight-and-course-data">FLIGHT_AND_COURSE_DATA_GOES_HERE</script>
+
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { Line2 } from "three/addons/lines/Line2.js";
+import { LineGeometry } from "three/addons/lines/LineGeometry.js";
+import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+
+// -------------------------------------------------------------------------------------------
+// The drone's shape and the referee's rules. These must match referee.py.
+// -------------------------------------------------------------------------------------------
+
+// Motor positions on the frame as (forward, left), in metres. From the organizers' settings
+// file 07_airframe_geometry.params, measured on drone 20. All the drones use the same frame.
+const MOTOR_POSITIONS_METRES = [[0.08, 0.16], [0.08, -0.16], [-0.15, 0.14], [-0.15, -0.14]];
+// Assuming 7-inch propellers, which nobody has confirmed. Half of 7 inches is 8.89 cm.
+const PROPELLER_RADIUS_METRES = 0.0889;
+// Estimated height of the propellers above the drone's recorded position. The recorded position
+// is at floor level while the drone stands on the floor.
+const PROPELLER_HEIGHT_METRES = 0.10;
+// A propeller closer than this to an obstacle counts as touching it.
+const TOUCHING_DISTANCE_METRES = 0.01;
+// Contact that comes back within this many seconds counts as the same touch.
+const SECONDS_OF_CLEARANCE_BEFORE_NEXT_TOUCH_COUNTS = 1.0;
+// The referee counts the drone as taken off once it is this high, and starts the clock then.
+const HEIGHT_THAT_COUNTS_AS_TAKEN_OFF_METRES = 0.05;
+
+// -------------------------------------------------------------------------------------------
+// How things look. These are all our own choices.
+// -------------------------------------------------------------------------------------------
+
+const BACKGROUND_COLOUR = "#f4f4f2";
+// The path's colour shows height. The top of the scale is about the height of the window's top
+// edge, which is 1.22 m.
+const PATH_COLOUR_AT_FLOOR = "#f2b134";
+const PATH_COLOUR_AT_TOP = "#2a4fa8";
+const PATH_TOP_OF_COLOUR_SCALE_METRES = 1.2;
+const PATH_WIDTH_PIXELS = 5;
+const LEGEND_COLOUR_STEPS = 12;
+const TOUCH_COLOUR = "#d62728";
+const START_COLOUR = "#2ca02c";
+const PROPELLER_COLOUR = "#ff8c1a";
+const DRONE_BODY_COLOUR = "#333333";
+const MARKER_RADIUS_METRES = 0.03;
+const SEE_THROUGH_OPACITY = 0.35;
+const NET_OPACITY = 0.12;
+
+// Sizes of the drone's body, arms and nose, for drawing only.
+const BODY_LENGTH_METRES = 0.16;
+const BODY_WIDTH_METRES = 0.10;
+const BODY_THICKNESS_METRES = 0.05;
+const ARM_THICKNESS_METRES = 0.015;
+const NOSE_RADIUS_METRES = 0.025;
+const NOSE_LENGTH_METRES = 0.07;
+
+// Where the camera starts, and what it looks at. The course's centre is at x = 0, y = 0.
+const COURSE_CENTRE_METRES = new THREE.Vector3(0, 0, 0.4);
+// High up, so that the long barrier across the middle of the course hides less of the far half.
+const OVERVIEW_CAMERA_POSITION_METRES = new THREE.Vector3(-1.0, -5.5, 7.5);
+// Looking exactly straight down confuses the mouse controls, so this sits a hair towards -y.
+const VIEW_FROM_ABOVE_CAMERA_POSITION_METRES = new THREE.Vector3(0, -0.01, 9);
+// For "Behind the drone": how far behind and above the drone the camera sits.
+const BEHIND_THE_DRONE_DISTANCE_METRES = 1.2;
+const BEHIND_THE_DRONE_HEIGHT_METRES = 0.6;
+
+// -------------------------------------------------------------------------------------------
+// The steps of building the page.
+// -------------------------------------------------------------------------------------------
+
+const flightAndCourse = readFlightAndCourseData();
+const samples = flightAndCourse.samples;
+const recordStartSeconds = samples[0].seconds;
+const recordLengthSeconds = samples[samples.length - 1].seconds - recordStartSeconds;
+const takeoffSample = samples.find((sample) => sample.height_metres > HEIGHT_THAT_COUNTS_AS_TAKEN_OFF_METRES);
+
+const { scene, camera, renderer, controls } = createSceneCameraAndControls();
+const course = addCourse(flightAndCourse.course_parts);
+const pathMaterial = addFlightPath();
+addStartAndTouchMarkers();
+const drone = addDrone();
+
+let playbackSeconds = 0;
+let playbackSpeed = 1;
+let isPlaying = false;
+
+connectThePanel();
+drawTheLegend();
+showSummary();
+showMoment(0);
+showOverview();
+document.getElementById("loading").remove();
+startDrawingLoop();
+
+// -------------------------------------------------------------------------------------------
+// Reading the data
+// -------------------------------------------------------------------------------------------
+
+function readFlightAndCourseData() {
+  const text = document.getElementById("flight-and-course-data").textContent;
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    document.getElementById("loading").textContent =
+      "This page has no flight data in it. Run make_flight_viewer.py and open the page it makes.";
+    throw error;
+  }
+}
+
+// -------------------------------------------------------------------------------------------
+// The scene, camera, lights and mouse controls
+// -------------------------------------------------------------------------------------------
+
+function createSceneCameraAndControls() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(BACKGROUND_COLOUR);
+
+  const viewArea = document.getElementById("view");
+  const camera = new THREE.PerspectiveCamera(45, viewArea.clientWidth / viewArea.clientHeight, 0.01, 100);
+  // The course model has z pointing up, so the camera must treat z as up too.
+  camera.up.set(0, 0, 1);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(viewArea.clientWidth, viewArea.clientHeight);
+  viewArea.appendChild(renderer.domElement);
+
+  // Soft light from the whole sky, plus one "sun", so that surfaces facing different ways get
+  // different shades and the shapes are easy to read.
+  const skyLight = new THREE.HemisphereLight("#ffffff", "#8a8a80", 2.0);
+  skyLight.position.set(0, 0, 1);
+  scene.add(skyLight);
+  const sunLight = new THREE.DirectionalLight("#ffffff", 1.5);
+  sunLight.position.set(-3, -5, 8);
+  scene.add(sunLight);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  window.addEventListener("resize", () => {
+    camera.aspect = viewArea.clientWidth / viewArea.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(viewArea.clientWidth, viewArea.clientHeight);
+    pathMaterial.resolution.set(viewArea.clientWidth, viewArea.clientHeight);
+  });
+  return { scene, camera, renderer, controls };
+}
+
+// -------------------------------------------------------------------------------------------
+// The course
+// -------------------------------------------------------------------------------------------
+
+function addCourse(courseParts) {
+  const obstacleMaterials = [];
+  const netMeshes = [];
+  for (const part of courseParts) {
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(part.corner_points_metres, 3));
+    geometry.setIndex(part.triangles);
+    const material = new THREE.MeshStandardMaterial({
+      color: new THREE.Color().setRGB(part.colour[0], part.colour[1], part.colour[2], THREE.SRGBColorSpace),
+      roughness: 0.9,
+      // One flat shade per triangle. The model has no smoothing information, and flat walls
+      // and boxes look right this way.
+      flatShading: true,
+      // Draw both sides of every triangle, so that the inside of the tunnel shows too.
+      side: THREE.DoubleSide,
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+
+    if (part.kind === "floor") {
+      // Push the floor slightly back in the drawing, so the markings painted on it always show.
+      material.polygonOffset = true;
+      material.polygonOffsetFactor = 1;
+      material.polygonOffsetUnits = 1;
+    } else if (part.kind === "net") {
+      material.transparent = true;
+      material.opacity = NET_OPACITY;
+      material.depthWrite = false;
+      mesh.visible = false;
+      netMeshes.push(mesh);
+    } else if (part.kind === "obstacle") {
+      obstacleMaterials.push(material);
+    }
+    scene.add(mesh);
+  }
+  return { obstacleMaterials, netMeshes };
+}
+
+function setObstaclesSeeThrough(seeThrough) {
+  for (const material of course.obstacleMaterials) {
+    material.transparent = seeThrough;
+    material.opacity = seeThrough ? SEE_THROUGH_OPACITY : 1.0;
+    // A see-through surface must not hide what is behind it.
+    material.depthWrite = !seeThrough;
+    material.needsUpdate = true;
+  }
+}
+
+// -------------------------------------------------------------------------------------------
+// The flight path and its markers
+// -------------------------------------------------------------------------------------------
+
+function pathColourAtHeight(heightMetres) {
+  // We blend the hue, and not the amounts of red, green and blue. Blending the amounts would
+  // pass through a dull grey in the middle, at about the height the drone flies. Blending the
+  // hue passes through bright greens and teals instead.
+  const fractionOfScale = THREE.MathUtils.clamp(heightMetres / PATH_TOP_OF_COLOUR_SCALE_METRES, 0, 1);
+  return new THREE.Color(PATH_COLOUR_AT_FLOOR).lerpHSL(new THREE.Color(PATH_COLOUR_AT_TOP), fractionOfScale);
+}
+
+function drawTheLegend() {
+  const coloursAlongTheBar = [];
+  for (let step = 0; step <= LEGEND_COLOUR_STEPS; step += 1) {
+    const heightMetres = (PATH_TOP_OF_COLOUR_SCALE_METRES * step) / LEGEND_COLOUR_STEPS;
+    coloursAlongTheBar.push("#" + pathColourAtHeight(heightMetres).getHexString());
+  }
+  const legendBar = document.querySelector(".legend-bar");
+  legendBar.style.background = `linear-gradient(to right, ${coloursAlongTheBar.join(", ")})`;
+}
+
+function addFlightPath() {
+  const positions = [];
+  const colours = [];
+  for (const sample of samples) {
+    positions.push(sample.course_x_metres, sample.course_y_metres, sample.height_metres);
+    const colour = pathColourAtHeight(sample.height_metres);
+    colours.push(colour.r, colour.g, colour.b);
+  }
+
+  // A plain line in a web page is always 1 pixel wide, which is hard to see. Line2 draws a
+  // wider one.
+  const geometry = new LineGeometry();
+  geometry.setPositions(positions);
+  geometry.setColors(colours);
+  const material = new LineMaterial({ linewidth: PATH_WIDTH_PIXELS, vertexColors: true });
+  const viewArea = document.getElementById("view");
+  material.resolution.set(viewArea.clientWidth, viewArea.clientHeight);
+  scene.add(new Line2(geometry, material));
+  return material;
+}
+
+function sampleIsTouching(sample) {
+  return sample.nearest_obstacle_metres < TOUCHING_DISTANCE_METRES;
+}
+
+function addStartAndTouchMarkers() {
+  addMarker(samples[0], START_COLOUR);
+
+  // Mark each touch where it began, using the referee's rule for when a new touch begins.
+  let lastContactSeconds = null;
+  for (const sample of samples) {
+    if (!sampleIsTouching(sample)) {
+      continue;
+    }
+    const contactIsNew =
+      lastContactSeconds === null ||
+      sample.seconds - lastContactSeconds > SECONDS_OF_CLEARANCE_BEFORE_NEXT_TOUCH_COUNTS;
+    lastContactSeconds = sample.seconds;
+    if (contactIsNew) {
+      addMarker(sample, TOUCH_COLOUR);
+    }
+  }
+}
+
+function addMarker(sample, colour) {
+  const marker = new THREE.Mesh(
+    new THREE.SphereGeometry(MARKER_RADIUS_METRES, 16, 12),
+    new THREE.MeshBasicMaterial({ color: colour }),
+  );
+  marker.position.set(sample.course_x_metres, sample.course_y_metres, sample.height_metres);
+  scene.add(marker);
+}
+
+// -------------------------------------------------------------------------------------------
+// The drone
+// -------------------------------------------------------------------------------------------
+
+function addDrone() {
+  // The drone is a group of shapes that move together. Inside the group, x is forward, y is
+  // left and z is up, the same as on the real drone's body.
+  const group = new THREE.Group();
+  const bodyMaterial = new THREE.MeshStandardMaterial({ color: DRONE_BODY_COLOUR, roughness: 0.6 });
+
+  const body = new THREE.Mesh(
+    new THREE.BoxGeometry(BODY_LENGTH_METRES, BODY_WIDTH_METRES, BODY_THICKNESS_METRES),
+    bodyMaterial,
+  );
+  body.position.z = PROPELLER_HEIGHT_METRES - BODY_THICKNESS_METRES;
+  group.add(body);
+
+  const propellerMaterials = [];
+  for (const [forwardMetres, leftMetres] of MOTOR_POSITIONS_METRES) {
+    group.add(makeArm(forwardMetres, leftMetres, bodyMaterial));
+    const propellerMaterial = new THREE.MeshBasicMaterial({
+      color: PROPELLER_COLOUR, transparent: true, opacity: 0.6, side: THREE.DoubleSide,
+    });
+    const propeller = new THREE.Mesh(new THREE.CircleGeometry(PROPELLER_RADIUS_METRES, 32), propellerMaterial);
+    propeller.position.set(forwardMetres, leftMetres, PROPELLER_HEIGHT_METRES);
+    group.add(propeller);
+    propellerMaterials.push(propellerMaterial);
+  }
+
+  // A cone on the nose shows which way the drone faces. A new cone points along y, and turning
+  // it a quarter turn clockwise makes it point forward, along x.
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(NOSE_RADIUS_METRES, NOSE_LENGTH_METRES, 16), bodyMaterial);
+  nose.rotation.z = -Math.PI / 2;
+  nose.position.set(BODY_LENGTH_METRES / 2 + NOSE_LENGTH_METRES / 2, 0, PROPELLER_HEIGHT_METRES - BODY_THICKNESS_METRES);
+  group.add(nose);
+
+  scene.add(group);
+  return { group, propellerMaterials };
+}
+
+function makeArm(forwardMetres, leftMetres, material) {
+  const lengthMetres = Math.hypot(forwardMetres, leftMetres);
+  const arm = new THREE.Mesh(
+    new THREE.BoxGeometry(lengthMetres, ARM_THICKNESS_METRES, ARM_THICKNESS_METRES),
+    material,
+  );
+  // Place the arm halfway out to its motor, and turn it to point at the motor.
+  arm.position.set(forwardMetres / 2, leftMetres / 2, PROPELLER_HEIGHT_METRES - ARM_THICKNESS_METRES);
+  arm.rotation.z = Math.atan2(leftMetres, forwardMetres);
+  return arm;
+}
+
+// -------------------------------------------------------------------------------------------
+// Showing one moment of the flight
+// -------------------------------------------------------------------------------------------
+
+function findSampleIndexAt(secondsSinceRecordStart) {
+  // Returns the last sample taken at or before this moment. There are only a few thousand
+  // samples, so checking them in order is fast enough.
+  const wantedSeconds = recordStartSeconds + secondsSinceRecordStart;
+  let index = 0;
+  while (index + 1 < samples.length && samples[index + 1].seconds <= wantedSeconds) {
+    index += 1;
+  }
+  return index;
+}
+
+function showMoment(secondsSinceRecordStart) {
+  const sample = samples[findSampleIndexAt(secondsSinceRecordStart)];
+  const newPosition = new THREE.Vector3(sample.course_x_metres, sample.course_y_metres, sample.height_metres);
+
+  if (document.getElementById("follow").checked) {
+    // Move the camera by however far the drone moved, so the view travels with the drone.
+    const movement = newPosition.clone().sub(drone.group.position);
+    camera.position.add(movement);
+    controls.target.add(movement);
+  }
+  drone.group.position.copy(newPosition);
+  drone.group.rotation.z = THREE.MathUtils.degToRad(sample.heading_degrees);
+
+  const propellerColour = sampleIsTouching(sample) ? TOUCH_COLOUR : PROPELLER_COLOUR;
+  for (const material of drone.propellerMaterials) {
+    material.color.set(propellerColour);
+  }
+  showReadings(sample);
+  document.getElementById("time-slider").value = secondsSinceRecordStart;
+}
+
+function showReadings(sample) {
+  setText("reading-clock", describeClock(sample));
+  // On the floor, the recorded height can be a fraction of a millimetre below zero, which would
+  // show as "-0.00". The drone can't really be below the floor, so we show zero instead.
+  const heightMetres = Math.max(sample.height_metres, 0);
+  setText("reading-height", `${heightMetres.toFixed(2)} m above the floor`);
+  const clearance = document.getElementById("reading-clearance");
+  clearance.textContent = sampleIsTouching(sample) ? "touching" : `${sample.nearest_obstacle_metres.toFixed(2)} m away`;
+  clearance.classList.toggle("touching", sampleIsTouching(sample));
+  setText("reading-motors", describeYesOrNo(sample.armed, "armed (allowed to spin)", "off"));
+  setText("reading-landed", describeYesOrNo(sample.landed, "yes", "no"));
+  setText("reading-automatic", describeYesOrNo(sample.automatic_flight, "yes", "no"));
+}
+
+function describeClock(sample) {
+  if (!takeoffSample || sample.seconds < takeoffSample.seconds) {
+    return "before takeoff";
+  }
+  return `${(sample.seconds - takeoffSample.seconds).toFixed(1)} s after takeoff`;
+}
+
+function describeYesOrNo(value, textForYes, textForNo) {
+  if (value === true) {
+    return textForYes;
+  }
+  if (value === false) {
+    return textForNo;
+  }
+  return "not known yet";
+}
+
+function setText(elementId, text) {
+  document.getElementById(elementId).textContent = text;
+}
+
+// -------------------------------------------------------------------------------------------
+// The panel: summary, playback and view buttons
+// -------------------------------------------------------------------------------------------
+
+function showSummary() {
+  setText("title", flightAndCourse.flight_record_name);
+  const summary = flightAndCourse.summary;
+  if (!summary) {
+    setText("summary", "The referee wrote no summary for this flight.");
+    return;
+  }
+
+  const sentences = [`Touches: ${summary.touches}.`];
+  if (summary.motors_off_seconds === null) {
+    sentences.push("The motors had not switched off when the record ended.");
+  } else {
+    const where = summary.landed_on_pad ? "inside" : "outside";
+    sentences.push(`The motors switched off ${summary.motors_off_seconds} s after takeoff, ${where} the landing pad.`);
+  }
+  // Older summaries have no record of which line cleared each checkpoint.
+  const linesUsed = summary.checkpoint_lines_used || {};
+  for (const [checkpointName, seconds] of Object.entries(summary.checkpoint_seconds)) {
+    const through = linesUsed[checkpointName] ? ` through "${linesUsed[checkpointName]}"` : "";
+    sentences.push(`Checkpoint "${checkpointName}"${through} at ${seconds} s.`);
+  }
+  if (summary.px4_clock_speed_compared_with_real_time !== null) {
+    sentences.push(`PX4's clock ran at ${summary.px4_clock_speed_compared_with_real_time} of real time.`);
+  }
+  setText("summary", sentences.join(" "));
+}
+
+function connectThePanel() {
+  const slider = document.getElementById("time-slider");
+  slider.max = recordLengthSeconds;
+  slider.addEventListener("input", () => {
+    playbackSeconds = Number(slider.value);
+    showMoment(playbackSeconds);
+  });
+
+  document.getElementById("play").addEventListener("click", togglePlaying);
+  document.getElementById("speed").addEventListener("change", (event) => {
+    playbackSpeed = Number(event.target.value);
+  });
+
+  const seeThroughBox = document.getElementById("see-through");
+  seeThroughBox.addEventListener("change", () => setObstaclesSeeThrough(seeThroughBox.checked));
+  setObstaclesSeeThrough(seeThroughBox.checked);
+
+  const netBox = document.getElementById("show-net");
+  netBox.addEventListener("change", () => {
+    for (const mesh of course.netMeshes) {
+      mesh.visible = netBox.checked;
+    }
+  });
+
+  document.getElementById("view-overview").addEventListener("click", showOverview);
+  document.getElementById("view-above").addEventListener("click", showFromAbove);
+  document.getElementById("view-behind").addEventListener("click", showFromBehindTheDrone);
+}
+
+function togglePlaying() {
+  // Pressing Play at the end starts the flight again from the beginning.
+  if (!isPlaying && playbackSeconds >= recordLengthSeconds) {
+    playbackSeconds = 0;
+  }
+  isPlaying = !isPlaying;
+  setText("play", isPlaying ? "Pause" : "Play");
+}
+
+function showOverview() {
+  lookFrom(OVERVIEW_CAMERA_POSITION_METRES, COURSE_CENTRE_METRES);
+}
+
+function showFromAbove() {
+  lookFrom(VIEW_FROM_ABOVE_CAMERA_POSITION_METRES, COURSE_CENTRE_METRES);
+}
+
+function showFromBehindTheDrone() {
+  const headingRadians = drone.group.rotation.z;
+  const behindTheDrone = new THREE.Vector3(-Math.cos(headingRadians), -Math.sin(headingRadians), 0)
+    .multiplyScalar(BEHIND_THE_DRONE_DISTANCE_METRES);
+  const cameraPosition = drone.group.position.clone()
+    .add(behindTheDrone)
+    .add(new THREE.Vector3(0, 0, BEHIND_THE_DRONE_HEIGHT_METRES));
+  const dronePropellerLevel = drone.group.position.clone().add(new THREE.Vector3(0, 0, PROPELLER_HEIGHT_METRES));
+  lookFrom(cameraPosition, dronePropellerLevel);
+}
+
+function lookFrom(cameraPosition, targetPosition) {
+  camera.position.copy(cameraPosition);
+  controls.target.copy(targetPosition);
+  controls.update();
+}
+
+// -------------------------------------------------------------------------------------------
+// Drawing, about 60 times per second
+// -------------------------------------------------------------------------------------------
+
+function startDrawingLoop() {
+  let previousFrameMilliseconds = performance.now();
+
+  function drawFrame(nowMilliseconds) {
+    const realSecondsPassed = (nowMilliseconds - previousFrameMilliseconds) / 1000;
+    previousFrameMilliseconds = nowMilliseconds;
+
+    if (isPlaying) {
+      playbackSeconds = Math.min(playbackSeconds + realSecondsPassed * playbackSpeed, recordLengthSeconds);
+      if (playbackSeconds >= recordLengthSeconds) {
+        togglePlaying();
+      }
+      showMoment(playbackSeconds);
+    }
+    controls.update();
+    renderer.render(scene, camera);
+    requestAnimationFrame(drawFrame);
+  }
+  requestAnimationFrame(drawFrame);
+}
+</script>
+</body>
+</html>

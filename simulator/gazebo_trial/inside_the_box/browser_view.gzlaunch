@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!-- Lets a web browser show Gazebo's scene live. TRIAL ONLY, SIMULATOR ONLY.
+     Started by ../watch_course_in_browser.sh. The browser page is Gazebo's own viewer,
+     https://app.gazebosim.org/visualization, which connects to ws://localhost:9002. -->
+<gz version="1.0">
+  <plugin name="gz::launch::WebsocketServer" filename="gz-launch-websocket-server">
+    <!-- Our own choice: how many times per second the scene is sent to the browser. -->
+    <publication_hz>30</publication_hz>
+    <!-- Gazebo's usual port for this. watch_course_in_browser.sh opens the same one. -->
+    <port>9002</port>
+    <!-- No limit on how many browser tabs may watch at once. -->
+    <max_connections>-1</max_connections>
+  </plugin>
+</gz>

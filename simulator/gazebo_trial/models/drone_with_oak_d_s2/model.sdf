@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!--
+  PX4's x500 drone with our pretend OAK-D S2 depth camera on its nose.
+  TRIAL ONLY, SIMULATOR ONLY.
+
+  Why the x500 and not drone 16: PX4 ships the x500 ready for Gazebo, with its motors,
+  motion sensor, compass, air pressure sensor and GPS already described, and with PX4
+  settings (airframe 4001) that fly it. It is NOT drone 16. It is bigger (motors 49 cm
+  apart corner to corner) and heavier (2 kg), and its motors sit in a perfect square,
+  while drone 16's do not. Our normal simulator (simulator/px4_changes/) is tuned to
+  drone 16; this trial is not. Making a drone 16 model for Gazebo is possible but not done.
+
+  This file copies the layout of PX4's own x500_depth model
+  (Tools/simulation/gz/models/x500_depth/model.sdf in PX4 v1.16.2), which puts an
+  OAK-D Lite camera in the same place.
+-->
+<sdf version="1.9">
+  <model name="drone_with_oak_d_s2">
+    <!-- "merge" folds the included model's parts into this one, so PX4 sees a single drone. -->
+    <include merge="true">
+      <uri>model://x500</uri>
+    </include>
+
+    <!-- From PX4's x500_depth model: 12 cm in front of the drone's centre, at the height
+         of its body. We centre it sideways, because the depth picture is worked out for
+         the point midway between the two real camera eyes. -->
+    <include merge="true">
+      <uri>model://oak_d_s2_camera</uri>
+      <pose>0.12 0 0.242 0 0 0</pose>
+    </include>
+
+    <!-- Fixes the camera rigidly to the drone's body. -->
+    <joint name="camera_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>camera_link</child>
+    </joint>
+  </model>
+</sdf>

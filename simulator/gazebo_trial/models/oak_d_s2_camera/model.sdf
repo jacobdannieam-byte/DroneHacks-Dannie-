@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<!--
+  A pretend OAK-D S2 depth camera. TRIAL ONLY, SIMULATOR ONLY.
+
+  What it is: one small box with a Gazebo "depth camera" in it. Every pixel of a depth
+  picture holds the distance, in metres, from the camera to whatever that pixel sees,
+  measured straight forward (along the camera's view direction), not along the slanted
+  line to the object.
+
+  How it differs from the real camera: the real OAK-D S2 has two black-and-white cameras
+  7.5 cm apart, and distance is worked out by matching the two pictures. That matching is
+  imperfect: it fails on plain walls and its error grows with the square of the distance.
+  This pretend camera measures every pixel perfectly. Errors, if we want them, must be
+  added afterwards (simulator/ros_packages/course_simulator/course_simulator/
+  pretend_depth_camera.py shows one way).
+
+  The camera looks along this model's x axis, with the picture's top towards z.
+
+  Settings and where they come from:
+    512 x 320 pixels  From docs/ARCHITECTURE.md: our depth plan shrinks the real
+                      1024 x 640 pictures to 512 x 320 before matching them.
+    1.3579 radians    The width of the view (77.8 degrees). From drone 16's camera
+                      settings: 1024 pixels wide with a focal length of 634.5 pixels,
+                      so the view is 2 * atan(512 / 634.5) wide. Gazebo works out the
+                      height of the view from the picture's shape (53.5 degrees).
+    10 per second     From docs/ARCHITECTURE.md: the depth plan expects "about 10 Hz".
+    0.35 m nearest    From the organizers' website: the OAK-D S2 gives "metric stereo
+                      depth, ~0.35 m and beyond".
+    10 m farthest     Our own choice. The farthest point in the course, corner to corner,
+                      is about 8.6 m away.
+-->
+<sdf version="1.9">
+  <model name="oak_d_s2_camera">
+    <link name="camera_link">
+      <inertial>
+        <!-- Estimated. We have not weighed drone 16's camera. -->
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.00007</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>0.00001</iyy><iyz>0</iyz><izz>0.00007</izz>
+        </inertia>
+      </inertial>
+      <!-- Estimated: a box roughly the size of the camera, 2 x 10 x 3 cm. -->
+      <visual name="camera_body_visual">
+        <geometry><box><size>0.02 0.10 0.03</size></box></geometry>
+        <material><ambient>0.1 0.1 0.1 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material>
+      </visual>
+      <collision name="camera_body_collision">
+        <geometry><box><size>0.02 0.10 0.03</size></box></geometry>
+      </collision>
+
+      <sensor name="depth" type="depth_camera">
+        <!-- The lens sits on the front face of the box. -->
+        <pose>0.011 0 0 0 0 0</pose>
+        <always_on>true</always_on>
+        <update_rate>10</update_rate>
+        <!-- The Gazebo topic the depth pictures appear on. gazebo_camera_to_ros.py passes
+             them on to ROS 2. -->
+        <topic>oak_d_s2/depth</topic>
+        <camera>
+          <horizontal_fov>1.3579</horizontal_fov>
+          <image>
+            <width>512</width>
+            <height>320</height>
+            <!-- One 4-byte decimal number per pixel: the distance in metres. -->
+            <format>R_FLOAT32</format>
+          </image>
+          <clip>
+            <near>0.35</near>
+            <far>10.0</far>
+          </clip>
+        </camera>
+      </sensor>
+    </link>
+  </model>
+</sdf>

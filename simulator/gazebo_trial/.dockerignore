@@ -1,0 +1,3 @@
+# The box recipe copies nothing from this folder, so send Docker nothing but the recipe.
+*
+!Dockerfile
