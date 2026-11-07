@@ -107,6 +107,20 @@ class GoalBinding:
 
 
 @dataclass(frozen=True)
+class MetricGoal:
+    """An explicit map-frame progress objective without semantic authority."""
+
+    reference: SpatialReference
+    position_m: tuple
+
+    def __post_init__(self):
+        point = vector3(self.position_m, "metric goal")
+        if not isinstance(self.reference, SpatialReference) or max(map(abs, point)) > MAX_LOCAL_M:
+            raise ValueError("metric goal needs bounded map coordinates and a reference")
+        object.__setattr__(self, "position_m", point)
+
+
+@dataclass(frozen=True)
 class CandidateDiagnostic:
     candidate_id: str
     status: str
@@ -194,6 +208,10 @@ def _resolve_goal(snapshot, goal, now_ns):
     if goal is None:
         return None, None, ()
     metric = snapshot.metric
+    if isinstance(goal, MetricGoal):
+        if goal.reference != metric.reference:
+            return None, "unknown", ("metric_goal_reference_mismatch",)
+        return np.asarray(goal.position_m), None, ()
     origin = snapshot.semantic_time_origin_ns
     if not stamp_ok(origin) or origin > now_ns:
         return None, "unknown", ("invalid_semantic_time",)
@@ -274,12 +292,12 @@ def _evaluate_one(candidate, state, predictor, history, transform, alignment, ve
 
 
 def evaluate_candidates(state, candidates, snapshot, *, now_ns, alignment, vehicle,
-                        goal=None, predictor=None, model_id=None, history=None, policy=EvaluationPolicy()):
+                        goal=None, predictor=None, model_id=None, history=None, policy=EvaluationPolicy(), interrupted=None):
     """Rank feasible supplied candidates against current, static observed evidence."""
     if (not isinstance(state, DroneState) or not isinstance(snapshot, SpatialSnapshot)
             or not isinstance(snapshot.metric, MetricSnapshot) or not isinstance(alignment, FrameAlignment)
             or not isinstance(vehicle, VehicleBounds) or not isinstance(policy, EvaluationPolicy)
-            or not stamp_ok(now_ns) or (goal is not None and not isinstance(goal, GoalBinding))):
+            or not stamp_ok(now_ns) or (goal is not None and not isinstance(goal, (GoalBinding, MetricGoal)))):
         raise ValueError("invalid evaluation input contract")
     if (not isinstance(candidates, tuple) or not 1 <= len(candidates) <= MAX_CANDIDATES
             or not all(isinstance(candidate, Candidate) for candidate in candidates)
@@ -294,6 +312,7 @@ def evaluate_candidates(state, candidates, snapshot, *, now_ns, alignment, vehic
         raise ValueError("explicit predictor requires an ID and a rollout API")
 
     metric = snapshot.metric
+    interruption = None if interrupted is None else interrupted()
     reasons = _shared_reasons(state, metric, alignment, now_ns, policy)
     status, goal_point = "unknown", None
     if not reasons:
@@ -301,17 +320,30 @@ def evaluate_candidates(state, candidates, snapshot, *, now_ns, alignment, vehic
     if reasons:
         diagnostics = tuple(CandidateDiagnostic(item.candidate_id, status, reasons, "unverified")
                             for item in candidates)
-    else:
+    elif interruption is None:
         transform = rot_z(alignment.map_from_enu_yaw_rad) @ R_ENU_NED
         geometry = _Geometry(metric, now_ns)
-        diagnostics = tuple(_evaluate_one(item, state, predictor, history, transform, alignment, vehicle,
-                                         geometry, goal_point) for item in candidates)
+        evaluated = []
+        for item in candidates:
+            interruption = None if interrupted is None else interrupted()
+            if interruption is not None:
+                break
+            evaluated.append(_evaluate_one(item, state, predictor, history, transform, alignment, vehicle,
+                                           geometry, goal_point))
+        diagnostics = tuple(evaluated)
+
+    if interruption is None and interrupted is not None:
+        interruption = interrupted()
+    if interruption is not None:
+        diagnostics = tuple(CandidateDiagnostic(item.candidate_id, "unknown", (interruption,), "unverified")
+                            for item in candidates)
 
     feasible = sorted((entry for entry in diagnostics if entry.status == "feasible"),
                       key=lambda entry: (-entry.score, entry.candidate_id))
     order = tuple(entry.candidate_id for entry in feasible)
     ranks = {name: index for index, name in enumerate(order, start=1)}
     ranked = tuple(replace(entry, rank=ranks.get(entry.candidate_id)) for entry in diagnostics)
-    return Evaluation(ranked, order, None if order else "no_verified_candidate", model_id, metric.reference,
+    fallback = None if order else (interruption or "no_verified_candidate")
+    return Evaluation(ranked, order, fallback, model_id, metric.reference,
                       metric.capture_ns, metric.observation_id, metric.calibration_id,
-                      alignment.provenance, None if goal is None else goal.proposal.proposal_id)
+                      alignment.provenance, goal.proposal.proposal_id if isinstance(goal, GoalBinding) else None)
