@@ -1,0 +1,102 @@
+{
+  "scenario_count": 7,
+  "expected_decisions_matched": 7,
+  "grounded_proposals_validated": 7,
+  "width_only_proposals_rejected": 6,
+  "scope": "Hand-written expected replay decisions and deliberately weak width-only comparison; no navigation, learned model or physical flight benefit measured.",
+  "scenarios": [
+    {
+      "label": "partial_wall",
+      "expected_intent": "insufficient_information",
+      "selected_intent": "insufficient_information",
+      "target_entity_id": null,
+      "matches_expected": true,
+      "validated": true,
+      "width_only_intent": "insufficient_information",
+      "width_only_validated": true,
+      "width_only_rejections": []
+    },
+    {
+      "label": "opening_revealed",
+      "expected_intent": "observe_more",
+      "selected_intent": "observe_more",
+      "target_entity_id": "opening_0003",
+      "matches_expected": true,
+      "validated": true,
+      "width_only_intent": "investigate_candidate",
+      "width_only_validated": false,
+      "width_only_rejections": [
+        "missing_evidence_suppressed"
+      ]
+    },
+    {
+      "label": "translated_and_turned",
+      "expected_intent": "observe_more",
+      "selected_intent": "observe_more",
+      "target_entity_id": "opening_0003",
+      "matches_expected": true,
+      "validated": true,
+      "width_only_intent": "investigate_candidate",
+      "width_only_validated": false,
+      "width_only_rejections": [
+        "missing_evidence_suppressed"
+      ]
+    },
+    {
+      "label": "out_of_view",
+      "expected_intent": "observe_more",
+      "selected_intent": "observe_more",
+      "target_entity_id": "opening_0003",
+      "matches_expected": true,
+      "validated": true,
+      "width_only_intent": "investigate_candidate",
+      "width_only_validated": false,
+      "width_only_rejections": [
+        "missing_evidence_suppressed"
+      ]
+    },
+    {
+      "label": "stale_memory",
+      "expected_intent": "observe_more",
+      "selected_intent": "observe_more",
+      "target_entity_id": "opening_0003",
+      "matches_expected": true,
+      "validated": true,
+      "width_only_intent": "investigate_candidate",
+      "width_only_validated": false,
+      "width_only_rejections": [
+        "missing_evidence_suppressed",
+        "reason_inconsistent_with_context",
+        "stale_target_requires_reobservation"
+      ]
+    },
+    {
+      "label": "reobserved_after_staleness",
+      "expected_intent": "observe_more",
+      "selected_intent": "observe_more",
+      "target_entity_id": "opening_0003",
+      "matches_expected": true,
+      "validated": true,
+      "width_only_intent": "investigate_candidate",
+      "width_only_validated": false,
+      "width_only_rejections": [
+        "missing_evidence_suppressed"
+      ]
+    },
+    {
+      "label": "passage_blocked",
+      "expected_intent": "reject_blocked_candidate",
+      "selected_intent": "reject_blocked_candidate",
+      "target_entity_id": "opening_0003",
+      "matches_expected": true,
+      "validated": true,
+      "width_only_intent": "investigate_candidate",
+      "width_only_validated": false,
+      "width_only_rejections": [
+        "invalidated_target_requires_rejection",
+        "missing_evidence_suppressed",
+        "reason_inconsistent_with_context"
+      ]
+    }
+  ]
+}

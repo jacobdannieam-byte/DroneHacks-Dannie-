@@ -1,0 +1,1854 @@
+[
+  {
+    "label": "partial_wall",
+    "world_entity_ids": [
+      "wall_0001"
+    ],
+    "mission": {
+      "intent": "investigate_candidate_passage",
+      "target_entity_id": null
+    },
+    "context": {
+      "schema_version": 1,
+      "reference": {
+        "frame_id": "odom",
+        "epoch": 0,
+        "clock_id": "replay"
+      },
+      "snapshot_timestamp": 0.0,
+      "context_created_at": 0.0,
+      "expires_at": 0.5,
+      "stale_after_s": 5.0,
+      "mission_goal": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "entities": [
+        {
+          "entity_id": "wall_0001",
+          "semantic_type": "wall",
+          "geometry": {
+            "center": [
+              3.999999914169225,
+              1.7750943263971575,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              8.051389719762659e-28,
+              0.0
+            ],
+            "width_m": 2.2460377191147707,
+            "height_m": 3.4777358231454514,
+            "uncertainty_m": 0.121152162542177
+          },
+          "last_observed": 0.0,
+          "age_s": 0.0,
+          "status": "provisional",
+          "geometric_confidence": 0.4123130798650336,
+          "semantic_confidence": 0.36077394488190434,
+          "observations": 1,
+          "contradictions": 0,
+          "evidence": [
+            {
+              "observation_id": "frame_0.000000",
+              "source": "synthetic_depth",
+              "stamp": 0.0,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            }
+          ],
+          "missing_evidence": [
+            "full_surface_extent"
+          ],
+          "relations": [],
+          "connected_regions": [],
+          "traversability": "unknown"
+        }
+      ],
+      "omitted_entities": 0,
+      "context_valid": true,
+      "invalid_reasons": [],
+      "context_reference": "ctx_6cf6926dc98df80443545c234e0ccfd8c4f6c95634a59b4f0506716a474a04cf"
+    },
+    "proposal": {
+      "schema_version": 1,
+      "proposal_id": "goal_5632c60040e22b4670195b539493acd0c9cc2b24e3e38e778c5ea53b155c4c1e",
+      "intent": "insufficient_information",
+      "target_entity_id": null,
+      "reason_codes": [
+        "no_relevant_entities"
+      ],
+      "missing_information": [
+        "candidate_observation"
+      ],
+      "source_entity_ids": [],
+      "context_reference": "ctx_6cf6926dc98df80443545c234e0ccfd8c4f6c95634a59b4f0506716a474a04cf",
+      "reference": {
+        "frame_id": "odom",
+        "epoch": 0,
+        "clock_id": "replay"
+      },
+      "validation_status": "unvalidated"
+    },
+    "validation": {
+      "valid": true,
+      "reason_codes": [
+        "valid_non_executable"
+      ],
+      "checked_at": 0.0,
+      "proposal": {
+        "schema_version": 1,
+        "proposal_id": "goal_5632c60040e22b4670195b539493acd0c9cc2b24e3e38e778c5ea53b155c4c1e",
+        "intent": "insufficient_information",
+        "target_entity_id": null,
+        "reason_codes": [
+          "no_relevant_entities"
+        ],
+        "missing_information": [
+          "candidate_observation"
+        ],
+        "source_entity_ids": [],
+        "context_reference": "ctx_6cf6926dc98df80443545c234e0ccfd8c4f6c95634a59b4f0506716a474a04cf",
+        "reference": {
+          "frame_id": "odom",
+          "epoch": 0,
+          "clock_id": "replay"
+        },
+        "validation_status": "valid_non_executable"
+      }
+    }
+  },
+  {
+    "label": "opening_revealed",
+    "world_entity_ids": [
+      "opening_0003",
+      "wall_0001",
+      "wall_0002"
+    ],
+    "mission": {
+      "intent": "investigate_candidate_passage",
+      "target_entity_id": null
+    },
+    "context": {
+      "schema_version": 1,
+      "reference": {
+        "frame_id": "odom",
+        "epoch": 0,
+        "clock_id": "replay"
+      },
+      "snapshot_timestamp": 0.2,
+      "context_created_at": 0.2,
+      "expires_at": 0.7,
+      "stale_after_s": 5.0,
+      "mission_goal": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "entities": [
+        {
+          "entity_id": "opening_0003",
+          "semantic_type": "opening",
+          "geometry": {
+            "center": [
+              3.999999914169196,
+              2.5168350864606406e-29,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              6.292087851165341e-30,
+              0.0
+            ],
+            "width_m": 1.3041509336795443,
+            "height_m": null,
+            "uncertainty_m": 0.11919999957084598
+          },
+          "last_observed": 0.2,
+          "age_s": 0.0,
+          "status": "provisional",
+          "geometric_confidence": 0.39240000128746205,
+          "semantic_confidence": 0.31392000102996964,
+          "observations": 1,
+          "contradictions": 0,
+          "evidence": [
+            {
+              "observation_id": "frame_0.200000",
+              "source": "synthetic_depth",
+              "stamp": 0.2,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": 105,
+              "blocked_fraction": 0.0
+            }
+          ],
+          "missing_evidence": [
+            "controller_tracking_margin",
+            "full_volume_coverage",
+            "localization_margin",
+            "lower_boundary",
+            "region_connectivity",
+            "upper_boundary",
+            "validated_swept_path",
+            "vehicle_propeller_envelope"
+          ],
+          "relations": [
+            {
+              "relation_type": "bounded_by",
+              "target_entity_id": "wall_0001",
+              "status": "observed_geometry"
+            },
+            {
+              "relation_type": "bounded_by",
+              "target_entity_id": "wall_0002",
+              "status": "observed_geometry"
+            }
+          ],
+          "connected_regions": [],
+          "traversability": "unknown"
+        },
+        {
+          "entity_id": "wall_0001",
+          "semantic_type": "wall",
+          "geometry": {
+            "center": [
+              3.999999914169196,
+              1.7750943263971575,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              6.292087851165341e-30,
+              0.0
+            ],
+            "width_m": 2.2460377191147707,
+            "height_m": 3.4777358231454514,
+            "uncertainty_m": 0.12115216254217687
+          },
+          "last_observed": 0.2,
+          "age_s": 0.0,
+          "status": "provisional",
+          "geometric_confidence": 0.41231307986503407,
+          "semantic_confidence": 0.36077394488190473,
+          "observations": 2,
+          "contradictions": 0,
+          "evidence": [
+            {
+              "observation_id": "frame_0.000000",
+              "source": "synthetic_depth",
+              "stamp": 0.0,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            },
+            {
+              "observation_id": "frame_0.200000",
+              "source": "synthetic_depth",
+              "stamp": 0.2,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            }
+          ],
+          "missing_evidence": [
+            "full_surface_extent"
+          ],
+          "relations": [],
+          "connected_regions": [],
+          "traversability": "unknown"
+        },
+        {
+          "entity_id": "wall_0002",
+          "semantic_type": "wall",
+          "geometry": {
+            "center": [
+              3.999999914169196,
+              -1.7388679401829545,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              6.292087851165341e-30,
+              0.0
+            ],
+            "width_m": 2.173584946686365,
+            "height_m": 3.4777358231454514,
+            "uncertainty_m": 0.12107680066697478
+          },
+          "last_observed": 0.2,
+          "age_s": 0.0,
+          "status": "provisional",
+          "geometric_confidence": 0.4125542378656807,
+          "semantic_confidence": 0.36098495813247056,
+          "observations": 1,
+          "contradictions": 0,
+          "evidence": [
+            {
+              "observation_id": "frame_0.200000",
+              "source": "synthetic_depth",
+              "stamp": 0.2,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            }
+          ],
+          "missing_evidence": [
+            "full_surface_extent"
+          ],
+          "relations": [],
+          "connected_regions": [],
+          "traversability": "unknown"
+        }
+      ],
+      "omitted_entities": 0,
+      "context_valid": true,
+      "invalid_reasons": [],
+      "context_reference": "ctx_2f2586ef5110113298c3683a8715c2dbe02d2471a922076c2f5dc35145c8db03"
+    },
+    "proposal": {
+      "schema_version": 1,
+      "proposal_id": "goal_f02ae073c3500027926981ae4b9f41dcf324583581a5109bb2b96fc8eb3b8ec9",
+      "intent": "observe_more",
+      "target_entity_id": "opening_0003",
+      "reason_codes": [
+        "candidate_passage_exists",
+        "clearance_unconfirmed",
+        "height_unconfirmed"
+      ],
+      "missing_information": [
+        "controller_tracking_margin",
+        "full_volume_coverage",
+        "localization_margin",
+        "lower_boundary",
+        "region_connectivity",
+        "upper_boundary",
+        "validated_swept_path",
+        "vehicle_propeller_envelope"
+      ],
+      "source_entity_ids": [
+        "opening_0003"
+      ],
+      "context_reference": "ctx_2f2586ef5110113298c3683a8715c2dbe02d2471a922076c2f5dc35145c8db03",
+      "reference": {
+        "frame_id": "odom",
+        "epoch": 0,
+        "clock_id": "replay"
+      },
+      "validation_status": "unvalidated"
+    },
+    "validation": {
+      "valid": true,
+      "reason_codes": [
+        "valid_non_executable"
+      ],
+      "checked_at": 0.2,
+      "proposal": {
+        "schema_version": 1,
+        "proposal_id": "goal_f02ae073c3500027926981ae4b9f41dcf324583581a5109bb2b96fc8eb3b8ec9",
+        "intent": "observe_more",
+        "target_entity_id": "opening_0003",
+        "reason_codes": [
+          "candidate_passage_exists",
+          "clearance_unconfirmed",
+          "height_unconfirmed"
+        ],
+        "missing_information": [
+          "controller_tracking_margin",
+          "full_volume_coverage",
+          "localization_margin",
+          "lower_boundary",
+          "region_connectivity",
+          "upper_boundary",
+          "validated_swept_path",
+          "vehicle_propeller_envelope"
+        ],
+        "source_entity_ids": [
+          "opening_0003"
+        ],
+        "context_reference": "ctx_2f2586ef5110113298c3683a8715c2dbe02d2471a922076c2f5dc35145c8db03",
+        "reference": {
+          "frame_id": "odom",
+          "epoch": 0,
+          "clock_id": "replay"
+        },
+        "validation_status": "valid_non_executable"
+      }
+    }
+  },
+  {
+    "label": "translated_and_turned",
+    "world_entity_ids": [
+      "opening_0003",
+      "wall_0001",
+      "wall_0002"
+    ],
+    "mission": {
+      "intent": "investigate_candidate_passage",
+      "target_entity_id": null
+    },
+    "context": {
+      "schema_version": 1,
+      "reference": {
+        "frame_id": "odom",
+        "epoch": 0,
+        "clock_id": "replay"
+      },
+      "snapshot_timestamp": 0.4,
+      "context_created_at": 0.4,
+      "expires_at": 0.9,
+      "stale_after_s": 5.0,
+      "mission_goal": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "entities": [
+        {
+          "entity_id": "opening_0003",
+          "semantic_type": "opening",
+          "geometry": {
+            "center": [
+              4.000000003081099,
+              -0.023823573874974458,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              4.31564342404143e-10,
+              0.0
+            ],
+            "width_m": 1.2519921741156204,
+            "height_m": null,
+            "uncertainty_m": 0.11798165948343324
+          },
+          "last_observed": 0.4,
+          "age_s": 0.0,
+          "status": "provisional",
+          "geometric_confidence": 0.39605502154970024,
+          "semantic_confidence": 0.3168440172397602,
+          "observations": 2,
+          "contradictions": 0,
+          "evidence": [
+            {
+              "observation_id": "frame_0.200000",
+              "source": "synthetic_depth",
+              "stamp": 0.2,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": 105,
+              "blocked_fraction": 0.0
+            },
+            {
+              "observation_id": "frame_0.400000",
+              "source": "synthetic_depth",
+              "stamp": 0.4,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": 112,
+              "blocked_fraction": 0.0
+            }
+          ],
+          "missing_evidence": [
+            "controller_tracking_margin",
+            "full_volume_coverage",
+            "localization_margin",
+            "lower_boundary",
+            "region_connectivity",
+            "upper_boundary",
+            "validated_swept_path",
+            "vehicle_propeller_envelope"
+          ],
+          "relations": [
+            {
+              "relation_type": "bounded_by",
+              "target_entity_id": "wall_0001",
+              "status": "observed_geometry"
+            },
+            {
+              "relation_type": "bounded_by",
+              "target_entity_id": "wall_0002",
+              "status": "observed_geometry"
+            }
+          ],
+          "connected_regions": [],
+          "traversability": "unknown"
+        },
+        {
+          "entity_id": "wall_0001",
+          "semantic_type": "wall",
+          "geometry": {
+            "center": [
+              4.000000002299,
+              1.7884176940870582,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              4.31564342404143e-10,
+              0.0
+            ],
+            "width_m": 2.372490361808445,
+            "height_m": 3.5626790127133887,
+            "uncertainty_m": 0.11969668616939567
+          },
+          "last_observed": 0.4,
+          "age_s": 0.0,
+          "status": "confirmed",
+          "geometric_confidence": 0.4169706042579339,
+          "semantic_confidence": 0.3648492787256921,
+          "observations": 3,
+          "contradictions": 0,
+          "evidence": [
+            {
+              "observation_id": "frame_0.200000",
+              "source": "synthetic_depth",
+              "stamp": 0.2,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            },
+            {
+              "observation_id": "frame_0.400000",
+              "source": "synthetic_depth",
+              "stamp": 0.4,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            }
+          ],
+          "missing_evidence": [
+            "full_surface_extent"
+          ],
+          "relations": [],
+          "connected_regions": [],
+          "traversability": "unknown"
+        },
+        {
+          "entity_id": "wall_0002",
+          "semantic_type": "wall",
+          "geometry": {
+            "center": [
+              4.000000003612457,
+              -1.2550609982253838,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              4.31564342404143e-10,
+              0.0
+            ],
+            "width_m": 1.2104826745851982,
+            "height_m": 3.205602372066835,
+            "uncertainty_m": 0.11931628265011583
+          },
+          "last_observed": 0.4,
+          "age_s": 0.0,
+          "status": "provisional",
+          "geometric_confidence": 0.4181878955196293,
+          "semantic_confidence": 0.3659144085796756,
+          "observations": 2,
+          "contradictions": 0,
+          "evidence": [
+            {
+              "observation_id": "frame_0.200000",
+              "source": "synthetic_depth",
+              "stamp": 0.2,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            },
+            {
+              "observation_id": "frame_0.400000",
+              "source": "synthetic_depth",
+              "stamp": 0.4,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            }
+          ],
+          "missing_evidence": [
+            "full_surface_extent"
+          ],
+          "relations": [],
+          "connected_regions": [],
+          "traversability": "unknown"
+        }
+      ],
+      "omitted_entities": 0,
+      "context_valid": true,
+      "invalid_reasons": [],
+      "context_reference": "ctx_c8e422b276ed1101b343dbef9bbcb25b32e992b8fe23ab4a4e92f3fa18c38e0c"
+    },
+    "proposal": {
+      "schema_version": 1,
+      "proposal_id": "goal_8dca0314e974f7afc6534230d2bde8bb5bfb94d04f4ec85fcb7d575a58f7eb08",
+      "intent": "observe_more",
+      "target_entity_id": "opening_0003",
+      "reason_codes": [
+        "candidate_passage_exists",
+        "clearance_unconfirmed",
+        "height_unconfirmed"
+      ],
+      "missing_information": [
+        "controller_tracking_margin",
+        "full_volume_coverage",
+        "localization_margin",
+        "lower_boundary",
+        "region_connectivity",
+        "upper_boundary",
+        "validated_swept_path",
+        "vehicle_propeller_envelope"
+      ],
+      "source_entity_ids": [
+        "opening_0003"
+      ],
+      "context_reference": "ctx_c8e422b276ed1101b343dbef9bbcb25b32e992b8fe23ab4a4e92f3fa18c38e0c",
+      "reference": {
+        "frame_id": "odom",
+        "epoch": 0,
+        "clock_id": "replay"
+      },
+      "validation_status": "unvalidated"
+    },
+    "validation": {
+      "valid": true,
+      "reason_codes": [
+        "valid_non_executable"
+      ],
+      "checked_at": 0.4,
+      "proposal": {
+        "schema_version": 1,
+        "proposal_id": "goal_8dca0314e974f7afc6534230d2bde8bb5bfb94d04f4ec85fcb7d575a58f7eb08",
+        "intent": "observe_more",
+        "target_entity_id": "opening_0003",
+        "reason_codes": [
+          "candidate_passage_exists",
+          "clearance_unconfirmed",
+          "height_unconfirmed"
+        ],
+        "missing_information": [
+          "controller_tracking_margin",
+          "full_volume_coverage",
+          "localization_margin",
+          "lower_boundary",
+          "region_connectivity",
+          "upper_boundary",
+          "validated_swept_path",
+          "vehicle_propeller_envelope"
+        ],
+        "source_entity_ids": [
+          "opening_0003"
+        ],
+        "context_reference": "ctx_c8e422b276ed1101b343dbef9bbcb25b32e992b8fe23ab4a4e92f3fa18c38e0c",
+        "reference": {
+          "frame_id": "odom",
+          "epoch": 0,
+          "clock_id": "replay"
+        },
+        "validation_status": "valid_non_executable"
+      }
+    }
+  },
+  {
+    "label": "out_of_view",
+    "world_entity_ids": [
+      "opening_0003",
+      "wall_0001",
+      "wall_0002"
+    ],
+    "mission": {
+      "intent": "investigate_candidate_passage",
+      "target_entity_id": null
+    },
+    "context": {
+      "schema_version": 1,
+      "reference": {
+        "frame_id": "odom",
+        "epoch": 0,
+        "clock_id": "replay"
+      },
+      "snapshot_timestamp": 0.6,
+      "context_created_at": 0.6,
+      "expires_at": 1.1,
+      "stale_after_s": 5.0,
+      "mission_goal": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "entities": [
+        {
+          "entity_id": "opening_0003",
+          "semantic_type": "opening",
+          "geometry": {
+            "center": [
+              4.000000003081099,
+              -0.023823573874974458,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              4.31564342404143e-10,
+              0.0
+            ],
+            "width_m": 1.2519921741156204,
+            "height_m": null,
+            "uncertainty_m": 0.11798165948343324
+          },
+          "last_observed": 0.4,
+          "age_s": 0.19999999999999996,
+          "status": "provisional",
+          "geometric_confidence": 0.38052548202819775,
+          "semantic_confidence": 0.3044203856225582,
+          "observations": 2,
+          "contradictions": 0,
+          "evidence": [
+            {
+              "observation_id": "frame_0.200000",
+              "source": "synthetic_depth",
+              "stamp": 0.2,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": 105,
+              "blocked_fraction": 0.0
+            },
+            {
+              "observation_id": "frame_0.400000",
+              "source": "synthetic_depth",
+              "stamp": 0.4,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": 112,
+              "blocked_fraction": 0.0
+            }
+          ],
+          "missing_evidence": [
+            "controller_tracking_margin",
+            "full_volume_coverage",
+            "localization_margin",
+            "lower_boundary",
+            "region_connectivity",
+            "upper_boundary",
+            "validated_swept_path",
+            "vehicle_propeller_envelope"
+          ],
+          "relations": [
+            {
+              "relation_type": "bounded_by",
+              "target_entity_id": "wall_0001",
+              "status": "observed_geometry"
+            },
+            {
+              "relation_type": "bounded_by",
+              "target_entity_id": "wall_0002",
+              "status": "observed_geometry"
+            }
+          ],
+          "connected_regions": [],
+          "traversability": "unknown"
+        },
+        {
+          "entity_id": "wall_0001",
+          "semantic_type": "wall",
+          "geometry": {
+            "center": [
+              4.000000002299,
+              1.7884176940870582,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              4.31564342404143e-10,
+              0.0
+            ],
+            "width_m": 2.372490361808445,
+            "height_m": 3.5626790127133887,
+            "uncertainty_m": 0.11969668616939567
+          },
+          "last_observed": 0.4,
+          "age_s": 0.19999999999999996,
+          "status": "confirmed",
+          "geometric_confidence": 0.4006209530079856,
+          "semantic_confidence": 0.3505433338819874,
+          "observations": 3,
+          "contradictions": 0,
+          "evidence": [
+            {
+              "observation_id": "frame_0.200000",
+              "source": "synthetic_depth",
+              "stamp": 0.2,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            },
+            {
+              "observation_id": "frame_0.400000",
+              "source": "synthetic_depth",
+              "stamp": 0.4,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            }
+          ],
+          "missing_evidence": [
+            "full_surface_extent"
+          ],
+          "relations": [],
+          "connected_regions": [],
+          "traversability": "unknown"
+        },
+        {
+          "entity_id": "wall_0002",
+          "semantic_type": "wall",
+          "geometry": {
+            "center": [
+              4.000000003612457,
+              -1.2550609982253838,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              4.31564342404143e-10,
+              0.0
+            ],
+            "width_m": 1.2104826745851982,
+            "height_m": 3.205602372066835,
+            "uncertainty_m": 0.11931628265011583
+          },
+          "last_observed": 0.4,
+          "age_s": 0.19999999999999996,
+          "status": "provisional",
+          "geometric_confidence": 0.40179051359659496,
+          "semantic_confidence": 0.35156669939702057,
+          "observations": 2,
+          "contradictions": 0,
+          "evidence": [
+            {
+              "observation_id": "frame_0.200000",
+              "source": "synthetic_depth",
+              "stamp": 0.2,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            },
+            {
+              "observation_id": "frame_0.400000",
+              "source": "synthetic_depth",
+              "stamp": 0.4,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            }
+          ],
+          "missing_evidence": [
+            "full_surface_extent"
+          ],
+          "relations": [],
+          "connected_regions": [],
+          "traversability": "unknown"
+        }
+      ],
+      "omitted_entities": 0,
+      "context_valid": true,
+      "invalid_reasons": [],
+      "context_reference": "ctx_d55bfef7a2be110e9e9bd4999b8d939dc32f5161c5e20781c67c5d12aa3bd280"
+    },
+    "proposal": {
+      "schema_version": 1,
+      "proposal_id": "goal_c89cffc6872bc220062e5f3ca323d70c5171bcc6b61f8f7d19196d449eaf935e",
+      "intent": "observe_more",
+      "target_entity_id": "opening_0003",
+      "reason_codes": [
+        "candidate_passage_exists",
+        "clearance_unconfirmed",
+        "height_unconfirmed"
+      ],
+      "missing_information": [
+        "controller_tracking_margin",
+        "full_volume_coverage",
+        "localization_margin",
+        "lower_boundary",
+        "region_connectivity",
+        "upper_boundary",
+        "validated_swept_path",
+        "vehicle_propeller_envelope"
+      ],
+      "source_entity_ids": [
+        "opening_0003"
+      ],
+      "context_reference": "ctx_d55bfef7a2be110e9e9bd4999b8d939dc32f5161c5e20781c67c5d12aa3bd280",
+      "reference": {
+        "frame_id": "odom",
+        "epoch": 0,
+        "clock_id": "replay"
+      },
+      "validation_status": "unvalidated"
+    },
+    "validation": {
+      "valid": true,
+      "reason_codes": [
+        "valid_non_executable"
+      ],
+      "checked_at": 0.6,
+      "proposal": {
+        "schema_version": 1,
+        "proposal_id": "goal_c89cffc6872bc220062e5f3ca323d70c5171bcc6b61f8f7d19196d449eaf935e",
+        "intent": "observe_more",
+        "target_entity_id": "opening_0003",
+        "reason_codes": [
+          "candidate_passage_exists",
+          "clearance_unconfirmed",
+          "height_unconfirmed"
+        ],
+        "missing_information": [
+          "controller_tracking_margin",
+          "full_volume_coverage",
+          "localization_margin",
+          "lower_boundary",
+          "region_connectivity",
+          "upper_boundary",
+          "validated_swept_path",
+          "vehicle_propeller_envelope"
+        ],
+        "source_entity_ids": [
+          "opening_0003"
+        ],
+        "context_reference": "ctx_d55bfef7a2be110e9e9bd4999b8d939dc32f5161c5e20781c67c5d12aa3bd280",
+        "reference": {
+          "frame_id": "odom",
+          "epoch": 0,
+          "clock_id": "replay"
+        },
+        "validation_status": "valid_non_executable"
+      }
+    }
+  },
+  {
+    "label": "stale_memory",
+    "world_entity_ids": [
+      "opening_0003",
+      "wall_0001",
+      "wall_0002"
+    ],
+    "mission": {
+      "intent": "investigate_candidate_passage",
+      "target_entity_id": null
+    },
+    "context": {
+      "schema_version": 1,
+      "reference": {
+        "frame_id": "odom",
+        "epoch": 0,
+        "clock_id": "replay"
+      },
+      "snapshot_timestamp": 6.5,
+      "context_created_at": 6.5,
+      "expires_at": 7.0,
+      "stale_after_s": 5.0,
+      "mission_goal": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "entities": [
+        {
+          "entity_id": "opening_0003",
+          "semantic_type": "opening",
+          "geometry": {
+            "center": [
+              4.000000003081099,
+              -0.023823573874974458,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              4.31564342404143e-10,
+              0.0
+            ],
+            "width_m": 1.2519921741156204,
+            "height_m": null,
+            "uncertainty_m": 0.11798165948343324
+          },
+          "last_observed": 0.4,
+          "age_s": 6.1,
+          "status": "stale",
+          "geometric_confidence": 0.11692739012321204,
+          "semantic_confidence": 0.09354191209856964,
+          "observations": 2,
+          "contradictions": 0,
+          "evidence": [
+            {
+              "observation_id": "frame_0.200000",
+              "source": "synthetic_depth",
+              "stamp": 0.2,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": 105,
+              "blocked_fraction": 0.0
+            },
+            {
+              "observation_id": "frame_0.400000",
+              "source": "synthetic_depth",
+              "stamp": 0.4,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": 112,
+              "blocked_fraction": 0.0
+            }
+          ],
+          "missing_evidence": [
+            "controller_tracking_margin",
+            "fresh_consistent_observation",
+            "full_volume_coverage",
+            "localization_margin",
+            "lower_boundary",
+            "region_connectivity",
+            "upper_boundary",
+            "validated_swept_path",
+            "vehicle_propeller_envelope"
+          ],
+          "relations": [
+            {
+              "relation_type": "bounded_by",
+              "target_entity_id": "wall_0001",
+              "status": "observed_geometry"
+            },
+            {
+              "relation_type": "bounded_by",
+              "target_entity_id": "wall_0002",
+              "status": "observed_geometry"
+            }
+          ],
+          "connected_regions": [],
+          "traversability": "unknown"
+        },
+        {
+          "entity_id": "wall_0001",
+          "semantic_type": "wall",
+          "geometry": {
+            "center": [
+              4.000000002299,
+              1.7884176940870582,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              4.31564342404143e-10,
+              0.0
+            ],
+            "width_m": 2.372490361808445,
+            "height_m": 3.5626790127133887,
+            "uncertainty_m": 0.11969668616939567
+          },
+          "last_observed": 0.4,
+          "age_s": 6.1,
+          "status": "stale",
+          "geometric_confidence": 0.1231023010974769,
+          "semantic_confidence": 0.10771451346029227,
+          "observations": 3,
+          "contradictions": 0,
+          "evidence": [
+            {
+              "observation_id": "frame_0.200000",
+              "source": "synthetic_depth",
+              "stamp": 0.2,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            },
+            {
+              "observation_id": "frame_0.400000",
+              "source": "synthetic_depth",
+              "stamp": 0.4,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            }
+          ],
+          "missing_evidence": [
+            "full_surface_extent"
+          ],
+          "relations": [],
+          "connected_regions": [],
+          "traversability": "unknown"
+        },
+        {
+          "entity_id": "wall_0002",
+          "semantic_type": "wall",
+          "geometry": {
+            "center": [
+              4.000000003612457,
+              -1.2550609982253838,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              4.31564342404143e-10,
+              0.0
+            ],
+            "width_m": 1.2104826745851982,
+            "height_m": 3.205602372066835,
+            "uncertainty_m": 0.11931628265011583
+          },
+          "last_observed": 0.4,
+          "age_s": 6.1,
+          "status": "stale",
+          "geometric_confidence": 0.12346168219986238,
+          "semantic_confidence": 0.10802897192487956,
+          "observations": 2,
+          "contradictions": 0,
+          "evidence": [
+            {
+              "observation_id": "frame_0.200000",
+              "source": "synthetic_depth",
+              "stamp": 0.2,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            },
+            {
+              "observation_id": "frame_0.400000",
+              "source": "synthetic_depth",
+              "stamp": 0.4,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            }
+          ],
+          "missing_evidence": [
+            "full_surface_extent"
+          ],
+          "relations": [],
+          "connected_regions": [],
+          "traversability": "unknown"
+        }
+      ],
+      "omitted_entities": 0,
+      "context_valid": true,
+      "invalid_reasons": [],
+      "context_reference": "ctx_c71604b305652f733f6eaf82be1515567eb3cbe20c9ff4f1ac2b004c56f4ac9a"
+    },
+    "proposal": {
+      "schema_version": 1,
+      "proposal_id": "goal_70f8932022abba0d18a8080aa11e0e28b7f139543707543de6a948494fc99719",
+      "intent": "observe_more",
+      "target_entity_id": "opening_0003",
+      "reason_codes": [
+        "candidate_passage_exists",
+        "clearance_unconfirmed",
+        "height_unconfirmed",
+        "reobserve_stale_belief"
+      ],
+      "missing_information": [
+        "controller_tracking_margin",
+        "fresh_consistent_observation",
+        "full_volume_coverage",
+        "localization_margin",
+        "lower_boundary",
+        "region_connectivity",
+        "upper_boundary",
+        "validated_swept_path",
+        "vehicle_propeller_envelope"
+      ],
+      "source_entity_ids": [
+        "opening_0003"
+      ],
+      "context_reference": "ctx_c71604b305652f733f6eaf82be1515567eb3cbe20c9ff4f1ac2b004c56f4ac9a",
+      "reference": {
+        "frame_id": "odom",
+        "epoch": 0,
+        "clock_id": "replay"
+      },
+      "validation_status": "unvalidated"
+    },
+    "validation": {
+      "valid": true,
+      "reason_codes": [
+        "valid_non_executable"
+      ],
+      "checked_at": 6.5,
+      "proposal": {
+        "schema_version": 1,
+        "proposal_id": "goal_70f8932022abba0d18a8080aa11e0e28b7f139543707543de6a948494fc99719",
+        "intent": "observe_more",
+        "target_entity_id": "opening_0003",
+        "reason_codes": [
+          "candidate_passage_exists",
+          "clearance_unconfirmed",
+          "height_unconfirmed",
+          "reobserve_stale_belief"
+        ],
+        "missing_information": [
+          "controller_tracking_margin",
+          "fresh_consistent_observation",
+          "full_volume_coverage",
+          "localization_margin",
+          "lower_boundary",
+          "region_connectivity",
+          "upper_boundary",
+          "validated_swept_path",
+          "vehicle_propeller_envelope"
+        ],
+        "source_entity_ids": [
+          "opening_0003"
+        ],
+        "context_reference": "ctx_c71604b305652f733f6eaf82be1515567eb3cbe20c9ff4f1ac2b004c56f4ac9a",
+        "reference": {
+          "frame_id": "odom",
+          "epoch": 0,
+          "clock_id": "replay"
+        },
+        "validation_status": "valid_non_executable"
+      }
+    }
+  },
+  {
+    "label": "reobserved_after_staleness",
+    "world_entity_ids": [
+      "opening_0003",
+      "wall_0001",
+      "wall_0002"
+    ],
+    "mission": {
+      "intent": "investigate_candidate_passage",
+      "target_entity_id": null
+    },
+    "context": {
+      "schema_version": 1,
+      "reference": {
+        "frame_id": "odom",
+        "epoch": 0,
+        "clock_id": "replay"
+      },
+      "snapshot_timestamp": 7.2,
+      "context_created_at": 7.2,
+      "expires_at": 7.7,
+      "stale_after_s": 5.0,
+      "mission_goal": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "entities": [
+        {
+          "entity_id": "opening_0003",
+          "semantic_type": "opening",
+          "geometry": {
+            "center": [
+              3.999999999329085,
+              0.0018438115163357872,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              1.3105474861894917e-08,
+              0.0
+            ],
+            "width_m": 1.2222859700915494,
+            "height_m": null,
+            "uncertainty_m": 0.11821100894826611
+          },
+          "last_observed": 7.2,
+          "age_s": 0.0,
+          "status": "provisional",
+          "geometric_confidence": 0.39536697315520164,
+          "semantic_confidence": 0.31629357852416135,
+          "observations": 3,
+          "contradictions": 0,
+          "evidence": [
+            {
+              "observation_id": "frame_0.400000",
+              "source": "synthetic_depth",
+              "stamp": 0.4,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": 112,
+              "blocked_fraction": 0.0
+            },
+            {
+              "observation_id": "frame_7.200000",
+              "source": "synthetic_depth",
+              "stamp": 7.2,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": 105,
+              "blocked_fraction": 0.0
+            }
+          ],
+          "missing_evidence": [
+            "controller_tracking_margin",
+            "full_volume_coverage",
+            "localization_margin",
+            "lower_boundary",
+            "region_connectivity",
+            "upper_boundary",
+            "validated_swept_path",
+            "vehicle_propeller_envelope"
+          ],
+          "relations": [
+            {
+              "relation_type": "bounded_by",
+              "target_entity_id": "wall_0001",
+              "status": "observed_geometry"
+            },
+            {
+              "relation_type": "bounded_by",
+              "target_entity_id": "wall_0002",
+              "status": "observed_geometry"
+            }
+          ],
+          "connected_regions": [],
+          "traversability": "unknown"
+        },
+        {
+          "entity_id": "wall_0001",
+          "semantic_type": "wall",
+          "geometry": {
+            "center": [
+              3.9999999759438483,
+              1.7862306399493568,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              1.3105474861894917e-08,
+              0.0
+            ],
+            "width_m": 2.3464876867744926,
+            "height_m": 3.545201392041193,
+            "uncertainty_m": 0.12003356012252295
+          },
+          "last_observed": 7.2,
+          "age_s": 0.0,
+          "status": "confirmed",
+          "geometric_confidence": 0.41589260760792657,
+          "semantic_confidence": 0.36390603165693575,
+          "observations": 4,
+          "contradictions": 0,
+          "evidence": [
+            {
+              "observation_id": "frame_0.400000",
+              "source": "synthetic_depth",
+              "stamp": 0.4,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            },
+            {
+              "observation_id": "frame_7.200000",
+              "source": "synthetic_depth",
+              "stamp": 7.2,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            }
+          ],
+          "missing_evidence": [
+            "full_surface_extent"
+          ],
+          "relations": [],
+          "connected_regions": [],
+          "traversability": "unknown"
+        },
+        {
+          "entity_id": "wall_0002",
+          "semantic_type": "wall",
+          "geometry": {
+            "center": [
+              4.0000000173768315,
+              -1.3752712107740417,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              1.3105474861894917e-08,
+              0.0
+            ],
+            "width_m": 1.5319440744892059,
+            "height_m": 3.3016412038047775,
+            "uncertainty_m": 0.11966446100719622
+          },
+          "last_observed": 7.2,
+          "age_s": 0.0,
+          "status": "confirmed",
+          "geometric_confidence": 0.41707372477697213,
+          "semantic_confidence": 0.3649395091798506,
+          "observations": 3,
+          "contradictions": 0,
+          "evidence": [
+            {
+              "observation_id": "frame_0.400000",
+              "source": "synthetic_depth",
+              "stamp": 0.4,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            },
+            {
+              "observation_id": "frame_7.200000",
+              "source": "synthetic_depth",
+              "stamp": 7.2,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            }
+          ],
+          "missing_evidence": [
+            "full_surface_extent"
+          ],
+          "relations": [],
+          "connected_regions": [],
+          "traversability": "unknown"
+        }
+      ],
+      "omitted_entities": 0,
+      "context_valid": true,
+      "invalid_reasons": [],
+      "context_reference": "ctx_42f5d2282d99abf9c521f98f42277f809a0633ab60602c434d757dac16fee237"
+    },
+    "proposal": {
+      "schema_version": 1,
+      "proposal_id": "goal_84f6a8fef70d5932abc562283ee18d04e480dfb447a49df90cfb8d9459d0a336",
+      "intent": "observe_more",
+      "target_entity_id": "opening_0003",
+      "reason_codes": [
+        "candidate_passage_exists",
+        "clearance_unconfirmed",
+        "height_unconfirmed"
+      ],
+      "missing_information": [
+        "controller_tracking_margin",
+        "full_volume_coverage",
+        "localization_margin",
+        "lower_boundary",
+        "region_connectivity",
+        "upper_boundary",
+        "validated_swept_path",
+        "vehicle_propeller_envelope"
+      ],
+      "source_entity_ids": [
+        "opening_0003"
+      ],
+      "context_reference": "ctx_42f5d2282d99abf9c521f98f42277f809a0633ab60602c434d757dac16fee237",
+      "reference": {
+        "frame_id": "odom",
+        "epoch": 0,
+        "clock_id": "replay"
+      },
+      "validation_status": "unvalidated"
+    },
+    "validation": {
+      "valid": true,
+      "reason_codes": [
+        "valid_non_executable"
+      ],
+      "checked_at": 7.2,
+      "proposal": {
+        "schema_version": 1,
+        "proposal_id": "goal_84f6a8fef70d5932abc562283ee18d04e480dfb447a49df90cfb8d9459d0a336",
+        "intent": "observe_more",
+        "target_entity_id": "opening_0003",
+        "reason_codes": [
+          "candidate_passage_exists",
+          "clearance_unconfirmed",
+          "height_unconfirmed"
+        ],
+        "missing_information": [
+          "controller_tracking_margin",
+          "full_volume_coverage",
+          "localization_margin",
+          "lower_boundary",
+          "region_connectivity",
+          "upper_boundary",
+          "validated_swept_path",
+          "vehicle_propeller_envelope"
+        ],
+        "source_entity_ids": [
+          "opening_0003"
+        ],
+        "context_reference": "ctx_42f5d2282d99abf9c521f98f42277f809a0633ab60602c434d757dac16fee237",
+        "reference": {
+          "frame_id": "odom",
+          "epoch": 0,
+          "clock_id": "replay"
+        },
+        "validation_status": "valid_non_executable"
+      }
+    }
+  },
+  {
+    "label": "passage_blocked",
+    "world_entity_ids": [
+      "opening_0003",
+      "wall_0001",
+      "wall_0002",
+      "wall_0004"
+    ],
+    "mission": {
+      "intent": "investigate_candidate_passage",
+      "target_entity_id": null
+    },
+    "context": {
+      "schema_version": 1,
+      "reference": {
+        "frame_id": "odom",
+        "epoch": 0,
+        "clock_id": "replay"
+      },
+      "snapshot_timestamp": 7.4,
+      "context_created_at": 7.4,
+      "expires_at": 7.9,
+      "stale_after_s": 5.0,
+      "mission_goal": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "entities": [
+        {
+          "entity_id": "opening_0003",
+          "semantic_type": "opening",
+          "geometry": {
+            "center": [
+              3.999999999329085,
+              0.0018438115163357872,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              1.3105474861894917e-08,
+              0.0
+            ],
+            "width_m": 1.2222859700915494,
+            "height_m": null,
+            "uncertainty_m": 0.11821100894826611
+          },
+          "last_observed": 7.4,
+          "age_s": 0.0,
+          "status": "invalidated",
+          "geometric_confidence": 0.15814678926208067,
+          "semantic_confidence": 0.12651743140966454,
+          "observations": 3,
+          "contradictions": 1,
+          "evidence": [
+            {
+              "observation_id": "frame_7.200000",
+              "source": "synthetic_depth",
+              "stamp": 7.2,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": 105,
+              "blocked_fraction": 0.0
+            },
+            {
+              "observation_id": "frame_7.400000",
+              "source": "synthetic_depth",
+              "stamp": 7.4,
+              "kind": "blocking_evidence",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": 105,
+              "blocked_fraction": 1.0
+            }
+          ],
+          "missing_evidence": [
+            "controller_tracking_margin",
+            "full_volume_coverage",
+            "localization_margin",
+            "lower_boundary",
+            "region_connectivity",
+            "unobstructed_reobservation",
+            "upper_boundary",
+            "validated_swept_path",
+            "vehicle_propeller_envelope"
+          ],
+          "relations": [
+            {
+              "relation_type": "bounded_by",
+              "target_entity_id": "wall_0001",
+              "status": "observed_geometry"
+            },
+            {
+              "relation_type": "bounded_by",
+              "target_entity_id": "wall_0002",
+              "status": "observed_geometry"
+            }
+          ],
+          "connected_regions": [],
+          "traversability": "blocked"
+        },
+        {
+          "entity_id": "wall_0004",
+          "semantic_type": "wall",
+          "geometry": {
+            "center": [
+              3.9999999141691895,
+              0.03622638621420293,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              -2.042360866096043e-29,
+              0.0
+            ],
+            "width_m": 5.72377359948068,
+            "height_m": 3.4777358231454514,
+            "uncertainty_m": 0.11920085394707586
+          },
+          "last_observed": 7.4,
+          "age_s": 0.0,
+          "status": "provisional",
+          "geometric_confidence": 0.4185572673693573,
+          "semantic_confidence": 0.3662376089481876,
+          "observations": 1,
+          "contradictions": 0,
+          "evidence": [
+            {
+              "observation_id": "frame_7.400000",
+              "source": "synthetic_depth",
+              "stamp": 7.4,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            }
+          ],
+          "missing_evidence": [
+            "full_surface_extent"
+          ],
+          "relations": [],
+          "connected_regions": [],
+          "traversability": "unknown"
+        },
+        {
+          "entity_id": "wall_0001",
+          "semantic_type": "wall",
+          "geometry": {
+            "center": [
+              3.9999999759438483,
+              1.7862306399493568,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              1.3105474861894917e-08,
+              0.0
+            ],
+            "width_m": 2.3464876867744926,
+            "height_m": 3.545201392041193,
+            "uncertainty_m": 0.12003356012252295
+          },
+          "last_observed": 7.2,
+          "age_s": 0.20000000000000018,
+          "status": "confirmed",
+          "geometric_confidence": 0.399585225211217,
+          "semantic_confidence": 0.34963707205981487,
+          "observations": 4,
+          "contradictions": 0,
+          "evidence": [
+            {
+              "observation_id": "frame_0.400000",
+              "source": "synthetic_depth",
+              "stamp": 0.4,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            },
+            {
+              "observation_id": "frame_7.200000",
+              "source": "synthetic_depth",
+              "stamp": 7.2,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            }
+          ],
+          "missing_evidence": [
+            "full_surface_extent"
+          ],
+          "relations": [],
+          "connected_regions": [],
+          "traversability": "unknown"
+        },
+        {
+          "entity_id": "wall_0002",
+          "semantic_type": "wall",
+          "geometry": {
+            "center": [
+              4.0000000173768315,
+              -1.3752712107740417,
+              1.2
+            ],
+            "normal": [
+              1.0,
+              1.3105474861894917e-08,
+              0.0
+            ],
+            "width_m": 1.5319440744892059,
+            "height_m": 3.3016412038047775,
+            "uncertainty_m": 0.11966446100719622
+          },
+          "last_observed": 7.2,
+          "age_s": 0.20000000000000018,
+          "status": "confirmed",
+          "geometric_confidence": 0.40072003011363744,
+          "semantic_confidence": 0.35063002634943274,
+          "observations": 3,
+          "contradictions": 0,
+          "evidence": [
+            {
+              "observation_id": "frame_0.400000",
+              "source": "synthetic_depth",
+              "stamp": 0.4,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            },
+            {
+              "observation_id": "frame_7.200000",
+              "source": "synthetic_depth",
+              "stamp": 7.2,
+              "kind": "support",
+              "position_sigma_m": 0.02,
+              "angle_sigma_rad": 0.005,
+              "rays": null,
+              "blocked_fraction": null
+            }
+          ],
+          "missing_evidence": [
+            "full_surface_extent"
+          ],
+          "relations": [],
+          "connected_regions": [],
+          "traversability": "unknown"
+        }
+      ],
+      "omitted_entities": 0,
+      "context_valid": true,
+      "invalid_reasons": [],
+      "context_reference": "ctx_bb08cf89b8295788b181edc7f30d22c136a22b325951870bec194d623f3a0b9c"
+    },
+    "proposal": {
+      "schema_version": 1,
+      "proposal_id": "goal_c887d01ae2a68bba342265019640bd7f00d43d83376aaf06ce6d8bb161562fe4",
+      "intent": "reject_blocked_candidate",
+      "target_entity_id": "opening_0003",
+      "reason_codes": [
+        "blocking_evidence",
+        "candidate_passage_exists"
+      ],
+      "missing_information": [
+        "controller_tracking_margin",
+        "full_volume_coverage",
+        "localization_margin",
+        "lower_boundary",
+        "region_connectivity",
+        "unobstructed_reobservation",
+        "upper_boundary",
+        "validated_swept_path",
+        "vehicle_propeller_envelope"
+      ],
+      "source_entity_ids": [
+        "opening_0003"
+      ],
+      "context_reference": "ctx_bb08cf89b8295788b181edc7f30d22c136a22b325951870bec194d623f3a0b9c",
+      "reference": {
+        "frame_id": "odom",
+        "epoch": 0,
+        "clock_id": "replay"
+      },
+      "validation_status": "unvalidated"
+    },
+    "validation": {
+      "valid": true,
+      "reason_codes": [
+        "valid_non_executable"
+      ],
+      "checked_at": 7.4,
+      "proposal": {
+        "schema_version": 1,
+        "proposal_id": "goal_c887d01ae2a68bba342265019640bd7f00d43d83376aaf06ce6d8bb161562fe4",
+        "intent": "reject_blocked_candidate",
+        "target_entity_id": "opening_0003",
+        "reason_codes": [
+          "blocking_evidence",
+          "candidate_passage_exists"
+        ],
+        "missing_information": [
+          "controller_tracking_margin",
+          "full_volume_coverage",
+          "localization_margin",
+          "lower_boundary",
+          "region_connectivity",
+          "unobstructed_reobservation",
+          "upper_boundary",
+          "validated_swept_path",
+          "vehicle_propeller_envelope"
+        ],
+        "source_entity_ids": [
+          "opening_0003"
+        ],
+        "context_reference": "ctx_bb08cf89b8295788b181edc7f30d22c136a22b325951870bec194d623f3a0b9c",
+        "reference": {
+          "frame_id": "odom",
+          "epoch": 0,
+          "clock_id": "replay"
+        },
+        "validation_status": "valid_non_executable"
+      }
+    }
+  }
+]

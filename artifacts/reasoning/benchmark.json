@@ -1,0 +1,187 @@
+{
+  "provenance": {
+    "os": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+    "machine": "AMD64",
+    "python": "3.11.9",
+    "hardware_class": "available host; not Jetson",
+    "clock": "perf_counter wall latency; replay seconds in contracts",
+    "repeats": 40,
+    "source_sha256": {
+      "refnav/reasoning/__init__.py": "3a9f796a8738f6f9d9736266e42cd73eb8c3aa2dabfeac37ffb730306d548338",
+      "refnav/reasoning/baseline.py": "8e28766bf52805e0d9befb32ae378441f50dc2777f2c729cc4304b1ad002bc7b",
+      "refnav/reasoning/context.py": "d4541f8385d88745c66b9b4e3ffdba58d7ca52702318d019d06466911e48ef88",
+      "refnav/reasoning/evaluation.py": "859118f2ea6ef6127db54104b20bb117d1d646bd723a62792d390468096ebcda",
+      "refnav/reasoning/schema.py": "9b7f1142e802feac8a43554c2b2e334190fcb71ce22129714a57805aab6e9ba2",
+      "refnav/reasoning/validation.py": "c0b754dd780cbe82f8b868776092285a66dd8b4c7fa752ee479c7dab2bf60766",
+      "refnav/world_model/state.py": "127151182568c38ead941726c7553c08d65b26d520746840b8ec6df211ccb6ca",
+      "examples/semantic_reasoning_demo.py": "1a8388256d40e76a23d4c01461d87d9752e3b4a1d3f59d0fb18a0948800c8b1d"
+    },
+    "original_p1_benchmark_sha256": "a89431fb8dfb0ad3a0c04ef1bca211a28285d9dca8a9124d9ca8e84fb84a1137"
+  },
+  "configuration": {
+    "max_entities": 32,
+    "max_context_bytes": 16384,
+    "evidence_per_entity": 2
+  },
+  "scope": "Independent timings; fixture generation excluded. Eight-entry histories; new pipeline bounds entities/bytes and keeps two evidence entries. It is not a full-graph replacement; included and omitted counts are reported.",
+  "counts": [
+    {
+      "world_entities": 1,
+      "semantic_read_entities": 1,
+      "context_entities": 1,
+      "omitted_entities": 0,
+      "serialized_context_bytes": 1559,
+      "estimated_context_python_bytes": 3208,
+      "one_pipeline_peak_traced_bytes": 17981,
+      "latencies": {
+        "world_snapshot": {
+          "median_ms": 0.3424500009714393,
+          "p95_ms": 0.4209200012155633,
+          "worst_ms": 0.46939999992900994
+        },
+        "legacy_opening_query": {
+          "median_ms": 0.34154999957536347,
+          "p95_ms": 0.35101000057693454,
+          "worst_ms": 0.3558000007615192
+        },
+        "bounded_semantic_read": {
+          "median_ms": 0.010199999451288022,
+          "p95_ms": 0.01137499884862336,
+          "worst_ms": 0.017700000171316788
+        },
+        "context_from_preacquired_semantic_read": {
+          "median_ms": 0.48129999959201086,
+          "p95_ms": 0.7169800006522562,
+          "worst_ms": 0.8081999985734001
+        },
+        "context_from_world_including_read": {
+          "median_ms": 0.5101499991724268,
+          "p95_ms": 0.6461700005274905,
+          "worst_ms": 0.8536000004824018
+        },
+        "reasoner": {
+          "median_ms": 0.1708999998299987,
+          "p95_ms": 0.22272500145845697,
+          "worst_ms": 0.23950000104377978
+        },
+        "independent_validation": {
+          "median_ms": 0.1558500007377006,
+          "p95_ms": 0.171779999800492,
+          "worst_ms": 0.20989999939047266
+        },
+        "total_pipeline": {
+          "median_ms": 0.8963999998741201,
+          "p95_ms": 1.0515949998989527,
+          "worst_ms": 1.1549999999260763
+        }
+      },
+      "pipeline_to_legacy_query_median_ratio": 2.6245059317481516
+    },
+    {
+      "world_entities": 32,
+      "semantic_read_entities": 32,
+      "context_entities": 13,
+      "omitted_entities": 19,
+      "serialized_context_bytes": 14495,
+      "estimated_context_python_bytes": 27212,
+      "one_pipeline_peak_traced_bytes": 199561,
+      "latencies": {
+        "world_snapshot": {
+          "median_ms": 10.798849999446247,
+          "p95_ms": 11.654775000079098,
+          "worst_ms": 12.34880000083649
+        },
+        "legacy_opening_query": {
+          "median_ms": 10.829249999005697,
+          "p95_ms": 12.47037999983148,
+          "worst_ms": 17.25830000032147
+        },
+        "bounded_semantic_read": {
+          "median_ms": 0.25629999981902074,
+          "p95_ms": 0.33123500043075177,
+          "worst_ms": 0.5239999991317745
+        },
+        "context_from_preacquired_semantic_read": {
+          "median_ms": 6.430200000067998,
+          "p95_ms": 8.214579999093983,
+          "worst_ms": 9.369200000946876
+        },
+        "context_from_world_including_read": {
+          "median_ms": 6.7490499995983555,
+          "p95_ms": 7.225514999208826,
+          "worst_ms": 7.4475000001257285
+        },
+        "reasoner": {
+          "median_ms": 0.8897499992599478,
+          "p95_ms": 1.056324999353819,
+          "worst_ms": 1.482699999542092
+        },
+        "independent_validation": {
+          "median_ms": 0.869599999532511,
+          "p95_ms": 1.0462049986927013,
+          "worst_ms": 1.066799999534851
+        },
+        "total_pipeline": {
+          "median_ms": 7.6850500008731615,
+          "p95_ms": 8.321570000407517,
+          "worst_ms": 11.597700000493205
+        }
+      },
+      "pipeline_to_legacy_query_median_ratio": 0.70965671690826
+    },
+    {
+      "world_entities": 128,
+      "semantic_read_entities": 32,
+      "context_entities": 13,
+      "omitted_entities": 115,
+      "serialized_context_bytes": 14496,
+      "estimated_context_python_bytes": 27212,
+      "one_pipeline_peak_traced_bytes": 199563,
+      "latencies": {
+        "world_snapshot": {
+          "median_ms": 42.757100000926584,
+          "p95_ms": 47.537909999937256,
+          "worst_ms": 50.33690000163915
+        },
+        "legacy_opening_query": {
+          "median_ms": 42.86764999869774,
+          "p95_ms": 47.920645001522644,
+          "worst_ms": 52.329899999676854
+        },
+        "bounded_semantic_read": {
+          "median_ms": 0.3075499998885789,
+          "p95_ms": 0.4448050011887972,
+          "worst_ms": 0.630000000455766
+        },
+        "context_from_preacquired_semantic_read": {
+          "median_ms": 6.722299999637471,
+          "p95_ms": 7.837870000366818,
+          "worst_ms": 8.507599999575177
+        },
+        "context_from_world_including_read": {
+          "median_ms": 6.1930499996378785,
+          "p95_ms": 9.462870000061228,
+          "worst_ms": 10.977500000080909
+        },
+        "reasoner": {
+          "median_ms": 0.878599998941354,
+          "p95_ms": 1.1549899998499311,
+          "worst_ms": 1.211400000102003
+        },
+        "independent_validation": {
+          "median_ms": 0.8546499993826728,
+          "p95_ms": 0.9418199991159781,
+          "worst_ms": 1.0121000013896264
+        },
+        "total_pipeline": {
+          "median_ms": 8.507899999131041,
+          "p95_ms": 9.507389999453153,
+          "worst_ms": 10.229100000287872
+        }
+      },
+      "pipeline_to_legacy_query_median_ratio": 0.19846900866713008
+    }
+  ],
+  "process_peak_resident_bytes": 50249728
+}

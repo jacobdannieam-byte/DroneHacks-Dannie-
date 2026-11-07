@@ -1,0 +1,8 @@
+Baseline at 8f71328: python -m pytest -q tests
+93 passed in 11.98s
+
+Final implementation: python -m pytest -q tests
+160 passed in 13.37s
+
+Includes all 93 existing tests and 67 new reasoning tests.
+No ROS nodes, simulator services, missions or PX4 commands were executed.
