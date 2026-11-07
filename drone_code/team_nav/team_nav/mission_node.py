@@ -14,6 +14,8 @@ Topics:
          /visual_slam/status               camera tracking's own status (vo_state): logged only, never
                                            used to land. On drone 16 it stayed 1 ("tracking") while the
                                            camera was covered.
+         /team/left_corner_count           the FAST corner count in the left camera (corner_count_node.py),
+                                           for the pre-start check (prestart_check.py)
          depth_topic (a parameter)         only with drift_correction:=true: depth points
                                            (sensor_msgs/PointCloud2, x y z = forward left up in metres
                                            from the drone's centre). In the simulator, Kenny's pretend
@@ -42,7 +44,7 @@ from rcl_interfaces.msg import ParameterDescriptor
 from rclpy.node import Node
 from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
 from sensor_msgs.msg import PointCloud2, PointField
-from std_msgs.msg import String
+from std_msgs.msg import Int32, String
 
 from .camera_exposure import CameraExposureCap
 from .course_map import load_course_map
@@ -67,6 +69,8 @@ DEFAULT_PX4_LOCAL_POSITION_TOPIC = "/fmu/out/vehicle_local_position"
 # the suffix _v1.
 DEFAULT_PX4_STATUS_TOPIC = "/fmu/out/vehicle_status_v1"
 DEFAULT_VISUAL_SLAM_STATUS_TOPIC = "/visual_slam/status"
+# corner_count_node.py publishes here.
+DEFAULT_CORNER_COUNT_TOPIC = "/team/left_corner_count"
 # From the message definition read on drone 16 (VisualSlamStatus.msg).
 VO_STATE_NAMES = {0: "unknown", 1: "tracking", 2: "lost"}
 # The route files installed with this package live in its missions folder.
@@ -233,6 +237,7 @@ class MissionNode(Node):
                                  "vehicle_status", DEFAULT_PX4_STATUS_TOPIC)
         visual_slam_status_topic = self.declare_parameter("visual_slam_status_topic",
                                                           DEFAULT_VISUAL_SLAM_STATUS_TOPIC).value
+        corner_count_topic = self.declare_parameter("corner_count_topic", DEFAULT_CORNER_COUNT_TOPIC).value
         # PX4's reports arrive "best effort" and keep the latest message for late listeners; a
         # listener that asks for anything else never receives them.
         px4_reports = QoSProfile(reliability=QoSReliabilityPolicy.BEST_EFFORT,
@@ -242,7 +247,8 @@ class MissionNode(Node):
         self.create_subscription(String, flight_state_topic, self.on_flight_state, 10)
         self.create_subscription(VehicleLocalPosition, local_position_topic, self.on_px4_local_position, px4_reports)
         self.create_subscription(VehicleStatus, status_topic, self.on_px4_status, px4_reports)
-        heard = [position_topic, flight_state_topic, local_position_topic, status_topic]
+        self.create_subscription(Int32, corner_count_topic, self.on_corner_count, 10)
+        heard = [position_topic, flight_state_topic, local_position_topic, status_topic, corner_count_topic]
         if VisualSlamStatus is None:
             self.get_logger().warn("The package isaac_ros_visual_slam_interfaces is not installed, so "
                                    f"{visual_slam_status_topic} is not logged. Nothing else depends on it.")
@@ -343,6 +349,9 @@ class MissionNode(Node):
         distance, _ = distance_straight_ahead(points, settings.drift_depth_window_degrees,
                                               settings.drift_depth_least_points)
         self.mission.observe_depth_ahead(self.now_seconds(), distance)
+
+    def on_corner_count(self, message):
+        self.mission.observe_corner_count(self.now_seconds(), int(message.data))
 
     def on_visual_slam_status(self, message):
         vo_state = int(message.vo_state)

@@ -13,9 +13,16 @@ flight_interface (the organizers') is the only program that talks to PX4, the fl
 software. It keeps the connection to PX4 alive, applies the safety limits (height band, speed cap)
 to every target, and hands control to our code at the start of a run.
 
-team_nav mission (ours, team_nav/mission_node.py) sends targets to flight_interface: a target just
-above the drone while it waits, then the takeoff, the course and the landing. It also caps the
-camera's automatic exposure (team_nav/camera_exposure.py).
+team_nav mission (ours, team_nav/mission_node.py) sends targets to flight_interface: a hold target
+at the drone 10 times a second while it waits, then the takeoff, the course and the landing. It also
+caps the camera's automatic exposure (team_nav/camera_exposure.py).
+
+team_nav corner_count (ours, team_nav/corner_count_node.py, launch argument corner_count) counts
+FAST corners in the left camera's picture for the mission's pre-start check. It is a separate
+program, so a crash in it cannot stop the mission.
+
+This file starts exactly one flight_interface. The organizers' guide warns that two fight over
+PX4's control flags, so never run another one (for example competitor_example's) at the same time.
 
 Why this is safe
 ----------------
@@ -37,7 +44,7 @@ With auto_offboard_on_arm:=false the drone never hands control to any program.
 """
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.conditions import LaunchConfigurationNotEquals
+from launch.conditions import IfCondition, LaunchConfigurationNotEquals
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
@@ -92,6 +99,12 @@ ARGUMENTS = [
     ('route_turn_rate_degrees_per_second', '25.0', 'route mission: fastest turn, in place or while flying through'),
     ('route_arrive_metres', '0.10', 'route mission: a waypoint where the drone stops counts as reached this close'),
     ('route_fly_through_degrees', '25.0', 'route mission: fly through a waypoint whose next leg turns by less than this'),
+    ('origin_check_horizontal_metres', '1.0',
+     'before the start: warn that the drone was moved after the stack started if camera tracking puts it '
+     'further than this sideways from where the stack started'),
+    ('origin_check_vertical_metres', '0.3', 'before the start: the same, up or down'),
+    ('corner_count', 'true', 'start team_nav corner_count, the left camera FAST corner count for the pre-start check'),
+    ('left_image_topic', '/oak/left/image_raw', 'the left camera picture (from the organizers\' guide)'),
     ('drift_correction', 'false',
      'route mission: at each corner, correct camera tracking drift from the depth straight ahead and the '
      'course map (team_nav/drift_correction.py). Tried only in the simulator so far'),
@@ -158,6 +171,8 @@ def generate_launch_description(mission_default='stages'):
             'route_turn_rate_degrees_per_second': LaunchConfiguration('route_turn_rate_degrees_per_second'),
             'route_arrive_metres': LaunchConfiguration('route_arrive_metres'),
             'route_fly_through_degrees': LaunchConfiguration('route_fly_through_degrees'),
+            'origin_check_horizontal_metres': LaunchConfiguration('origin_check_horizontal_metres'),
+            'origin_check_vertical_metres': LaunchConfiguration('origin_check_vertical_metres'),
             'drift_correction': LaunchConfiguration('drift_correction'),
             'depth_topic': LaunchConfiguration('depth_topic'),
             'course_map_file': LaunchConfiguration('course_map_file'),
@@ -169,4 +184,14 @@ def generate_launch_description(mission_default='stages'):
         }, watchdog_parameters()],
     )
 
-    return LaunchDescription(declared + [flight_interface, mission])
+    corner_count = Node(
+        package='team_nav',
+        executable='corner_count',
+        name='team_corner_count',
+        output='screen',
+        emulate_tty=True,
+        condition=IfCondition(LaunchConfiguration('corner_count')),
+        parameters=[{'image_topic': LaunchConfiguration('left_image_topic')}],
+    )
+
+    return LaunchDescription(declared + [flight_interface, mission, corner_count])

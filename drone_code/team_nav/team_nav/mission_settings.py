@@ -39,6 +39,32 @@ class MissionSettings:
     # which leaves about 10 s for the landing itself (section 7 measured about 9 s).
     flight_time_limit_seconds: float = 170.0
 
+    # ------------------------------------------------------------------ before the start (prestart_check.py)
+    # From the organizers' guide (skybeta 0.3.3): before Offboard, publish a target at the drone's
+    # position at least once a second, 10 times a second at best.
+    prestart_setpoints_per_second: float = 10.0
+    # Our own choice: the hold target stops only if no camera tracking report has arrived for this
+    # long (drone 16 showed gaps of up to 0.332 s at a normal 30 Hz).
+    prestart_odometry_max_age_seconds: float = 0.5
+    # From the team (2026-11-07): not ready if the reports' timestamps stop advancing this long...
+    prestart_stamp_stall_seconds: float = 0.5
+    # ...or if the pose is bit-identical longer than this while the left camera is blind.
+    prestart_identical_pose_seconds: float = 3.0
+    # Estimated, not yet measured on drone 16: fewer FAST corners than this in the left camera
+    # (corner_count_node.py, at 512 x 320) means it sees nothing to track. A covered lens gives
+    # almost none; a textured room gives hundreds. Check with drone_code/check_drone_16.sh.
+    prestart_blind_below_corners: int = 30
+    # Our own choice: corner_count_node.py reports twice a second; older than this is no count.
+    corner_count_max_age_seconds: float = 1.5
+    # From the team: once ready, stay ready at least this long.
+    prestart_ready_hold_seconds: float = 2.0
+    # From the team: warn that the drone was moved after the stack started if camera tracking puts
+    # it further than this from where the stack started, sideways or up and down.
+    origin_check_horizontal_metres: float = 1.0
+    origin_check_vertical_metres: float = 0.3
+    # Our own choice: while waiting, log the camera tracking position this often.
+    prestart_position_log_seconds: float = 5.0
+
     # ------------------------------------------------------------------ position watchdog
     # (position_watchdog.py). Each one is also a launch argument of the same name.
     # From the team (2026-11-07): rule (a), no new camera tracking report for this long. Measured on
@@ -104,8 +130,10 @@ class MissionSettings:
     # From the team plan (section 11): if position reports stop for more than 0.2 s, hold.
     position_report_max_age_seconds: float = 0.2
     # Measured on drone 16 (2026-11-07): when camera tracking died, its reports kept coming 30 times a
-    # second with a bit-identical position for many seconds. More identical positions in a row than
-    # this means tracking has frozen (about a third of a second at 30 reports per second).
+    # second with a bit-identical position for many seconds. In flight, more identical positions in a
+    # row than this means tracking has frozen (about a third of a second at 30 reports per second). A
+    # drone flying never reports the same position twice; one standing still can, so before the
+    # start prestart_check.py decides instead.
     frozen_tracking_identical_reports: int = 10
     # Our own choice: the organizers' code reports the flight state 5 times per second.
     flight_state_max_age_seconds: float = 1.0

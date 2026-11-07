@@ -27,6 +27,7 @@ setup(
     entry_points={
         "console_scripts": [
             "mission = team_nav.mission_node:main",
+            "corner_count = team_nav.corner_count_node:main",
         ],
     },
 )

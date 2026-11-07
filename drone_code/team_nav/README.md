@@ -2,9 +2,10 @@
 
 This is our team's ROS 2 package for the real drone. It holds the mission program. That program flies either the course stages or a route of waypoints, and lands with the bottom laser sensor (section 7 of [`docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md)). A position watchdog runs for the whole flight.
 
-[`launch/team_nav.launch.py`](launch/team_nav.launch.py) starts two programs on the drone, the same way the organizers' example launch file does:
-- the organizers' flight interface, with `auto_offboard_on_arm` on and `target_system` set to 16;
-- our mission program.
+[`launch/team_nav.launch.py`](launch/team_nav.launch.py) starts these programs on the drone:
+- the organizers' flight interface, exactly one, with `auto_offboard_on_arm` on and `target_system` set to 16, as their example launch file starts it (two would fight over PX4's control flags);
+- our mission program;
+- our corner counter (`corner_count`, on by default), which counts FAST corners in the left camera's picture for the pre-start check. It is a separate program, so a crash in it can't stop the mission.
 
 `target_system` is drone 16's PX4 system ID (`MAV_SYS_ID` is 16, measured in `~/skybeta/px4/params/fleet/drone16-vio-2026-11-03.params`). The flight interface in skybeta 0.3.2 defaults it to 1, and then its Offboard request would go to a system that isn't there.
 
@@ -19,12 +20,24 @@ On the drone, where launch arguments can't be given, [`launch/team_nav_route.lau
 
 Other settings work the same way. For example, `cruise_height_metres:=0.6` changes the cruise height, and every watchdog threshold and route speed is a launch argument too.
 
+## Before the start (fixed after drone 16 on 2026-11-07)
+
+On 2026-11-07 the drone sat still on the takeoff spot, and the mission flapped once a second between "not ready: camera tracking is frozen" and "ready". While "not ready" it sent no target, so the hand-over never happened. A drone standing still can report bit-identical positions, and that is normal. Now:
+
+- While camera tracking reports keep arriving (none missing for 0.5 s), the mission sends a hold target at the drone's position 10 times a second, whatever else is wrong. The organizers' code only hands over control if it has heard a target in the last second.
+- `prestart_check.py` says **not ready** only if the reports' own timestamps stop advancing for 0.5 s, or if the position has been bit-identical for over 3 s while the left camera is also blind (fewer than 30 FAST corners, from `corner_count`). Once ready, it stays ready for at least 2 s. If Offboard starts while it is not ready, the start is refused and a gentle descent is commanded.
+- A missing corner count never blocks a start on its own. In flight, watchdog rule (c) still catches tracking that is frozen while the drone is asked to move.
+- Every 5 s while waiting, the log shows camera tracking's position, heading and corner count. If the drone is more than 1.0 m sideways or 0.3 m up or down from where the stack started (`origin_check_horizontal_metres`, `origin_check_vertical_metres`), it logs `THE DRONE WAS MOVED AFTER THE STACK STARTED`. That only warns. Targets are always held at least 0.3 m above the stack's start point, so a drone carried to the net climbs to 0.3 m above wherever the stack started. Restart the stack on the takeoff spot ([`../restart_drone_16.sh`](../README.md)).
+
+The blind threshold of 30 corners is an estimate. Check the real count with the drone's camera covered and uncovered.
+
 ## Reading order
 
 All flight decisions are plain Python with no ROS in them, so they run and are tested on a laptop. Read them in this order:
 
 1. [`team_nav/mission.py`](team_nav/mission.py) covers the whole flight: waiting on the launch mark, the takeoff, the course, the landing, and the rules checked at every step.
 2. [`team_nav/position_watchdog.py`](team_nav/position_watchdog.py) decides when the position can no longer be trusted, which lands the drone at once.
+   - [`team_nav/prestart_check.py`](team_nav/prestart_check.py) decides, before the start, whether a start would be accepted, and warns if the drone was moved after the stack started.
 3. [`team_nav/course_stages.py`](team_nav/course_stages.py) covers the stages between takeoff and landing: follow_line, gate_a, tunnel_align, tunnel_cross, tunnel_exit, chicane and find_pad.
 4. [`team_nav/route_flight.py`](team_nav/route_flight.py) is the route mission. It flies the waypoints one leg at a time at 0.5 m/s. At a corner that turns by 25° or more it stops and turns in place at up to 25°/s; at a shallower one it flies straight through and lets the heading blend round. A waypoint can carry a height: the leg into it is flown at that height, and the height changes while the drone is stopped before that leg, never during a leg.
    - [`team_nav/drift_correction.py`](team_nav/drift_correction.py) and [`team_nav/depth_ahead.py`](team_nav/depth_ahead.py) are the drift correction at route corners (below).
@@ -34,6 +47,7 @@ All flight decisions are plain Python with no ROS in them, so they run and are t
 8. [`team_nav/mission_settings.py`](team_nav/mission_settings.py) has every number, with its unit and where it came from.
 9. [`team_nav/mission_node.py`](team_nav/mission_node.py) is the thin ROS 2 program that passes messages in and out, 20 times a second.
 10. [`team_nav/camera_exposure.py`](team_nav/camera_exposure.py) caps the camera's automatic exposure, so the pictures camera tracking depends on stay sharp.
+    - [`team_nav/corner_count_node.py`](team_nav/corner_count_node.py) is the corner counter program. It uses [`team_nav/camera_images.py`](team_nav/camera_images.py) to read camera pictures and [`team_nav/fast_corners.py`](team_nav/fast_corners.py) to count corners, both plain numpy, so they work even if OpenCV is missing on the drone.
 11. [`launch/team_nav.launch.py`](launch/team_nav.launch.py) says what starts on the drone, and why that is safe.
 
 The route's waypoints live in files in [`missions/`](missions/), not in code, because the judges take points off for routes written into code. The launch argument `route_file` picks one by name:
@@ -68,8 +82,9 @@ On the drone this needs two things that don't exist yet. One is a program publis
 | hears | `/fmu/out/vehicle_local_position` | `dist_bottom` (the bottom laser distance), plus `xy_reset_counter` and `heading_reset_counter` for watchdog rule (e). It is read only. This name has no version suffix on drone 16 (measured). Set the parameter `px4_local_position_topic` to empty, and the organizers' code works the name out. |
 | hears | `/fmu/out/vehicle_status_v1` | `nav_state`, PX4's own mode, for watchdog rule (f). It is read only. PX4's status message is at version 1, hence `_v1` (measured on drone 16 and in the simulator). |
 | hears | `depth_topic` (only with `drift_correction:=true`) | Depth points for the drift correction, as `sensor_msgs/PointCloud2`. Empty by default: there is no depth program on the drone yet. |
+| hears | `/team/left_corner_count` | The FAST corner count in the left camera (`corner_count`), for the pre-start check. |
 | hears | `/visual_slam/status` | Camera tracking's own `vo_state`. It is only logged and never lands the drone, because on drone 16 it stayed at 1 ("tracking") while the camera was covered. |
-| sends | `/skybeta/setpoint/pose` | Position targets while waiting, climbing and cruising. |
+| sends | `/skybeta/setpoint/pose` | Position targets: 10 times a second while waiting (a hold at the drone), then every step while climbing and cruising. |
 | sends | `/skybeta/setpoint/twist` | Velocity commands while landing, because position targets can't go below 0.3 m. They are in world directions (x East, y North, z Up), whatever way the nose points. |
 | sets | camera parameters on `/oak` | The automatic exposure cap: `r_auto_exposure_limit` 8000 on the left and right cameras first, then the switches that turn it on. It is applied again if the camera program restarts. The node name is a parameter (`camera_node_name`); check it on the drone with `ros2 param list /oak`. |
 
@@ -83,7 +98,7 @@ These come from reading the organizers' flight interface. Each one has a test.
 - **No speed limit on position targets.** PX4 will fly to a position target at up to 12 m/s. So no target is ever more than 0.5 m from the drone, and the log records each new peak horizontal speed.
 - **The flight state repeats old values.** Before anything advances, the mission checks three things separately: camera tracking reports have arrived recently, PX4's position reports have arrived recently, and the flight state is fresh and says the PX4 link is up. If any check fails, the drone holds, and it lands if that lasts 5 s.
 - **Touchdown needs three signs together.** The mission must be commanding a descent, position reports must show the drone has stopped moving down, and the laser must be at the floor reading. The laser never reads below 0.1 m, so it can't confirm touchdown alone. Without a usable laser or position reports, the drone keeps descending gently, and PX4 lands it a few seconds later.
-- **Frozen camera tracking counts as unhealthy.** On drone 16, odometry once kept arriving 30 times a second with a bit-identical position for many seconds after tracking died. While a target asks the drone to move, a freeze trips watchdog rule (c). While hovering, more than 10 identical positions in a row means hold, then land after 5 s. The landing never treats a frozen position as stillness. Before a start, no target is sent while tracking is frozen, so the organizers' code can't hand over control, and the log says why. If Offboard still begins in the moment before the freeze is spotted, the start is refused. The mission then commands a gentle descent, which keeps the drone on the floor until PX4 switches the motors off.
+- **Frozen camera tracking counts as unhealthy in flight.** On drone 16, odometry once kept arriving 30 times a second with a bit-identical position for many seconds after tracking died. While a target asks the drone to move, a freeze trips watchdog rule (c). While hovering, more than 10 identical positions in a row means hold, then land after 5 s. The landing never treats a frozen position as stillness. Before the start, the rule is different (see "Before the start" above), because a drone standing still can report identical positions.
 - **Each run starts clean.** When a run starts, everything learned in the previous run is cleared: the pad position, the space seen free, the counts, the fault, the timers and the detector reports. Once PX4 has disarmed the drone on the ground, the mission is ready for another run. A new run starts the same way as the first: the pilot arms, then flips the switch to Position. PX4 can still report Offboard after disarming. That is never treated as a start, and the drone gets no target while it lasts.
 
 ## The position watchdog

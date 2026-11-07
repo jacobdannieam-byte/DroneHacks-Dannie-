@@ -247,27 +247,123 @@ def freeze_tracking_from(seconds):
     return freeze
 
 
-def test_frozen_tracking_before_the_start_sends_no_target_so_the_hand_over_is_refused():
+def corner_count(count_at):
+    """Report corner_count_node.py's count every step: count_at(now_seconds) gives it."""
+    def report(now_seconds, mission, drone):
+        mission.observe_corner_count(now_seconds, count_at(now_seconds))
+    return report
+
+
+def not_ready_reasons(mission):
+    return [reason for reason in reasons(mission) if reason.startswith("not ready")]
+
+
+@pytest.mark.parametrize("corners", [None, 300])
+def test_a_still_drone_reporting_identical_positions_stays_ready_sends_the_hold_target_and_takes_off(corners):
+    """Drone 16 on 2026-11-07: sitting still, it flapped to "not ready" and sent no target."""
     mission, drone = Mission(), FakeDrone()
-    record = fly(mission, drone, 5.0, switch_at_seconds=3.0, every_step=freeze_tracking_from(0.0))
-    frozen_at = first_time(mission, "not ready: camera tracking is frozen")
-    assert frozen_at == pytest.approx(1.0, abs=0.11)               # the eleventh identical report
-    assert all(command.kind == "nothing" for command in commands_after(record, frozen_at))
-    assert not drone.offboard and mission.phase == "waiting_for_start"   # the organizers' code refused
-    assert max(step.drone_position[2] for step in record) == 0.0
+    drone.still_reports_identical = True
+    identical_in_a_row = []
+
+    def count_identical(now_seconds, mission, drone):
+        identical_in_a_row.append(mission.position_watch.identical_reports_in_a_row)
+        if corners is not None:
+            mission.observe_corner_count(now_seconds, corners)
+    record = fly(mission, drone, 40.0, switch_at_seconds=30.0, every_step=count_identical)
+    waiting = [step for step in record if step.seconds < 30.0]
+    assert len({step.drone_position for step in waiting}) == 1               # it really sat still...
+    assert max(identical_in_a_row) > 250                                     # ...reporting one position
+    assert all(step.command.kind == "position" for step in waiting)           # 10 times a second
+    assert not_ready_reasons(mission) == []
+    assert "taking_off" in phases(mission)
 
 
-def test_offboard_beginning_while_frozen_refuses_the_start_and_keeps_the_drone_down():
+def test_identical_positions_with_a_blind_camera_are_not_ready_but_the_hold_target_continues():
     mission, drone = Mission(), FakeDrone(disarms_if_not_flown_after_seconds=10.0)
-    record = fly(mission, drone, 14.0, switch_at_seconds=1.5, every_step=freeze_tracking_from(0.0))
-    refused_at = first_time(mission, "refused to start: camera tracking frozen")
-    assert refused_at == pytest.approx(1.5)                        # its last target was still recent
-    assert any(reason.endswith("so the position is not changing at all") for reason in reasons(mission))
+    record = fly(mission, drone, 16.0, switch_at_seconds=5.0,
+                 every_step=every_step_do(freeze_tracking_from(0.0), corner_count(lambda now: 4)))
+    not_ready_at = first_time(mission, "not ready: camera tracking has not changed for over 3 s and the left "
+                                       "camera is blind (fewer than 30 corners)")
+    assert not_ready_at == pytest.approx(3.1, abs=0.11)
+    assert all(step.command.kind == "position" for step in record if step.seconds < 5.0)
+    refused_at = first_time(mission, "refused to start: camera tracking has not changed")
+    assert refused_at == pytest.approx(5.0)
     motors_off_at = first_time(mission, "PX4 switched the motors off after the refused start")
     held_down = [step.command for step in record if refused_at <= step.seconds < motors_off_at]
     assert held_down and all(command.velocity == (0.0, 0.0, -0.35) for command in held_down)
     assert "taking_off" not in phases(mission)
-    assert max(step.drone_position[2] for step in record) == 0.0  # never left the ground
+
+
+def test_identical_positions_with_a_camera_that_sees_corners_stay_ready():
+    mission, drone = Mission(), FakeDrone()
+    fly(mission, drone, 20.0, switch_at_seconds=1e9,
+        every_step=every_step_do(freeze_tracking_from(0.0), corner_count(lambda now: 30)))
+    assert not_ready_reasons(mission) == []
+
+
+def test_timestamps_that_stop_advancing_are_not_ready_but_the_hold_target_continues():
+    def stamps_stop_at_2_s(now_seconds, mission, drone):
+        drone.stamps_frozen = now_seconds >= 2.0
+    mission, drone = Mission(), FakeDrone()
+    record = fly(mission, drone, 6.0, switch_at_seconds=1e9, every_step=stamps_stop_at_2_s)
+    not_ready_at = first_time(mission, "not ready: camera tracking timestamps have stopped advancing (for over 0.5 s)")
+    assert not_ready_at == pytest.approx(2.6, abs=0.11)
+    assert all(step.command.kind == "position" for step in record)
+
+
+def test_the_hold_target_stops_only_when_reports_stop():
+    def reports_stop_at_3_s(now_seconds, mission, drone):
+        drone.sends_position_reports = now_seconds < 3.0
+    mission, drone = Mission(), FakeDrone()
+    record = fly(mission, drone, 6.0, switch_at_seconds=1e9, every_step=reports_stop_at_3_s)
+    assert all(step.command.kind == "position" for step in record if step.seconds < 3.4)
+    assert all(step.command.kind == "nothing" for step in record if step.seconds > 3.5)
+    assert "waiting for position reports from camera tracking" in reasons(mission)
+
+
+def test_once_ready_it_stays_ready_for_at_least_2_s():
+    """A blind camera, but one report at 6 s with plenty of corners: ready from 6 s to 8 s."""
+    mission, drone = Mission(), FakeDrone()
+    fly(mission, drone, 10.0, switch_at_seconds=1e9,
+        every_step=every_step_do(freeze_tracking_from(0.0), corner_count(lambda now: 300 if now == 6.0 else 0)))
+    changes = [(round(seconds, 1), reason.split(":")[0]) for seconds, phase, reason in mission.history
+               if reason.startswith(("ready", "not ready"))]
+    assert changes == [(0.0, "ready"), (3.1, "not ready"), (6.0, "ready"), (8.0, "not ready")]
+
+
+def test_the_hold_target_goes_out_10_times_a_second_when_the_mission_steps_20_times():
+    mission, drone = Mission(), FakeDrone()
+    record = fly(mission, drone, 3.0, step_seconds=0.05, switch_at_seconds=1e9)
+    sent = [step.seconds for step in record if step.command.kind == "position"]
+    assert len(sent) == 30
+    assert all(later - earlier == pytest.approx(0.1) for earlier, later in zip(sent, sent[1:]))
+
+
+def test_the_position_is_logged_while_waiting_and_a_moved_drone_is_warned_about():
+    """Drone 16 on 2026-11-07: powered on at the table, carried to the net, camera tracking said
+    (10.64, -4.82, -2.41) on the takeoff spot."""
+    mission, drone = Mission(), FakeDrone(floor_height=lambda x, y: -2.41)
+    drone.position = [10.64, -4.82, -2.41]
+    fly(mission, drone, 11.0, switch_at_seconds=1e9)
+    logged = [reason for reason in reasons(mission) if reason.startswith("waiting: camera tracking at")]
+    assert logged[0].startswith("waiting: camera tracking at (10.64, -4.82, -2.41) m, heading 0 deg; "
+                                "no corner count from corner_count_node")
+    assert len(logged) == 3                                                   # at 0, 5 and 10 s
+    warnings = [reason for reason in reasons(mission) if reason.startswith("THE DRONE WAS MOVED AFTER THE STACK STARTED")]
+    assert len(warnings) == 3
+    assert "11.68 m sideways and -2.41 m up" in warnings[0]
+    assert "restart the stack with the drone on the takeoff spot" in warnings[0]
+
+
+def test_a_drone_near_the_origin_gets_no_warning_and_the_limits_are_settings():
+    mission, drone = Mission(), FakeDrone()
+    fly(mission, drone, 6.0, switch_at_seconds=1e9)
+    assert not any("THE DRONE WAS MOVED" in reason for reason in reasons(mission))
+    settings = MissionSettings(origin_check_horizontal_metres=20.0, origin_check_vertical_metres=3.0)
+    mission, drone = Mission(settings), FakeDrone(floor_height=lambda x, y: -2.41)
+    drone.position = [10.64, -4.82, -2.41]
+    fly(mission, drone, 6.0, switch_at_seconds=1e9)
+    assert not any("THE DRONE WAS MOVED" in reason for reason in reasons(mission))
 
 
 def test_tracking_freezing_while_hovering_holds_then_lands():

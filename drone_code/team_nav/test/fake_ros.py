@@ -163,6 +163,38 @@ class String:
         self.data = data
 
 
+class Int32:
+    def __init__(self, data=0):
+        self.data = data
+
+
+class Image:
+    """sensor_msgs/Image: a picture, row after row of bytes."""
+
+    def __init__(self):
+        self.header = Header()
+        self.height = 0
+        self.width = 0
+        self.encoding = ""
+        self.is_bigendian = 0
+        self.step = 0
+        self.data = b""
+
+
+class CameraInfo:
+    """sensor_msgs/CameraInfo: the camera's lens numbers (k, d, r, p as flat lists)."""
+
+    def __init__(self):
+        self.header = Header()
+        self.height = 0
+        self.width = 0
+        self.distortion_model = ""
+        self.d = []
+        self.k = [0.0] * 9
+        self.r = [0.0] * 9
+        self.p = [0.0] * 12
+
+
 class VehicleLocalPosition:
     def __init__(self):
         self.dist_bottom = math.nan
@@ -322,9 +354,10 @@ def install():
     sys.modules["nav_msgs"] = module("nav_msgs")
     sys.modules["nav_msgs.msg"] = module("nav_msgs.msg", Odometry=Odometry)
     sys.modules["std_msgs"] = module("std_msgs")
-    sys.modules["std_msgs.msg"] = module("std_msgs.msg", String=String)
+    sys.modules["std_msgs.msg"] = module("std_msgs.msg", String=String, Int32=Int32)
     sys.modules["sensor_msgs"] = module("sensor_msgs")
-    sys.modules["sensor_msgs.msg"] = module("sensor_msgs.msg", PointCloud2=PointCloud2, PointField=PointField)
+    sys.modules["sensor_msgs.msg"] = module("sensor_msgs.msg", PointCloud2=PointCloud2, PointField=PointField,
+                                            Image=Image, CameraInfo=CameraInfo)
     sys.modules["px4_msgs"] = module("px4_msgs")
     sys.modules["px4_msgs.msg"] = module("px4_msgs.msg", VehicleLocalPosition=VehicleLocalPosition,
                                          VehicleStatus=VehicleStatus)

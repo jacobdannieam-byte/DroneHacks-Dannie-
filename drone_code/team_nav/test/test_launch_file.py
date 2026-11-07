@@ -169,3 +169,34 @@ def test_the_drift_correction_is_off_by_default_and_its_inputs_are_launch_argume
     assert float(declared["start_heading_degrees"]) == MissionSettings().start_heading_degrees == 90.0
     for name in ("drift_correction", "depth_topic", "course_map_file", "start_heading_degrees"):
         assert mission_parameters(launched)[name].name == name, name
+
+
+def test_exactly_one_flight_interface_starts_with_the_hand_over_on_and_drone_16s_system_id(launched):
+    """The organizers' guide: exactly one flight_interface, started from our launch file with
+    auto_offboard_on_arm true; two fight over PX4's control flags."""
+    started = [entity.settings for entity in launched.entities if isinstance(entity, fake_launch.Node)]
+    interfaces = [settings for settings in started if settings["executable"] == "flight_interface"]
+    assert len(interfaces) == 1
+    assert interfaces[0]["package"] == "skybeta_flight_interface"
+    assert "condition" not in interfaces[0]                              # nothing can switch it off
+    parameters = interfaces[0]["parameters"][0]
+    assert parameters["auto_offboard_on_arm"].name == "auto_offboard_on_arm"
+    assert parameters["target_system"].name == "target_system"
+    declared = arguments(launched)
+    assert declared["auto_offboard_on_arm"] == "true" and declared["target_system"] == "16"
+    assert not any(settings["package"] == "competitor_example" for settings in started)   # no square_mission
+
+
+def test_the_corner_count_starts_as_its_own_program_and_the_origin_limits_are_arguments(launched):
+    corner_count = node(launched, "corner_count")
+    assert corner_count["package"] == "team_nav"
+    assert corner_count["condition"].predicate.name == "corner_count"
+    assert corner_count["parameters"][0]["image_topic"].name == "left_image_topic"
+    declared = arguments(launched)
+    assert declared["corner_count"] == "true"
+    assert declared["left_image_topic"] == "/oak/left/image_raw"
+    for name, value in (("origin_check_horizontal_metres", 1.0), ("origin_check_vertical_metres", 0.3)):
+        assert float(declared[name]) == getattr(MissionSettings(), name) == value
+        assert mission_parameters(launched)[name].name == name
+    setup_text = (PACKAGE_FOLDER / "setup.py").read_text()
+    assert '"corner_count = team_nav.corner_count_node:main"' in setup_text

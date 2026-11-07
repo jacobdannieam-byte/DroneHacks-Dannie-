@@ -20,15 +20,18 @@ Words used here:
   way the nose points.
 
 Phases:
-  waiting_for_start  On the launch mark. We already send a target just above the drone, because the
-                     organizers' code only hands control over while it is hearing targets; it has no
-                     effect before that. We also record the laser's floor reading (section 7, step 1).
+  waiting_for_start  On the launch mark. While camera tracking reports arrive, we send a hold target
+                     at the drone's position 10 times a second, because the organizers' code only
+                     hands control over while it hears a target at least once a second; it has no
+                     effect before that. prestart_check.py says whether a start would be accepted, and
+                     the position is logged every 5 s, with a warning if the drone is far from where
+                     the stack started. We also record the laser's floor reading (section 7, step 1).
   taking_off         From the first step with Offboard active: climb to cruise height.
   flying_course      course_stages.py decides (mission:=stages).
   flying_route       route_flight.py decides (mission:=route).
   landing            landing.py decides.
-  start_refused      Offboard began while camera tracking was frozen. A gentle descent is sent, so
-                     the drone stays on the ground until PX4 switches the motors off.
+  start_refused      Offboard began while prestart_check.py said not ready. A gentle descent is sent,
+                     so the drone comes back down until PX4 switches the motors off.
   finished           PX4 switched the motors off after landing.
   stopped            Control is not ours any more. Nothing is published until the drone is disarmed
                      on the ground, after which a new run can start (all run state is cleared then).
@@ -59,9 +62,11 @@ Safety rules (each one is a test in test/test_mission.py):
 * Nothing advances unless camera tracking reports and PX4's position reports are each freshly
   received, and the flight state is fresh and says the link to PX4 is up. (The flight state repeats
   old values, so it cannot vouch for the other two.) Otherwise hold, and land if that lasts 5 s.
-* Camera tracking that repeats a bit-identical position more than 10 times in a row has frozen.
-  While it is frozen before a start, no target is sent, so control cannot be handed over; the reason
-  is logged. Frozen in flight while hovering, it is a hold, then a landing after 5 s.
+* Before the start, a drone standing still may report bit-identical positions; that is normal.
+  prestart_check.py says not ready only if the reports' timestamps stop advancing, or the position
+  has not changed for over 3 s while the left camera is blind. In flight, more than 10 identical
+  positions in a row means tracking has frozen: while hovering that is a hold, then a landing
+  after 5 s.
 * Every position target stays within 0.5 m of the drone, sideways.
 * 170 s after the start the landing begins. Nothing stops a landing except the motors switching
   off or Offboard ending.
@@ -85,6 +90,7 @@ from .mission_inputs import MissionInputs, is_finite_number
 from .mission_settings import MissionSettings
 from .position_watch import PositionWatch
 from .position_watchdog import PositionWatchdog
+from .prestart_check import PrestartCheck, origin_warning
 from .route_flight import RouteFlight
 
 # Our own choice: after a pause in the steps (a slow computer), move the carrot as if at most this
@@ -137,6 +143,10 @@ class Mission:
         self.position_watch = PositionWatch(self.settings.frozen_tracking_identical_reports)
         # The watchdog follows the report streams across runs; start_watching() restarts its rules.
         self.watchdog = PositionWatchdog(self.settings)
+        # Like the watchdog, the pre-start check follows the report streams across runs.
+        self.prestart = PrestartCheck(self.settings)
+        self.last_prestart_target_seconds = None
+        self.last_position_log_seconds = None
         self.nav_state = None                    # PX4's own mode, from its status report
         self.phase = "waiting_for_start"
         self.reason = ""
@@ -196,6 +206,11 @@ class Mission:
         if orientation is None:
             orientation = (self.heading_radians,)
         self.watchdog.observe_report(now_seconds, stamp_seconds, self.position, orientation)
+        self.prestart.observe_report(now_seconds, stamp_seconds, self.position + tuple(orientation))
+
+    def observe_corner_count(self, now_seconds, corner_count):
+        """How many FAST corners corner_count_node.py found in the left camera's picture."""
+        self.prestart.observe_corner_count(now_seconds, corner_count)
 
     def observe_flight_state(self, now_seconds, offboard_active, armed, landed, px4_link=None):
         """Each value is True, False, or None when the report did not say."""
@@ -314,10 +329,6 @@ class Mission:
         """Freshly received, and not frozen."""
         return self.position_is_fresh(now_seconds) and not self.position_watch.tracking_frozen()
 
-    def frozen_tracking_reason(self):
-        repeats = self.position_watch.identical_reports_in_a_row
-        return f"camera tracking frozen (the same position {repeats} times in a row)"
-
     def laser_is_fresh(self, now_seconds):
         return self.received_within(self.laser_seconds, now_seconds, self.settings.laser_report_max_age_seconds)
 
@@ -354,18 +365,47 @@ class Mission:
                                                  "to end before the next run")
             elif self.offboard_active is True:
                 return self.try_to_start(now_seconds)
-        if not self.position_is_fresh(now_seconds):
+        if not self.received_within(self.position_seconds, now_seconds, self.settings.prestart_odometry_max_age_seconds):
             return Command("nothing", reason="waiting for position reports from camera tracking")
-        if self.position_watch.tracking_frozen():
-            # Without a recent target the organizers' code will not hand over control.
-            return Command("nothing", reason="not ready: camera tracking is frozen (its position is not changing "
-                                             "at all), so no target is sent and control cannot be handed over")
+        self.log_position_while_waiting(now_seconds)
+        ready, why = self.prestart.readiness(now_seconds)
+        if ready:
+            reason = "ready: waiting for Offboard (the pilot's switch to Position after arming)"
+        else:
+            reason = f"not ready: {why}; a start now would be refused (still sending the hold target)"
+        if not self.time_for_a_prestart_target(now_seconds):
+            return Command("nothing", reason=reason)
         x, y, z = self.position
-        # A target just above the drone: the lowest the organizers' code allows. It does nothing
-        # until Offboard starts, and then it lifts the drone off at once.
+        # A target at the drone, raised to the lowest height the organizers' code allows (it would
+        # raise it anyway, and log a warning each time). It does nothing until Offboard starts, and
+        # then it lifts the drone off at once.
         target = (x, y, z + self.settings.lowest_position_target_metres)
-        return Command("position", position=target, heading_radians=self.heading_radians,
-                       reason="ready: waiting for Offboard (the pilot's switch to Position after arming)")
+        return Command("position", position=target, heading_radians=self.heading_radians, reason=reason)
+
+    def time_for_a_prestart_target(self, now_seconds):
+        """The hold target goes out prestart_setpoints_per_second times a second, not at every step."""
+        period = 1.0 / self.settings.prestart_setpoints_per_second
+        last = self.last_prestart_target_seconds
+        if last is not None and now_seconds - last < period - 1e-6:
+            return False
+        self.last_prestart_target_seconds = now_seconds
+        return True
+
+    def log_position_while_waiting(self, now_seconds):
+        last = self.last_position_log_seconds
+        if last is not None and now_seconds - last < self.settings.prestart_position_log_seconds:
+            return
+        self.last_position_log_seconds = now_seconds
+        x, y, z = self.position
+        if self.prestart.corner_count_is_fresh(now_seconds):
+            corners = f"{self.prestart.corner_count} corners in the left camera"
+        else:
+            corners = "no corner count from corner_count_node"
+        self.log(now_seconds, f"waiting: camera tracking at ({x:.2f}, {y:.2f}, {z:.2f}) m, heading "
+                              f"{math.degrees(self.heading_radians):.0f} deg; {corners}")
+        warning = origin_warning(self.position, self.settings)
+        if warning is not None:
+            self.log(now_seconds, warning)
 
     def try_to_start(self, now_seconds):
         if not self.seen_offboard_inactive:
@@ -377,8 +417,9 @@ class Mission:
         if self.position is None:
             return self.stop(now_seconds, "Offboard became active but no position report has ever arrived "
                                           "from camera tracking: cannot take off")
-        if self.position_watch.tracking_frozen():
-            return self.refuse_start(now_seconds)
+        ready, why = self.prestart.readiness(now_seconds)
+        if not ready:
+            return self.refuse_start(now_seconds, why)
         floor_reading = self.median_floor_reading()
         self.reset_run_state()
         self.watchdog.start_watching(now_seconds)
@@ -395,15 +436,17 @@ class Mission:
         self.log(now_seconds, f"new run: home ({self.home[0]:.2f}, {self.home[1]:.2f}), ground height "
                               f"{self.ground_height_metres:.2f} m, heading {math.degrees(self.heading_radians):.0f} deg, "
                               f"laser floor reading {floor_text}")
+        warning = origin_warning(self.position, self.settings)
+        if warning is not None:
+            self.log(now_seconds, warning)
         return self.take_off(now_seconds)
 
-    def refuse_start(self, now_seconds):
-        """Offboard has begun, but camera tracking is frozen: no mission. The organizers' code is
-        already flying to our last target, just above the drone, so keep commanding a gentle
-        descent until PX4 switches the motors off. On the floor this cannot move the drone."""
+    def refuse_start(self, now_seconds, why):
+        """Offboard has begun, but the pre-start check says camera tracking cannot be trusted: no
+        mission. The organizers' code is already flying to our last target, just above the drone,
+        so keep commanding a gentle descent until PX4 switches the motors off."""
         self.phase = "start_refused"
-        self.log(now_seconds, f"refused to start: {self.frozen_tracking_reason()}, so the position is not "
-                              "changing at all")
+        self.log(now_seconds, f"refused to start: {why}")
         return self.keep_on_the_ground()
 
     def keep_on_the_ground(self):

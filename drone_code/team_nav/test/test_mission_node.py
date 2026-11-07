@@ -20,6 +20,7 @@ FLIGHT_STATE_TOPIC = "/skybeta/state"
 PX4_LOCAL_POSITION_TOPIC = "/fmu/out/vehicle_local_position"
 PX4_STATUS_TOPIC = "/fmu/out/vehicle_status_v1"
 VISUAL_SLAM_STATUS_TOPIC = "/visual_slam/status"
+CORNER_COUNT_TOPIC = "/team/left_corner_count"
 POSE_TOPIC = "/skybeta/setpoint/pose"
 TWIST_TOPIC = "/skybeta/setpoint/twist"
 STEP_SECONDS = 1.0 / MissionSettings().steps_per_second           # the node's timer period: 20 Hz
@@ -107,10 +108,10 @@ def logged(node):
 
 
 # ---------------------------------------------------------------- wiring
-def test_hears_five_topics_and_sends_only_on_the_two_setpoint_topics(build_node):
+def test_hears_six_topics_and_sends_only_on_the_two_setpoint_topics(build_node):
     node = build_node()
     assert set(node.subscriptions) == {POSITION_TOPIC, FLIGHT_STATE_TOPIC, PX4_LOCAL_POSITION_TOPIC,
-                                       PX4_STATUS_TOPIC, VISUAL_SLAM_STATUS_TOPIC}
+                                       PX4_STATUS_TOPIC, VISUAL_SLAM_STATUS_TOPIC, CORNER_COUNT_TOPIC}
     assert set(node.publishers) == {POSE_TOPIC, TWIST_TOPIC}
     assert not any(topic.startswith("/fmu/in") for topic in node.publishers)
     assert node.timers[0][0] == pytest.approx(1.0 / MissionSettings().steps_per_second)
@@ -385,3 +386,24 @@ def test_publishing_stops_when_offboard_ends(build_node):
     sent = fly_node(node, drone, 10.0, every_step=pilot_takes_over)
     assert sent and max(seconds for seconds, _, _ in sent) < 5.0
     assert any("PX4 left Offboard" in line for line in logged(node))
+
+
+# ---------------------------------------------------------------- before the start, on drone 16
+def test_a_still_drone_gets_a_hold_target_10_times_a_second_from_the_20_hz_node(build_node):
+    """Drone 16 on 2026-11-07: standing still, the node flapped to "not ready" and sent nothing."""
+    node = build_node()
+    drone = FakeDrone()
+    drone.still_reports_identical = True
+    sent = fly_node(node, drone, 20.0, arm_at_seconds=1e9, switch_at_seconds=1e9)
+    poses = [seconds for seconds, topic, _ in sent if topic == POSE_TOPIC]
+    assert len(poses) == pytest.approx(20.0 * 10, abs=2)
+    assert max(later - earlier for earlier, later in zip(poses, poses[1:])) <= 0.1 + 1e-6
+    assert not any(text.startswith("not ready") for text in logged(node))
+
+
+def test_the_corner_count_reaches_the_pre_start_check(build_node):
+    node = build_node()
+    fake_ros.Clock.seconds = 2.0
+    deliver(node, CORNER_COUNT_TOPIC, fake_ros.Int32(123))
+    assert node.mission.prestart.corner_count == 123
+    assert node.mission.prestart.corner_count_seconds == 2.0

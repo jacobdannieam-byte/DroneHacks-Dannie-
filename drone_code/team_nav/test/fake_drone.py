@@ -17,7 +17,9 @@ What it imitates:
   8 cm while the drone sits on the floor (section 7).
 * Camera tracking's reported position wobbles by a few micrometres from report to report, as real
   tracking does even when the drone is still. tracking_frozen makes it repeat one position exactly,
-  as drone 16's did after tracking died (2026-11-07).
+  as drone 16's did after tracking died (2026-11-07). still_reports_identical makes it repeat one
+  position exactly while it stands on the floor, as a healthy drone 16 can (2026-11-07), and
+  stamps_frozen makes every report carry the same timestamp.
 * Optionally, PX4 switches the motors off if the drone has not taken off within 10 s of arming
   (PX4 setting COM_DISARM_PRFLT).
 """
@@ -76,6 +78,9 @@ class FakeDrone:
         self.frozen_orientation = None
         self.xy_reset_counter = 0                 # PX4 raises these when it resets its estimates
         self.tracking_error_metres = [0.0, 0.0]   # tests set this to imitate camera tracking drift (x, y)
+        self.still_reports_identical = False      # no wobble while standing on the floor
+        self.stamps_frozen = False                # every report carries the same timestamp
+        self.frozen_stamp = None
         self.heading_reset_counter = 0
 
     # ------------------------------------------------------------------ what the mission hears
@@ -88,9 +93,20 @@ class FakeDrone:
         self.frozen_report = None
         self.reports_made += 1
         wobble = TRACKING_WOBBLE_METRES * (self.reports_made % 3 - 1)
+        if self.still_reports_identical and self.on_floor():
+            wobble = 0.0
         error_x, error_y = self.tracking_error_metres
         self.last_reported = (self.position[0] + error_x + wobble, self.position[1] + error_y, self.position[2])
         return self.last_reported
+
+    def report_stamp(self, now_seconds):
+        """The timestamp in a camera tracking report: the time now, or a stuck copy."""
+        if not self.stamps_frozen:
+            self.frozen_stamp = None
+            return now_seconds
+        if self.frozen_stamp is None:
+            self.frozen_stamp = now_seconds
+        return self.frozen_stamp
 
     def reported_orientation(self):
         """Camera tracking's orientation (x, y, z, w) for the heading, frozen along with the position."""
@@ -241,7 +257,7 @@ def fly(mission, drone, seconds, step_seconds=0.1, arm_at_seconds=0.5, switch_at
             switched = True
             drone.switch_to_position_mode(now)
         if drone.sends_position_reports:
-            mission.observe_position(now, drone.reported_position(), drone.heading_radians, now,
+            mission.observe_position(now, drone.reported_position(), drone.heading_radians, drone.report_stamp(now),
                                      drone.reported_orientation())
         mission.observe_px4_status(now, drone.px4_nav_state())
         if drone.sends_flight_state:
