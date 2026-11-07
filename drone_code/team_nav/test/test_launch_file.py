@@ -164,7 +164,7 @@ def test_the_drift_correction_is_off_by_default_and_its_inputs_are_launch_argume
     declared = arguments(launched)
     assert declared["drift_correction"] == "false"
     assert MissionSettings().drift_correction is False
-    assert declared["depth_topic"] == ""                                   # no depth program on the drone yet
+    assert declared["depth_topic"] == "/team/depth_points"                 # team_nav depth_points
     assert declared["course_map_file"] == "organizers_drawing.json"
     assert float(declared["start_heading_degrees"]) == MissionSettings().start_heading_degrees == 90.0
     for name in ("drift_correction", "depth_topic", "course_map_file", "start_heading_degrees"):
@@ -200,3 +200,21 @@ def test_the_corner_count_starts_as_its_own_program_and_the_origin_limits_are_ar
         assert mission_parameters(launched)[name].name == name
     setup_text = (PACKAGE_FOLDER / "setup.py").read_text()
     assert '"corner_count = team_nav.corner_count_node:main"' in setup_text
+
+
+def test_the_depth_points_start_as_their_own_program_with_the_camera_offset_as_arguments(launched):
+    depth_points = node(launched, "depth_points")
+    assert depth_points["package"] == "team_nav"
+    assert depth_points["condition"].predicate.name == "depth_points"
+    declared = arguments(launched)
+    assert declared["depth_points"] == "true"
+    expected = {"camera_forward_metres": "0.116", "camera_left_metres": "0.037", "camera_up_metres": "0.029",
+                "left_image_topic": "/oak/left/image_raw", "right_image_topic": "/oak/right/image_raw",
+                "left_camera_info_topic": "/oak/left/camera_info", "right_camera_info_topic": "/oak/right/camera_info"}
+    for name, value in expected.items():
+        assert declared[name] == value, name
+        assert depth_points["parameters"][0][name].name == name, name
+    assert declared["drift_correction"] == "false"                         # still off by default
+    setup_text = (PACKAGE_FOLDER / "setup.py").read_text()
+    assert '"depth_points = team_nav.depth_points_node:main"' in setup_text
+    assert '"depth_check = team_nav.depth_check_node:main"' in setup_text

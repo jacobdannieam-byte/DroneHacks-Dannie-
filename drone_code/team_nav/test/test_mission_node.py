@@ -286,8 +286,13 @@ def test_with_drift_correction_the_depth_straight_ahead_reaches_the_mission(buil
     assert node.mission.depth_ahead_metres is None
 
 
-def test_drift_correction_without_a_depth_topic_warns(build_node):
+def test_drift_correction_listens_to_our_depth_points_by_default(build_node):
     node = build_drift_node(build_node)
+    assert node.subscriptions["/team/depth_points"][0] is fake_ros.PointCloud2
+
+
+def test_drift_correction_with_an_empty_depth_topic_warns(build_node):
+    node = build_drift_node(build_node, depth_topic="")
     assert any(level == "warn" and "depth_topic is empty" in text for level, text in node.log_lines)
 
 

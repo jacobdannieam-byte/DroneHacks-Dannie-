@@ -28,6 +28,8 @@ setup(
         "console_scripts": [
             "mission = team_nav.mission_node:main",
             "corner_count = team_nav.corner_count_node:main",
+            "depth_points = team_nav.depth_points_node:main",
+            "depth_check = team_nav.depth_check_node:main",
         ],
     },
 )

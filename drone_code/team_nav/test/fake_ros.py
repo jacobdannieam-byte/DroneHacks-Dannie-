@@ -331,7 +331,7 @@ def module(name, **contents):
     return made
 
 
-STAND_IN_MODULES = ("rclpy", "rclpy.node", "rclpy.qos", "rclpy.parameter", "geometry_msgs", "geometry_msgs.msg", "nav_msgs",
+STAND_IN_MODULES = ("rclpy", "rclpy.node", "rclpy.qos", "rclpy.parameter", "rclpy.utilities", "geometry_msgs", "geometry_msgs.msg", "nav_msgs",
                     "nav_msgs.msg", "std_msgs", "std_msgs.msg", "sensor_msgs", "sensor_msgs.msg", "px4_msgs", "px4_msgs.msg", "rcl_interfaces",
                     "rcl_interfaces.msg", "rcl_interfaces.srv", "isaac_ros_visual_slam_interfaces",
                     "isaac_ros_visual_slam_interfaces.msg")
@@ -347,6 +347,7 @@ def install():
                                   ok=lambda: False, shutdown=lambda: None)
     sys.modules["rclpy.node"] = module("rclpy.node", Node=Node)
     sys.modules["rclpy.parameter"] = module("rclpy.parameter", Parameter=ParameterStandIn)
+    sys.modules["rclpy.utilities"] = module("rclpy.utilities", remove_ros_args=lambda args=None: list(args or []))
     sys.modules["rclpy.qos"] = module("rclpy.qos", QoSProfile=QoSProfile, QoSReliabilityPolicy=Policy,
                                       QoSDurabilityPolicy=Policy, QoSHistoryPolicy=Policy)
     sys.modules["geometry_msgs"] = module("geometry_msgs")

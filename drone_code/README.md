@@ -22,6 +22,7 @@ to another team's drone gets us disqualified.
 | [`install_on_drone_16.sh`](install_on_drone_16.sh) | Copies `team_nav` into `~/team_ws/src` on the drone. |
 | [`restart_drone_16.sh`](restart_drone_16.sh) | Restarts the drone's software (the "stack"), waits for our mission to start, then runs the check. |
 | [`check_drone_16.sh`](check_drone_16.sh) | Prints one line per check and ends with **READY TO FLY** or **NOT READY** and the reasons. It only reads. |
+| [`depth_check_16.sh`](depth_check_16.sh) | Prints whether the depth program runs, how many depth clouds come each second, and the median depth straight ahead, to compare with a tape measure. It only reads. |
 | [`drone_16_check_on_drone.sh`](drone_16_check_on_drone.sh) | The checks themselves; `check_drone_16.sh` runs them on the drone. |
 | [`drone_16_common.sh`](drone_16_common.sh) | Shared by the scripts: the address, the name check, one reused ssh connection. |
 
@@ -51,6 +52,19 @@ Do these in order, every flight.
 
 The pilot takes the drone back by moving a stick (raise the throttle towards centre), as the
 organizers' guide says.
+
+## Checking the depth against a tape measure
+
+Hold the drone level, its camera lens 1.0 m from a textured wall (a plain wall gives a stereo camera
+nothing to match), and run:
+
+```bash
+drone_code/depth_check_16.sh skybeta-16.local
+```
+
+Repeat at 1.5 m and 2.0 m. The "from the camera" figure should match the tape to within a few
+centimetres at 1 m, and stereo error grows with the square of the distance. If it says OpenCV is
+missing, see "Depth points on the drone" in [`team_nav/README.md`](team_nav/README.md).
 
 ## How to install it on the drone
 

@@ -5,7 +5,10 @@ This is our team's ROS 2 package for the real drone. It holds the mission progra
 [`launch/team_nav.launch.py`](launch/team_nav.launch.py) starts these programs on the drone:
 - the organizers' flight interface, exactly one, with `auto_offboard_on_arm` on and `target_system` set to 16, as their example launch file starts it (two would fight over PX4's control flags);
 - our mission program;
-- our corner counter (`corner_count`, on by default), which counts FAST corners in the left camera's picture for the pre-start check. It is a separate program, so a crash in it can't stop the mission.
+- our corner counter (`corner_count`, on by default), which counts FAST corners in the left camera's picture for the pre-start check;
+- our depth program (`depth_points`, on by default), which makes stereo depth points on `/team/depth_points`.
+
+The last two are separate programs, so a crash in either can't stop the mission or the flight.
 
 `target_system` is drone 16's PX4 system ID (`MAV_SYS_ID` is 16, measured in `~/skybeta/px4/params/fleet/drone16-vio-2026-11-03.params`). The flight interface in skybeta 0.3.2 defaults it to 1, and then its Offboard request would go to a system that isn't there.
 
@@ -31,6 +34,21 @@ On 2026-11-07 the drone sat still on the takeoff spot, and the mission flapped o
 
 The blind threshold of 30 corners is an estimate. Check the real count with the drone's camera covered and uncovered.
 
+## Depth points on the drone (`depth_points`)
+
+`depth_points` reads `/oak/left/image_raw` and `/oak/right/image_raw` (topic names from the organizers' guide), and each camera's lens numbers from `/oak/left/camera_info` and `/oak/right/camera_info` when it starts. It publishes `/team/depth_points` about 10 times a second, in exactly the simulator's format: `sensor_msgs/PointCloud2`, x, y, z float32 = forward, left, up in metres from the drone's centre.
+
+How it works, using the numbers measured on this drone earlier:
+1. It rectifies both pictures and shrinks them to 512 x 320, where the focal length is about 317.25 px.
+2. It matches them with OpenCV's StereoSGBM, numDisparities 64, about 15 ms. Depth = 23.79 / disparity in metres.
+3. It keeps 0.37 to 4.0 m at every 4th pixel, and adds the camera's place on the drone (launch arguments `camera_forward_metres` 0.116, `camera_left_metres` 0.037, `camera_up_metres` 0.029).
+
+If camera_info has no baseline, it uses the OAK-D-S2's 0.075 m. It assumes the camera looks straight along the nose. Turn it off with `depth_points:=false`. Every topic name is a launch argument.
+
+**It needs OpenCV (`python3-opencv`).** The Ubuntu 22.04 package works: it was checked under ROS 2 Humble in the simulator image, with OpenCV installed. On synthetic pictures of a wall 1.19 m from the camera, it gave 1.190 m at 9.8 clouds per second. We don't know yet whether the drone's stack has OpenCV. If it doesn't, `depth_points` logs one error line saying so and stops, and nothing else is affected. To add it, put `RUN apt-get install -y python3-opencv` in `~/team_ws/Dockerfile` and run `host/run.sh build` (organizers' guide, section 5). The corner counter doesn't need OpenCV.
+
+Check it against a tape measure with `drone_code/depth_check_16.sh skybeta-16.local`, holding the drone 1.0, 1.5 and 2.0 m from a textured wall.
+
 ## Reading order
 
 All flight decisions are plain Python with no ROS in them, so they run and are tested on a laptop. Read them in this order:
@@ -41,6 +59,7 @@ All flight decisions are plain Python with no ROS in them, so they run and are t
 3. [`team_nav/course_stages.py`](team_nav/course_stages.py) covers the stages between takeoff and landing: follow_line, gate_a, tunnel_align, tunnel_cross, tunnel_exit, chicane and find_pad.
 4. [`team_nav/route_flight.py`](team_nav/route_flight.py) is the route mission. It flies the waypoints one leg at a time at 0.5 m/s. At a corner that turns by 25° or more it stops and turns in place at up to 25°/s; at a shallower one it flies straight through and lets the heading blend round. A waypoint can carry a height: the leg into it is flown at that height, and the height changes while the drone is stopped before that leg, never during a leg.
    - [`team_nav/drift_correction.py`](team_nav/drift_correction.py) and [`team_nav/depth_ahead.py`](team_nav/depth_ahead.py) are the drift correction at route corners (below).
+   - [`team_nav/stereo_depth.py`](team_nav/stereo_depth.py) turns the two cameras' pictures into depth points, and [`team_nav/depth_points_node.py`](team_nav/depth_points_node.py) is the program that runs it on the drone. [`team_nav/depth_check_node.py`](team_nav/depth_check_node.py) prints the depth straight ahead for a tape-measure check.
 5. [`team_nav/landing.py`](team_nav/landing.py) is the landing from section 7.
 6. [`team_nav/position_watch.py`](team_nav/position_watch.py) spots frozen tracking before a start, and measures the speed actually flown.
 7. [`team_nav/mission_inputs.py`](team_nav/mission_inputs.py) holds what the detectors report, and decides whether each report can still be trusted.
@@ -71,7 +90,7 @@ Camera tracking has no loop closure, so its error grows with distance flown. In 
 
 The correction is added to camera tracking's position before the route sees it, and taken off every target sent. PX4's own estimate is never touched. The watchdog and the landing never see the correction, and it is cleared at every start.
 
-On the drone this needs two things that don't exist yet. One is a program publishing depth points as `sensor_msgs/PointCloud2`: x, y, z float32 = forward, left, up in metres from the drone's centre (the simulator's pretend depth camera publishes exactly that on `/simulator_only/depth_points`). The other is the right start heading: `start_heading_degrees` (default 90, north up the first corridor, as the simulator and Kenny's planner assume). The course maps and the code that reads them (`course_map.py`, `start_frame.py`, `course_maps/`) are Kenny's, copied unchanged from `origin/classical` at commit `8d848da` (the commit the planned routes came from). That branch has since added `line_pieces_cross` to `course_map.py`; we don't use it.
+On the drone the depth comes from `depth_points` (below), on `/team/depth_points`, the default `depth_topic`. The simulator passes its pretend depth camera's topic instead. The correction also needs the right start heading: `start_heading_degrees` (default 90, north up the first corridor, as the simulator and Kenny's planner assume). The course maps and the code that reads them (`course_map.py`, `start_frame.py`, `course_maps/`) are Kenny's, copied unchanged from `origin/classical` at commit `8d848da` (the commit the planned routes came from). That branch has since added `line_pieces_cross` to `course_map.py`; we don't use it.
 
 ## What it hears and sends
 
@@ -81,7 +100,7 @@ On the drone this needs two things that don't exist yet. One is a program publis
 | hears | `/skybeta/state` | Whether Offboard is active and whether the drone is armed or landed. This is JSON from the organizers' code. |
 | hears | `/fmu/out/vehicle_local_position` | `dist_bottom` (the bottom laser distance), plus `xy_reset_counter` and `heading_reset_counter` for watchdog rule (e). It is read only. This name has no version suffix on drone 16 (measured). Set the parameter `px4_local_position_topic` to empty, and the organizers' code works the name out. |
 | hears | `/fmu/out/vehicle_status_v1` | `nav_state`, PX4's own mode, for watchdog rule (f). It is read only. PX4's status message is at version 1, hence `_v1` (measured on drone 16 and in the simulator). |
-| hears | `depth_topic` (only with `drift_correction:=true`) | Depth points for the drift correction, as `sensor_msgs/PointCloud2`. Empty by default: there is no depth program on the drone yet. |
+| hears | `depth_topic` (only with `drift_correction:=true`) | Depth points for the drift correction, as `sensor_msgs/PointCloud2`. By default `/team/depth_points`, from `depth_points`. |
 | hears | `/team/left_corner_count` | The FAST corner count in the left camera (`corner_count`), for the pre-start check. |
 | hears | `/visual_slam/status` | Camera tracking's own `vo_state`. It is only logged and never lands the drone, because on drone 16 it stayed at 1 ("tracking") while the camera was covered. |
 | sends | `/skybeta/setpoint/pose` | Position targets: 10 times a second while waiting (a hold at the drone), then every step while climbing and cruising. |

@@ -18,8 +18,12 @@ at the drone 10 times a second while it waits, then the takeoff, the course and 
 caps the camera's automatic exposure (team_nav/camera_exposure.py).
 
 team_nav corner_count (ours, team_nav/corner_count_node.py, launch argument corner_count) counts
-FAST corners in the left camera's picture for the mission's pre-start check. It is a separate
-program, so a crash in it cannot stop the mission.
+FAST corners in the left camera's picture for the mission's pre-start check.
+
+team_nav depth_points (ours, team_nav/depth_points_node.py, launch argument depth_points) makes depth
+points from the two front cameras on /team/depth_points, for the drift correction.
+
+Both are separate programs, so a crash in either cannot stop the mission or the flight.
 
 This file starts exactly one flight_interface. The organizers' guide warns that two fight over
 PX4's control flags, so never run another one (for example competitor_example's) at the same time.
@@ -105,12 +109,19 @@ ARGUMENTS = [
     ('origin_check_vertical_metres', '0.3', 'before the start: the same, up or down'),
     ('corner_count', 'true', 'start team_nav corner_count, the left camera FAST corner count for the pre-start check'),
     ('left_image_topic', '/oak/left/image_raw', 'the left camera picture (from the organizers\' guide)'),
+    ('right_image_topic', '/oak/right/image_raw', 'the right camera picture (from the organizers\' guide)'),
+    ('left_camera_info_topic', '/oak/left/camera_info', 'the left camera\'s lens numbers'),
+    ('right_camera_info_topic', '/oak/right/camera_info', 'the right camera\'s lens numbers'),
+    ('depth_points', 'true', 'start team_nav depth_points, stereo depth points on /team/depth_points'),
+    ('camera_forward_metres', '0.116', 'depth points: the left camera, forward of the drone centre'),
+    ('camera_left_metres', '0.037', 'depth points: the left camera, left of the drone centre'),
+    ('camera_up_metres', '0.029', 'depth points: the left camera, above the drone centre'),
     ('drift_correction', 'false',
      'route mission: at each corner, correct camera tracking drift from the depth straight ahead and the '
      'course map (team_nav/drift_correction.py). Tried only in the simulator so far'),
-    ('depth_topic', '',
+    ('depth_topic', '/team/depth_points',
      'drift correction: topic of the depth points (sensor_msgs/PointCloud2, forward/left/up from the '
-     'drone centre). Empty: none, and every correction is skipped'),
+     'drone centre); team_nav depth_points publishes /team/depth_points'),
     ('course_map_file', 'organizers_drawing.json',
      'drift correction: the course map; a file name in the package\'s course_maps folder '
      '(organizers_drawing.json, phone_scan_2026-11-06.json) or a full path'),
@@ -194,4 +205,16 @@ def generate_launch_description(mission_default='stages'):
         parameters=[{'image_topic': LaunchConfiguration('left_image_topic')}],
     )
 
-    return LaunchDescription(declared + [flight_interface, mission, corner_count])
+    depth_points = Node(
+        package='team_nav',
+        executable='depth_points',
+        name='team_depth_points',
+        output='screen',
+        emulate_tty=True,
+        condition=IfCondition(LaunchConfiguration('depth_points')),
+        parameters=[{name: LaunchConfiguration(name) for name in (
+            'left_image_topic', 'right_image_topic', 'left_camera_info_topic', 'right_camera_info_topic',
+            'camera_forward_metres', 'camera_left_metres', 'camera_up_metres')}],
+    )
+
+    return LaunchDescription(declared + [flight_interface, mission, corner_count, depth_points])

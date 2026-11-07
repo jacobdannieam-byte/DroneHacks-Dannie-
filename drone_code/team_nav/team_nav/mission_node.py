@@ -18,9 +18,9 @@ Topics:
                                            for the pre-start check (prestart_check.py)
          depth_topic (a parameter)         only with drift_correction:=true: depth points
                                            (sensor_msgs/PointCloud2, x y z = forward left up in metres
-                                           from the drone's centre). In the simulator, Kenny's pretend
-                                           depth camera; on the drone, a depth program of ours that
-                                           does not exist yet. depth_ahead.py reads them.
+                                           from the drone's centre). By default /team/depth_points,
+                                           from depth_points_node.py; in the simulator, Kenny's
+                                           pretend depth camera. depth_ahead.py reads them.
   sends  /skybeta/setpoint/pose            position targets while waiting, climbing and cruising
          /skybeta/setpoint/twist           velocity commands while landing (world directions)
   sets   the camera driver's exposure parameters (camera_exposure.py)
@@ -71,6 +71,8 @@ DEFAULT_PX4_STATUS_TOPIC = "/fmu/out/vehicle_status_v1"
 DEFAULT_VISUAL_SLAM_STATUS_TOPIC = "/visual_slam/status"
 # corner_count_node.py publishes here.
 DEFAULT_CORNER_COUNT_TOPIC = "/team/left_corner_count"
+# depth_points_node.py publishes here; the simulator's pretend depth camera uses another topic.
+DEFAULT_DEPTH_TOPIC = "/team/depth_points"
 # From the message definition read on drone 16 (VisualSlamStatus.msg).
 VO_STATE_NAMES = {0: "unknown", 1: "tracking", 2: "lost"}
 # The route files installed with this package live in its missions folder.
@@ -259,7 +261,7 @@ class MissionNode(Node):
 
     def listen_to_depth(self, course_map_file):
         """With drift_correction:=true, subscribe to the depth points. Returns the topic, for the log."""
-        depth_topic = self.declare_parameter("depth_topic", "").value
+        depth_topic = self.declare_parameter("depth_topic", DEFAULT_DEPTH_TOPIC).value
         if not self.mission.settings.drift_correction:
             return []
         if not depth_topic:

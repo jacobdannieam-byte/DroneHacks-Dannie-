@@ -25,6 +25,8 @@
 #                             box (see TEAM_NAV_STARTED_BY in drone_code/team_nav/team_nav/mission_node.py).
 #        depth_topic:=/simulator_only/depth_points   Kenny's pretend depth camera, which the drift
 #                             correction reads. It is only listened to with drift_correction:=true.
+#        depth_points:=false  the simulator has no camera pictures, so our stereo depth program
+#                             would have nothing to read; the pretend depth camera stands in for it.
 #   3. Runs test_flights/team_nav_flight.py. It presses start through the pretend remote control
 #      (arm, then flip the switch to Position), watches the flight, and prints a RESULT line.
 #   4. Saves the records in simulator/generated_files/flight_records/ and prints the referee's summary.
@@ -113,7 +115,7 @@ docker exec --detach \
         until [ -f /tmp/our_packages_are_built ]; do sleep 1; done
         source /repository/simulator/inside_the_box/load_ros_environment.sh
         ros2 launch team_nav team_nav.launch.py target_system:=1 vision_check:=false \
-            depth_topic:=/simulator_only/depth_points mission:=$mission_kind $team_nav_arguments \
+            depth_topic:=/simulator_only/depth_points depth_points:=false mission:=$mission_kind $team_nav_arguments \
             > /repository/simulator/generated_files/last_team_nav_log.txt 2>&1
     "
 
