@@ -29,6 +29,7 @@ class Episode:
     states: np.ndarray
     commands: tuple[PositionSetpoint, ...]
     response: dict
+    change_step: int | None = None
 
     def sample(self, index):
         value = self.states[index]
@@ -39,16 +40,19 @@ class Episode:
         return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
-def generate(split, *, seed=SEED):
+def generate(split, *, seed=SEED, count=None, steps=STEPS, step_seconds=None, change_step=None):
     """Use separate random streams and full response configurations per episode."""
-    count = COUNTS[split]
+    count = COUNTS[split] if count is None else count
     rng = np.random.default_rng(np.random.SeedSequence([seed, SEED_OFFSETS[split]]))
-    shifted = split == "shifted"
+    shifted = split == "shifted" and change_step is None
     ranges = np.array(SHIFTED_RANGES if shifted else RANGES)
     response = rng.uniform(ranges[:, 0], ranges[:, 1], size=(count, len(RESPONSE_NAMES)))
     position_delay = rng.integers(3, 7, count) if shifted else rng.integers(0, 3, count)
     yaw_delay = rng.integers(5, 10, count) if shifted else rng.integers(0, 5, count)
-    dt = rng.choice([0.01, 0.02, 0.04], count) if split == "train" else np.full(count, 0.02)
+    if step_seconds is not None:
+        dt = np.full(count, step_seconds)
+    else:
+        dt = rng.choice([0.01, 0.02, 0.04], count) if split == "train" else np.full(count, 0.02)
     initial = np.zeros((count, 8))
     initial[:, :3] = rng.uniform([-0.5, -0.5, -1.5], [0.5, 0.5, -0.5], (count, 3))
     initial[:, 3:6] = rng.uniform(-0.4, 0.4, (count, 3))
@@ -56,14 +60,14 @@ def generate(split, *, seed=SEED):
     initial[:, 7] = rng.uniform(-0.4, 0.4, count)
 
     reference = LocalNED("d1_synthetic_ned", 0, "replay")
-    targets = np.empty((count, STEPS, 4))
+    targets = np.empty((count, steps, 4))
     schedules = []
     for episode in range(count):
         row = initial[episode]
         boundary = int(rng.integers(8, 17))
         segments = [(0, boundary, row[:3], row[6])]
-        while boundary < STEPS:
-            end = min(STEPS, boundary + int(rng.integers(15, 32)))
+        while boundary < steps:
+            end = min(steps, boundary + int(rng.integers(15, 32)))
             position = row[:3] + rng.uniform([-3, -3, -1], [3, 3, 1])
             heading = rng.uniform(-pi, pi)
             segments.append((boundary, end, position, heading))
@@ -75,18 +79,35 @@ def generate(split, *, seed=SEED):
             commands.extend([command] * (end - start))
         schedules.append(tuple(commands))
 
-    traces = _simulate(initial, targets, dt, response, position_delay, yaw_delay)
+    change = None
+    post_settings = [{} for _ in range(count)]
+    if change_step is not None:
+        if not 0 < change_step < steps:
+            raise ValueError("response switch must occur inside the episode")
+        shifted_post = split == "shifted"
+        after_ranges = np.array(SHIFTED_RANGES if shifted_post else RANGES)
+        after = rng.uniform(after_ranges[:, 0], after_ranges[:, 1], size=response.shape)
+        after_position_delay = rng.integers(3, 7, count) if shifted_post else rng.integers(0, 3, count)
+        after_yaw_delay = rng.integers(5, 10, count) if shifted_post else rng.integers(0, 5, count)
+        change = (change_step, after, after_position_delay, after_yaw_delay)
+        post_settings = [{"change_time_s": float(change_step * dt[i]),
+                          "after": {**dict(zip(RESPONSE_NAMES, map(float, after[i]))),
+                                    "position_delay_s": float(after_position_delay[i] * dt[i]),
+                                    "yaw_delay_s": float(after_yaw_delay[i] * dt[i])}} for i in range(count)]
+    traces = _simulate(initial, targets, dt, response, position_delay, yaw_delay, change=change)
     return tuple(Episode(
         f"{split}-{i:03}", float(dt[i]), reference, traces[i], schedules[i],
         {**dict(zip(RESPONSE_NAMES, map(float, response[i]))),
-         "position_delay_s": float(position_delay[i] * dt[i]), "yaw_delay_s": float(yaw_delay[i] * dt[i])},
+         "position_delay_s": float(position_delay[i] * dt[i]), "yaw_delay_s": float(yaw_delay[i] * dt[i]),
+         **post_settings[i]}, change_step,
     ) for i in range(count))
 
 
-def _simulate(initial, targets, dt, response, position_delay, yaw_delay):
+def _simulate(initial, targets, dt, response, position_delay, yaw_delay, *, change=None):
     """Vectorized independent RK4 with ten substeps per prediction interval."""
     state = initial.copy()
-    traces = np.empty((len(state), STEPS + 1, 8))
+    steps = targets.shape[1]
+    traces = np.empty((len(state), steps + 1, 8))
     traces[:, 0] = state
     position_gain, velocity_tau, acceleration_scale, drag, yaw_gain, yaw_tau, yaw_scale = response.T
     velocity_limit = np.array([1.2, 1.2, 0.7])
@@ -106,7 +127,12 @@ def _simulate(initial, targets, dt, response, position_delay, yaw_delay):
         return np.column_stack((velocity, accel, value[:, 7], yaw_accel))
 
     rows = np.arange(len(state))
-    for index in range(STEPS):
+    for index in range(steps):
+        if change is not None and index == change[0]:
+            _, after, position_delay, yaw_delay = change
+            position_gain, velocity_tau, acceleration_scale, drag, yaw_gain, yaw_tau, yaw_scale = after.T
+            acceleration_limit = acceleration_scale[:, None] * np.array([2.0, 2.0, 1.2])
+            heading_acceleration_limit = 4.0 * yaw_scale
         position = targets[rows, np.maximum(0, index - position_delay), :3]
         heading = targets[rows, np.maximum(0, index - yaw_delay), 3]
         for _ in range(10):
