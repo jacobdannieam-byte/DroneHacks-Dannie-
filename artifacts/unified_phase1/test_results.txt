@@ -1,0 +1,40 @@
+Unified Phase 1 offline verification
+
+Base: Dannie-experimental feb55b6a2485fb9f1aedeada371e8ca2abf96cd6
+Host: Windows AMD64, Intel Family 6 Model 183, Python 3.11.9.
+OPENBLAS_NUM_THREADS=1 and OMP_NUM_THREADS=1 for pytest and A1.
+
+python -m pytest -q tests
+Before changes: 30 passed.
+A1 source branch before Phase 1: 120 passed in 9.94 s.
+Final Phase 1 branch: 46 passed in 7.82 s (16 added).
+
+Compatibility: archived c36918e (A1), overlaid the semantic changes from
+a254248..b026465, then added Phase 1 observer source and tests.
+python -B -m pytest -q -p no:cacheprovider tests
+266 passed in 14.28 s. This was an isolated source overlay, not a merge.
+
+A1 reproduction from archived c36918e:
+python -B -m examples.evaluate_adaptive_dynamics_a1 --skip-timing --output <new-dir>
+All 15 cohorts completed. Accuracy/split JSON equals committed evaluation
+after excluding host and timing. Forecast CSV matches committed bytes.
+No new A1 timing is implied.
+
+Observer replay:
+python -m onboard.diagnostics.phase1_probe replay <capture.json> --output <report.json>
+Synthetic captures come from sample_capture() in tests/test_phase1_localization.py.
+The healthy trace passed (exit 0). The slow-clock trace returned exit 1, with
+clock:rtf_below_target_or_unknown at 0.528 RTF. See synthetic_checks.json.
+A 3,637-event healthy trace analyzed in 5.36 ms p50, 5.67 ms p95, 8.80 ms
+worst across 100 timed calls after 5 warmups (perf_counter_ns, Windows).
+This measures offline report calculation, excluding ROS and file I/O.
+
+Runtime probe:
+python -m onboard.diagnostics.phase1_probe capture --output <new-dir>
+Exit 2: ROS 2/PX4 runtime unavailable: No module named 'rclpy'.
+No live capture output was generated. Native Windows lacked ROS and PX4
+Python packages. Ubuntu WSL x86-64 lacked Jazzy setup, ROS CLI, container
+runtime CLI, PX4 and cuVSLAM imports. No compatible live lab session or
+bag/ULog was available. The historical moving RTF 0.53 is a prior run
+documented in onboard/README.md. No new simulation maneuver, PX4 commands
+or hardware operations were executed.
