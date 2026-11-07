@@ -14,6 +14,11 @@ Topics:
          /visual_slam/status               camera tracking's own status (vo_state): logged only, never
                                            used to land. On drone 16 it stayed 1 ("tracking") while the
                                            camera was covered.
+         depth_topic (a parameter)         only with drift_correction:=true: depth points
+                                           (sensor_msgs/PointCloud2, x y z = forward left up in metres
+                                           from the drone's centre). In the simulator, Kenny's pretend
+                                           depth camera; on the drone, a depth program of ours that
+                                           does not exist yet. depth_ahead.py reads them.
   sends  /skybeta/setpoint/pose            position targets while waiting, climbing and cruising
          /skybeta/setpoint/twist           velocity commands while landing (world directions)
   sets   the camera driver's exposure parameters (camera_exposure.py)
@@ -36,11 +41,16 @@ from px4_msgs.msg import VehicleLocalPosition, VehicleStatus
 from rcl_interfaces.msg import ParameterDescriptor
 from rclpy.node import Node
 from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
+from sensor_msgs.msg import PointCloud2, PointField
 from std_msgs.msg import String
 
 from .camera_exposure import CameraExposureCap
+from .course_map import load_course_map
+from .depth_ahead import distance_straight_ahead, points_from_cloud
+from .drift_correction import MapRanging
 from .mission import Mission
 from .mission_settings import MissionSettings
+from .start_frame import StartFrame
 
 try:
     from isaac_ros_visual_slam_interfaces.msg import VisualSlamStatus
@@ -62,6 +72,9 @@ VO_STATE_NAMES = {0: "unknown", 1: "tracking", 2: "lost"}
 # The route files installed with this package live in its missions folder.
 MISSIONS_FOLDER_IN_PACKAGE = "missions"
 DEFAULT_ROUTE_FILE = "route_waypoints.json"
+# The course maps installed with this package (Kenny's, copied unchanged from origin/classical).
+COURSE_MAPS_FOLDER_IN_PACKAGE = "course_maps"
+DEFAULT_COURSE_MAP_FILE = "organizers_drawing.json"
 POSE_TARGET_TOPIC = "/skybeta/setpoint/pose"
 VELOCITY_COMMAND_TOPIC = "/skybeta/setpoint/twist"
 # SIMULATOR ONLY. The simulator publishes no camera images, so nothing reports camera tracking
@@ -100,21 +113,57 @@ def px4_topic(requested_topic, uorb_name, plain_topic):
         return plain_topic
 
 
+def file_in_package(file_name, folder):
+    """A bare file name means that file in this package's folder; a path is used as it is."""
+    if os.path.dirname(file_name) != "":
+        return file_name
+    from ament_index_python.packages import get_package_share_directory
+    return os.path.join(get_package_share_directory("team_nav"), folder, file_name)
+
+
 def read_route_waypoints(route_file):
-    """The route mission's waypoints, [(forward, left), ...] in metres, from a JSON file. A bare
-    file name, such as route_waypoints_scan.json, means that file in this package's missions folder;
-    a path is used as it is. With no file named, the default route."""
-    route_file = route_file or DEFAULT_ROUTE_FILE
-    if os.path.dirname(route_file) == "":
-        from ament_index_python.packages import get_package_share_directory
-        route_file = os.path.join(get_package_share_directory("team_nav"), MISSIONS_FOLDER_IN_PACKAGE, route_file)
+    """The route mission's waypoints, [(forward, left) or (forward, left, height), ...] in metres,
+    from a JSON file. A bare file name, such as route_waypoints_scan.json, means that file in this
+    package's missions folder; a path is used as it is. With no file named, the default route."""
+    route_file = file_in_package(route_file or DEFAULT_ROUTE_FILE, MISSIONS_FOLDER_IN_PACKAGE)
     try:
         with open(route_file, encoding="utf-8") as opened:
             waypoints = json.load(opened)["waypoints_forward_left_metres"]
     except (OSError, ValueError, KeyError) as problem:
         raise ValueError(f"Could not read the route's waypoints from {route_file} ({problem}). Check the "
                          "route_file parameter, or that the package was built with its missions folder.")
-    return [(float(forward), float(left)) for forward, left in waypoints]
+    route = []
+    for number, waypoint in enumerate(waypoints, start=1):
+        if not isinstance(waypoint, list) or len(waypoint) not in (2, 3):
+            raise ValueError(f"Waypoint {number} in {route_file} is {waypoint!r}; each waypoint must be [forward, left] "
+                             "or [forward, left, height] in metres. Fix the route file.")
+        route.append(tuple(float(value) for value in waypoint))
+    return route
+
+
+def read_map_ranging(course_map_file, start_heading_degrees):
+    """What the drift correction measures the map with: the course map, and where the drone starts
+    on it (its launch mark, facing start_heading_degrees)."""
+    course_map_file = file_in_package(course_map_file or DEFAULT_COURSE_MAP_FILE, COURSE_MAPS_FOLDER_IN_PACKAGE)
+    try:
+        course_map = load_course_map(course_map_file)
+    except (OSError, ValueError) as problem:
+        raise ValueError(f"Could not read the course map {course_map_file} ({problem}). Check the course_map_file "
+                         "parameter, or launch with drift_correction:=false.")
+    start_frame = StartFrame(course_map.launch_mark_centre_metres, start_heading_degrees)
+    return MapRanging(course_map, start_frame), course_map_file
+
+
+def xyz_offsets(message):
+    """The byte offsets of the x, y and z fields of a PointCloud2, or None if any is missing or is
+    not a 32-bit float."""
+    offsets = {}
+    for point_field in message.fields:
+        if point_field.datatype == PointField.FLOAT32:
+            offsets[point_field.name] = point_field.offset
+    if not all(name in offsets for name in ("x", "y", "z")):
+        return None
+    return [offsets["x"], offsets["y"], offsets["z"]]
 
 
 def setting_value(name, default, value):
@@ -146,10 +195,16 @@ class MissionNode(Node):
         mission_kind = self.declare_parameter("mission_kind", "stages").value
         route_file = self.declare_parameter("route_file", DEFAULT_ROUTE_FILE).value
         route_waypoints = read_route_waypoints(route_file) if mission_kind == "route" else None
+        course_map_file = self.declare_parameter("course_map_file", DEFAULT_COURSE_MAP_FILE).value
+        map_ranging = None
+        if settings.drift_correction:
+            map_ranging, course_map_file = read_map_ranging(course_map_file, settings.start_heading_degrees)
         self.mission = Mission(settings, vision_check=self.read_vision_check(), mission_kind=mission_kind,
-                               route_waypoints=route_waypoints)
+                               route_waypoints=route_waypoints, map_ranging=map_ranging)
         self.last_vo_state = None
+        self.depth_format_warned = False
         heard = self.listen_to_reports()
+        heard += self.listen_to_depth(course_map_file)
         self.pose_publisher = self.create_publisher(PoseStamped, POSE_TARGET_TOPIC, 10)
         self.twist_publisher = self.create_publisher(TwistStamped, VELOCITY_COMMAND_TOPIC, 10)
         self.create_timer(1.0 / self.mission.settings.steps_per_second, self.on_step)
@@ -195,6 +250,22 @@ class MissionNode(Node):
             self.create_subscription(VisualSlamStatus, visual_slam_status_topic, self.on_visual_slam_status, 10)
             heard.append(f"{visual_slam_status_topic} (logged only)")
         return heard
+
+    def listen_to_depth(self, course_map_file):
+        """With drift_correction:=true, subscribe to the depth points. Returns the topic, for the log."""
+        depth_topic = self.declare_parameter("depth_topic", "").value
+        if not self.mission.settings.drift_correction:
+            return []
+        if not depth_topic:
+            self.get_logger().warn("drift_correction is true but depth_topic is empty, so every correction will be "
+                                   "skipped for want of a depth reading. Give depth_topic:=<topic of the depth points>.")
+            return []
+        # Best effort accepts a sender of either kind; only the latest depth matters.
+        latest_only = QoSProfile(reliability=QoSReliabilityPolicy.BEST_EFFORT, history=QoSHistoryPolicy.KEEP_LAST, depth=1)
+        self.create_subscription(PointCloud2, depth_topic, self.on_depth_points, latest_only)
+        self.get_logger().info(f"Drift correction on: depth from {depth_topic}, map {course_map_file}, start heading "
+                               f"{self.mission.settings.start_heading_degrees:g} deg from the map's east.")
+        return [f"{depth_topic} (drift correction)"]
 
     def read_settings(self):
         """Every MissionSettings value becomes a ROS parameter with the same name and default.
@@ -258,6 +329,20 @@ class MissionNode(Node):
 
     def on_px4_status(self, message):
         self.mission.observe_px4_status(self.now_seconds(), message.nav_state)
+
+    def on_depth_points(self, message):
+        offsets = xyz_offsets(message)
+        if offsets is None:
+            if not self.depth_format_warned:
+                self.depth_format_warned = True
+                self.get_logger().warn("The depth points have no float32 x, y and z fields, so they are ignored and "
+                                       "the drift correction is skipped. Check what publishes on depth_topic.")
+            return
+        points = points_from_cloud(message.data, message.point_step, offsets, little_endian=not message.is_bigendian)
+        settings = self.mission.settings
+        distance, _ = distance_straight_ahead(points, settings.drift_depth_window_degrees,
+                                              settings.drift_depth_least_points)
+        self.mission.observe_depth_ahead(self.now_seconds(), distance)
 
     def on_visual_slam_status(self, message):
         vo_state = int(message.vo_state)

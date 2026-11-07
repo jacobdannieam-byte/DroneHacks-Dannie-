@@ -26,7 +26,8 @@ All flight decisions are plain Python with no ROS in them, so they run and are t
 1. [`team_nav/mission.py`](team_nav/mission.py) covers the whole flight: waiting on the launch mark, the takeoff, the course, the landing, and the rules checked at every step.
 2. [`team_nav/position_watchdog.py`](team_nav/position_watchdog.py) decides when the position can no longer be trusted, which lands the drone at once.
 3. [`team_nav/course_stages.py`](team_nav/course_stages.py) covers the stages between takeoff and landing: follow_line, gate_a, tunnel_align, tunnel_cross, tunnel_exit, chicane and find_pad.
-4. [`team_nav/route_flight.py`](team_nav/route_flight.py) is the route mission. It flies the waypoints one leg at a time at 0.5 m/s. At a corner that turns by 25° or more it stops and turns in place at up to 25°/s; at a shallower one it flies straight through and lets the heading blend round.
+4. [`team_nav/route_flight.py`](team_nav/route_flight.py) is the route mission. It flies the waypoints one leg at a time at 0.5 m/s. At a corner that turns by 25° or more it stops and turns in place at up to 25°/s; at a shallower one it flies straight through and lets the heading blend round. A waypoint can carry a height: the leg into it is flown at that height, and the height changes while the drone is stopped before that leg, never during a leg.
+   - [`team_nav/drift_correction.py`](team_nav/drift_correction.py) and [`team_nav/depth_ahead.py`](team_nav/depth_ahead.py) are the drift correction at route corners (below).
 5. [`team_nav/landing.py`](team_nav/landing.py) is the landing from section 7.
 6. [`team_nav/position_watch.py`](team_nav/position_watch.py) spots frozen tracking before a start, and measures the speed actually flown.
 7. [`team_nav/mission_inputs.py`](team_nav/mission_inputs.py) holds what the detectors report, and decides whether each report can still be trusted.
@@ -43,7 +44,20 @@ The route's waypoints live in files in [`missions/`](missions/), not in code, be
 | `route_waypoints_drawing.json` | Planned by Kenny's route planner (`origin/classical`) on the organizers' drawing, at 0.8 m. |
 | `route_waypoints_scan.json` | Planned by the same planner on the phone scan of the real course (2026-11-06), at 0.8 m. |
 
-Each planned file also keeps the heights the planner wanted. Through the window those are 0.76 m on the drawing and **1.19 m on the scan**. The route mission ignores them and flies every leg at its cruise height (0.8 m). On the scan's map, 0.8 m through the window hits the window's lower wall. So don't fly `route_waypoints_scan.json` on the real course until the route mission can change height at the window.
+A waypoint is `[forward, left]`, or `[forward, left, height]` when the leg into it must be flown at a height other than cruise. The height is in metres above the launch floor. Each planned file sets the planner's window crossing height on its two window waypoints: **0.76 m** on the drawing (waypoints 19 and 20) and **1.19 m** on the scan (waypoints 22 and 23). The window on the scan's map is 0.81 to 1.56 m high, so 0.8 m there would hit its lower edge. The files also keep every height the planner wanted, in `planned_heights_metres`, for information only. A waypoint where the height changes is never flown through.
+
+## The drift correction (route mission, off by default)
+
+Camera tracking has no loop closure, so its error grows with distance flown. In the simulator, with its pretend drift of 1% of the distance flown, the drone ended about 0.2 m from where it thought it was. With `drift_correction:=true`, each time the route stops at a corner, before it turns:
+
+1. `depth_ahead.py` takes the median depth of the points within 3° of straight ahead, from the depth topic `depth_topic`. With fewer than 5 points there, or a reading older than 0.5 s, there is no good reading.
+2. `drift_correction.py` measures the distance to the nearest wall straight ahead in the course map (`course_map_file`), from where the drone thinks it is, along its heading, at its height.
+3. If the map's wall is 0.4 to 2.5 m away and the depth differs from it by less than 0.4 m, the position estimate for the rest of the route moves along the heading by the difference, at most 0.2 m per correction. A depth shorter than the map moves the estimate forward. The safety net is skipped, because a stereo camera can't see a net.
+4. Every correction, and every skip with its reason, goes in the log ("drift correction at waypoint …").
+
+The correction is added to camera tracking's position before the route sees it, and taken off every target sent. PX4's own estimate is never touched. The watchdog and the landing never see the correction, and it is cleared at every start.
+
+On the drone this needs two things that don't exist yet. One is a program publishing depth points as `sensor_msgs/PointCloud2`: x, y, z float32 = forward, left, up in metres from the drone's centre (the simulator's pretend depth camera publishes exactly that on `/simulator_only/depth_points`). The other is the right start heading: `start_heading_degrees` (default 90, north up the first corridor, as the simulator and Kenny's planner assume). The course maps and the code that reads them (`course_map.py`, `start_frame.py`, `course_maps/`) are Kenny's, copied unchanged from `origin/classical`.
 
 ## What it hears and sends
 
@@ -53,6 +67,7 @@ Each planned file also keeps the heights the planner wanted. Through the window 
 | hears | `/skybeta/state` | Whether Offboard is active and whether the drone is armed or landed. This is JSON from the organizers' code. |
 | hears | `/fmu/out/vehicle_local_position` | `dist_bottom` (the bottom laser distance), plus `xy_reset_counter` and `heading_reset_counter` for watchdog rule (e). It is read only. This name has no version suffix on drone 16 (measured). Set the parameter `px4_local_position_topic` to empty, and the organizers' code works the name out. |
 | hears | `/fmu/out/vehicle_status_v1` | `nav_state`, PX4's own mode, for watchdog rule (f). It is read only. PX4's status message is at version 1, hence `_v1` (measured on drone 16 and in the simulator). |
+| hears | `depth_topic` (only with `drift_correction:=true`) | Depth points for the drift correction, as `sensor_msgs/PointCloud2`. Empty by default: there is no depth program on the drone yet. |
 | hears | `/visual_slam/status` | Camera tracking's own `vo_state`. It is only logged and never lands the drone, because on drone 16 it stayed at 1 ("tracking") while the camera was covered. |
 | sends | `/skybeta/setpoint/pose` | Position targets while waiting, climbing and cruising. |
 | sends | `/skybeta/setpoint/twist` | Velocity commands while landing, because position targets can't go below 0.3 m. They are in world directions (x East, y North, z Up), whatever way the nose points. |
@@ -112,7 +127,7 @@ From the top of the repository, run:
 python3 -m pytest drone_code/team_nav/test
 ```
 
-Four helper files in `test/` exist only for the tests and never run on the drone. `fake_drone.py` stands in for PX4 and the organizers' flight interface. `fake_ros.py` stands in for ROS 2, including the parameter client, so `mission_node.py` and `camera_exposure.py` can be tested without ROS. `fake_launch.py` does the same for the launch file. `conftest.py` lets the tests find the package. To fly the package in the simulator, with this launch file, run `simulator/run_team_nav.sh` from the top of the repository. It launches with two simulator-only settings: `target_system:=1` and `vision_check:=false`. The simulator has no camera images, so nothing reports camera tracking health. `vision_check` defaults to true, and the mission refuses false unless that script started it inside the simulator box. None of this has flown on the drone yet.
+Four helper files in `test/` exist only for the tests and never run on the drone. `fake_drone.py` stands in for PX4 and the organizers' flight interface. `fake_ros.py` stands in for ROS 2, including the parameter client, so `mission_node.py` and `camera_exposure.py` can be tested without ROS. `fake_launch.py` does the same for the launch file. `conftest.py` lets the tests find the package. To fly the package in the simulator, with this launch file, run `simulator/run_team_nav.sh` from the top of the repository. It launches with three simulator-only settings: `target_system:=1`, `vision_check:=false` and `depth_topic:=/simulator_only/depth_points`. The simulator has no camera images, so nothing reports camera tracking health. `vision_check` defaults to true, and the mission refuses false unless that script started it inside the simulator box. None of this has flown on the drone yet.
 
 ## Other files
 

@@ -1,0 +1,404 @@
+{
+  "map_format_version": 1,
+  "name": "Organizers' drawing",
+  "description": "The course as the organizers drew it in their preliminary 3D model, dronehacks-course-v3.obj. Made by course_map_tools/make_map_from_organizers_model.py. Our phone scan of the real course shows several walls in different places, so treat this as the plan, not the built course.",
+  "course_edges": {
+    "lowest_corner_metres": [
+      -3.048,
+      -3.048
+    ],
+    "highest_corner_metres": [
+      3.048,
+      3.048
+    ],
+    "wall_top_height_metres": 1.727,
+    "source": "From the organizers' 3D model (dronehacks-course-v3.obj): the floor part's edges, and the most common wall top height."
+  },
+  "launch_mark": {
+    "centre_metres": [
+      -2.5146,
+      0.9144
+    ],
+    "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'Launch mark'."
+  },
+  "landing_pad": {
+    "centre_metres": [
+      -2.0422,
+      -0.7925
+    ],
+    "outer_radius_metres": 0.762,
+    "approach_ring_radius_metres": 1.0033,
+    "source": "From the organizers' 3D model (dronehacks-course-v3.obj), parts 'Landing pad 5 ft' and 'Approach ring (stage 4 line)'."
+  },
+  "walls": [
+    {
+      "name": "Tube cradle 1",
+      "start_metres": [
+        1.8034,
+        -0.2919
+      ],
+      "end_metres": [
+        2.8194,
+        -0.2923
+      ],
+      "thickness_metres": 0.0258,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 0.2776,
+      "openings": [],
+      "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'Tube cradle 1'."
+    },
+    {
+      "name": "C2b chicane wall",
+      "start_metres": [
+        -0.2006,
+        -1.5124
+      ],
+      "end_metres": [
+        0.1623,
+        -0.5487
+      ],
+      "thickness_metres": 0.113,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7272,
+      "openings": [],
+      "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'C2b chicane wall'."
+    },
+    {
+      "name": "Barrier 3 (cut to 55 in)",
+      "start_metres": [
+        0.1778,
+        0.4572
+      ],
+      "end_metres": [
+        1.5748,
+        0.4572
+      ],
+      "thickness_metres": 0.1016,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7272,
+      "openings": [],
+      "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'Barrier 3 (cut to 55 in)'."
+    },
+    {
+      "name": "Barrier 2",
+      "start_metres": [
+        -1.4351,
+        0.4572
+      ],
+      "end_metres": [
+        0.1778,
+        0.4572
+      ],
+      "thickness_metres": 0.1016,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7272,
+      "openings": [],
+      "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'Barrier 2'."
+    },
+    {
+      "name": "C1 chicane wall",
+      "start_metres": [
+        0.9679,
+        -1.1269
+      ],
+      "end_metres": [
+        1.5305,
+        0.3855
+      ],
+      "thickness_metres": 0.1129,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7272,
+      "openings": [],
+      "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'C1 chicane wall'."
+    },
+    {
+      "name": "M1 maze divider",
+      "start_metres": [
+        -1.9304,
+        0.508
+      ],
+      "end_metres": [
+        -1.9304,
+        2.1209
+      ],
+      "thickness_metres": 0.1016,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7272,
+      "openings": [],
+      "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'M1 maze divider'."
+    },
+    {
+      "name": "Tube cradle 3",
+      "start_metres": [
+        1.8034,
+        1.2067
+      ],
+      "end_metres": [
+        2.8194,
+        1.2063
+      ],
+      "thickness_metres": 0.0258,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 0.2776,
+      "openings": [],
+      "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'Tube cradle 3'."
+    },
+    {
+      "name": "C2a chicane wall (window)",
+      "start_metres": [
+        -0.7488,
+        -3.0291
+      ],
+      "end_metres": [
+        -0.1931,
+        -1.5147
+      ],
+      "thickness_metres": 0.1058,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7272,
+      "openings": [
+        {
+          "name": "window",
+          "start_along_wall_metres": 0.36,
+          "end_along_wall_metres": 1.26,
+          "bottom_height_metres": 0.32,
+          "top_height_metres": 1.2,
+          "source": "From the organizers' 3D model (dronehacks-course-v3.obj), the hole in part 'C2a chicane wall (window)', measured to the nearest 2 cm."
+        }
+      ],
+      "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'C2a chicane wall (window)'."
+    },
+    {
+      "name": "Barrier 1",
+      "start_metres": [
+        -3.048,
+        0.4572
+      ],
+      "end_metres": [
+        -1.4351,
+        0.4572
+      ],
+      "thickness_metres": 0.1016,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7272,
+      "openings": [],
+      "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'Barrier 1'."
+    },
+    {
+      "name": "A1 approach wall",
+      "start_metres": [
+        -0.9754,
+        -0.6223
+      ],
+      "end_metres": [
+        -0.9754,
+        0.4064
+      ],
+      "thickness_metres": 0.1016,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7272,
+      "openings": [],
+      "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'A1 approach wall'."
+    },
+    {
+      "name": "Tube cradle 2",
+      "start_metres": [
+        1.8034,
+        0.4574
+      ],
+      "end_metres": [
+        2.8194,
+        0.457
+      ],
+      "thickness_metres": 0.0258,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 0.2776,
+      "openings": [],
+      "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'Tube cradle 2'."
+    },
+    {
+      "name": "M2 maze divider",
+      "start_metres": [
+        -0.8128,
+        1.4351
+      ],
+      "end_metres": [
+        -0.8128,
+        3.048
+      ],
+      "thickness_metres": 0.1016,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7272,
+      "openings": [],
+      "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'M2 maze divider'."
+    },
+    {
+      "name": "M3 maze divider",
+      "start_metres": [
+        0.3048,
+        0.508
+      ],
+      "end_metres": [
+        0.3048,
+        2.1209
+      ],
+      "thickness_metres": 0.1016,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7272,
+      "openings": [],
+      "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'M3 maze divider'."
+    }
+  ],
+  "tubes": [
+    {
+      "name": "Tunnel",
+      "entrance_centre_metres": [
+        2.3249,
+        1.2318
+      ],
+      "exit_centre_metres": [
+        2.2979,
+        -0.3174
+      ],
+      "outside_width_metres": 1.4994,
+      "outside_height_metres": 1.8288,
+      "wall_thickness_metres": 0.0341,
+      "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'Tube oval 58 x 72 x 60'. Its bottom is 3 cm above the floor; the map treats it as standing on the floor."
+    }
+  ],
+  "low_obstacles": [
+    {
+      "name": "Boulder 1",
+      "centre_metres": [
+        2.0117,
+        -2.4689
+      ],
+      "radius_metres": 0.2286,
+      "top_height_metres": 0.5334,
+      "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'Boulder 1'."
+    },
+    {
+      "name": "Boulder 3",
+      "centre_metres": [
+        0.7925,
+        -2.347
+      ],
+      "radius_metres": 0.2286,
+      "top_height_metres": 0.5334,
+      "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'Boulder 3'."
+    },
+    {
+      "name": "Boulder 4",
+      "centre_metres": [
+        -2.5603,
+        -2.4994
+      ],
+      "radius_metres": 0.2286,
+      "top_height_metres": 0.5334,
+      "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'Boulder 4'."
+    },
+    {
+      "name": "Boulder 5",
+      "centre_metres": [
+        -1.3411,
+        -2.3774
+      ],
+      "radius_metres": 0.2286,
+      "top_height_metres": 0.5334,
+      "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'Boulder 5'."
+    },
+    {
+      "name": "Boulder 2",
+      "centre_metres": [
+        2.5298,
+        -1.5545
+      ],
+      "radius_metres": 0.2286,
+      "top_height_metres": 0.5334,
+      "source": "From the organizers' 3D model (dronehacks-course-v3.obj), part 'Boulder 2'."
+    }
+  ],
+  "checkpoint_lines": [
+    {
+      "name": "end of first corridor",
+      "start_metres": [
+        -3.048,
+        2.1209
+      ],
+      "end_metres": [
+        -1.9304,
+        2.1209
+      ],
+      "far_side_point_metres": [
+        -2.4892,
+        2.6209
+      ],
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    },
+    {
+      "name": "Gate A",
+      "start_metres": [
+        0.3556,
+        0.508
+      ],
+      "end_metres": [
+        0.3556,
+        3.048
+      ],
+      "far_side_point_metres": [
+        0.8556,
+        1.778
+      ],
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    },
+    {
+      "name": "tunnel exit",
+      "start_metres": [
+        1.5483,
+        -0.3043
+      ],
+      "end_metres": [
+        3.0475,
+        -0.3305
+      ],
+      "far_side_point_metres": [
+        2.2892,
+        -0.8173
+      ],
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    },
+    {
+      "name": "through the window",
+      "start_metres": [
+        -0.6248,
+        -2.6911
+      ],
+      "end_metres": [
+        -0.3148,
+        -1.8462
+      ],
+      "far_side_point_metres": [
+        -0.9392,
+        -2.0965
+      ],
+      "opening_name": "window",
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    },
+    {
+      "name": "Gate B",
+      "start_metres": [
+        -0.9754,
+        -0.6223
+      ],
+      "end_metres": [
+        0.1623,
+        -0.5487
+      ],
+      "far_side_point_metres": [
+        -0.3742,
+        -1.0845
+      ],
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    }
+  ]
+}

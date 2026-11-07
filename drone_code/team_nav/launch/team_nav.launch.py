@@ -29,6 +29,7 @@ How to use it
 -------------
     ros2 launch team_nav team_nav.launch.py                    # the course stages
     ros2 launch team_nav team_nav.launch.py mission:=route     # the route in missions/route_waypoints.json
+    ros2 launch team_nav team_nav.launch.py mission:=route drift_correction:=true depth_topic:=<depth points>
     ros2 launch team_nav team_nav.launch.py cruise_height_metres:=0.6
     ros2 launch team_nav team_nav.launch.py mission:=none      # flight_interface only
 
@@ -91,6 +92,18 @@ ARGUMENTS = [
     ('route_turn_rate_degrees_per_second', '25.0', 'route mission: fastest turn, in place or while flying through'),
     ('route_arrive_metres', '0.10', 'route mission: a waypoint where the drone stops counts as reached this close'),
     ('route_fly_through_degrees', '25.0', 'route mission: fly through a waypoint whose next leg turns by less than this'),
+    ('drift_correction', 'false',
+     'route mission: at each corner, correct camera tracking drift from the depth straight ahead and the '
+     'course map (team_nav/drift_correction.py). Tried only in the simulator so far'),
+    ('depth_topic', '',
+     'drift correction: topic of the depth points (sensor_msgs/PointCloud2, forward/left/up from the '
+     'drone centre). Empty: none, and every correction is skipped'),
+    ('course_map_file', 'organizers_drawing.json',
+     'drift correction: the course map; a file name in the package\'s course_maps folder '
+     '(organizers_drawing.json, phone_scan_2026-11-06.json) or a full path'),
+    ('start_heading_degrees', '90.0',
+     'drift correction: the way the nose points at takeoff, anticlockwise from the map\'s east; 90 is north, '
+     'up the first corridor'),
 ] + WATCHDOG_ARGUMENTS
 
 
@@ -145,6 +158,10 @@ def generate_launch_description(mission_default='stages'):
             'route_turn_rate_degrees_per_second': LaunchConfiguration('route_turn_rate_degrees_per_second'),
             'route_arrive_metres': LaunchConfiguration('route_arrive_metres'),
             'route_fly_through_degrees': LaunchConfiguration('route_fly_through_degrees'),
+            'drift_correction': LaunchConfiguration('drift_correction'),
+            'depth_topic': LaunchConfiguration('depth_topic'),
+            'course_map_file': LaunchConfiguration('course_map_file'),
+            'start_heading_degrees': LaunchConfiguration('start_heading_degrees'),
             'tunnel_enabled': LaunchConfiguration('tunnel_enabled'),
             'window_enabled': LaunchConfiguration('window_enabled'),
             'vision_check': LaunchConfiguration('vision_check'),

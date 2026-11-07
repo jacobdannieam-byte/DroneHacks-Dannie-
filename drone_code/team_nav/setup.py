@@ -1,5 +1,6 @@
 """Tells ROS what this package contains: the mission program (team_nav/mission_node.py), which
-`ros2 run team_nav mission` starts, the launch file, and the route mission's waypoints."""
+`ros2 run team_nav mission` starts, the launch files, the route mission's waypoints, and the course
+maps the drift correction measures against."""
 from setuptools import setup
 
 PACKAGE_NAME = "team_nav"
@@ -14,6 +15,8 @@ setup(
         (f"share/{PACKAGE_NAME}/launch", ["launch/team_nav.launch.py", "launch/team_nav_route.launch.py"]),
         (f"share/{PACKAGE_NAME}/missions", ["missions/route_waypoints.json", "missions/route_waypoints_drawing.json",
                                              "missions/route_waypoints_scan.json"]),
+        (f"share/{PACKAGE_NAME}/course_maps", ["course_maps/organizers_drawing.json",
+                                                "course_maps/phone_scan_2026-11-06.json"]),
     ],
     install_requires=["setuptools"],
     zip_safe=True,

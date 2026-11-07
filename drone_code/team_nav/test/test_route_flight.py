@@ -1,7 +1,8 @@
 """The route mission (route_flight.py, through mission.py) against the pretend drone: it flies every
 waypoint in order at cruise height, stops and turns in place at corners that turn by 25 deg or more,
 flies through the others with the heading blending round, never turns faster than 25 deg/s nor flies
-a leg faster than 0.5 m/s, lands at the end, and the watchdog stays active throughout."""
+a leg faster than 0.5 m/s, lands at the end, and the watchdog stays active throughout. A waypoint
+with a height has the leg into it flown at that height, changed while stopped before the leg."""
 import json
 import math
 from pathlib import Path
@@ -160,7 +161,7 @@ def test_the_planned_routes_fly_to_the_end_and_land(name, count):
         document = json.load(opened)
     route = [tuple(waypoint) for waypoint in document["waypoints_forward_left_metres"]]
     assert len(route) == count == len(document["planned_heights_metres"])
-    assert route[-1] == (-1.707, -0.472)                                   # both end over the landing pad
+    assert route[-1][:2] == (-1.707, -0.472)                               # both end over the landing pad
     mission, drone, record = fly_route(route=route)
     assert f"route: route complete: reached waypoint {count} of {count}" in reasons(mission)
     assert any(reason.startswith("landed: PX4 switched the motors off") for reason in reasons(mission))
@@ -171,3 +172,74 @@ def test_a_route_mission_without_waypoints_is_refused():
         Mission(mission_kind="route", route_waypoints=[])
     with pytest.raises(ValueError, match="must be one of stages, route"):
         Mission(mission_kind="square")
+
+
+# ---------------------------------------------------------------------- heights on waypoints
+HEIGHT_ROUTE = [(1.0, 0.0), (1.5, 0.0, 0.5), (2.0, 0.0, 0.5), (2.5, 0.0), (2.5, -1.0)]
+
+
+def height_above_floor(step):
+    return step.drone_position[2]                                          # the pretend floor is at 0
+
+
+def test_each_leg_is_flown_at_its_waypoints_height_or_cruise():
+    mission, drone, record = fly_route(route=HEIGHT_ROUTE)
+    assert "route: route complete: reached waypoint 5 of 5" in reasons(mission)
+    wanted = {1: 0.8, 2: 0.5, 3: 0.5, 4: 0.8, 5: 0.8}
+    for number, height in wanted.items():
+        flying = route_steps(record, f"flying to waypoint {number} of 5")
+        assert flying, number
+        for step in flying:
+            assert step.command.position[2] == pytest.approx(height), number      # the target never changes
+        for step in flying[5:]:
+            assert height_above_floor(step) == pytest.approx(height, abs=0.06), number
+
+
+def test_height_changes_only_while_stopped_before_the_leg_never_faster_than_the_climb_speed():
+    mission, drone, record = fly_route(route=HEIGHT_ROUTE)
+    changing = route_steps(record, "changing height")
+    assert [reason for reason in reasons(mission) if "changing height" in reason] == [
+        "route: changing height to 0.50 m before waypoint 2 of 5",
+        "route: changing height to 0.80 m before waypoint 4 of 5"]
+    for step in changing:
+        assert step.command.position[:2] == changing[0].command.position[:2] or step.command.position[:2] == \
+            changing[-1].command.position[:2]                              # in place, at one of the two corners
+    for earlier, later in zip(changing, changing[1:]):
+        if abs(later.seconds - earlier.seconds - STEP_SECONDS) > 1e-6:
+            continue
+        moved = abs(later.command.position[2] - earlier.command.position[2])
+        assert moved <= SETTINGS.climb_speed_metres_per_second * STEP_SECONDS + 1e-9
+        speed = math.dist(later.drone_position[:2], earlier.drone_position[:2]) / STEP_SECONDS
+        assert speed < SETTINGS.settled_speed_metres_per_second + 0.02
+
+
+def test_a_waypoint_where_the_height_changes_is_never_flown_through():
+    mission, drone, record = fly_route(route=HEIGHT_ROUTE)                 # straight on: would fly through
+    assert "route: reached waypoint 1 of 5" in reasons(mission)            # stops: 0.8 m -> 0.5 m
+    assert "route: reached waypoint 2 of 5 (flying through)" in reasons(mission)   # same height: flies through
+    assert "route: reached waypoint 3 of 5" in reasons(mission)            # stops: 0.5 m -> 0.8 m
+
+
+def test_the_planned_routes_carry_the_planners_window_crossing_heights():
+    for name, numbers, height in [("route_waypoints_drawing.json", (19, 20), 0.76),
+                                  ("route_waypoints_scan.json", (22, 23), 1.19)]:
+        with open(ROUTE_FILE.parent / name, encoding="utf-8") as opened:
+            route = json.load(opened)["waypoints_forward_left_metres"]
+        with_height = [number for number, waypoint in enumerate(route, start=1) if len(waypoint) == 3]
+        assert with_height == list(numbers), name
+        assert all(route[number - 1][2] == height for number in numbers), name
+
+
+def test_the_scan_route_crosses_the_window_at_1_19_metres():
+    with open(ROUTE_FILE.parent / "route_waypoints_scan.json", encoding="utf-8") as opened:
+        route = [tuple(waypoint) for waypoint in json.load(opened)["waypoints_forward_left_metres"]]
+    mission, drone, record = fly_route(route=route, seconds=300.0)
+    crossing = route_steps(record, "flying to waypoint 23 of 25")
+    assert crossing and all(step.command.position[2] == pytest.approx(1.19) for step in crossing)
+    assert all(step.command.position[2] == pytest.approx(SETTINGS.cruise_height_metres)
+               for step in route_steps(record, "flying to waypoint 24 of 25"))
+
+
+def test_a_waypoint_with_the_wrong_count_of_numbers_is_refused():
+    with pytest.raises(ValueError, match="Waypoint 2 of the route has 4 numbers"):
+        Mission(mission_kind="route", route_waypoints=[(1.0, 0.0), (1.0, 1.0, 0.5, 9.0)])

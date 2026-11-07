@@ -3,6 +3,7 @@
 import importlib
 import json
 import math
+import struct
 import sys
 import types
 from dataclasses import fields
@@ -236,6 +237,73 @@ def test_a_bare_route_file_name_means_that_file_in_the_packages_missions_folder(
         sys.modules.pop("ament_index_python.packages", None)
     assert len(node.mission.route_waypoints) == count
     assert node.parameters["route_file"] == route_file
+    with_height = sum(len(waypoint) == 3 for waypoint in node.mission.route_waypoints)
+    assert with_height == (0 if route_file == "route_waypoints.json" else 2)   # the window legs' heights
+
+
+def test_a_waypoint_with_the_wrong_count_of_numbers_in_the_route_file_is_a_clear_error(build_node, tmp_path):
+    route_file = tmp_path / "route.json"
+    route_file.write_text(json.dumps({"waypoints_forward_left_metres": [[1.0, 0.0], [1.0]]}))
+    with pytest.raises(ValueError, match=r"Waypoint 2 in .*route.json is \[1.0\]"):
+        build_node(mission_kind="route", route_file=str(route_file))
+
+
+DEPTH_TOPIC = "/some/depth_points"
+
+
+def depth_cloud(points):
+    """A PointCloud2 of float32 x, y, z points, packed as the pretend depth camera packs them."""
+    message = fake_ros.PointCloud2()
+    message.fields = [fake_ros.PointField(name, offset) for name, offset in (("x", 0), ("y", 4), ("z", 8))]
+    message.point_step = 12
+    message.data = b"".join(struct.pack("<fff", *point) for point in points)
+    return message
+
+
+def build_drift_node(build_node, **parameters):
+    maps = str(Path(__file__).resolve().parents[1] / "course_maps" / "organizers_drawing.json")
+    return build_node(mission_kind="route", route_file=str(Path(__file__).resolve().parents[1] / "missions" /
+                                                           "route_waypoints.json"),
+                      drift_correction=True, course_map_file=maps, **parameters)
+
+
+def test_without_drift_correction_no_depth_is_heard(build_node):
+    node = build_node(depth_topic=DEPTH_TOPIC)
+    assert DEPTH_TOPIC not in node.subscriptions
+    assert node.mission.map_ranging is None
+
+
+def test_with_drift_correction_the_depth_straight_ahead_reaches_the_mission(build_node):
+    node = build_drift_node(build_node, depth_topic=DEPTH_TOPIC)
+    assert node.subscriptions[DEPTH_TOPIC][0] is fake_ros.PointCloud2
+    assert node.mission.map_ranging.course_map.launch_mark_centre_metres is not None
+    fake_ros.Clock.seconds = 4.0
+    deliver(node, DEPTH_TOPIC, depth_cloud([(1.2, 0.0, 0.0)] * 6 + [(0.5, 0.5, 0.0)] * 20))
+    assert node.mission.depth_ahead_metres == pytest.approx(1.2)
+    assert node.mission.depth_ahead_seconds == 4.0
+    deliver(node, DEPTH_TOPIC, depth_cloud([(1.2, 0.0, 0.0)] * 2))           # too few straight ahead
+    assert node.mission.depth_ahead_metres is None
+
+
+def test_drift_correction_without_a_depth_topic_warns(build_node):
+    node = build_drift_node(build_node)
+    assert any(level == "warn" and "depth_topic is empty" in text for level, text in node.log_lines)
+
+
+def test_depth_points_without_float_xyz_are_ignored_with_one_warning(build_node):
+    node = build_drift_node(build_node, depth_topic=DEPTH_TOPIC)
+    message = depth_cloud([(1.2, 0.0, 0.0)] * 6)
+    message.fields = message.fields[:2]
+    deliver(node, DEPTH_TOPIC, message)
+    deliver(node, DEPTH_TOPIC, message)
+    assert node.mission.depth_ahead_seconds is None
+    assert sum("no float32 x, y and z" in text for _, text in node.log_lines) == 1
+
+
+def test_a_course_map_that_cannot_be_read_is_a_clear_error(build_node):
+    with pytest.raises(ValueError, match="Could not read the course map /no/such/map.json"):
+        build_node(mission_kind="route", drift_correction=True, course_map_file="/no/such/map.json",
+                   route_file=str(Path(__file__).resolve().parents[1] / "missions" / "route_waypoints.json"))
 
 
 def test_a_route_file_that_cannot_be_read_is_a_clear_error(build_node):

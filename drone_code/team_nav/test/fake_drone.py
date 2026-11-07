@@ -75,6 +75,7 @@ class FakeDrone:
         self.armed_at_seconds = None
         self.frozen_orientation = None
         self.xy_reset_counter = 0                 # PX4 raises these when it resets its estimates
+        self.tracking_error_metres = [0.0, 0.0]   # tests set this to imitate camera tracking drift (x, y)
         self.heading_reset_counter = 0
 
     # ------------------------------------------------------------------ what the mission hears
@@ -87,7 +88,8 @@ class FakeDrone:
         self.frozen_report = None
         self.reports_made += 1
         wobble = TRACKING_WOBBLE_METRES * (self.reports_made % 3 - 1)
-        self.last_reported = (self.position[0] + wobble, self.position[1], self.position[2])
+        error_x, error_y = self.tracking_error_metres
+        self.last_reported = (self.position[0] + error_x + wobble, self.position[1] + error_y, self.position[2])
         return self.last_reported
 
     def reported_orientation(self):
@@ -161,7 +163,10 @@ class FakeDrone:
             return self.velocity_command
         if self.pose_target is None:
             return 0.0, 0.0, 0.0
-        difference = [target - now for target, now in zip(self.pose_target, self.position)]
+        # PX4 flies to a target using camera tracking's position, drift and all.
+        error_x, error_y = self.tracking_error_metres
+        believed = (self.position[0] + error_x, self.position[1] + error_y, self.position[2])
+        difference = [target - now for target, now in zip(self.pose_target, believed)]
         velocity = [POSITION_RESPONSE_PER_SECOND * value for value in difference]
         size = math.sqrt(sum(value * value for value in velocity))
         if size > FASTEST_POSITION_FLIGHT_METRES_PER_SECOND:

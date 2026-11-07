@@ -1,5 +1,5 @@
 {
-  "description": "The route planned on the organizers' drawing. Planned on 2026-11-07 by Kenny's route planner, used unchanged (drone_code/team_nav/team_nav/route_planner.py on origin/classical, commit 8d848da), on the map course_maps/organizers_drawing.json with the mission missions/dronehacks_2026.json, cruise height 0.8 m. Converted to this file's frame with his start_frame.py: each waypoint is [forward, left] in metres from the launch mark, with forward being where the nose points at takeoff, taken as 90 degrees from the course's east direction (north, along the first corridor), as in his route test and our simulator. The planner's first waypoint, the launch mark itself, is left out. Read by team_nav/mission_node.py when launched with mission:=route and route_file:=route_waypoints_drawing.json.",
+  "description": "The route planned on the organizers' drawing. Planned on 2026-11-07 by Kenny's route planner, used unchanged (drone_code/team_nav/team_nav/route_planner.py on origin/classical, commit 8d848da), on the map course_maps/organizers_drawing.json with the mission missions/dronehacks_2026.json, cruise height 0.8 m. Converted to this file's frame with his start_frame.py: each waypoint is [forward, left] in metres from the launch mark, or [forward, left, height] where the leg into it must be flown at a height other than cruise (metres above the launch floor), with forward being where the nose points at takeoff, taken as 90 degrees from the course's east direction (north, along the first corridor), as in his route test and our simulator. The planner's first waypoint, the launch mark itself, is left out. Read by team_nav/mission_node.py when launched with mission:=route and route_file:=route_waypoints_drawing.json.",
   "waypoints_forward_left_metres": [
     [
       1.506,
@@ -75,11 +75,13 @@
     ],
     [
       -3.391,
-      -2.611
+      -2.611,
+      0.76
     ],
     [
       -2.975,
-      -1.479
+      -1.479,
+      0.76
     ],
     [
       -2.769,
@@ -114,7 +116,7 @@
     0.8,
     0.8
   ],
-  "planned_heights_note": "Information only: the route mission flies every leg at its cruise height and ignores these. The planner asks for 0.76 m through the window, where it crosses.",
+  "planned_heights_note": "The planner's height at each waypoint, for information. The route mission uses only the heights written as a third number in waypoints_forward_left_metres: 0.76 m at waypoints 19 and 20 (counting from 1), the planner's window crossing height (its 0.76 m, rounded to the centimetre). The window in this map is 0.32 to 1.20 m high. Every other leg is flown at cruise height.",
   "planner_summary": {
     "map_file": "organizers_drawing.json",
     "length_metres": 17.94,

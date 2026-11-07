@@ -73,6 +73,32 @@ class MissionSettings:
     route_corner_settle_time_limit_seconds: float = 3.0
     # Our own choice: the turn is done when the nose is within this of the next leg's direction.
     route_heading_tolerance_degrees: float = 3.0
+    # Our own choice: before a leg flown at another height (a waypoint's third number), the height
+    # change is done when the drone is within this of the new height, or after this long at most once
+    # the target has got there (PX4's height hold can sit a few centimetres off).
+    route_height_tolerance_metres: float = 0.05
+    route_height_settle_time_limit_seconds: float = 3.0
+
+    # ------------------------------------------------------------------ drift correction (drift_correction.py)
+    # From the team (2026-11-07): at route corners, correct camera tracking's drift from the depth
+    # straight ahead. False by default: it has only been tried in the simulator, and on the drone it
+    # also needs a depth topic and the right start heading (start_heading_degrees).
+    drift_correction: bool = False
+    # Our own choice: "straight ahead" is a cone this wide either side of the nose, needing at least
+    # this many depth points in it, received no longer ago than this.
+    drift_depth_window_degrees: float = 3.0
+    drift_depth_least_points: int = 5
+    drift_depth_max_age_seconds: float = 0.5
+    # From the team: correct only when the map's wall straight ahead is this near to this far...
+    drift_nearest_wall_metres: float = 0.4
+    drift_farthest_wall_metres: float = 2.5
+    # ...the depth and the map differ by less than this, and by at most this much per correction.
+    drift_largest_difference_metres: float = 0.4
+    drift_largest_correction_metres: float = 0.2
+    # The way the nose points at takeoff, anticlockwise from the course map's east (x) direction.
+    # From the simulator and Kenny's route planner, which both assume 90 (north, up the first
+    # corridor). The rulebook does not say; check it on the day. Only the drift correction uses it.
+    start_heading_degrees: float = 90.0
 
     # ------------------------------------------------------------------ freshness of inputs
     # From the team plan (section 11): if position reports stop for more than 0.2 s, hold.

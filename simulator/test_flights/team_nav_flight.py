@@ -186,8 +186,13 @@ class TeamNavFlightWatcher(Node):
             route = json.load(opened)["waypoints_forward_left_metres"]
         start_east, start_north = self.tracked_position
         cos_heading, sin_heading = math.cos(self.tracked_heading_radians), math.sin(self.tracked_heading_radians)
-        self.waypoints = [(start_east + cos_heading * forward - sin_heading * left,
-                           start_north + sin_heading * forward + cos_heading * left) for forward, left in route]
+        self.waypoints = []
+        for waypoint in route:
+            # A waypoint may carry a third number, the height of the leg into it; only the place
+            # matters here.
+            forward, left = waypoint[0], waypoint[1]
+            self.waypoints.append((start_east + cos_heading * forward - sin_heading * left,
+                                   start_north + sin_heading * forward + cos_heading * left))
         self.closest_approach_metres = [math.inf] * len(self.waypoints)
         self.say(f"The route in {self.route_file} has {len(self.waypoints)} waypoints.")
 

@@ -36,9 +36,10 @@ Run a test flight. The first run takes about a minute longer because it prepares
 simulator/run_test_flight.sh landing_test.py --with-push-down
 ```
 
-Fly our real mission program, [`drone_code/team_nav`](../drone_code/team_nav/README.md), started by the same launch file the drone uses. The script starts the simulator without its own copy of the organizers' flight interface, because our launch file starts that. It launches with two simulator-only settings:
+Fly our real mission program, [`drone_code/team_nav`](../drone_code/team_nav/README.md), started by the same launch file the drone uses. The script starts the simulator without its own copy of the organizers' flight interface, because our launch file starts that. It launches with three simulator-only settings:
 - `target_system:=1`, because the simulator's PX4 is system 1 (drone 16's is 16);
-- `vision_check:=false`, because the simulator has no camera images, so nothing reports camera tracking health.
+- `vision_check:=false`, because the simulator has no camera images, so nothing reports camera tracking health;
+- `depth_topic:=/simulator_only/depth_points`, the pretend depth camera, which the drift correction reads (only with `drift_correction:=true`).
 
 The mission accepts `vision_check:=false` only from this script, inside the box. The script then presses start through the pretend remote control and watches the flight.
 
@@ -139,7 +140,7 @@ All of this was run on 2026-11-06, on an M1 Mac.
 - **The start.** The pretend person arms and flips to Position, and the organizers' real program then hands control to the test flight. The takeoff follows without any stick input.
 - **Short flights.** `landing_test.py` climbs to 0.8 m, flies 1 m forward along the first corridor, and lands. It stayed within about 8 cm of its line, peaked at about 0.84 m, and touched nothing. The closest a propeller came to an obstacle was about 13 cm.
 - **Landing.** Six flights passed, three with the push-down and three without. The results are in section 7 of [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md).
-- **Depth points.** One flight's points were correct: at cruise height, they showed the first wall where the course model says it is, with no invalid values. Nothing uses these points yet.
+- **Depth points.** One flight's points were correct: at cruise height, they showed the first wall where the course model says it is, with no invalid values. The route mission's drift correction now uses them (below).
 - **Our mission program** (2026-11-07, on a second Mac with Docker Desktop). `run_team_nav.sh` flew `drone_code/team_nav`, started by its own launch file. It did everything expected:
   - the hand-over;
   - a climb peaking at 0.78 m;
@@ -165,5 +166,19 @@ All of this was run on 2026-11-06, on an M1 Mac.
 - **Kenny's planned routes** (2026-11-07, same Mac, PX4's clock at 0.90). Two runs, current settings (25° fly-through), drift on. The simulator's walls come from the organizers' drawing.
   - **Drawing route:** all 22 waypoints. Motors off 147.2 s after the hand-over. 1 touch, in the window (C2a chicane wall).
   - **Scan route:** all 25 waypoints. Motors off 150.4 s after the hand-over. 2 touches, on the M2 maze divider and the M3 maze divider. The scan puts those two walls somewhere other than the drawing: on the scan, both touch points are 0.55 m from the nearest wall. So these touches show where the two maps disagree, not a fault in the route.
+
+- **Window heights and the drift correction** (2026-11-07, same Mac, PX4's clock at 0.91). Drift on (1% of distance flown), 25° fly-through. The drawing route now flies its two window legs at 0.76 m. Pictures are in `generated_files/route_pictures/`, named `team_route_drift_correction_off/on.png` and `drawing_route_drift_correction_off/on.png`.
+
+  | Run | Motors off after the hand-over | Touches | Corrections made / skipped |
+  |---|---|---|---|
+  | Team route, correction off | 149.2 s | 2, on the legs after waypoints 16 and 18 | — |
+  | Team route, correction on | 147.6 s | 0 | 9 / 9 |
+  | Drawing route, correction off | 160.8 s | 1, the window's top edge | — |
+  | Drawing route, correction on | 154.0 s | 0 | 6 / 15 |
+
+  - On the team route, the correction removed both touches. Camera tracking ended 0.22 m from the true position, and the corrected estimate ended 0.04 m from it. The biggest single correction was +0.12 m, at waypoint 15.
+  - On the drawing route, the touch was a height problem, and the correction did not fix it. After the drone passed over a boulder, PX4's height estimate stayed about 0.35 m below the truth, so it crossed the window at about 1.1 m instead of 0.76 m and clipped the window's top edge (1.20 m). PX4 takes its height mainly from the bottom laser here (drone 16's `EKF2_HGT_REF=2`). In the corrected run, PX4's height stayed right (0.74 to 0.81 m through the window), and the drone passed 3.7 cm from the window frame. The correction made no changes after waypoint 12 on this route, so this route's 0 touches is not evidence for the correction. Its corrected estimate ended 0.14 m off.
+  - Most skips were "no good depth reading": too few depth points within 3° of straight ahead, often because the wall ahead is beyond the pretend camera's reach or the points there are missing. One was the safety net.
+  - Each result is a single run.
 
 We have not tested a full run of the course, because the mission's detectors (the line, the pad and the depth clearances) don't exist yet. We also haven't tested the bottom edge of the window, the boulders, or lost camera tracking. No result here has been compared with a real flight.

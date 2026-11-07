@@ -184,6 +184,29 @@ class VisualSlamStatus:
         self.vo_state = vo_state
 
 
+class PointField:
+    """sensor_msgs/PointField: one field of every point in a PointCloud2."""
+    FLOAT32 = 7
+
+    def __init__(self, name="", offset=0, datatype=7, count=1):
+        self.name, self.offset, self.datatype, self.count = name, offset, datatype, count
+
+
+class PointCloud2:
+    """sensor_msgs/PointCloud2: points packed as bytes, point_step bytes each."""
+
+    def __init__(self):
+        self.header = Header()
+        self.height = 1
+        self.width = 0
+        self.fields = []
+        self.is_bigendian = False
+        self.point_step = 0
+        self.row_step = 0
+        self.data = b""
+        self.is_dense = False
+
+
 class ParameterDescriptor:
     def __init__(self, dynamic_typing=False):
         self.dynamic_typing = dynamic_typing
@@ -277,7 +300,7 @@ def module(name, **contents):
 
 
 STAND_IN_MODULES = ("rclpy", "rclpy.node", "rclpy.qos", "rclpy.parameter", "geometry_msgs", "geometry_msgs.msg", "nav_msgs",
-                    "nav_msgs.msg", "std_msgs", "std_msgs.msg", "px4_msgs", "px4_msgs.msg", "rcl_interfaces",
+                    "nav_msgs.msg", "std_msgs", "std_msgs.msg", "sensor_msgs", "sensor_msgs.msg", "px4_msgs", "px4_msgs.msg", "rcl_interfaces",
                     "rcl_interfaces.msg", "rcl_interfaces.srv", "isaac_ros_visual_slam_interfaces",
                     "isaac_ros_visual_slam_interfaces.msg")
 
@@ -300,6 +323,8 @@ def install():
     sys.modules["nav_msgs.msg"] = module("nav_msgs.msg", Odometry=Odometry)
     sys.modules["std_msgs"] = module("std_msgs")
     sys.modules["std_msgs.msg"] = module("std_msgs.msg", String=String)
+    sys.modules["sensor_msgs"] = module("sensor_msgs")
+    sys.modules["sensor_msgs.msg"] = module("sensor_msgs.msg", PointCloud2=PointCloud2, PointField=PointField)
     sys.modules["px4_msgs"] = module("px4_msgs")
     sys.modules["px4_msgs.msg"] = module("px4_msgs.msg", VehicleLocalPosition=VehicleLocalPosition,
                                          VehicleStatus=VehicleStatus)

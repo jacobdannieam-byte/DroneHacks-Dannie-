@@ -6,6 +6,7 @@
 #   simulator/run_team_nav.sh route      # the route in drone_code/team_nav/missions/route_waypoints.json
 #   simulator/run_team_nav.sh route route_fly_through_degrees:=45
 #   simulator/run_team_nav.sh route route_file:=route_waypoints_scan.json
+#   simulator/run_team_nav.sh route route_file:=route_waypoints_drawing.json drift_correction:=true
 #   SIMULATOR_ARGUMENTS="tracking_drift_metres_per_metre:=0.0" simulator/run_team_nav.sh route
 #
 # Any words after the mission are passed to our launch file as launch arguments (name:=value).
@@ -16,12 +17,14 @@
 #      starts that program, and the organizers' guide warns that two flight interfaces fight over
 #      the control flags.
 #   2. Launches drone_code/team_nav/launch/team_nav.launch.py, the same file the drone uses, with
-#      two settings for the simulator:
+#      three settings for the simulator:
 #        target_system:=1     the simulator's PX4 is system 1 (drone 16's is 16, the default)
 #        vision_check:=false  the simulator has no camera images, so nothing reports camera
 #                             tracking health; this makes the mission treat it as healthy. The
 #                             mission accepts false only from this script, inside the simulator
 #                             box (see TEAM_NAV_STARTED_BY in drone_code/team_nav/team_nav/mission_node.py).
+#        depth_topic:=/simulator_only/depth_points   Kenny's pretend depth camera, which the drift
+#                             correction reads. It is only listened to with drift_correction:=true.
 #   3. Runs test_flights/team_nav_flight.py. It presses start through the pretend remote control
 #      (arm, then flip the switch to Position), watches the flight, and prints a RESULT line.
 #   4. Saves the records in simulator/generated_files/flight_records/ and prints the referee's summary.
@@ -109,7 +112,8 @@ docker exec --detach \
     "$box_name" bash -c "
         until [ -f /tmp/our_packages_are_built ]; do sleep 1; done
         source /repository/simulator/inside_the_box/load_ros_environment.sh
-        ros2 launch team_nav team_nav.launch.py target_system:=1 vision_check:=false mission:=$mission_kind $team_nav_arguments \
+        ros2 launch team_nav team_nav.launch.py target_system:=1 vision_check:=false \
+            depth_topic:=/simulator_only/depth_points mission:=$mission_kind $team_nav_arguments \
             > /repository/simulator/generated_files/last_team_nav_log.txt 2>&1
     "
 

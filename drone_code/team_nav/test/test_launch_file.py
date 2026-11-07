@@ -24,7 +24,7 @@ EXAMPLE_FLIGHT_INTERFACE_DEFAULTS = {
 DRONE_16_SYSTEM_ID = "16"
 MISSION_NODE_PARAMETERS_NOT_IN_SETTINGS = {"position_topic", "flight_state_topic", "px4_local_position_topic",
                                            "px4_status_topic", "visual_slam_status_topic", "vision_check",
-                                           "mission_kind", "route_file"}
+                                           "mission_kind", "route_file", "depth_topic", "course_map_file"}
 WATCHDOG_THRESHOLDS = ["watchdog_odometry_timeout_seconds", "watchdog_jump_speed_metres_per_second",
                        "watchdog_jump_margin_metres", "watchdog_frozen_seconds", "watchdog_motion_request_metres",
                        "watchdog_motion_request_degrees", "watchdog_motion_request_metres_per_second"]
@@ -155,3 +155,17 @@ def test_the_mission_program_the_launch_file_names_is_installed():
         assert f'"missions/{route_file}"' in setup_text, route_file
         assert (PACKAGE_FOLDER / "missions" / route_file).is_file(), route_file
     assert "install_scripts=$base/lib/team_nav" in (PACKAGE_FOLDER / "setup.cfg").read_text()
+    for map_file in ("organizers_drawing.json", "phone_scan_2026-11-06.json"):
+        assert f'"course_maps/{map_file}"' in setup_text, map_file
+        assert (PACKAGE_FOLDER / "course_maps" / map_file).is_file(), map_file
+
+
+def test_the_drift_correction_is_off_by_default_and_its_inputs_are_launch_arguments(launched):
+    declared = arguments(launched)
+    assert declared["drift_correction"] == "false"
+    assert MissionSettings().drift_correction is False
+    assert declared["depth_topic"] == ""                                   # no depth program on the drone yet
+    assert declared["course_map_file"] == "organizers_drawing.json"
+    assert float(declared["start_heading_degrees"]) == MissionSettings().start_heading_degrees == 90.0
+    for name in ("drift_correction", "depth_topic", "course_map_file", "start_heading_degrees"):
+        assert mission_parameters(launched)[name].name == name, name

@@ -6,8 +6,9 @@ calls step twenty times a second. step returns what to publish this time: a posi
 velocity command, or nothing. Between takeoff and landing it flies either the course stages
 (course_stages.py, mission:=stages) or a list of waypoints (route_flight.py, mission:=route). The
 landing is landing.py; position_watchdog.py decides when the position can no longer be trusted;
-position_watch.py spots frozen tracking before a start and measures speed. This file never talks
-to ROS and never reads a clock, so the tests can run it on a laptop.
+position_watch.py spots frozen tracking before a start and measures speed; drift_correction.py
+decides, at route corners, how far camera tracking has drifted. This file never talks to ROS and
+never reads a clock, so the tests can run it on a laptop.
 
 Words used here:
 * "Offboard" is the PX4 mode in which the drone follows targets from a computer. The organizers'
@@ -66,11 +67,19 @@ Safety rules (each one is a test in test/test_mission.py):
   off or Offboard ending.
 * Every decision has a reason. Each change of phase or reason is logged, and so is each new peak
   horizontal speed.
+
+The drift correction (route mission, drift_correction:=true): each time the route has stopped at a
+corner, before it turns, the depth straight ahead is compared with the course map's wall straight
+ahead, and the result (a correction, or why there is none) is logged. The total correction is
+added to camera tracking's position before the route sees it, and taken off every target the route
+asks for, so the drone flies where the route really is. Camera tracking, PX4's estimate, the
+watchdog and the landing never see the correction. It is cleared at every start.
 """
 import math
 from dataclasses import dataclass, field
 
-from .course_stages import Course, wrap_angle
+from .course_stages import Course, world_to_body, wrap_angle
+from .drift_correction import decide_correction
 from .landing import Landing
 from .mission_inputs import MissionInputs, is_finite_number
 from .mission_settings import MissionSettings
@@ -104,16 +113,23 @@ class Command:
 
 
 class Mission:
-    def __init__(self, settings=None, vision_check=True, mission_kind="stages", route_waypoints=None):
+    def __init__(self, settings=None, vision_check=True, mission_kind="stages", route_waypoints=None,
+                 map_ranging=None):
         """vision_check=False is for the simulator only (see fly_course); mission_node.py refuses it
         anywhere else. mission_kind is "stages" or "route"; a route needs its waypoints, each
-        (forward, left) in metres from the takeoff spot."""
+        (forward, left) or (forward, left, height) in metres from the takeoff spot. map_ranging
+        (drift_correction.MapRanging) measures the course map's distance to the wall straight ahead;
+        the drift correction needs it."""
         if mission_kind not in MISSION_KINDS:
             raise ValueError(f"The mission must be one of {', '.join(MISSION_KINDS)}, not {mission_kind!r}. "
                              "Fix the mission launch argument.")
         if mission_kind == "route" and not route_waypoints:
             raise ValueError("The route mission needs waypoints, and none were given. Check the route file.")
         self.settings = settings or MissionSettings()
+        if self.settings.drift_correction and map_ranging is None:
+            raise ValueError("The drift correction needs a course map, and none was given. Check the course_map_file "
+                             "parameter, or launch with drift_correction:=false.")
+        self.map_ranging = map_ranging
         self.vision_check = vision_check
         self.mission_kind = mission_kind
         self.route_waypoints = route_waypoints
@@ -137,6 +153,8 @@ class Mission:
         self.px4_report_seconds = None           # when PX4's position report last arrived
         self.laser_metres = None                 # latest usable bottom laser distance in it
         self.laser_seconds = None
+        self.depth_ahead_metres = None           # latest depth straight ahead (None: no good reading)
+        self.depth_ahead_seconds = None          # when it arrived
         self.floor_laser_readings = []           # [(seconds, distance)] while on the launch mark
         self.seen_offboard_inactive = False
         self.last_step_seconds = None
@@ -145,8 +163,8 @@ class Mission:
     def reset_run_state(self):
         """Forget everything worked out during a previous run: the course's memory (where the pad
         is, what space was seen free, how many sightings were counted), the route's progress, the
-        landing, the watchdog's trip, the timers, the position watch and the detector reports. There
-        is no map correction yet; when there is, it must be cleared here too."""
+        drift correction, the landing, the watchdog's trip, the timers, the position watch and the
+        detector reports."""
         self.course = Course(self.settings)
         self.route = RouteFlight(self.settings, self.route_waypoints) if self.mission_kind == "route" else None
         self.landing = None
@@ -166,6 +184,7 @@ class Mission:
         self.home = None                         # (x, y) of the launch mark
         self.start_heading_radians = None
         self.floor_reading_metres = None
+        self.position_correction_metres = (0.0, 0.0)   # (x, y) added to camera tracking's position
 
     # ------------------------------------------------------------------ reports from mission_node.py
     def observe_position(self, now_seconds, position, heading_radians, stamp_seconds=None, orientation=None):
@@ -205,6 +224,11 @@ class Mission:
             self.floor_laser_readings.append((now_seconds, self.laser_metres))
             oldest_kept = now_seconds - self.settings.floor_reading_window_seconds
             self.floor_laser_readings = [entry for entry in self.floor_laser_readings if entry[0] >= oldest_kept]
+
+    def observe_depth_ahead(self, now_seconds, distance_metres):
+        """The median depth straight ahead (depth_ahead.py), or None when there was no good reading."""
+        self.depth_ahead_metres = distance_metres if is_finite_number(distance_metres) else None
+        self.depth_ahead_seconds = now_seconds
 
     # ------------------------------------------------------------------ one step
     def step(self, now_seconds):
@@ -478,7 +502,7 @@ class Mission:
             cruise = (self.home[0], self.home[1], self.ground_height_metres + settings.cruise_height_metres,
                       self.start_heading_radians)
             if self.route is not None:
-                self.route.start(now_seconds, cruise)
+                self.route.start(now_seconds, cruise, self.ground_height_metres)
                 self.phase = "flying_route"
             else:
                 self.course.start(now_seconds, cruise)
@@ -517,13 +541,51 @@ class Mission:
         held = self.hold_while_reports_stopped(now_seconds)
         if held is not None:
             return held
-        decision = self.route.step(now_seconds, seconds_since_last_step, self.position, self.heading_radians,
-                                   self.position_watch.latest_horizontal_speed_metres_per_second)
+        decision = self.route.step(now_seconds, seconds_since_last_step, self.corrected_position(),
+                                   self.heading_radians, self.position_watch.latest_horizontal_speed_metres_per_second)
+        if decision.stopped_at_corner and self.settings.drift_correction:
+            self.correct_drift(now_seconds)
+        setpoint = self.uncorrected_setpoint(decision.setpoint)
         if decision.complete:
-            self.current_setpoint = decision.setpoint
+            self.current_setpoint = setpoint
             self.begin_landing(now_seconds, f"route: {decision.reason}")
             return self.land(now_seconds)
-        return self.position_command(now_seconds, decision.setpoint, f"route: {decision.reason}")
+        return self.position_command(now_seconds, setpoint, f"route: {decision.reason}")
+
+    # ------------------------------------------------------------------ the drift correction
+    def corrected_position(self):
+        correction_x, correction_y = self.position_correction_metres
+        x, y, z = self.position
+        return (x + correction_x, y + correction_y, z)
+
+    def uncorrected_setpoint(self, setpoint):
+        """A route target, in the corrected positions the route sees, as a camera tracking target."""
+        correction_x, correction_y = self.position_correction_metres
+        return (setpoint[0] - correction_x, setpoint[1] - correction_y, setpoint[2], setpoint[3])
+
+    def correct_drift(self, now_seconds):
+        """Stopped at a corner, not yet turned: compare the depth straight ahead with the map, and
+        move the position estimate along the heading if they agree closely enough."""
+        settings = self.settings
+        measured = self.depth_ahead_metres
+        if not self.received_within(self.depth_ahead_seconds, now_seconds, settings.drift_depth_max_age_seconds):
+            measured = None
+        x, y, z = self.corrected_position()
+        forward, left = world_to_body(self.home, self.start_heading_radians, (x, y))
+        heading_from_start = self.heading_radians - self.start_heading_radians
+        map_metres, wall_name = self.map_ranging.distance_ahead(forward, left, heading_from_start,
+                                                               z - self.ground_height_metres)
+        decision = decide_correction(measured, map_metres, wall_name, settings)
+        where = self.route.corner_name()
+        if decision.shift_metres is None:
+            self.log(now_seconds, f"drift correction at {where}: none, {decision.reason}")
+            return
+        correction_x, correction_y = self.position_correction_metres
+        correction_x += decision.shift_metres * math.cos(self.heading_radians)
+        correction_y += decision.shift_metres * math.sin(self.heading_radians)
+        self.position_correction_metres = (correction_x, correction_y)
+        self.log(now_seconds, f"drift correction at {where}: {decision.reason}; total correction now "
+                              f"({correction_x:+.2f}, {correction_y:+.2f}) m")
 
     def begin_landing(self, now_seconds, why):
         self.log(now_seconds, why)
