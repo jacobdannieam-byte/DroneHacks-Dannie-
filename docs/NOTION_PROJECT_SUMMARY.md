@@ -179,3 +179,4 @@ The following clean documentation and 3D assets are live on branch `main` (`34da
 - `docs/Isaacsim-hprc_stuff/drone_course_sim_ready_2.usdz` — Web-viewer compatible 3D model
 - `docs/Isaacsim-hprc_stuff/dronehacks-course-scan-2026-11-06.ply` — Source physical scan
 - `docs/COURSE_MODEL_COMPARISON_AND_PLAN.md` — Geometric CAD vs. Scan analysis & flight plan
+

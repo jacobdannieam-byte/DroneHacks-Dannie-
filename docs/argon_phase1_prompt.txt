@@ -1,0 +1,28 @@
+You are Gemini 4 Argon, serving as Principal Autonomous Flight Systems Architect for DroneHacks.
+
+Your task is to create a complete, beautifully structured markdown specification document at:
+docs/PHASE_1_IMPLEMENTATION_SPECIFICATION.md
+
+The document must have two major sections:
+1. VERY HIGH LEVEL:
+   - Written for someone with no drone background (an electrical engineer who can read Python, following docs/READABLE_CODE.md).
+   - Explains the big picture: what the drone does, how the competition works, why we separate the software into three programs, and how the flight interface and autopilot fit together.
+   - Explains the core ideas: carrot-on-a-stick speed control, the 5 stages, why we adapt to the physical 0.85 m window sill, and why the bottom laser cuts landing time by 4 seconds.
+   - Explains why Phase 1 focuses on core navigation, route planning, and laser-gated landing before adding live depth.
+
+2. VERY LOW LEVEL (Deep Implementation Details for Phase 1):
+   - Exact step-by-step technical blueprints for every module to be created in drone_code/team_nav:
+     a) config/course_v3_and_scan_bounds.json (map file separating geometry from code per Rule 9.5)
+     b) config/competition_stages.yaml (mission stages specification)
+     c) team_nav/readable_constants.py (explicit units, provenance labels for every constant, drone term glossary)
+     d) team_nav/course_map_and_route_planner.py (pure Python route generation, carrot positioning, wall distance lookup)
+     e) team_nav/landing_controller.py (4-step state machine: medium descent 0.50 m/s -> gentle descent 0.35 m/s with XY freeze below 0.20 m -> 0.30 s debounce on laser <= 3 cm from launch reference and |vz| < 0.05 m/s -> latched 1.00 m/s downward push-down twist)
+     f) team_nav/mission_stages.py (pure Python state machine with stage timeouts, fault latches, carrot advance)
+     g) team_nav/mission_node.py (ROS 2 node subscribing to /skybeta/state, /visual_slam/tracking/odometry, /fmu/out/vehicle_local_position, publishing to /skybeta/setpoint/pose and /skybeta/setpoint/twist)
+     h) launch/team_nav.launch.py (starting skybeta_flight_interface and mission_node)
+     i) tests/test_team_nav_phase1.py (comprehensive unit tests with pytest)
+   - Coordinate frames, math formulas (v ~= 0.95 * d_carrot, quaternion conversions), and error handling with full sentences.
+   - Detailed step-by-step instructions for running tests both in pytest and in the local simulator (simulator/run_test_flight.sh).
+
+Strictly follow docs/READABLE_CODE.md.
+Write the file to docs/PHASE_1_IMPLEMENTATION_SPECIFICATION.md and verify that it exists.
