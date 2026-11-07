@@ -8,6 +8,19 @@ Use readiness at `78ef913` as the comparison baseline and the pinned
 checkout for the first disarmed capture. Source landing requires the
 relevant owner review and the evidence listed below.
 
+## Branches to use
+
+- `main` is the stable managed ROS 2 reference.
+- `integration/unified-sitl-readiness` is the managed test checkout for
+  world semantics, dynamics prediction, hybrid planning and ROS 2 diagnostics.
+- `classical` is the separate Docker/Humble emulator checkout. Review the
+  staged mission there in [draft PR #18](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/pull/18).
+
+The published `Dannie-experimental` and `baseline-original` refs were
+removed after checking all open PR bases and heads. Their commits,
+`feb55b6a2485fb9f1aedeada371e8ca2abf96cd6` and
+`c3c5df33bea400209e4bec95ba99a3acdb6d67f8`, are reachable from `main`.
+
 ## Recommended branch outcomes
 
 | Ref | Outcome after acceptance | Reason |
@@ -16,6 +29,7 @@ relevant owner review and the evidence listed below.
 | `integration/unified-sitl-readiness` | Keep through native qualification | One test checkout for Phases 1–8. Its head already preserves both research lines. |
 | `classical` at `1f60fb5` | Keep the existing ref; consider `strategy/classical` only after independent launch acceptance | The Humble/SIH emulator uses the organizer command interface and emulated observations. Keep the dependency pins and simulation fixtures together. |
 | `dannie-classical` at `79d4da2` | Review with Dannie, retain the proposal, resolve script modes in the proper lane | The distinct change is a proposal plus executable-bit removals on four scripts. The runnable harness is inherited. |
+| `soham-stages` at `0ef71ce` | Review into `classical` | Two commits add the `team_nav` ROS 2 package to the existing emulator. The package's offline tests pass. The staged flight still needs an isolated emulator run. |
 | `soham-depth` and `soham-mission` | Preserve for focused owner reviews | Directional probes and course stages are independent contributions absent from readiness. |
 | Hybrid | Start as a configuration of the managed stack after native acceptance | Uses the same state, metric map and command owner. A separate branch would add maintenance without a separate runtime. |
 | Neural and RL | Defer branches | No independently runnable strategies found in the audited refs. |
@@ -79,9 +93,9 @@ each named branch and immutable commit reference.
 7. **Retire only after evidence and approval.** Recheck ownership, recent
    commits, worktrees, external asset availability and all open PR bases.
    Mark approved archival refs and publish the preserved SHAs before a
-   separate deletion decision. Review deprecated branch pointers with
-   their owners, including `Dannie-experimental`, local
-   `experimental` and `integration/unified-phase4-base`.
+   separate deletion decision. Review the remaining deprecated pointers
+   with their owners, including local `experimental` and
+   `integration/unified-phase4-base`.
 
 ## Conflicts and validation
 
