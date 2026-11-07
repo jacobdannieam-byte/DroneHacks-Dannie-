@@ -134,6 +134,15 @@ class DynamicsModel:
                 or end_s - command.effective_until_s > slack_s):
             raise ValueError("command interval does not cover the prediction step")
 
+        velocity_reference, acceleration, rate_reference, yaw_acceleration = self._tracking(state, command, dt)
+        velocity = tuple(v + a * dt for v, a in zip(state.velocity_mps, acceleration))
+        position = tuple(x + v * dt for x, v in zip(state.position_m, velocity))
+        yaw_rate = state.yaw_rate_rad_s + yaw_acceleration * dt
+        yaw = wrap_yaw(state.yaw_rad + yaw_rate * dt)
+        predicted = PredictedState(state.reference, end_s, position, velocity, yaw, yaw_rate)
+        return Prediction(predicted, velocity_reference, acceleration, rate_reference, yaw_acceleration)
+
+    def _tracking(self, state, command, dt):
         p = self.parameters
         velocity_reference = tuple(
             _clip(p.position_gain_per_s * (target - position), limit)
@@ -143,14 +152,8 @@ class DynamicsModel:
             _clip((target - velocity) / p.velocity_tau_s, limit)
             for target, velocity, limit in zip(velocity_reference, state.velocity_mps, p.acceleration_limits_mps2)
         )
-        velocity = tuple(v + a * dt for v, a in zip(state.velocity_mps, acceleration))
-        position = tuple(x + v * dt for x, v in zip(state.position_m, velocity))
-
         yaw_error = wrap_yaw(command.yaw_rad - state.yaw_rad)
         rate_reference = _clip(p.yaw_gain_per_s * yaw_error, p.yaw_rate_limit_rad_s)
         yaw_acceleration = _clip((rate_reference - state.yaw_rate_rad_s) / p.yaw_tau_s,
                                  p.yaw_acceleration_limit_rad_s2)
-        yaw_rate = state.yaw_rate_rad_s + yaw_acceleration * dt
-        yaw = wrap_yaw(state.yaw_rad + yaw_rate * dt)
-        predicted = PredictedState(state.reference, end_s, position, velocity, yaw, yaw_rate)
-        return Prediction(predicted, velocity_reference, acceleration, rate_reference, yaw_acceleration)
+        return velocity_reference, acceleration, rate_reference, yaw_acceleration
