@@ -1,0 +1,107 @@
+# Adaptive dynamics roadmap
+
+D0 is the position-setpoint baseline. D1 adds a trained offline residual
+predictor. D2 adds causal adaptation and a classical online identification
+baseline. D3–D5 describe future work.
+The progression adds learned correction, adaptation, environment evaluation,
+observational integration, and then planning in separate stages.
+
+```mermaid
+flowchart LR
+  S[Estimated state and effective setpoint history] --> D[D0 nominal closed-loop prediction]
+  H[Causal motion history] -. D2 context .-> R[D1 and D2 residual]
+  R -. bounded derivative correction .-> D
+  D --> T[Predicted trajectory]
+  W[WorldState and verified metric geometry] -. D3 .-> E[Candidate evaluator]
+  T -. D3 .-> E
+  T -. D4 .-> O[Shadow diagnostics and error logging]
+  E -. D5 .-> P[Predictive local planner]
+  P -. separate authority review .-> G[Guarded flight gateway]
+```
+
+## D1 residual model
+
+The 64×64 MLP predicts translational and yaw acceleration corrections from the
+current state, command, step duration and nominal tracking references. Training
+uses randomized closed-loop dynamics and whole-episode validation. Inference
+uses frozen weights and the D0 integrator.
+
+D1 reduced two-second position rollout RMSE on both randomized holdout cohorts.
+The matched-nominal fixture favored D0. Eight one-second D1 rollouts exceeded
+the provisional 10 ms host budget. Aircraft data and Orin profiling remain
+needed to select a deployment model. [D1 implementation and evidence](adaptive_dynamics_d1.md)
+
+## D2 adaptive context
+
+D2 uses up to 20 completed transitions at 20 ms intervals. A history MLP and
+32/64-unit GRUs each produce eight context coordinates with frozen weights.
+The comparison includes an online ridge fit of acceleration gain and damping,
+and a pre-switch frozen-context ablation. History improved the selected GRU's
+post-switch forecasts relative to the frozen context. The online fit achieved
+lower shifted-cohort rollout error and preserved matched-nominal accuracy more
+closely. The selected GRU remains an offline research candidate.
+[D2 implementation and evidence](adaptive_dynamics_d2.md)
+
+## D3 predictive evaluation against the world
+
+Pass predicted trajectories, a compact read-only semantic context, verified
+local metric geometry, and an explicit objective to a separate evaluator. Map
+the trajectory and vehicle swept envelope into the geometry frame using a
+validated transform with compatible capture time and reference epoch. Treat
+unknown and stale geometry conservatively. An opening candidate and sampled
+rays provide evidence for further observation. A complete occupied/free/unknown
+volume, clearance margin and validated full vehicle dimensions are prerequisites
+for geometric feasibility. Output diagnostic scores, reasons and rankings.
+
+The existing WorldState and reasoning interfaces provide semantic data and
+non-executable goals. A common `frame_id` string does not establish a transform
+between the local NED trajectory and an ENU or arbitrary-heading odometry map.
+The evaluator needs calibrated frame alignment and explicit clock binding.
+[WorldState PR](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/pull/1) ·
+[Reasoning PR](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/pull/2)
+
+## D4 ROS 2 shadow adapter
+
+Start from ROS bag replay. Select authoritative estimated pose and velocity
+using PX4 local position or odometry and validated estimator health. Use NED
+velocity directly when the source declares it. For ROS odometry, rotate
+child-frame twist into the world frame and explicitly transform ENU into NED.
+Reuse the repo's frame utilities and validated heading alignment. Derive yaw
+from the appropriate attitude or heading estimate. Derive yaw rate from a
+validated synchronized heading derivative or attitude kinematics. A body FRD
+angular velocity component alone is insufficient away from level attitude.
+
+For each sample, preserve state capture time, receive time, source clock, and
+reference epoch. Pair it with the setpoint that was effective over the interval,
+using ordered command history, transport timestamps and measured response delay.
+The current flight node stamps PX4-bound messages with system time, even under
+ROS simulation time. The existing PX4-to-ROS odometry bridge stamps at receipt.
+An adapter needs explicit clock mapping and latency characterization before
+using these sources for training labels. Guard against estimator resets,
+backwards clock jumps, stale samples, dropped messages and queue backpressure.
+
+Shadow output consists of diagnostic trajectories, error records and timing.
+The existing mission owns the PX4 flight command path. Qualify shadow operation
+alongside VIO, depth, semantic mapping and normal ROS workloads before collecting
+target-device performance evidence.
+
+## D5 local predictive planning
+
+Generate bounded candidate setpoint sequences, predict their physical responses,
+and reject infeasible trajectories against verified metric geometry and the
+uncertainty-inflated vehicle envelope. Rank feasible trajectories by goal
+progress, clearance, uncertainty and effort. A rejected or unknown corridor
+requires information gathering or another feasible candidate. Test offline and
+in simulation before considering flight integration. A separate review must
+cover estimator and sensor health, actual tracking margins, command authority,
+failsafe behavior, emergency takeover, deadline tails and team approval.
+
+## Embedded budgets to verify
+
+The provisional 20 Hz design allocates up to 2 ms each for preprocessing and one
+prediction, 10 ms each for candidate rollout and geometry evaluation, and 25 ms
+for total local planning. Measure median, p95, worst observed, missed deadlines,
+input age, scheduling jitter, memory, and CPU/GPU usage on the Orin Nano with
+co-running workloads. Compare CPU inference with GPU/TensorRT for small models
+and include transfer, conversion and scheduling costs. D0's Windows timings
+measure an offline workload. [D0 implementation and evidence](adaptive_dynamics_d0.md)
