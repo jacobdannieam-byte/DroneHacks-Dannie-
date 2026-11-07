@@ -4,7 +4,8 @@
 # It starts from the normal simulator box, "drone-simulator", and leaves that box
 # unchanged. Build the normal box first with simulator/build_simulator_image.sh.
 #
-# Took about 20 minutes on an M1 Mac, and adds about 3 GB of disk.
+# Measured on 2026-11-07: took about 8 minutes on an M1 Mac, and adds about 2.5 GB of disk
+# ("docker images" lists drone-simulator at 5.5 GB and drone-simulator-gazebo at 8.0 GB).
 set -euo pipefail
 
 folder_of_this_script="$(cd "$(dirname "$0")" && pwd)"

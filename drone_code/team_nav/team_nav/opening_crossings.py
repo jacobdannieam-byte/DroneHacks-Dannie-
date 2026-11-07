@@ -10,8 +10,11 @@ angles to the wall, in four points:
     (usual height)                      (opening's middle height)      (opening's middle height)              (usual height)
 
 The level part starts and ends far enough from the wall that no part of the drone is above or
-below the wall's solid edge while it changes height. The line-up point is where the flight
-program can stop, look at the opening with the camera, and line up before crossing.
+below the wall's solid edge while it changes height. It is TRAILING_ALLOWANCE_METRES longer at
+each end than that, because the drone trails its target (route_follower.py): it reaches the
+opening's height a little after the plan says, and starts the next height change a little
+before. The line-up point is where the flight program can stop, look at the opening with the
+camera, and line up before crossing.
 
 This file does not search for a route to the line-up point; route_planner.py does.
 """
@@ -29,6 +32,12 @@ from team_nav.drone_dimensions import (
 # Our own choice. The drone changes height over this distance before and after the level part.
 # 0.6 m to climb about 0.4 m is a gentle slope.
 HEIGHT_CHANGE_DISTANCE_METRES = 0.6
+
+# Our own choice, from a pretend-drone test (test_route_follower.py). Without this extra level
+# length, the pretend drone was up to 12 cm below the window's middle height on our scan while
+# part of it was still above the wall's lower edge. With 0.2 m, about 6 cm. A longer allowance
+# would help more, but at 0.3 m our scan has no room left to line up for the window.
+TRAILING_ALLOWANCE_METRES = 0.2
 
 
 class OpeningCrossingNotPossible(Exception):
@@ -65,7 +74,9 @@ def plan_opening_crossing(course_map, line, cruise_height_metres):
         (opening.start_along_wall_metres + opening.end_along_wall_metres) / 2.0
     )
     through_the_wall = _direction_through_wall_towards(wall, line.far_side_point_metres)
-    level_half_length_metres = DRONE_RADIUS_METRES + wall.thickness_metres / 2.0 + SIDEWAYS_SAFETY_MARGIN_METRES
+    level_half_length_metres = (
+        DRONE_RADIUS_METRES + wall.thickness_metres / 2.0 + SIDEWAYS_SAFETY_MARGIN_METRES + TRAILING_ALLOWANCE_METRES
+    )
     whole_half_length_metres = level_half_length_metres + HEIGHT_CHANGE_DISTANCE_METRES
 
     line_up_point = opening_middle - through_the_wall * whole_half_length_metres

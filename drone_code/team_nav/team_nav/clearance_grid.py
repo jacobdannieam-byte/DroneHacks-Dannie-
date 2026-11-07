@@ -8,6 +8,11 @@ nearest wall, tunnel side, boulder or safety net. Only things the drone could hi
 flying height count. For example, a boulder lower than the drone's body is left out, and the
 tunnel's curved sides count as narrower or wider depending on the height.
 
+The grid also holds, for each square, the distance from the drone's centre to the edge of the
+nearest boulder, whatever the boulder's height (negative above a boulder; see
+boulder_distances.py). The bottom laser is at the drone's centre, and a boulder under it makes
+the drone's height reading jump, so the planner prefers to keep away.
+
 The grid is made of squares GRID_SQUARE_METRES across. Each square's room is worked out
 exactly at its centre, from the shapes in the map. The grid only answers "how much room is
 there?". It does not decide where the drone may go; route_planner.py does.
@@ -16,6 +21,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from team_nav.boulder_distances import distance_to_nearest_boulder_metres
 from team_nav.course_map import distance_to_shapes_metres, shapes_blocking_between_heights
 
 # Our own choice. Small enough that the 0.9 m window has several free squares across its
@@ -37,6 +43,8 @@ class ClearanceGrid:
     shapes: list                        # The shapes the room was measured to.
     lowest_height_metres: float         # The heights the drone's body spans.
     highest_height_metres: float
+    boulder_distance_metres: np.ndarray # squares_east x squares_north. Negative above a boulder, infinite if there are none.
+    boulders: list                      # Every low obstacle in the map, whatever its height.
 
     def centre_of_square_metres(self, east_index, north_index):
         return self.lowest_corner_metres + (np.array([east_index, north_index]) + 0.5) * GRID_SQUARE_METRES
@@ -66,6 +74,8 @@ def make_clearance_grid(course_map, lowest_height_metres, highest_height_metres)
 
     shapes = shapes_blocking_between_heights(course_map, lowest_height_metres, highest_height_metres)
     room_metres, nearest_names = distance_to_shapes_metres(centres_metres, shapes)
+    boulders = list(course_map.low_obstacles)
+    boulder_distance_metres, _ = distance_to_nearest_boulder_metres(centres_metres, boulders)
     return ClearanceGrid(
         lowest_corner_metres=course_map.lowest_corner_metres.copy(),
         squares_east=int(squares_east),
@@ -75,6 +85,8 @@ def make_clearance_grid(course_map, lowest_height_metres, highest_height_metres)
         shapes=shapes,
         lowest_height_metres=lowest_height_metres,
         highest_height_metres=highest_height_metres,
+        boulder_distance_metres=boulder_distance_metres.reshape(squares_east, squares_north),
+        boulders=boulders,
     )
 
 

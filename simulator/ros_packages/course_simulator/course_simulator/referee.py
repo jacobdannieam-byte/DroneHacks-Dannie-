@@ -4,9 +4,13 @@ What it records
 ---------------
   - Each time a propeller touches an obstacle. The simulated drone does NOT bounce or crash,
     because PX4's physics does not know about walls. It flies straight through, and the
-    touch is only written down. A touch like that could end a real run.
+    touch is only written down. A touch like that could end a real run, so run_test_flight.sh
+    fails the test if the summary shows any touch.
   - Whether the drone went above the wall tops or left the course.
   - When each checkpoint was reached, and the finish time.
+  - Each time the drone was above a boulder, and how far PX4's height estimate strayed from
+    the true height (boulder_watch.py). run_test_flight.sh fails the test if the drone stayed
+    above a boulder too long or the estimate went too far wrong.
 
 Every sample also goes to a file, which plot_flight.py can turn into a picture of the run.
 
@@ -34,6 +38,7 @@ from std_msgs.msg import String
 
 from team_nav.mission import check_mission_fits_map, load_mission
 
+from course_simulator.boulder_watch import BoulderWatch
 from course_simulator.course_model import CourseModel
 from course_simulator.paths import FOLDER_FOR_FLIGHT_RECORDS, RULEBOOK_MISSION_FILE
 from course_simulator.true_drone_state import DEFAULT_START_HEADING_DEGREES, TrueDroneState
@@ -118,6 +123,7 @@ class Referee(Node):
             lines = [self.world_map.checkpoint_line_named(name) for name in checkpoint.line_names_in_order_of_preference]
             self.checkpoints_in_order.append((checkpoint.name, lines))
         self.propeller_points_on_body = build_propeller_points_on_body()
+        self.boulder_watch = BoulderWatch(self, self.world_map)
 
         self.drone_state = {}
         self.takeoff_time_seconds = None
@@ -141,7 +147,7 @@ class Referee(Node):
         self.record_writer = csv.writer(self.record_file)
         self.record_writer.writerow((
             "seconds", "course_x_metres", "course_y_metres", "height_metres", "heading_degrees",
-            "nearest_obstacle_metres", "armed", "landed", "automatic_flight",
+            "nearest_obstacle_metres", "armed", "landed", "automatic_flight", "px4_estimated_height_metres",
         ))
 
         self.create_subscription(String, "/skybeta/state", self.on_drone_state, 10)
@@ -186,10 +192,11 @@ class Referee(Node):
         )
 
         self.check_for_takeoff(position)
-        self.check_for_touch(nearest_obstacle_metres)
+        self.check_for_touch(position, nearest_obstacle_metres)
         self.check_limits(position)
         self.check_checkpoints(propeller_points, position)
         self.check_for_finish(propeller_points)
+        self.boulder_watch.check(position, self.now_in_seconds(), self.seconds_flying())
         self.write_sample(position, nearest_obstacle_metres)
 
     def check_for_takeoff(self, position):
@@ -200,7 +207,13 @@ class Referee(Node):
     def seconds_since_takeoff(self):
         return self.now_in_seconds() - self.takeoff_time_seconds
 
-    def check_for_touch(self, nearest_obstacle_metres):
+    def seconds_flying(self):
+        """Seconds since takeoff, or None before takeoff and after the motors have stopped."""
+        if self.takeoff_time_seconds is None or self.finish_time_seconds is not None:
+            return None
+        return self.seconds_since_takeoff()
+
+    def check_for_touch(self, position, nearest_obstacle_metres):
         if nearest_obstacle_metres >= TOUCHING_DISTANCE_METRES:
             return
         now = self.now_in_seconds()
@@ -212,7 +225,8 @@ class Referee(Node):
         if contact_is_new:
             self.touch_count += 1
             self.get_logger().warning(
-                f"Touch number {self.touch_count}. In a real run this adds "
+                f"Touch number {self.touch_count}, with the drone's centre at ({position[0]:.2f}, "
+                f"{position[1]:.2f}) and {position[2]:.2f} m up. In a real run this adds "
                 f"{PENALTY_SECONDS_PER_TOUCH:.0f} seconds, and it could also end the run."
             )
             self.write_summary()
@@ -267,6 +281,7 @@ class Referee(Node):
             round(nearest_obstacle_metres, 4),
             self.drone_state.get("armed"), self.drone_state.get("landed"),
             self.drone_state.get("offboard_active"),
+            self.boulder_watch.px4_estimated_height_metres,
         ))
         self.record_file.flush()
 
@@ -285,6 +300,7 @@ class Referee(Node):
             "left_the_course": self.left_the_course,
             "px4_clock_speed_compared_with_real_time": self.px4_clock_speed(),
         }
+        summary.update(self.boulder_watch.summary())
         with open(self.summary_path, "w", encoding="utf-8") as summary_file:
             json.dump(summary, summary_file, indent=2)
 

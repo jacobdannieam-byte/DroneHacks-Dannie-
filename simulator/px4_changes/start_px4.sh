@@ -9,6 +9,16 @@ set -e
 folder_of_this_script="$(cd "$(dirname "$0")" && pwd)"
 source "$folder_of_this_script/drone_16_settings.sh"
 
+# A flight started with "run_test_flight.sh --try-px4-setting NAME=VALUE" runs with one setting
+# that drone 16 does not have, to see what changing it would do. It is applied after drone 16's
+# settings, so it wins. Drone 16 itself is never changed by this.
+if [ -n "$PX4_SETTING_TO_TRY" ]; then
+    setting_name="${PX4_SETTING_TO_TRY%%=*}"
+    setting_value="${PX4_SETTING_TO_TRY#*=}"
+    echo "This flight tries a PX4 setting that drone 16 does not have: $setting_name = $setting_value"
+    export "PX4_PARAM_$setting_name=$setting_value"
+fi
+
 # 10040 is PX4's number for its simulated X-shaped quadcopter.
 export PX4_SYS_AUTOSTART=10040
 export PX4_SIMULATOR=sihsim

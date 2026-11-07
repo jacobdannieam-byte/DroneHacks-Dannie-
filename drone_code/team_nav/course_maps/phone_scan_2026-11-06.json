@@ -1,7 +1,7 @@
 {
   "map_format_version": 1,
   "name": "Phone scan of the real course",
-  "description": "The course as our phone scan recorded it on 2026-11-06. A1 and C1 are copied from the organizers' drawing until a photo confirms them, because the scan may have drawn them twice. M3 comes from the scan, but its exact angle needs a photo. C2b and the tunnel's cradles are left out because the scan does not show them. The course may have changed since the scan.",
+  "description": "The course as our phone scan recorded it on 2026-11-06. A1 is copied from the organizers' drawing, because the scan seems to have drawn it twice. M3 and C1 come from the scan, but their exact positions need a photo. C2b and the tunnel's cradles are left out because the scan does not show them. The course may have changed since the scan.",
   "course_edges": {
     "lowest_corner_metres": [
       -3.048,
@@ -121,6 +121,22 @@
       "source": "Measured from our phone scan of 2026-11-06 by course_map_tools/measure_phone_scan.py, from the scan points in the box x 0.6 to 1.25 m, y 0.65 to 2.3 m. Its start is extended to meet the Long barrier; its end is where the scan's points end. It is turned by 9 degrees, which may be a scan error. Check with a photo."
     },
     {
+      "name": "C1 chicane wall",
+      "start_metres": [
+        1.5163,
+        -1.2876
+      ],
+      "end_metres": [
+        1.1094,
+        0.1852
+      ],
+      "thickness_metres": 0.4021,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7391,
+      "openings": [],
+      "source": "Measured from our phone scan of 2026-11-06 by course_map_tools/measure_phone_scan.py, from the scan points in the box x 0.85 to 1.75 m, y -1.35 to 0.2 m. Its start is where the scan's points end; its end is where the scan's points end. Its points are smeared over about 30 cm, so its position is uncertain. Check with a photo."
+    },
+    {
       "name": "A1 approach wall",
       "start_metres": [
         -0.9754,
@@ -135,22 +151,6 @@
       "top_height_metres": 1.7272,
       "openings": [],
       "source": "Copied from the organizers' drawing. The scan shows this wall about 65 cm from where the drawing puts it, joined to an extra line of points just south of the barrier where nothing should be. The wall and the extra line are shifted by about the same amount, which suggests the phone lost track and drew them a second time."
-    },
-    {
-      "name": "C1 chicane wall",
-      "start_metres": [
-        0.9679,
-        -1.1269
-      ],
-      "end_metres": [
-        1.5305,
-        0.3855
-      ],
-      "thickness_metres": 0.1129,
-      "bottom_height_metres": 0.0,
-      "top_height_metres": 1.7272,
-      "openings": [],
-      "source": "Copied from the organizers' drawing until a photo confirms it. The scan shows this wall slanted the other way (turned by about 36 degrees). Its points are smeared over about 30 cm, where the other walls show two sharp faces 10 cm apart, so the phone may have lost track here."
     }
   ],
   "tubes": [
@@ -200,6 +200,56 @@
       "radius_metres": 0.125,
       "top_height_metres": 0.3001,
       "source": "Measured from our phone scan of 2026-11-06 by course_map_tools/measure_phone_scan.py. Something standing on the floor; the scan can't tell what. It may be a boulder."
+    },
+    {
+      "name": "Boulder 1",
+      "centre_metres": [
+        2.0117,
+        -2.4689
+      ],
+      "radius_metres": 0.2286,
+      "top_height_metres": 0.5334,
+      "source": "From the organizers' drawing. Kept in case it is still there, because boulders are easy to move and the scan may have missed it. The nearest low thing the scan found is 2.10 m away, centre to centre."
+    },
+    {
+      "name": "Boulder 3",
+      "centre_metres": [
+        0.7925,
+        -2.347
+      ],
+      "radius_metres": 0.2286,
+      "top_height_metres": 0.5334,
+      "source": "From the organizers' drawing. Kept in case it is still there, because boulders are easy to move and the scan may have missed it. The nearest low thing the scan found is 2.42 m away, centre to centre."
+    },
+    {
+      "name": "Boulder 4",
+      "centre_metres": [
+        -2.5603,
+        -2.4994
+      ],
+      "radius_metres": 0.2286,
+      "top_height_metres": 0.5334,
+      "source": "From the organizers' drawing. Kept in case it is still there, because boulders are easy to move and the scan may have missed it. The nearest low thing the scan found is 0.94 m away, centre to centre."
+    },
+    {
+      "name": "Boulder 5",
+      "centre_metres": [
+        -1.3411,
+        -2.3774
+      ],
+      "radius_metres": 0.2286,
+      "top_height_metres": 0.5334,
+      "source": "From the organizers' drawing. Kept in case it is still there, because boulders are easy to move and the scan may have missed it. The nearest low thing the scan found is 0.28 m away, centre to centre."
+    },
+    {
+      "name": "Boulder 2",
+      "centre_metres": [
+        2.5298,
+        -1.5545
+      ],
+      "radius_metres": 0.2286,
+      "top_height_metres": 0.5334,
+      "source": "From the organizers' drawing. Kept in case it is still there, because boulders are easy to move and the scan may have missed it. The nearest low thing the scan found is 1.06 m away, centre to centre."
     }
   ],
   "checkpoint_lines": [

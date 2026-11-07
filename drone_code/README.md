@@ -5,9 +5,12 @@ Everything in this folder is copied to drone 16 and runs there. Simulator code l
 
 ## What is here today
 
-`team_nav` is our team's ROS package. For now it does **nothing on purpose**. It replaces the
-organizers' demo, which would climb to 1.5 m and fly a 5 m square into the course walls as soon
-as someone armed the drone and flipped the switch to Position.
+`team_nav` is our team's ROS package. For now its launch file starts **nothing on purpose**. It
+replaces the organizers' demo, which would climb to 1.5 m and fly a 5 m square into the course
+walls as soon as someone armed the drone and flipped the switch to Position.
+
+The package also holds the route planner, with the course maps and the mission it reads. No
+flight program uses the planner yet. See [`team_nav/README.md`](team_nav/README.md).
 
 Read these two files, in this order:
 

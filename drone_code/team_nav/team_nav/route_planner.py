@@ -13,10 +13,12 @@ How it works
      mission's checkpoint lines in order, each in the right direction. Picture one copy of the
      grid for each checkpoint still to clear: crossing the next line moves the search onto the
      next copy, and the pad only counts on the last copy. Each step costs its length, plus
-     extra for squeezing close to walls, so the route keeps to the middle of corridors. (This is
-     Dijkstra's shortest-path search.)
+     extra for squeezing close to walls, so the route keeps to the middle of corridors, and a
+     lot extra for flying near a boulder (see "Boulders" below). (This is Dijkstra's
+     shortest-path search.)
   3. The zigzag route from square to square is straightened into a few long straight legs.
-     A straight leg is only accepted if it keeps about as much room as the zigzag it replaces.
+     A straight leg is only accepted if it keeps about as much room as the zigzag it replaces,
+     and doesn't take the laser closer to a boulder.
   4. An opening such as the window is always crossed straight through its middle, at the
      opening's height (opening_crossings.py). Everywhere else the drone flies at the mission's
      cruise height.
@@ -27,6 +29,15 @@ least one drone radius past each line.
 If a checkpoint can be cleared through more than one line (the window or Gate B), the planner
 tries the lines in the mission's order of preference and uses the first that has a route.
 
+Boulders
+--------
+The drone flies over boulders, but a boulder under the bottom laser makes the drone's height
+reading suddenly drop, and PX4 may then stop trusting the laser (docs/ARCHITECTURE.md, section 7).
+So the planner tries to keep the drone's centre, where the laser is, away from every boulder in
+the map, whatever its height. This is a strong preference, not a ban: if the only way through
+passes near a boulder, the route still goes there, and PlannedRoute.legs_near_boulders lists
+those legs, so the flight program can keep moving briskly over them instead of stopping.
+
 What this file does not do: fly the route, or change the map. It only plans.
 """
 import heapq
@@ -36,6 +47,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from team_nav.boulder_distances import closest_approach_to_each_boulder_metres, distance_to_each_boulder_metres
 from team_nav.clearance_grid import GRID_SQUARE_METRES, make_clearance_grid, room_along_line_metres
 from team_nav.course_map import distance_to_shapes_metres
 from team_nav.drone_dimensions import DRONE_RADIUS_METRES, REQUIRED_ROOM_METRES, heights_spanned_metres
@@ -53,6 +65,15 @@ CLOSENESS_COST_WEIGHT = 3.0
 # Our own choice: half a grid square. A straight leg may pass this much closer to a corner than
 # the square centres it replaces, because the square centres were only measured every 5 cm.
 STRAIGHTENING_TOLERANCE_METRES = 0.025
+# Our own choice. The planner tries to keep the drone's centre at least this far from the edge
+# of every boulder. It allows for the boulder being a little away from where the map says, and
+# for the laser beam's spread, which we don't know yet (somewhere between 1 and 27 degrees wide).
+LASER_KEEP_OFF_BOULDER_METRES = 0.25
+# Our own choice. Each metre flown closer to a boulder than that costs this much extra, so the
+# planner would rather fly about 10 m further than fly 1 m near a boulder. It costs up to twice
+# as much again the deeper inside the keep-off distance it is, so if the route has to pass a
+# boulder, it passes as far from the boulder as it can.
+BOULDER_COST_PER_METRE = 10.0
 
 # The eight moves from a square to a neighbouring one: (squares east, squares north, length in squares).
 NEIGHBOUR_MOVES = [
@@ -77,6 +98,7 @@ class PlannedRoute:
     length_metres: float
     least_room_metres: float            # The closest the drone's centre comes to anything it could hit.
     least_room_near: str                # The name of that thing.
+    legs_near_boulders: list            # (number of the leg's first waypoint, boulder name, closest distance to its edge in metres; negative means over it)
 
     def describe(self):
         lines = [
@@ -86,6 +108,11 @@ class PlannedRoute:
         ]
         for checkpoint_name, line_name, waypoint_number in self.checkpoints_cleared:
             lines.append(f"  {checkpoint_name}: cleared through '{line_name}' at waypoint {waypoint_number + 1}.")
+        for leg_start_number, boulder_name, distance_metres in self.legs_near_boulders:
+            lines.append(
+                f"  Between waypoints {leg_start_number + 1} and {leg_start_number + 2}, the drone's centre passes "
+                f"{distance_metres:.2f} m from the edge of {boulder_name}. Keep moving there."
+            )
         lines.append("Waypoints (metres east, metres north, height above the floor):")
         for number, waypoint in enumerate(self.waypoints_metres):
             lines.append(f"  {number + 1:2d}: ({waypoint[0]:+.2f}, {waypoint[1]:+.2f}, {waypoint[2]:.2f})")
@@ -131,6 +158,7 @@ def _plan_through_lines(course_map, mission, cruise_grid, start_metres, checkpoi
     square_path = _search_for_square_path(cruise_grid, stages, start_metres, goal_metres)
     waypoints_metres, cleared_at = _straighten_and_join(square_path, stages, cruise_grid, start_metres, goal_metres, mission.cruise_height_metres)
     least_room_metres, least_room_near = _least_room_on_route(waypoints_metres, stages, cleared_at, cruise_grid)
+    legs_near_boulders = _legs_near_boulders(waypoints_metres, cruise_grid)
 
     checkpoints_cleared = []
     for checkpoint, line_name, waypoint_number in zip(checkpoints, line_names, cleared_at):
@@ -142,6 +170,7 @@ def _plan_through_lines(course_map, mission, cruise_grid, start_metres, checkpoi
         length_metres=float(np.sum(np.linalg.norm(np.diff(waypoints_metres, axis=0), axis=1))),
         least_room_metres=least_room_metres,
         least_room_near=least_room_near,
+        legs_near_boulders=legs_near_boulders,
     )
 
 
@@ -168,7 +197,7 @@ def _search_for_square_path(grid, stages, start_metres, goal_metres):
     pad. Returns the path as a list of (copy number, square number)."""
     square_count = grid.squares_east * grid.squares_north
     is_free = (grid.room_metres >= REQUIRED_ROOM_METRES).ravel().tolist()
-    cost_per_metre = _cost_per_metre(grid.room_metres).ravel().tolist()
+    cost_per_metre = _cost_per_metre(grid.room_metres, grid.boulder_distance_metres).ravel().tolist()
     crossing_tests = [_crossing_test(grid, stage, is_free) for stage in stages]
 
     start_node = _free_square_number(grid, start_metres, is_free, "the start")
@@ -200,11 +229,22 @@ def _search_for_square_path(grid, stages, start_metres, goal_metres):
     raise _NoRouteThroughTheseLines("every line can be crossed, but there is no way from the last line to the landing pad.")
 
 
-def _cost_per_metre(room_metres):
-    """1 with comfortable room, rising to 1 + CLOSENESS_COST_WEIGHT at the least room allowed."""
+def _cost_per_metre(room_metres, boulder_distance_metres):
+    """1 with comfortable room, rising to 1 + CLOSENESS_COST_WEIGHT at the least room allowed,
+    plus the cost of flying near a boulder."""
     shortfall = (COMFORTABLE_ROOM_METRES - room_metres) / (COMFORTABLE_ROOM_METRES - REQUIRED_ROOM_METRES)
     shortfall = np.clip(shortfall, 0.0, None)
-    return 1.0 + CLOSENESS_COST_WEIGHT * shortfall ** 2
+    return 1.0 + CLOSENESS_COST_WEIGHT * shortfall ** 2 + _boulder_cost_per_metre(boulder_distance_metres)
+
+
+def _boulder_cost_per_metre(boulder_distance_metres):
+    """0 outside the keep-off distance. Inside it, BOULDER_COST_PER_METRE, plus up to twice that
+    again: BOULDER_COST_PER_METRE more at the boulder's edge, and about twice more above its centre.
+    (The distance is negative above a boulder.)"""
+    near_a_boulder = boulder_distance_metres < LASER_KEEP_OFF_BOULDER_METRES
+    depth_inside_keep_off = (LASER_KEEP_OFF_BOULDER_METRES - boulder_distance_metres) / LASER_KEEP_OFF_BOULDER_METRES
+    depth_inside_keep_off = np.clip(depth_inside_keep_off, 0.0, 2.0)
+    return BOULDER_COST_PER_METRE * (near_a_boulder + depth_inside_keep_off)
 
 
 def _steps_from(copy_number, square, grid, is_free, cost_per_metre, crossing_tests):
@@ -317,7 +357,7 @@ def _straighten_and_join(square_path, stages, grid, start_metres, goal_metres, c
         line_not_to_cross = stages[copy_number] if copy_number < len(stages) else None
         if not isinstance(line_not_to_cross, _FloorCrossing):
             line_not_to_cross = None
-        straight_points = _straighten(piece_points, grid.shapes, line_not_to_cross)
+        straight_points = _straighten(piece_points, grid, line_not_to_cross)
         if waypoints and np.allclose(straight_points[0], waypoints[-1][:2]):
             straight_points = straight_points[1:]   # The previous piece already ends at this point.
         for point in straight_points:
@@ -361,29 +401,64 @@ def _where_step_crosses(from_point, to_point, stage):
     return from_point + (to_point - from_point) * fraction
 
 
-def _straighten(points, shapes, line_not_to_cross):
+def _straighten(points, grid, line_not_to_cross):
     """Keeps the first and last points and as few in between as possible. From each kept point,
-    it reaches as far along the path as a straight leg can go without losing room."""
-    room_at_points, _ = distance_to_shapes_metres(np.array(points), shapes)
+    it reaches as far along the path as a straight leg can go without losing room or taking
+    the laser closer to a boulder."""
+    zigzag = _Zigzag(
+        points=points,
+        room_metres=distance_to_shapes_metres(np.array(points), grid.shapes)[0],
+        distance_to_each_boulder_metres=distance_to_each_boulder_metres(np.array(points), grid.boulders),
+    )
     kept = [points[0]]
     current = 0
     last = len(points) - 1
     while current < last:
         reach = current + 1
-        while reach < last and _straight_leg_is_acceptable(points, room_at_points, current, reach + 1, shapes, line_not_to_cross):
+        while reach < last and _straight_leg_is_acceptable(zigzag, current, reach + 1, grid, line_not_to_cross):
             reach += 1
         kept.append(points[reach])
         current = reach
     return kept
 
 
-def _straight_leg_is_acceptable(points, room_at_points, first, last, shapes, line_not_to_cross):
-    room_on_zigzag = float(np.min(room_at_points[first:last + 1]))
-    room_needed = max(REQUIRED_ROOM_METRES, min(room_on_zigzag, COMFORTABLE_ROOM_METRES) - STRAIGHTENING_TOLERANCE_METRES)
-    if line_not_to_cross is not None and _legs_cross(points[first], points[last], line_not_to_cross.start_metres, line_not_to_cross.end_metres):
+@dataclass
+class _Zigzag:
+    """The path from square centre to square centre, with the room at each of its points and
+    the distance from each point to each boulder."""
+    points: list
+    room_metres: np.ndarray
+    distance_to_each_boulder_metres: np.ndarray   # number of points x number of boulders
+
+
+def _straight_leg_is_acceptable(zigzag, first, last, grid, line_not_to_cross):
+    """Can one straight leg replace the zigzag from point number first to point number last?"""
+    start, end = zigzag.points[first], zigzag.points[last]
+    if line_not_to_cross is not None and _legs_cross(start, end, line_not_to_cross.start_metres, line_not_to_cross.end_metres):
         return False
-    room_on_leg, _ = room_along_line_metres(shapes, points[first], points[last])
-    return room_on_leg >= room_needed
+
+    room_on_zigzag = float(np.min(zigzag.room_metres[first:last + 1]))
+    room_needed = max(REQUIRED_ROOM_METRES, min(room_on_zigzag, COMFORTABLE_ROOM_METRES) - STRAIGHTENING_TOLERANCE_METRES)
+    room_on_leg, _ = room_along_line_metres(grid.shapes, start, end)
+    if room_on_leg < room_needed:
+        return False
+
+    # Each boulder is checked on its own, so that passing close to one boulder doesn't let the
+    # leg cut close to another.
+    approaches_on_leg = closest_approach_to_each_boulder_metres(grid.boulders, start, end)
+    for boulder_number, (_, distance_on_leg_metres) in enumerate(approaches_on_leg):
+        distance_on_zigzag_metres = float(np.min(zigzag.distance_to_each_boulder_metres[first:last + 1, boulder_number]))
+        if distance_on_leg_metres < _boulder_distance_needed_on_leg(distance_on_zigzag_metres):
+            return False
+    return True
+
+
+def _boulder_distance_needed_on_leg(distance_on_zigzag_metres):
+    """If the zigzag kept outside a boulder's keep-off distance, a straight leg replacing it must
+    too. If the zigzag had to come closer, the leg may come no closer than it did."""
+    if distance_on_zigzag_metres >= LASER_KEEP_OFF_BOULDER_METRES:
+        return LASER_KEEP_OFF_BOULDER_METRES
+    return distance_on_zigzag_metres - STRAIGHTENING_TOLERANCE_METRES
 
 
 def _legs_cross(first_start, first_end, second_start, second_end):
@@ -406,6 +481,19 @@ def _on_opposite_sides(point, other_point, line_start, line_end):
 
 
 # ---- Checking the finished route -------------------------------------------------------------
+
+def _legs_near_boulders(waypoints_metres, grid):
+    """Every leg on which the drone's centre comes closer to a boulder's edge than
+    LASER_KEEP_OFF_BOULDER_METRES, as (number of its first waypoint, boulder name, distance).
+    A leg near two boulders is listed twice."""
+    legs = []
+    for leg in range(len(waypoints_metres) - 1):
+        approaches = closest_approach_to_each_boulder_metres(grid.boulders, waypoints_metres[leg], waypoints_metres[leg + 1])
+        for boulder_name, distance_metres in approaches:
+            if distance_metres < LASER_KEEP_OFF_BOULDER_METRES:
+                legs.append((leg, boulder_name, distance_metres))
+    return legs
+
 
 def _least_room_on_route(waypoints_metres, stages, cleared_at, grid):
     """The least room on any leg. Legs through an opening were already measured with the

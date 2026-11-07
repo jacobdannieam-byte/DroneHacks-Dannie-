@@ -8,6 +8,8 @@ from launch import LaunchDescription
 from launch.actions import ExecuteProcess
 from launch_ros.actions import Node
 
+from course_simulator.world import prepare_world
+
 REPOSITORY = "/repository"
 
 # The organizers' bridge file is a single script, not an installed package. We run it from
@@ -24,6 +26,10 @@ def run_program(package, program_name, settings=None):
 
 
 def generate_launch_description():
+    # Before anything starts: make the course's 3D model and distance tables, if this world
+    # doesn't have them yet. world.py explains why this can't be left to the programs below.
+    prepare_world()
+
     return LaunchDescription([
         # REAL: the flight control software. It simulates the drone's physics inside itself.
         ExecuteProcess(cmd=["bash", f"{REPOSITORY}/simulator/px4_changes/start_px4.sh"], output="screen"),

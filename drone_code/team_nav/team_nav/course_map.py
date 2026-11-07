@@ -610,7 +610,7 @@ def distance_to_shapes_metres(points_metres, shapes):
     nearest_name = np.full(len(points_metres), "", dtype=object)
     for shape in shapes:
         if isinstance(shape, BlockingStrip):
-            distance_metres = _distance_to_line_piece(points_metres, shape.start_metres, shape.end_metres) - shape.half_thickness_metres
+            distance_metres = distance_to_line_piece_metres(points_metres, shape.start_metres, shape.end_metres) - shape.half_thickness_metres
         else:
             distance_metres = np.linalg.norm(points_metres - shape.centre_metres, axis=1) - shape.radius_metres
         distance_metres = np.maximum(distance_metres, 0.0)
@@ -630,7 +630,7 @@ def _course_edge_strips(course_map):
     return strips
 
 
-def _distance_to_line_piece(points_metres, start_metres, end_metres):
+def distance_to_line_piece_metres(points_metres, start_metres, end_metres):
     """The distance from each point to the nearest point on the straight piece from start to end."""
     piece = end_metres - start_metres
     length_squared = float(piece @ piece)

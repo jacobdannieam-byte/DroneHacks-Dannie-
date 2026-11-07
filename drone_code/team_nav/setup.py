@@ -1,4 +1,7 @@
-"""Tells ROS what this package contains. There are no programs yet, only the launch file."""
+"""Tells ROS what this package contains: the route planner's code, the launch file, and the
+map and mission files the planner reads. There is no flight program yet."""
+from glob import glob
+
 from setuptools import setup
 
 PACKAGE_NAME = "team_nav"
@@ -11,6 +14,8 @@ setup(
         ("share/ament_index/resource_index/packages", [f"resource/{PACKAGE_NAME}"]),
         (f"share/{PACKAGE_NAME}", ["package.xml"]),
         (f"share/{PACKAGE_NAME}/launch", ["launch/team_nav.launch.py"]),
+        (f"share/{PACKAGE_NAME}/course_maps", glob("course_maps/*.json")),
+        (f"share/{PACKAGE_NAME}/missions", glob("missions/*.json")),
     ],
     install_requires=["setuptools"],
     zip_safe=True,

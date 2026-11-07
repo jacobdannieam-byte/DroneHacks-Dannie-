@@ -16,6 +16,9 @@ The pretend sensors and the referee also need a full 3D model of the course (cou
   - For any other map, course_mesh_from_map.py makes a 3D model from the map's shapes the first
     time it is needed, in generated_files/worlds/. The folder's name includes a fingerprint of
     the map file's contents, so a changed map gets a fresh model and fresh distance tables.
+
+whole_simulator.launch.py calls prepare_world before it starts any simulator program, so that
+the model and its tables are ready before the drone flies.
 """
 import hashlib
 import os
@@ -23,6 +26,7 @@ import os
 from team_nav.course_map import load_course_map
 
 from course_simulator.course_mesh_from_map import write_course_mesh
+from course_simulator.course_model import CourseModel
 from course_simulator.paths import (
     COURSE_MODEL_FILE, FOLDER_FOR_GENERATED_WORLDS, FOLDER_FOR_SAVED_TABLES, ORGANIZERS_DRAWING_MAP_FILE,
 )
@@ -42,6 +46,17 @@ def world_map_file():
 
 def load_world_map():
     return load_course_map(world_map_file())
+
+
+def prepare_world():
+    """Makes the current world's 3D model and distance tables, if they don't exist yet.
+
+    Without this, every simulator program that needs the tables builds them itself, all at the
+    same moment, and the referee starts recording late. Building tables is heavy work. The first
+    time we flew in a new world that way, the flight went wrong: the drone climbed to 3.6 m and
+    the test never saw it touch down. The same flight with the tables built beforehand was normal.
+    """
+    CourseModel(*course_model_file_and_tables_folder())
 
 
 def course_model_file_and_tables_folder():

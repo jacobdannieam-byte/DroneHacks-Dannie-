@@ -36,6 +36,20 @@ Run a test flight. The first run takes about a minute longer because it prepares
 simulator/run_test_flight.sh landing_test.py --with-push-down
 ```
 
+The simulated course comes from a course map file, the same kind of file the drone's route planner reads. Without `--world`, it is the organizers' drawing. To fly in our phone scan of the real course instead, or in any other map, name the map file first:
+
+```bash
+simulator/run_test_flight.sh --world drone_code/team_nav/course_maps/phone_scan_2026-11-06.json landing_test.py --with-push-down
+```
+
+To see what changing one PX4 setting would do, without changing anything on the real drone, name it with `--try-px4-setting`. The flight's output then starts by saying it uses a setting drone 16 doesn't have. For example, this flies the whole course with PX4's laser check made less strict (section 7 of [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) says why):
+
+```bash
+simulator/run_test_flight.sh --world drone_code/team_nav/course_maps/phone_scan_2026-11-06.json --try-px4-setting EKF2_RNG_K_GATE=3 route_test.py
+```
+
+The first flight in a new map takes about a minute longer, because the simulator builds a 3D model of the course from the map, and its distance tables, before anything starts. A changed map file counts as a new map. [`ros_packages/course_simulator/course_simulator/world.py`](ros_packages/course_simulator/course_simulator/world.py) explains how this works.
+
 Look at the newest flight in 3D. This makes a web page next to the flight's record in `simulator/generated_files/flight_records/`, and opens it in your browser. You can turn the course with the mouse and play the flight back. See [`flight_viewer/README.md`](flight_viewer/README.md).
 
 ```bash
@@ -52,10 +66,11 @@ Each flight leaves these files in `simulator/generated_files/`:
 
 | File | What it is |
 |---|---|
-| `flight_records/flight_*_summary.json` | The referee's summary: touches, checkpoints, finish time and PX4's clock speed. |
+| `flight_records/flight_*_summary.json` | The referee's summary: which map it flew in, touches, checkpoints and the line used for each, finish time and PX4's clock speed. |
 | `flight_records/flight_*.csv` | The drone's true position and heading 30 times per second. |
 | `last_simulator_log.txt` | Everything the simulator printed. Look here first if something goes wrong. |
 | `px4_flight_logs/` | PX4's own detailed record of everything it did. It is a ULog file, and the Python package `pyulog` can read it. |
+| `worlds/` | The 3D model and distance tables made for each map other than the organizers' drawing. |
 
 Check the clock speed in the summary. It should be close to 1.0, and ours were between 0.92 and 1.01. If it's far off, close other busy programs on the Mac and fly again.
 
@@ -111,8 +126,9 @@ Please keep these limits in mind when you read a result. A pass here means the l
 - **The balance point is assumed.** The physics uses drone 16's motor positions, measured from the balance point that the organizers entered into PX4. We don't know whether that is where the drone really balances. If the battery sits further back, the real drone needs different motor power to stay level.
 - **How the body resists turning and moving through air is guessed.** These are PX4's default values for a generic drone, not measurements. The control tuning, on the other hand, is drone 16's own, because drone 16 also uses PX4's defaults.
 - **The bottom laser is a thin ray.** It gives 5 readings per second, each about 0.1 seconds late, which is what PX4's driver for the real sensor does. PX4's driver says the real sensor sees a cone 27 degrees wide, while the organizers say its beam is about 1 degree wide. If the cone is wide, the real drone notices an edge a little before it is over it.
-- **The course may change.** The organizers call this course model preliminary, and the checkpoint positions in `referee.py` are our own draft, because the exact lines haven't been published.
-- **The real course differs from the drawing.** A phone scan of the real course, taken on 2026-11-06, shows some walls up to 73 cm from where the drawing puts them, one wall slanted the other way, one wall missing, and the boulders elsewhere. The simulator still uses the drawing.
+- **The checkpoint lines are our own reading of the rulebook.** The exact lines haven't been published. The referee takes them from the map file, and `course_map_tools/checkpoint_line_rules.py` says how each is placed.
+- **The real course differs from the drawing.** A phone scan of the real course, taken on 2026-11-06, shows some walls up to 73 cm from where the drawing puts them, one wall slanted the other way, one wall missing, and the boulders elsewhere. The simulator uses the drawing unless you choose the scan with `--world`. Some of the scan's walls still need checking against a photo (see [`../course_map_tools/README.md`](../course_map_tools/README.md)).
+- **A course made from a map is plainer than the organizers' model.** Walls are plain boxes, the tunnel is a smooth oval tube, and boulders are upright cylinders. There is no window frame and no line on the floor.
 - **The way a run starts is our best prediction.** See section 8 of [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md).
 
 ## Why this isn't the organizers' simulator
@@ -121,7 +137,7 @@ The organizers have their own, more realistic simulator, built on Isaac Sim. It 
 
 ## What we have tested
 
-All of this was run on 2026-11-06, on an M1 Mac.
+All of this was run on an M1 Mac, on 2026-11-06 unless another date is given.
 
 - **The course model.** `check_course_model.py` passes. The simulator's copy of the course matches five known measurements to within 1.5 cm.
 - **The start.** The pretend person arms and flips to Position, and the organizers' real program then hands control to the test flight. The takeoff follows without any stick input.
@@ -130,5 +146,10 @@ All of this was run on 2026-11-06, on an M1 Mac.
 - **Depth points.** One flight's points were correct: at cruise height, they showed the first wall where the course model says it is, with no invalid values. Nothing uses these points yet.
 - **The drone's package.** `drone_code/team_nav` builds here, but this simulator doesn't run its launch file.
 - **After the accuracy fixes (2026-11-07).** We added drone 16's motor positions, the laser's real reading rate and position, and the rest of drone 16's laser settings, then flew the landing test again, once with the push-down and once without. The motors stopped 6.0 and 9.7 seconds after touchdown, the same as before, with no touches. While hovering, the front motors ran at 65% power and the back motors at 35%, as drone 16's motor positions predict. The laser gave a reading every 0.2 seconds, and PX4 used it for height for the whole flight. The highest point was 0.89 m.
+- **Other worlds (2026-11-07).** The landing test passed in the organizers' drawing, in our scan, and in the scan with every wall trusted. The referee now judges checkpoints by the mission file and the world's map. The landing test crosses no checkpoint lines, so that part hasn't been exercised in a flight yet. The first flight in our scan went wrong: three simulator programs each built the new world's distance tables during the flight, the referee started 40 seconds late, and the drone climbed to 3.6 m and never saw its touchdown. The same flight was normal once the tables existed. The simulator now builds them once, before anything starts, and a flight in a never-used map then passed too.
+- **Touches fail the test (2026-11-07).** `run_test_flight.sh` now fails if the referee counts any touch. We checked this by flying the landing test into a wall added across the first corridor: the referee counted one touch, said where, and the test failed.
+- **The box is cut off from other boxes (2026-11-07).** One flight went wrong because another box on the Mac (the Gazebo trial) was running its own PX4 at the same time, and the two boxes heard each other's ROS messages. The referee mixed up the two drones. The simulator's box now has no network at all, and the next flight was normal with the Gazebo box still running.
 
-We have not tested a full run of the course, because the mission program doesn't exist yet. We also haven't tested the bottom edge of the window, the boulders, or lost camera tracking. No result here has been compared with a real flight.
+- **The whole course (2026-11-07).** `test_flights/route_test.py` plans a route from our scan map, takes off, follows it through all four checkpoints and the window, and lands on the pad. Three flights with drone 16's settings, each with a better route follower, took 244, 164 and 138 seconds from takeoff to motors off. All three landed on the pad with no touches, and all three failed the height check: PX4 stopped using the bottom laser and its height estimate drifted 29 to 53 cm from the truth. Each time the trigger was the laser's reading jumping (over the window's lower wall, or over a boulder the drifting camera tracking had put under the drone), followed within a few seconds by the drone slowing down. Section 7 of [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) explains PX4's rule and the results.
+
+We have not tested lost camera tracking, or the drone spotting boulders in flight, which isn't written yet. No result here has been compared with a real flight.

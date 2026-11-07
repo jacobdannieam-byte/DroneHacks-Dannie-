@@ -9,8 +9,9 @@ propeller tip. Seen from the side, it treats the drone as a slab around its cent
 
 # Measured on drone 16: the motor farthest from the centre is 0.15 m back and 0.14 m to the side,
 # so 0.205 m away (the motor positions are in simulator/px4_changes/drone_16_settings.sh).
-# Assumed: 7-inch propellers, which reach 0.089 m beyond each motor. Nobody has confirmed the
-# propeller size. Together that is 0.294 m, rounded up.
+# Estimated: the team agreed on 2026-11-07 to assume 7-inch propellers, which reach 0.089 m
+# beyond each motor. Nobody has looked at the real propellers yet. Together that is 0.294 m,
+# rounded up.
 DRONE_RADIUS_METRES = 0.30
 
 # Estimated, not measured: the body, propellers and camera reach about this far above and

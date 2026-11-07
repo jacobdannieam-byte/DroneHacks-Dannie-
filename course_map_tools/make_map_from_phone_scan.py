@@ -15,16 +15,25 @@ measure_phone_scan.py measures each shape, and this file decides which measureme
 and writes:
 
   phone_scan_2026-11-06.json
-      Our best map. Walls we doubt are copied from the organizers' drawing instead.
+      Our best map. A wall we doubt is copied from the organizers' drawing instead.
   phone_scan_2026-11-06_trusting_every_wall.json
       Uses the scan for every wall. The route planner's tests use it as a "changed course".
 
 Why some walls are copied from the drawing
 ------------------------------------------
 A phone scan sometimes draws part of a room twice when the phone loses track of where it is.
-Two of our scan's biggest differences from the drawing, A1 and C1, look like copies of that
-kind, so we only trust them after checking a photo. DOUBTED_WALLS below gives the reason for
-each. The third big difference, M3, is used from the scan; WALLS_TO_MEASURE says why.
+One of our scan's biggest differences from the drawing, A1, looks like a copy of that kind,
+so the best map uses the drawing's A1 instead; DOUBTED_WALLS below says why. The other two big
+differences, M3 and C1, also looked doubtful at first. But the drawing's versions don't fit
+with the walls around them in the scan, while the scanned versions do, so the best map uses
+the scanned ones. WALLS_TO_MEASURE explains each. A photo should still confirm them.
+
+Boulders: both sets are kept
+----------------------------
+The scan found three low things on the floor, but not where the drawing puts its five
+boulders. Boulders are easy to move, and a phone scan can miss something that low, so we
+can't tell which set is right on the day. Both maps keep both sets, and the route planner
+tries to keep the drone's bottom laser away from all of them.
 
 Left out of both maps
 ---------------------
@@ -75,15 +84,21 @@ WALLS_TO_MEASURE = {
     # scan error: the tunnel's west side nearby is scanned with the same turn, although its east
     # side is straight. Check with a photo.
     "M3 maze divider": {"box": (0.6, 1.25, 0.65, 2.3), "start": "Long barrier", "end": "measured"},
-    # These two are copied from the drawing in our best map. See DOUBTED_WALLS.
-    "A1 approach wall": {"box": (-1.7, -1.35, -1.05, -0.1), "start": "measured", "end": "measured"},
+    # The scan shows C1 slanted the other way from the drawing (turned by about 36 degrees), and
+    # its points are smeared over about 30 cm, where other walls show two sharp faces 10 cm
+    # apart. But the drawing's C1 would poke 22 cm into the scanned tunnel, while the scanned C1
+    # ends at the corner between the scanned tunnel and barrier, as a chicane wall should. So we
+    # use it. Its measured thickness, about 40 cm, covers the whole smear. Check with a photo.
     "C1 chicane wall": {"box": (0.85, 1.75, -1.35, 0.2), "start": "measured", "end": "measured"},
+    # Copied from the drawing in our best map. See DOUBTED_WALLS.
+    "A1 approach wall": {"box": (-1.7, -1.35, -1.05, -0.1), "start": "measured", "end": "measured"},
 }
 WINDOW_WALL = "C2a chicane wall (window)"
 
 # Scanned walls we use, but whose source note in the map should carry a warning.
 WARNINGS_FOR_SCANNED_WALLS = {
     "M3 maze divider": " It is turned by 9 degrees, which may be a scan error. Check with a photo.",
+    "C1 chicane wall": " Its points are smeared over about 30 cm, so its position is uncertain. Check with a photo.",
 }
 
 # Walls our best map copies from the drawing instead of the scan, and why.
@@ -93,11 +108,6 @@ DOUBTED_WALLS = {
         "drawing puts it, joined to an extra line of points just south of the barrier where nothing "
         "should be. The wall and the extra line are shifted by about the same amount, which suggests "
         "the phone lost track and drew them a second time."
-    ),
-    "C1 chicane wall": (
-        "Copied from the organizers' drawing until a photo confirms it. The scan shows this wall slanted "
-        "the other way (turned by about 36 degrees). Its points are smeared over about 30 cm, where the "
-        "other walls show two sharp faces 10 cm apart, so the phone may have lost track here."
     ),
 }
 
@@ -112,20 +122,21 @@ def main():
     scanned_walls = measure_every_wall(points, drawing, tunnel)
     window_wall = scanned_walls[WINDOW_WALL]
     window_wall.openings = [measure_window(points, window_wall)]
-    low_objects = find_low_objects(points)
+    scanned_low_objects = find_low_objects(points)
+    low_objects = scanned_low_objects + drawing_boulders_kept_in_case(drawing, scanned_low_objects)
 
     best_map = build_map(drawing, walls_for_best_map(scanned_walls, drawing), tunnel, low_objects,
         "Phone scan of the real course", (
-            f"The course as our phone scan recorded it on {SCAN_DATE}. A1 and C1 are copied from the "
-            "organizers' drawing until a photo confirms them, because the scan may have drawn them twice. "
-            "M3 comes from the scan, but its exact angle needs a photo. "
+            f"The course as our phone scan recorded it on {SCAN_DATE}. A1 is copied from the organizers' "
+            "drawing, because the scan seems to have drawn it twice. M3 and C1 come from the scan, but "
+            "their exact positions need a photo. "
             "C2b and the tunnel's cradles are left out because the scan does not show them. The course may "
             "have changed since the scan."
         ))
     trusting_map = build_map(drawing, list(scanned_walls.values()), tunnel, low_objects,
         "Phone scan, trusting every wall", (
-            f"Like phone_scan_{SCAN_DATE}.json, but every wall comes from the scan, including A1 and C1, "
-            "which may be copies the phone drew by mistake. Used to test the route planner on a changed course."
+            f"Like phone_scan_{SCAN_DATE}.json, but every wall comes from the scan, including A1, "
+            "which may be a copy the phone drew by mistake. Used to test the route planner on a changed course."
         ))
     save_course_map(best_map, BEST_MAP_FILE)
     save_course_map(trusting_map, TRUSTING_MAP_FILE)
@@ -200,6 +211,21 @@ def describe_end(target):
     if target == "measured":
         return "where the scan's points end"
     return f"extended to meet the {target}"
+
+
+def drawing_boulders_kept_in_case(drawing, scanned_low_objects):
+    """The drawing's boulders, each with a note saying how far away the nearest low thing in
+    the scan is."""
+    boulders = []
+    for boulder in drawing.low_obstacles:
+        nearest_metres = min(np.linalg.norm(boulder.centre_metres - found.centre_metres) for found in scanned_low_objects)
+        source = (
+            "From the organizers' drawing. Kept in case it is still there, because boulders are easy to "
+            "move and the scan may have missed it. The nearest low thing the scan found is "
+            f"{nearest_metres:.2f} m away, centre to centre."
+        )
+        boulders.append(dataclasses.replace(boulder, source=source))
+    return boulders
 
 
 def build_map(drawing, walls, tunnel, low_objects, name, description):

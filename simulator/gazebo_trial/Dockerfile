@@ -20,7 +20,7 @@ FROM drone-simulator
 # are built for the Mac's arm64 processor as well as for normal PCs.
 #
 # Other packages here:
-#   libopencv-*-dev   PX4's Gazebo add-ons need OpenCV to compile.
+#   libopencv-dev     PX4's Gazebo add-ons need OpenCV to compile.
 #   mesa, egl, xvfb   Software drawing. The box has no graphics card, so the
 #                     camera pictures are drawn by the processor (Mesa's
 #                     "llvmpipe"). EGL lets Gazebo draw without a screen; Xvfb
@@ -32,7 +32,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl lsb-releas
         > /etc/apt/sources.list.d/gazebo-stable.list \
     && apt-get update && apt-get install -y --no-install-recommends \
         gz-harmonic \
-        libopencv-core-dev libopencv-imgproc-dev \
+        libopencv-dev \
         libgl1-mesa-dri libegl1 libegl-mesa0 libgles2 mesa-utils xvfb \
     && rm -rf /var/lib/apt/lists/*
 
