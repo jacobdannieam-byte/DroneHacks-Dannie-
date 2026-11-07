@@ -1,6 +1,6 @@
 # Instructions for coding agents
 
-Read `AI_CONTEXT.md`, `CLAUDE.md`, and the files you will edit before acting.
+Read `docs/from_the_organizers/AI_CONTEXT.md`, `CLAUDE.md`, and the files you will edit before acting.
 This is the team's persistent DroneHacks companion project. Treat existing
 mission code, notebooks and team instructions as team-owned work.
 

@@ -5,9 +5,10 @@ The programs below can be started with "ros2 run team_nav <name>":
   course_run         the competition program: flies the whole obstacle course (course_run.py).
   flight_recorder    records everything the drone reports, as a separate program, so the record
                      survives a crash of the flight program (flight_recorder.py).
-  hardware_check     runs one hardware smoke test with the propellers off, for example
-                     "ros2 run team_nav hardware_check laser_heights" (hardware_checks/).
-  practice_flight    runs one short practice flight, for example "hover_and_land"
+  hand_test          runs one hardware smoke test with the propellers off, for example
+                     "ros2 run team_nav hand_test laser_heights" (hand_tests/). The quick
+                     first check of drone 16 is drone_code/hardware_checks/, run from the Mac.
+  practice_flight    runs one short practice flight, for example "out_and_back"
                      (practice_flights/). So far these have flown only in our simulators.
 """
 from glob import glob
@@ -19,7 +20,7 @@ PACKAGE_NAME = "team_nav"
 setup(
     name=PACKAGE_NAME,
     version="0.0.1",
-    packages=[PACKAGE_NAME, f"{PACKAGE_NAME}.hardware_checks", f"{PACKAGE_NAME}.practice_flights"],
+    packages=[PACKAGE_NAME, f"{PACKAGE_NAME}.hand_tests", f"{PACKAGE_NAME}.practice_flights"],
     data_files=[
         ("share/ament_index/resource_index/packages", [f"resource/{PACKAGE_NAME}"]),
         (f"share/{PACKAGE_NAME}", ["package.xml"]),
@@ -37,7 +38,7 @@ setup(
         "console_scripts": [
             "course_run = team_nav.course_run:main",
             "flight_recorder = team_nav.flight_recorder:main",
-            "hardware_check = team_nav.hardware_checks.run_check:main",
+            "hand_test = team_nav.hand_tests.run_hand_test:main",
             "practice_flight = team_nav.practice_flights.run_practice_flight:main",
         ],
     },

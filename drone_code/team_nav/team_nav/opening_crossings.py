@@ -6,15 +6,32 @@ line that runs across an opening.
 The drone always crosses an opening the same way, straight through its middle and at right
 angles to the wall, in four points:
 
-    line-up point --climb or descend--> start of level part --level--> end of level part --climb or descend--> exit point
-    (usual height)                      (opening's middle height)      (opening's middle height)              (usual height)
+    line-up point --straight up or down--> start of level part --level--> end of level part --climb or descend--> exit point
+    (usual height)                         (opening's middle height)      (opening's middle height)              (usual height)
+
+The line-up point is directly below (or above) the start of the level part. The drone stops
+there, changes height on the spot, stops again, and then flies level through the opening. The
+line-up point is where the flight program can stop, look at the opening with the camera, and
+line up before crossing.
+
+Why the height change happens on the spot. Until 2026-11-07 the drone climbed while flying
+towards the wall, over HEIGHT_CHANGE_DISTANCE_METRES, so the line-up point was that much
+further from the wall. On our scan that put it 13 cm from the boulder in front of the window,
+pinned there by the safety net behind it, and the drone pauses at the line-up point: the worst
+place for a boulder under the bottom laser (docs/ARCHITECTURE.md, section 7). Climbing on the
+spot moves the line-up point 0.6 m closer to the wall, 47 cm from that boulder's edge. It also
+means the drone reaches the opening's height while holding still, so it starts the level part
+at the right height instead of trailing its target upwards.
 
 The level part starts and ends far enough from the wall that no part of the drone is above or
 below the wall's solid edge while it changes height. It is TRAILING_ALLOWANCE_METRES longer at
-each end than that, because the drone trails its target (route_follower.py): it reaches the
-opening's height a little after the plan says, and starts the next height change a little
-before. The line-up point is where the flight program can stop, look at the opening with the
-camera, and line up before crossing.
+each end than that, because the drone trails its target (route_follower.py): after the opening
+it starts the descent a little before the plan says. On the way in this allowance is no longer
+needed, since the drone climbs while holding still, but it is kept so that the line-up point
+stays a little further from the wall.
+
+On the far side, the drone descends while flying on, over HEIGHT_CHANGE_DISTANCE_METRES, as
+before, so it doesn't stop just past the wall.
 
 This file does not search for a route to the line-up point; route_planner.py does.
 """
@@ -29,8 +46,8 @@ from team_nav.drone_dimensions import (
     heights_spanned_metres,
 )
 
-# Our own choice. The drone changes height over this distance before and after the level part.
-# 0.6 m to climb about 0.4 m is a gentle slope.
+# Our own choice. The drone changes height over this distance after the level part. 0.6 m to
+# descend about 0.4 m is a gentle slope.
 HEIGHT_CHANGE_DISTANCE_METRES = 0.6
 
 # Our own choice, from a pretend-drone test (test_route_follower.py). Without this extra level
@@ -77,10 +94,11 @@ def plan_opening_crossing(course_map, line, cruise_height_metres):
     level_half_length_metres = (
         DRONE_RADIUS_METRES + wall.thickness_metres / 2.0 + SIDEWAYS_SAFETY_MARGIN_METRES + TRAILING_ALLOWANCE_METRES
     )
-    whole_half_length_metres = level_half_length_metres + HEIGHT_CHANGE_DISTANCE_METRES
+    exit_distance_metres = level_half_length_metres + HEIGHT_CHANGE_DISTANCE_METRES
 
-    line_up_point = opening_middle - through_the_wall * whole_half_length_metres
-    exit_point = opening_middle + through_the_wall * whole_half_length_metres
+    # Directly below (or above) the start of the level part: the height changes on the spot.
+    line_up_point = opening_middle - through_the_wall * level_half_length_metres
+    exit_point = opening_middle + through_the_wall * exit_distance_metres
     least_room_metres, least_room_near = _room_through_opening(
         course_map, opening.name, line_up_point, exit_point, cruise_height_metres, crossing_height_metres
     )

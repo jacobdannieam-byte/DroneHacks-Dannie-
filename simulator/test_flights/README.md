@@ -9,6 +9,9 @@ Read them in this order:
 | `simulator_test_flight.py` | The steps every flight shares: waiting for the simulator, starting, climbing, landing, and sending targets without a break. |
 | `landing_test.py` | Climbs to 0.8 m, flies 1 m forward, and lands. Its results are in section 7 of [`../../docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md). |
 | `route_test.py` | Plans a route from the drone's map, flies the whole course and lands on the pad. |
+| `real_program_test.py` | Runs one of our real drone programs, unchanged, and plays the teammate who arms the drone and flips the switch. |
+| `make_world_for_the_referee.py` | Copies a practice map, such as the mock gap and window, and adds the rulebook's checkpoint lines as tiny pretend lines in a corner, so the referee can load it. Simulator only; the drone's program still gets the real map. |
+| `rise_and_land_test.py` | Runs the rise-and-land program from `drone_code/smoke_flights/` (rise 0.5 m, hold 5 s, land), written by another session. It passed once on 2026-11-07 at about 12:57, with PX4's height within 10 cm (largest error 0.098 m). |
 
 Run them from the top folder of the repository. Each run starts a fresh simulator, flies, and prints the referee's summary.
 
@@ -41,6 +44,33 @@ Two more options choose how the route is planned:
 
 While following the route, the test lands at once, where the drone is, if the referee reports a touch, if the drone tilts or turns as if it hit something, or if PX4's height and the bottom laser's disagree over clear floor. `route_test.py`'s header explains each.
 
+## Testing a real drone program
+
+`real_program_test.py` doesn't fly anything itself. It starts a program from `drone_code`, exactly as the drone would run it, waits until that program is sending targets, and then calls the simulator's start service in place of the teammate who arms the drone and flips the switch to Position. It passes if the program ends with exit code 0 (or the code given with `--expected-exit-code`). Give the program's command after `--`, and any environment settings with `--env`:
+
+```bash
+simulator/run_test_flight.sh --world drone_code/team_nav/course_maps/phone_scan_2026-11-06.json real_program_test.py -- /repository/simulator/generated_files/ros_install/team_nav/lib/team_nav/course_run
+```
+
+```bash
+simulator/run_test_flight.sh --world drone_code/team_nav/course_maps/phone_scan_2026-11-06.json real_program_test.py --env TEAM_NAV_RUN_MODE=practice --env TEAM_NAV_STOP_AFTER_STAGE=climb -- /repository/simulator/generated_files/ros_install/team_nav/lib/team_nav/course_run
+```
+
+The long path is where the box installs the program. Once `drone_code/team_nav` has a `setup.cfg` that puts its programs in `lib/team_nav`, `ros2 run team_nav course_run` works too. The program's own records go to `simulator/generated_files/team_runs/`, and the test prints which folder and files it wrote. The program sees the real flight_interface, PX4 and the referee, but not the referee's touch messages, so a touch it can't notice by itself shows up only in the referee's summary.
+
+The practice flights (`drone_code/team_nav/team_nav/practice_flights/`, whose README has the results) run the same way. Out and back, in the default world:
+
+```bash
+simulator/run_test_flight.sh real_program_test.py --env TEAM_NAV_RUN_MODE=practice -- /repository/simulator/generated_files/ros_install/team_nav/lib/team_nav/practice_flight out_and_back --map organizers_drawing.json
+```
+
+The mock gap and window, in a world made for the referee first:
+
+```bash
+python3 simulator/test_flights/make_world_for_the_referee.py drone_code/team_nav/course_maps/practice_mock_gap_and_window.json
+simulator/run_test_flight.sh --world simulator/generated_files/practice_worlds/practice_mock_gap_and_window.json real_program_test.py --env TEAM_NAV_RUN_MODE=practice -- /repository/simulator/generated_files/ros_install/team_nav/lib/team_nav/practice_flight mock_gap_and_window --ignore-raw-laser
+```
+
 ## What makes a flight fail
 
 `run_test_flight.sh` says TEST FAILED, and stops with an error, if:
@@ -49,7 +79,7 @@ While following the route, the test lands at once, where the drone is, if the re
 - the flight program stopped the run early, after a touch or because PX4's height stopped matching the laser;
 - the drone touched anything;
 - the drone stayed above a boulder for more than 2 seconds;
-- PX4's height estimate strayed more than 10 cm from the true height.
+- PX4's height estimate strayed more than 10 cm from the true height in flight, or more than 20 cm during the takeoff climb. Time on the floor after touchdown is not counted.
 
 The last two come from the referee's boulder watch (`simulator/ros_packages/course_simulator/course_simulator/boulder_watch.py`), which explains the limits.
 

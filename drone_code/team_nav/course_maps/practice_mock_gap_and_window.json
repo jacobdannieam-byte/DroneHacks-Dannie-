@@ -1,0 +1,81 @@
+{
+  "map_format_version": 1,
+  "name": "Practice mock: a gap and a window",
+  "description": "A small practice course for the net, built from boxes or boards: a 0.90 m gap between two walls, then a 0.90 m window whose bottom edge is a 0.40 m box, then a landing pad. The drone starts facing north (+y). EVERY NUMBER HERE IS A PROPOSAL: build it, measure what was really built with a tape measure, and replace the numbers and the source notes before flying. drone_code/team_nav/team_nav/practice_flights/README.md says what to measure.",
+  "course_edges": {
+    "lowest_corner_metres": [-2.0, -3.0],
+    "highest_corner_metres": [2.0, 3.0],
+    "wall_top_height_metres": 1.2,
+    "source": "A proposal, to be measured and replaced on the day: a 4 m by 6 m patch of free floor inside the net, with the origin in its middle. The height limit is the mock walls' height (1.2 m), so the drone never tries to fly over them; run_safety.py refuses any target above 1.1 m."
+  },
+  "launch_mark": {
+    "centre_metres": [0.0, -2.5],
+    "source": "A proposal, to be measured and replaced on the day: 0.5 m in from the south edge of the free floor, about as far as the real launch mark is from the net. Mark it with tape and point the drone's nose north (+y)."
+  },
+  "landing_pad": {
+    "centre_metres": [0.4, 2.2],
+    "outer_radius_metres": 0.762,
+    "approach_ring_radius_metres": 1.0033,
+    "source": "A proposal, to be measured and replaced on the day: straight ahead of the window, so the drone does not turn just after crossing it. The radii are the real pad's (organizers' 3D model); mark a circle of that size with tape, or measure the pad you use."
+  },
+  "walls": [
+    {
+      "name": "Gap wall, west",
+      "start_metres": [-1.85, -1.7],
+      "end_metres": [-0.85, -1.7],
+      "thickness_metres": 0.1,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.2,
+      "openings": [],
+      "source": "A proposal, to be measured and replaced on the day: boards on their edges, or a row of boxes no more than 0.1 m deep, 1.0 m long and 1.2 m tall. Enter the real depth: the route planner treats each wall end as rounded by half the wall's thickness, so deeper boxes narrow the gap and it must then be built wider."
+    },
+    {
+      "name": "Gap wall, east",
+      "start_metres": [0.05, -1.7],
+      "end_metres": [1.05, -1.7],
+      "thickness_metres": 0.1,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.2,
+      "openings": [],
+      "source": "A proposal, to be measured and replaced on the day: like the west gap wall, leaving a 0.90 m gap between their ends, centred 0.4 m west of the launch mark. The drone needs 0.70 m (0.35 m from its centre each side), so 0.90 m leaves 0.10 m to spare each side; the real course's tightest gap leaves about the same."
+    },
+    {
+      "name": "Window wall",
+      "start_metres": [-0.65, 0.6],
+      "end_metres": [1.45, 0.6],
+      "thickness_metres": 0.1,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.2,
+      "openings": [
+        {
+          "name": "mock window",
+          "start_along_wall_metres": 0.6,
+          "end_along_wall_metres": 1.5,
+          "bottom_height_metres": 0.4,
+          "top_height_metres": 1.2,
+          "source": "A proposal, to be measured and replaced on the day: 0.90 m wide like the real window, centred 0.4 m east of the launch mark. Its bottom edge is a box 0.40 m tall filling the gap between the two side stacks, so the bottom laser's reading drops by 0.4 m as the drone crosses, like the real window's 0.32 m (drawing). It has no top bar: the opening reaches the walls' 1.2 m top, because a bar is hard to build safely from boxes. Its middle height, where the drone crosses, is 0.80 m."
+        }
+      ],
+      "source": "A proposal, to be measured and replaced on the day: two boards or box stacks 0.6 m long, 1.2 m tall and at most 0.1 m deep either side of the window, 2.1 m in all, 2.3 m north of the gap. Enter the real depth, as for the gap walls."
+    }
+  ],
+  "tubes": [],
+  "low_obstacles": [],
+  "checkpoint_lines": [
+    {
+      "name": "mock gap",
+      "start_metres": [-0.85, -1.7],
+      "end_metres": [0.05, -1.7],
+      "far_side_point_metres": [-0.4, -1.2],
+      "source": "A proposal, to be measured and replaced on the day: the line between the ends of the two gap walls, crossed northwards."
+    },
+    {
+      "name": "through the mock window",
+      "start_metres": [-0.05, 0.6],
+      "end_metres": [0.85, 0.6],
+      "far_side_point_metres": [0.4, 1.1],
+      "opening_name": "mock window",
+      "source": "A proposal, to be measured and replaced on the day: the line across the window opening, crossed northwards."
+    }
+  ]
+}

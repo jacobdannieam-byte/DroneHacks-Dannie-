@@ -71,10 +71,13 @@ class _Table:
 
 class RunLog:
 
-    def __init__(self, program_name, run_mode, folder_holding_all_runs=None):
-        """Creates this run's folder and writes the first event, which states the run mode."""
+    def __init__(self, program_name, run_mode, folder_holding_all_runs=None, mode_sentence=None):
+        """Creates this run's folder and writes the first event, which states the run mode.
+        mode_sentence replaces the mode's usual sentence on the screen, for programs that never
+        fly, such as the hand tests, where "the whole program flies" would mislead."""
         self.program_name = program_name
         self.run_mode = run_mode
+        self.mode_sentence = mode_sentence or run_mode.describe()
         self.start_monotonic_seconds = time.monotonic()
         self.tables = {}
         self.writing_has_failed = False
@@ -84,7 +87,7 @@ class RunLog:
             folder_holding_all_runs = records_folder()
         self.folder = self._make_run_folder(folder_holding_all_runs)
         self.events_file = open(os.path.join(self.folder, "events.jsonl"), "a", encoding="utf-8")
-        self.event("mode", run_mode.describe(), mode=run_mode.name, stop_after_stage=run_mode.stop_after_stage)
+        self.event("mode", self.mode_sentence, mode=run_mode.name, stop_after_stage=run_mode.stop_after_stage)
         self.event("records", f"This run's records are in {self.folder}.", folder=self.folder)
 
     def _make_run_folder(self, folder_holding_all_runs):
@@ -154,7 +157,7 @@ class RunLog:
     def _remind_the_mode_if_due(self):
         if time.monotonic() - self.time_of_last_mode_reminder >= SECONDS_BETWEEN_MODE_REMINDERS:
             self.time_of_last_mode_reminder = time.monotonic()
-            self.event("mode", self.run_mode.describe(), mode=self.run_mode.name)
+            self.event("mode", self.mode_sentence, mode=self.run_mode.name)
 
     # ---- Whole files --------------------------------------------------------------------------
 

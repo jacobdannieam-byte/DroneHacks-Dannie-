@@ -26,6 +26,10 @@ LISTEN_SECONDS = 8.0
 # From PX4 1.16 source: VehicleStatus.arming_state is 2 when the motors are allowed to spin.
 ARMING_STATE_ARMED = 2
 
+# From PX4 1.16 source (VehicleLocalPosition message): bit 0 of dist_bottom_sensor_bitfield is set
+# when the bottom laser is feeding PX4's distance-to-floor estimate.
+DISTANCE_TO_FLOOR_FROM_LASER_BIT = 1
+
 # Our own choice. On a table, the bottom laser should read a few centimetres. Outside this range
 # a person should look at it.
 LASER_SENSIBLE_RANGE_METRES = (0.0, 4.0)
@@ -95,9 +99,9 @@ def describe_reading(message):
     if kind == "DistanceSensor":
         return f"laser reads {message.current_distance:.2f} m"
     if kind == "VehicleLocalPosition":
-        height_above_floor = message.dist_bottom if message.dist_bottom_valid else None
-        laser_text = f"{height_above_floor:.2f} m" if height_above_floor is not None else "not valid"
-        return f"height from laser: {laser_text}; position valid: {bool(message.xy_valid)}"
+        return describe_position_estimate(message)
+    if kind == "EstimatorStatusFlags":
+        return describe_height_sources(message)
     if kind == "VehicleStatus":
         armed = message.arming_state == ARMING_STATE_ARMED
         return f"armed: {'YES - motors could spin' if armed else 'no'}; mode number {message.nav_state}"
@@ -114,6 +118,35 @@ def describe_reading(message):
         position = message.pose.pose.position
         return f"position x {position.x:.2f}, y {position.y:.2f}, z {position.z:.2f} m"
     return ""
+
+
+def describe_position_estimate(message):
+    """Whether PX4's position and height estimates are usable, and its distance to the floor.
+
+    We check z_valid, not dist_bottom_valid: with drone 16's settings dist_bottom_valid stays
+    false even when the height estimate is fine. Sitting on the floor, the laser may be too close
+    to measure, so "not measured by the laser" here does not by itself mean the laser is broken.
+    Lifting the disarmed drone by hand is the way to tell.
+    """
+    laser_in_use = bool(message.dist_bottom_sensor_bitfield & DISTANCE_TO_FLOOR_FROM_LASER_BIT)
+    laser_text = "measured by the laser" if laser_in_use else "NOT measured by the laser"
+    return (f"height estimate valid: {bool(message.z_valid)}; "
+            f"distance to floor {message.dist_bottom:.2f} m, {laser_text}; "
+            f"position valid: {bool(message.xy_valid)}")
+
+
+def describe_height_sources(message):
+    """Which sensors PX4 is using for its height estimate right now."""
+    height_sources = []
+    if message.cs_rng_hgt:
+        height_sources.append("bottom laser")
+    if message.cs_baro_hgt:
+        height_sources.append("air pressure sensor")
+    if message.cs_ev_hgt:
+        height_sources.append("camera tracking")
+    if not height_sources:
+        return "height comes from: nothing"
+    return "height comes from: " + ", ".join(height_sources)
 
 
 def warnings_about(message):

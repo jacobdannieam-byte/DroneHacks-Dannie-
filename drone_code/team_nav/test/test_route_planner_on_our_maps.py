@@ -17,9 +17,10 @@ from route_checks import check_route, closest_approach_to_boulder_metres, first_
 # The maze is the second of the mission's checkpoints: first corridor, maze, tunnel, chicane.
 MAZE_CHECKPOINT_NUMBER = 2
 # Our own choice for the boulder test below. Our maps have 5 to 8 boulders, and the planner
-# can't keep its full 25 cm from all of them: the window's line-up passes 12 cm from one, and the
-# straight run out of the window passes 9 cm from another on the scan. This test makes sure no
-# change to the planner or the maps lets the laser pass over a boulder without anyone noticing.
+# can't keep its full 25 cm from all of them: on the scan, the level run through the window and
+# the straight run out of it pass 14 and 9 cm from the boulder just past the window. This test
+# makes sure no change to the planner or the maps lets the laser pass over a boulder without
+# anyone noticing.
 LEAST_DISTANCE_FROM_ANY_BOULDER_EDGE_METRES = 0.05
 
 
@@ -116,3 +117,18 @@ def test_whole_drone_past_line_needs_the_centre_one_radius_beyond_it():
 
     assert first_point_with_whole_drone_past(line, points_along_route(np.array([on_the_line, just_short]))) is None
     assert first_point_with_whole_drone_past(line, np.array([on_the_line, just_short, just_past])) == 2
+
+
+@pytest.mark.parametrize("map_name", ALL_OUR_MAPS)
+def test_the_drone_stops_well_away_from_boulders_at_the_window(map_name):
+    # The drone stops at the window's line-up point, and again above it once it has climbed to
+    # the window's height. Both stops must keep clear of every boulder in the drone's map and in
+    # the organizers' drawing, as course_run.py plans it. Until 2026-11-07 the line-up point was
+    # 13 cm from the boulder in front of the window on the scan.
+    drawing = load_our_map(DRAWING_MAP)
+    route = plan_route(load_our_map(map_name), load_rulebook_mission(), other_possible_boulders=drawing.low_obstacles)
+
+    window_level_end_number = [number for _, line_name, number in route.checkpoints_cleared if line_name == "through the window"][0]
+    window_stops = {window_level_end_number - 2, window_level_end_number - 1}
+    stops_too_close = [stop for stop in route.stops_near_boulders if stop[0] in window_stops]
+    assert stops_too_close == []

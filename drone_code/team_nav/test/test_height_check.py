@@ -8,7 +8,10 @@ How to run these tests is in the package's README.
 import numpy as np
 
 from team_nav.course_map import LowObstacle
-from team_nav.height_check import HEIGHT_GAP_LIMIT_METRES, HEIGHT_GAP_LONGEST_SECONDS, HeightCheck, laser_height_above_launch_metres
+from team_nav.height_check import (
+    CAMERA_HEIGHT_GAP_LIMIT_METRES, CAMERA_HEIGHT_GAP_LONGEST_SECONDS, HEIGHT_GAP_LIMIT_METRES, HEIGHT_GAP_LONGEST_SECONDS,
+    CameraHeightCheck, HeightCheck, laser_height_above_launch_metres,
+)
 
 from our_files import SCAN_MAP, load_our_map
 
@@ -82,3 +85,26 @@ def test_a_boulder_from_another_map_also_counts():
 def test_laser_height_allows_for_tilt():
     # Tilted 60 degrees, a 1 m slanted reading is 0.5 m straight down.
     assert np.isclose(laser_height_above_launch_metres(1.0, 0.1, 60.0), 0.4)
+
+
+# ---- Camera tracking's height ----------------------------------------------------------------------
+
+def feed_camera_check(check, gap_metres, seconds):
+    """Like feed, for CameraHeightCheck: PX4's height that much above camera tracking's."""
+    for sample in range(int(seconds * SAMPLES_PER_SECOND) + 1):
+        problem = check.check(sample / SAMPLES_PER_SECOND, CRUISE_HEIGHT_METRES + gap_metres, CRUISE_HEIGHT_METRES)
+        if problem is not None:
+            return problem
+    return None
+
+
+def test_camera_height_gaps_like_a_normal_climb_are_ignored():
+    # PX4 trailed the true height by up to 12 cm while climbing in the simulator.
+    assert feed_camera_check(CameraHeightCheck(), -0.12, seconds=10.0) is None
+
+
+def test_a_large_gap_to_camera_height_stops_the_run_after_a_second_either_way():
+    too_big = CAMERA_HEIGHT_GAP_LIMIT_METRES + 0.05
+    assert feed_camera_check(CameraHeightCheck(), too_big, seconds=CAMERA_HEIGHT_GAP_LONGEST_SECONDS - 0.2) is None
+    assert "camera tracking says" in feed_camera_check(CameraHeightCheck(), too_big, seconds=CAMERA_HEIGHT_GAP_LONGEST_SECONDS)
+    assert feed_camera_check(CameraHeightCheck(), -too_big, seconds=CAMERA_HEIGHT_GAP_LONGEST_SECONDS) is not None

@@ -181,14 +181,18 @@ def test_boulder_that_cannot_be_avoided_is_passed_over_its_edge_not_its_middle(m
 
 
 @pytest.mark.parametrize("map_name", BOTH_MAPS)
-def test_route_straightens_when_the_boulder_in_front_of_the_window_is_gone(map_name):
+def test_the_boulder_in_front_of_the_window_no_longer_bends_the_route(map_name):
+    # Until 2026-11-07 the drone climbed on its way to the window, so it lined up 0.6 m further
+    # out, where the safety net pinned the line-up point 13 cm from this boulder. Now it climbs
+    # on the spot closer to the wall (opening_crossings.py), so the route keeps clear of the
+    # boulder, and removing it changes almost nothing.
     original_map = load_our_map(map_name)
     original_route = plan_route(original_map, load_rulebook_mission())
 
     route = plan_and_check(course_changes.without_low_obstacle(original_map, BOULDER_IN_FRONT_OF_THE_WINDOW))
 
-    assert BOULDER_IN_FRONT_OF_THE_WINDOW in boulders_passed_closely(original_route)
-    assert route.length_metres < original_route.length_metres
+    assert BOULDER_IN_FRONT_OF_THE_WINDOW not in boulders_passed_closely(original_route)
+    assert route.length_metres < original_route.length_metres + 0.1
 
 
 # ---- Walls moved or removed -----------------------------------------------------------------------

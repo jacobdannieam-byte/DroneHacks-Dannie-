@@ -11,7 +11,11 @@ What it records
   - When each checkpoint was reached, and the finish time.
   - Each time the drone was above a boulder, and how far PX4's height estimate strayed from
     the true height (boulder_watch.py). run_test_flight.sh fails the test if the drone stayed
-    above a boulder too long or the estimate went too far wrong.
+    above a boulder too long or the estimate went too far wrong. The estimate is judged in
+    three parts: the takeoff climb straight above the launch mark has a looser limit (20 cm),
+    because PX4 harmlessly trails the true height there; the rest of the flight keeps the 10 cm
+    limit; and the time on the floor after touchdown, while the drone presses down to make the
+    motors stop, is not counted. boulder_watch.py explains why.
 
 Every sample also goes to a file, which plot_flight.py can turn into a picture of the run.
 

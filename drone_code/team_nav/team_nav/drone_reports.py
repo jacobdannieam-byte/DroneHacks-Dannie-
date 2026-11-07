@@ -18,6 +18,10 @@ What it listens to
       vehicle_status           PX4's mode, armed state and pre-flight checks.
       vehicle_land_detected    whether PX4 believes the drone is on the ground.
       vehicle_odometry         PX4's attitude (which way the drone is tilted) and turn rate.
+      vehicle_attitude         PX4's attitude on its own. The real drone sends this one; on
+                               2026-11-07 a check of drone 16 did not list vehicle_odometry.
+      sensor_combined          the flight controller's raw motion sensors, including its gyro
+                               (turn rate). Used for the turn rate when vehicle_odometry is missing.
       distance_sensor          the bottom laser's raw reading, measured along its beam.
       estimator_status_flags   which sensors PX4's position estimator ("EKF2") is using now,
                                for example whether it still uses the laser for height.
@@ -40,8 +44,8 @@ import json
 import time
 
 from px4_msgs.msg import (
-    BatteryStatus, DistanceSensor, EstimatorStatusFlags, VehicleLandDetected, VehicleLocalPosition,
-    VehicleOdometry, VehicleStatus,
+    BatteryStatus, DistanceSensor, EstimatorStatusFlags, SensorCombined, VehicleAttitude, VehicleLandDetected,
+    VehicleLocalPosition, VehicleOdometry, VehicleStatus,
 )
 from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
 from std_msgs.msg import String
@@ -65,6 +69,8 @@ PX4_REPORTS = [
     ("px4_status", "vehicle_status", VehicleStatus),
     ("px4_land_detected", "vehicle_land_detected", VehicleLandDetected),
     ("px4_odometry", "vehicle_odometry", VehicleOdometry),
+    ("px4_attitude", "vehicle_attitude", VehicleAttitude),
+    ("motion_sensors", "sensor_combined", SensorCombined),
     ("laser", "distance_sensor", DistanceSensor),
     ("estimator_flags", "estimator_status_flags", EstimatorStatusFlags),
     ("battery", "battery_status", BatteryStatus),
@@ -177,15 +183,30 @@ class DroneReports:
         """How far the laser has risen since the launch mark, from its raw reading allowing for
         tilt, or None if the laser or the attitude has not reported."""
         reading = self.raw_laser_reading_metres()
-        if reading is None or not self.has("px4_odometry"):
+        if reading is None or not self.has_attitude():
             return None
         return laser_height_above_launch_metres(reading, launch_raw_laser_reading_metres, self.tilt_degrees())
 
+    def has_attitude(self):
+        return self.has("px4_odometry") or self.has("px4_attitude")
+
+    def has_turn_rate(self):
+        return self.has("px4_odometry") or self.has("motion_sensors")
+
     def tilt_degrees(self):
-        return tilt_degrees(self.latest["px4_odometry"].q)  # PX4 stores it as (w, x, y, z).
+        """How far the drone leans from level. Uses vehicle_odometry, or vehicle_attitude when the
+        drone doesn't send vehicle_odometry. Both store the attitude as (w, x, y, z)."""
+        if self.has("px4_odometry"):
+            return tilt_degrees(self.latest["px4_odometry"].q)
+        return tilt_degrees(self.latest["px4_attitude"].q)
 
     def rotation_degrees_per_second(self):
-        return rotation_degrees_per_second(self.latest["px4_odometry"].angular_velocity)
+        """How fast the drone is turning. Uses PX4's filtered estimate in vehicle_odometry, or the
+        gyro's raw reading in sensor_combined when the drone doesn't send vehicle_odometry. The raw
+        gyro is noisier, especially with motors spinning; we have not yet seen how much on drone 16."""
+        if self.has("px4_odometry"):
+            return rotation_degrees_per_second(self.latest["px4_odometry"].angular_velocity)
+        return rotation_degrees_per_second(self.latest["motion_sensors"].gyro_rad)
 
     def px4_uses_laser_for_height(self):
         """True if PX4's estimator is using the laser for height right now, None if unknown."""

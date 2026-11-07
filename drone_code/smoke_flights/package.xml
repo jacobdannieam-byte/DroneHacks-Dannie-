@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>team_smoke_flights</name>
+  <version>0.1.0</version>
+  <description>Team Quiet Sparrow's first real-drone test flights, starting with rise-and-land.</description>
+  <maintainer email="team@example.com">Team Quiet Sparrow</maintainer>
+  <license>MIT</license>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>px4_msgs</exec_depend>
+  <exec_depend>skybeta_flight_interface</exec_depend>
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

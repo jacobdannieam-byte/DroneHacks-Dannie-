@@ -19,3 +19,9 @@ Thumbs.db
 
 # Files the simulator generates when it runs. They can always be made again.
 simulator/generated_files/
+
+# Flight records copied from the drone by drone_code/collect_flight_records.sh. They can be large.
+flight_records_from_drone/
+
+# Crash dumps left by programs that crashed inside the simulator box.
+/core

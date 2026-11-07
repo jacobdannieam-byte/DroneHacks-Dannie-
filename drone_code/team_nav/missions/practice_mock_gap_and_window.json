@@ -1,0 +1,18 @@
+{
+  "mission_format_version": 1,
+  "name": "Practice: mock gap, then mock window, then the pad",
+  "description": "For the practice course in course_maps/practice_mock_gap_and_window.json only: cross the gap, then the window, then land on the pad. The stages are named after the checkpoints: 'mock gap' and 'mock window'.",
+  "source": "Our own choice, for practice flight 'mock_gap_and_window' (team_nav/practice_flights/README.md). Not from the rulebook.",
+  "cruise_height_metres": 0.8,
+  "cruise_height_source": "Our own choice: the same as the competition missions, so the practice flies like the real run. The window's middle is also at 0.8 m, so the drone barely changes height there.",
+  "checkpoints": [
+    {
+      "name": "Mock gap",
+      "cross_one_of": ["mock gap"]
+    },
+    {
+      "name": "Mock window",
+      "cross_one_of": ["through the mock window"]
+    }
+  ]
+}
