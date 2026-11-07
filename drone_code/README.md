@@ -5,9 +5,14 @@ Everything in this folder is copied to drone 16 and runs there. Simulator code l
 
 ## What is here today
 
-`team_nav` is our team's ROS package. For now it does **nothing on purpose**. It replaces the
-organizers' demo, which would climb to 1.5 m and fly a 5 m square into the course walls as soon
-as someone armed the drone and flipped the switch to Position.
+`team_nav` is our team's ROS package. It replaces the organizers' demo, which would climb to 1.5 m
+and fly a 5 m square into the course walls as soon as someone armed the drone and flipped the
+switch to Position.
+
+It contains our mission program (see [`team_nav/README.md`](team_nav/README.md)). Its launch file
+starts the organizers' flight interface with the hand-over to software switched on, like the
+organizers' example, together with our mission. Nothing moves until the pilot arms the drone and
+flips the switch to Position. Rehearse that start with the propellers off before the first flight.
 
 Read these two files, in this order:
 
@@ -44,10 +49,10 @@ ssh dronehacks@192.168.55.1 "docker rm -f skybeta-stack"
 
 ## How to check that it worked
 
-The demo program should be gone, and the organizers' interface should be running:
+The demo program should be gone, and the organizers' interface and our mission should be running:
 
 ```bash
-ssh dronehacks@192.168.55.1 "docker exec skybeta-stack pgrep -af 'square_mission|flight_interface'"
+ssh dronehacks@192.168.55.1 "docker exec skybeta-stack pgrep -af 'square_mission|flight_interface|team_nav'"
 ```
 
-You should see `flight_interface` in the output and no `square_mission`.
+You should see `flight_interface` and `team_nav/mission` in the output, and no `square_mission`.

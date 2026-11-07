@@ -1,0 +1,233 @@
+"""mission_node.py, the ROS 2 program, run on stand-in ROS (fake_ros.py) against the pretend drone
+(fake_drone.py): which topics it hears and sends on, and a whole flight through its callbacks."""
+import importlib
+import json
+import math
+import sys
+import types
+from dataclasses import fields
+
+import pytest
+
+import fake_ros
+from fake_drone import FakeDrone
+from team_nav.mission_settings import MissionSettings
+
+POSITION_TOPIC = "/visual_slam/tracking/odometry"
+FLIGHT_STATE_TOPIC = "/skybeta/state"
+PX4_LOCAL_POSITION_TOPIC = "/fmu/out/vehicle_local_position"
+POSE_TOPIC = "/skybeta/setpoint/pose"
+TWIST_TOPIC = "/skybeta/setpoint/twist"
+STEP_SECONDS = 1.0 / MissionSettings().steps_per_second           # the node's timer period: 20 Hz
+
+
+@pytest.fixture
+def build_node():
+    fake_ros.install()
+    sys.modules.pop("team_nav.mission_node", None)
+    node_module = importlib.import_module("team_nav.mission_node")
+
+    def build(**parameters):
+        fake_ros.Node.parameter_overrides = parameters
+        fake_ros.Clock.seconds = 0.0
+        return node_module.MissionNode()
+    yield build
+    fake_ros.Node.parameter_overrides = {}
+    sys.modules.pop("team_nav.mission_node", None)
+    fake_ros.uninstall()
+
+
+def deliver(node, topic, message):
+    node.subscriptions[topic][1](message)
+
+
+def deliver_reports(node, drone):
+    odometry = fake_ros.Odometry()
+    position = odometry.pose.pose.position
+    position.x, position.y, position.z = drone.reported_position()
+    odometry.pose.pose.orientation = fake_ros.Quaternion(z=math.sin(drone.heading_radians / 2),
+                                                         w=math.cos(drone.heading_radians / 2))
+    deliver(node, POSITION_TOPIC, odometry)
+    offboard, armed, landed, px4_link = drone.flight_state()
+    state = {"offboard_active": offboard, "armed": armed, "landed": landed, "px4_link": px4_link,
+             "nav_state_name": "whatever"}
+    deliver(node, FLIGHT_STATE_TOPIC, fake_ros.String(json.dumps(state)))
+    local_position = fake_ros.VehicleLocalPosition()
+    local_position.dist_bottom = drone.laser_reading()
+    deliver(node, PX4_LOCAL_POSITION_TOPIC, local_position)
+
+
+def as_command(topic, message):
+    """Turn a published message back into the command the pretend drone understands."""
+    if topic == POSE_TOPIC:
+        orientation = message.pose.orientation
+        heading = math.atan2(2 * orientation.w * orientation.z, 1 - 2 * orientation.z ** 2)
+        position = message.pose.position
+        return types.SimpleNamespace(kind="position", position=(position.x, position.y, position.z),
+                                     heading_radians=heading, velocity=None)
+    linear = message.twist.linear
+    return types.SimpleNamespace(kind="velocity", position=None, heading_radians=None,
+                                 velocity=(linear.x, linear.y, linear.z))
+
+
+def fly_node(node, drone, seconds, every_step=None, arm_at_seconds=0.5, switch_at_seconds=1.0):
+    """Returns [(seconds, topic, message)] for everything the node published."""
+    sent = []
+    seen = {POSE_TOPIC: 0, TWIST_TOPIC: 0}
+    tick = node.timers[0][1]
+    now = 0.0
+    while now < seconds - 1e-9:
+        fake_ros.Clock.seconds = now
+        if every_step is not None:
+            every_step(now, node, drone)
+        if now >= arm_at_seconds and not drone.armed and not drone.has_flown:
+            drone.arm()
+        if now >= switch_at_seconds and not drone.offboard and not drone.has_flown:
+            drone.switch_to_position_mode(now)
+        deliver_reports(node, drone)
+        tick()
+        for topic in (POSE_TOPIC, TWIST_TOPIC):
+            for message in node.publishers[topic].sent[seen[topic]:]:
+                sent.append((now, topic, message))
+                drone.receive(now, as_command(topic, message))
+            seen[topic] = len(node.publishers[topic].sent)
+        drone.advance(now, STEP_SECONDS)
+        now = round(now + STEP_SECONDS, 9)
+    return sent
+
+
+def logged(node):
+    return [text for _, text in node.log_lines]
+
+
+# ---------------------------------------------------------------- wiring
+def test_hears_three_topics_and_sends_only_on_the_two_setpoint_topics(build_node):
+    node = build_node()
+    assert set(node.subscriptions) == {POSITION_TOPIC, FLIGHT_STATE_TOPIC, PX4_LOCAL_POSITION_TOPIC}
+    assert set(node.publishers) == {POSE_TOPIC, TWIST_TOPIC}
+    assert not any(topic.startswith("/fmu/in") for topic in node.publishers)
+    assert node.timers[0][0] == pytest.approx(1.0 / MissionSettings().steps_per_second)
+
+
+def test_px4_reports_are_heard_the_way_px4_sends_them(build_node):
+    quality = build_node().subscriptions[PX4_LOCAL_POSITION_TOPIC][2]
+    assert quality.settings["reliability"] == "best_effort" and quality.settings["durability"] == "transient_local"
+
+
+def test_every_setting_is_a_ros_parameter_and_cruise_height_can_be_changed(build_node):
+    node = build_node(cruise_height_metres=0.6, px4_local_position_topic="/fmu/out/vehicle_local_position_v1")
+    assert {setting.name for setting in fields(MissionSettings)} <= set(node.parameters)
+    assert node.mission.settings.cruise_height_metres == 0.6
+    assert "/fmu/out/vehicle_local_position_v1" in node.subscriptions
+
+
+def test_the_px4_topic_defaults_to_the_name_measured_on_drone_16(build_node):
+    assert build_node().parameters["px4_local_position_topic"] == "/fmu/out/vehicle_local_position"
+
+
+def test_an_empty_px4_topic_asks_the_organizers_code_for_the_name(build_node):
+    organizers_topics = types.ModuleType("skybeta_flight_interface.topics")
+    organizers_topics.fmu_topic = lambda direction, name: f"/fmu/{direction}/{name}_v7"
+    sys.modules["skybeta_flight_interface"] = types.ModuleType("skybeta_flight_interface")
+    sys.modules["skybeta_flight_interface.topics"] = organizers_topics
+    try:
+        assert "/fmu/out/vehicle_local_position_v7" in build_node(px4_local_position_topic="").subscriptions
+    finally:
+        sys.modules.pop("skybeta_flight_interface", None)
+        sys.modules.pop("skybeta_flight_interface.topics", None)
+
+
+def test_an_empty_px4_topic_without_the_organizers_code_uses_the_plain_name(build_node):
+    assert PX4_LOCAL_POSITION_TOPIC in build_node(px4_local_position_topic="").subscriptions
+
+
+def test_launch_values_are_converted_to_each_settings_type(build_node):
+    node = build_node(cruise_height_metres=1, tunnel_enabled="true", sightings_to_confirm=4.0)
+    assert node.mission.settings.cruise_height_metres == 1.0
+    assert isinstance(node.mission.settings.cruise_height_metres, float)
+    assert node.mission.settings.tunnel_enabled is True and node.mission.settings.sightings_to_confirm == 4
+    with pytest.raises(ValueError, match="cruise_height_metres is 'high'"):
+        build_node(cruise_height_metres="high")
+
+
+def test_the_node_caps_the_camera_exposure_on_the_camera_named_by_a_parameter(build_node):
+    node = build_node(camera_node_name="/front_camera")
+    assert fake_ros.AsyncParameterClient.made[-1].remote_node_name == "/front_camera"
+    assert (MissionSettings().camera_check_seconds, node.camera_exposure.check) in node.timers
+    assert build_node(cap_camera_exposure=False).camera_exposure is None
+
+
+def test_the_laser_distance_is_read_even_though_px4_marks_it_invalid(build_node):
+    node = build_node()
+    report = fake_ros.VehicleLocalPosition()
+    report.dist_bottom, report.dist_bottom_valid = 0.12, False
+    deliver(node, PX4_LOCAL_POSITION_TOPIC, report)
+    assert node.mission.laser_metres == 0.12
+
+
+def test_a_flight_state_that_is_not_json_is_ignored_with_a_warning(build_node):
+    node = build_node()
+    deliver(node, FLIGHT_STATE_TOPIC, fake_ros.String("not json"))
+    assert node.mission.flight_state_seconds is None
+    assert ("warn", "The flight state on /skybeta/state was not valid JSON, so it was ignored.") in node.log_lines
+
+
+# ---------------------------------------------------------------- flights through the topics
+def test_a_whole_flight_through_the_topics(build_node):
+    node, drone = build_node(), FakeDrone()
+    sent = fly_node(node, drone, 40.0)
+    before_start = [message for seconds, topic, message in sent if seconds < 1.0]
+    assert before_start and all(message.pose.position.z == pytest.approx(0.3) for message in before_start)
+    cruise = [message.pose.position.z for _, topic, message in sent if topic == POSE_TOPIC]
+    assert max(cruise) == pytest.approx(0.8)
+    assert all(message.header.frame_id == "odom" for _, _, message in sent)
+    twists = [message.twist for _, topic, message in sent if topic == TWIST_TOPIC]
+    assert {round(-twist.linear.z, 2) for twist in twists} == {0.5, 0.35, 1.0}
+    assert all(twist.angular.z == 0.0 for twist in twists)              # never turning while landing
+    assert not drone.armed and drone.landed
+    motors_off_at = next(seconds for seconds, phase, _ in node.mission.history if phase == "finished")
+    assert all(seconds < motors_off_at for seconds, _, _ in sent)       # nothing published once the motors are off
+    assert drone.offboard                                               # PX4 still shows Offboard while disarmed
+    for line in ("waiting_for_start: ready: waiting for Offboard (the pilot's switch to Position after arming)",
+                 "flying_course: follow_line: camera tracking missing, holding",
+                 "landing: touchdown confirmed: pushing down"):
+        assert line in logged(node), line
+    assert any(line.startswith("finished: landed: PX4 switched the motors off (peak horizontal speed")
+               for line in logged(node))
+
+
+def test_the_landing_sends_a_pose_at_the_drone_then_twists_at_20_hz_until_the_motors_are_off(build_node):
+    node, drone = build_node(), FakeDrone()
+    positions_when_sent = []
+
+    def remember_position(now_seconds, node, drone):
+        positions_when_sent.append((now_seconds, tuple(drone.position)))
+    sent = fly_node(node, drone, 40.0, every_step=remember_position)
+    first_twist = next(index for index, (_, topic, _) in enumerate(sent) if topic == TWIST_TOPIC)
+    seconds, topic, pose = sent[first_twist - 1]
+    assert topic == POSE_TOPIC and seconds == sent[first_twist][0]        # same step, just before
+    drone_then = dict(positions_when_sent)[seconds]
+    position = pose.pose.position
+    assert math.dist((position.x, position.y, position.z), drone_then) < 1e-5   # tracking wobbles by 1e-6 m
+    twist_times = [seconds for seconds, topic, _ in sent[first_twist:] if topic == TWIST_TOPIC]
+    assert all(topic == TWIST_TOPIC for _, topic, _ in sent[first_twist:])
+    gaps = [later - earlier for earlier, later in zip(twist_times, twist_times[1:])]
+    assert max(gaps) == pytest.approx(STEP_SECONDS)                     # one every 0.05 s, no gaps
+    motors_off_at = next(seconds for seconds, phase, _ in node.mission.history if phase == "finished")
+    assert twist_times[-1] == pytest.approx(motors_off_at - STEP_SECONDS)  # right up to the motors stopping
+
+
+def test_the_flight_states_px4_link_reaches_the_mission(build_node):
+    node = build_node()
+    deliver(node, FLIGHT_STATE_TOPIC, fake_ros.String(json.dumps({"px4_link": False, "armed": False})))
+    assert node.mission.px4_link is False
+
+
+def test_publishing_stops_when_offboard_ends(build_node):
+    def pilot_takes_over(now_seconds, node, drone):
+        if now_seconds >= 5.0:
+            drone.offboard = False
+    node, drone = build_node(), FakeDrone()
+    sent = fly_node(node, drone, 10.0, every_step=pilot_takes_over)
+    assert sent and max(seconds for seconds, _, _ in sent) < 5.0
+    assert any("PX4 left Offboard" in line for line in logged(node))
