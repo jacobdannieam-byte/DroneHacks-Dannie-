@@ -1,0 +1,90 @@
+{
+  "scope": "synthetic_host_only",
+  "host": "Windows-10-10.0.26200-SP0",
+  "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+  "steps_per_candidate": 50,
+  "batch_size": 8,
+  "replay": {
+    "clean": {
+      "status_counts": {
+        "anchor": 1,
+        "effective_interval": 320,
+        "observed": 320
+      },
+      "comparison_counts": {
+        "matched_verified_hold": 4,
+        "effective_command_changed": 3
+      },
+      "endpoint_rmse": {
+        "d0": {
+          "position_error_m": 0.07747286460929209,
+          "heading_error_rad": 0.0028755830026034493
+        },
+        "ridge": {
+          "position_error_m": 0.06553981890298764,
+          "heading_error_rad": 0.0028755616542135813
+        },
+        "learned": {
+          "position_error_m": 0.0931593642114519,
+          "heading_error_rad": 0.0028870120699425357
+        }
+      }
+    },
+    "fault_injection": {
+      "status_counts": {
+        "anchor": 4,
+        "effective_interval": 319,
+        "observed": 314,
+        "out_of_order": 1,
+        "stale_or_unhealthy_state": 3
+      },
+      "comparison_counts": {
+        "matched_verified_hold": 4,
+        "effective_command_changed": 2
+      },
+      "endpoint_rmse": {
+        "d0": {
+          "position_error_m": 0.07752666475919688,
+          "heading_error_rad": 0.002874747377720129
+        },
+        "ridge": {
+          "position_error_m": 0.06913360533231382,
+          "heading_error_rad": 0.002874747377719259
+        },
+        "learned": {
+          "position_error_m": 0.0939527356579903,
+          "heading_error_rad": 0.0028747430341882845
+        }
+      }
+    }
+  },
+  "timing_ms": {
+    "d0": {
+      "p50": 6.4724000039859675,
+      "p95": 6.921794994559605,
+      "p99": 7.203302001435078,
+      "worst": 7.322299999941606,
+      "over_25ms": 0,
+      "over_50ms": 0,
+      "batches": 100
+    },
+    "ridge": {
+      "p50": 15.604200001689605,
+      "p95": 16.507320004166104,
+      "p99": 18.66469499640516,
+      "worst": 18.723599998338614,
+      "over_25ms": 0,
+      "over_50ms": 0,
+      "batches": 100
+    },
+    "learned": {
+      "p50": 19.15884999834816,
+      "p95": 20.187405003161984,
+      "p99": 20.293878999218585,
+      "worst": 21.450100000947714,
+      "over_25ms": 0,
+      "over_50ms": 0,
+      "batches": 100
+    }
+  }
+}
