@@ -149,12 +149,40 @@ def test_each_fault_alone_makes_it_not_ready_with_its_reason(tmp_path, change, r
     assert reason in verdict(output), output
 
 
-def test_a_missing_corner_count_or_build_log_only_warns(tmp_path):
+# The format drone 16's colcon really writes (2026-11-07): no "Summary" line in logger_all.log.
+DRONE_16_BUILD_LOG = ("[6.804s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'\n"
+                      "[6.833s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/root/team_ws/install/setup.zsh'\n")
+
+
+def test_drone_16s_real_build_log_reads_as_succeeded(tmp_path):
+    code, output = run_check(tmp_path, build_log=DRONE_16_BUILD_LOG)
+    assert code == 0, output
+    assert "last team_ws build: succeeded at" in " ".join(output.split())
+
+
+def test_a_build_that_colcon_says_failed_is_not_ready(tmp_path):
+    code, output = run_check(tmp_path, build_log=DRONE_16_BUILD_LOG.replace("with '0'", "with '1'"))
+    assert code == 1
+    assert "the last team_ws build failed (colcon finished with 1)" in verdict(output)
+
+
+def test_an_unclear_build_log_is_not_called_unfinished_while_team_nav_runs(tmp_path):
+    unclear = "[0.3s] DEBUG:colcon:Parsed command line arguments\n"
+    code, output = run_check(tmp_path, build_log=unclear)
+    assert code == 0, output
+    assert "succeeded (team_nav is running; the build log did not say)" in output
+    code, output = run_check(tmp_path, build_log=unclear,
+                             programs=GOOD_PROGRAMS.replace("/lib/team_nav/mission", "/lib/team_nav/other"))
+    assert code == 1
+    assert "the last team_ws build did not finish" in verdict(output)
+
+
+def test_a_missing_corner_count_only_warns_and_a_missing_build_log_is_fine_while_team_nav_runs(tmp_path):
     code, output = run_check(tmp_path, corners="", build_log=None,
                              programs=GOOD_PROGRAMS.replace("/lib/team_nav/corner_count", "/lib/team_nav/x"))
     assert code == 0, output
     assert "warning: no corner count from the left camera" in output
-    assert "warning: could not find the last team_ws build log" in output
+    assert "succeeded (team_nav is running; the build log did not say)" in output
     assert "warning: corner_count is not running" in output
     assert verdict(output) == "READY TO FLY"
 

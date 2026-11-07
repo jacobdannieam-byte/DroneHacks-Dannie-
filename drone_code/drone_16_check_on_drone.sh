@@ -27,6 +27,7 @@ ODOMETRY_TOPIC="/visual_slam/tracking/odometry"
 
 problems=()
 warnings=()
+team_nav_running=0          # set by check_programs; the build check uses it
 
 line() { printf '%-22s %s\n' "$1:" "$2"; }
 
@@ -83,6 +84,7 @@ check_programs() {
     corners="$(grep -c 'team_nav/corner_count' <<< "$programs")"
     squares="$(grep -c 'square_mission' <<< "$programs")"
     line "programs" "team_nav mission $missions, flight_interface $interfaces, square_mission $squares, corner_count $corners"
+    team_nav_running="$missions"
     [ "$missions" -ge 1 ] || problems+=("the team_nav mission is not running")
     [ "$interfaces" -eq 1 ] || problems+=("$interfaces flight_interface programs are running; exactly 1 must be")
     [ "$squares" -eq 0 ] || problems+=("the organizers' square_mission demo is running")
@@ -91,22 +93,28 @@ check_programs() {
 
 check_last_build() {
     # The stack builds ~/team_ws with colcon each time it starts; colcon keeps a log of the last build.
+    # On drone 16 (2026-11-07) that log has no "Summary" line: the build's result is the line
+    # "run_until_complete finished with '0'" (0 is success, anything else is a failure).
     local log="$team_workspace/log/latest_build/logger_all.log"
-    if [ ! -f "$log" ]; then
+    local when="" failed="" result=""
+    if [ -f "$log" ]; then
+        when=" at $(date -r "$log" '+%Y-%m-%d %H:%M' 2>/dev/null)"
+        failed="$(grep -Eo '[0-9]+ packages? (failed|aborted)[^]]*' "$log" | tail -n 1)"
+        result="$(grep -Eo "run_until_complete finished with '-?[0-9]+'" "$log" | tail -n 1 | grep -Eo -- "-?[0-9]+")"
+    fi
+    if [ -n "$failed" ] || { [ -n "$result" ] && [ "$result" != 0 ]; }; then
+        line "last team_ws build" "FAILED$when: ${failed:-colcon finished with $result}"
+        problems+=("the last team_ws build failed (${failed:-colcon finished with $result}), so nothing of ours started")
+    elif [ "$result" = 0 ] || grep -q 'Summary:.*finished' "$log" 2>/dev/null; then
+        line "last team_ws build" "succeeded$when"
+    elif [ "$team_nav_running" -ge 1 ]; then
+        # A failed build starts nothing, so a running team_nav means the build worked.
+        line "last team_ws build" "succeeded (team_nav is running; the build log did not say)"
+    elif [ ! -f "$log" ]; then
         line "last team_ws build" "unknown: no build log at $log"
         warnings+=("could not find the last team_ws build log")
-        return
-    fi
-    local when failed
-    when="$(date -r "$log" '+%Y-%m-%d %H:%M' 2>/dev/null)"
-    failed="$(grep -Eo '[0-9]+ packages? (failed|aborted)[^]]*' "$log" | tail -n 1)"
-    if [ -n "$failed" ]; then
-        line "last team_ws build" "FAILED at $when: $failed"
-        problems+=("the last team_ws build failed ($failed), so nothing of ours started")
-    elif grep -q 'Summary:.*finished' "$log"; then
-        line "last team_ws build" "succeeded at $when"
     else
-        line "last team_ws build" "unfinished or unknown at $when"
+        line "last team_ws build" "unfinished or unknown$when"
         problems+=("the last team_ws build did not finish")
     fi
 }
