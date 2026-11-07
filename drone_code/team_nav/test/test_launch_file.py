@@ -107,7 +107,7 @@ def test_every_watchdog_threshold_is_a_launch_argument_with_the_teams_default(la
     for name in WATCHDOG_THRESHOLDS:
         assert float(arguments(launched)[name]) == getattr(defaults, name), name
         assert mission_parameters(launched)[name].name == name, name
-    team_defaults = {"watchdog_odometry_timeout_seconds": 0.3, "watchdog_jump_speed_metres_per_second": 1.5,
+    team_defaults = {"watchdog_odometry_timeout_seconds": 0.5, "watchdog_jump_speed_metres_per_second": 1.5,
                      "watchdog_jump_margin_metres": 0.05, "watchdog_frozen_seconds": 0.5}
     for name, value in team_defaults.items():
         assert getattr(defaults, name) == value, name

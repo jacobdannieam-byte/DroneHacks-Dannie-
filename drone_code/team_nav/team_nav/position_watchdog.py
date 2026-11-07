@@ -7,8 +7,9 @@ mission.py then lands at once, using the normal landing (landing.py). It never t
 never reads a clock.
 
 The rules, lettered as the team named them (the team's list has no rule (d)):
-  (a) No new camera tracking report for 0.3 s, judged by when the reports arrive. (The simulator's
-      reports pause for 0.21 s now and then; PX4 itself gives up on them after about 0.4 s.)
+  (a) No new camera tracking report for 0.5 s, judged by when the reports arrive. (Measured on
+      drone 16: gaps of up to 0.332 s at a normal 30 Hz, so a shorter limit would land the drone
+      for nothing. PX4 itself stops using the reports after about 0.4 s.)
   (b) A camera tracking report moved further from the one before than 1.5 m/s times the time
       between them plus 0.05 m. The time between them comes from the reports' own timestamps,
       so a late delivery does not make a real move look like a jump.
@@ -120,7 +121,10 @@ class PositionWatchdog:
         if self.pose_unchanged_since_seconds is None:
             return
         frozen_since = max(self.pose_unchanged_since_seconds, self.motion_requested_since_seconds)
+        # Count only the time covered by identical reports that kept arriving, up to the latest one.
+        # If reports stop altogether, that is rule (a), not a freeze.
+        frozen_for = self.last_report_received_seconds - frozen_since
         limit = self.settings.watchdog_frozen_seconds
-        if now_seconds - frozen_since >= limit - 1e-9:
+        if frozen_for >= limit - 1e-9:
             self.trip("c", f"camera tracking position and orientation bit-identical for "
-                           f"{now_seconds - frozen_since:.2f} s while a target asks the drone to move (limit {limit:g} s)")
+                           f"{frozen_for:.2f} s while a target asks the drone to move (limit {limit:g} s)")

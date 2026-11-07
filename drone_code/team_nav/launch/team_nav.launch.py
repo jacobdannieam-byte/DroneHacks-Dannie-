@@ -49,7 +49,7 @@ DRONE_16_SYSTEM_ID = '16'
 # The position watchdog's thresholds (team_nav/position_watchdog.py), one launch argument each. The
 # defaults are the team's, and must match mission_settings.py (a test checks they do).
 WATCHDOG_ARGUMENTS = [
-    ('watchdog_odometry_timeout_seconds', '0.3', 'rule (a): land if no camera tracking report for this long'),
+    ('watchdog_odometry_timeout_seconds', '0.5', 'rule (a): land if no camera tracking report for this long'),
     ('watchdog_jump_speed_metres_per_second', '1.5', 'rule (b): believable speed between two reports'),
     ('watchdog_jump_margin_metres', '0.05', 'rule (b): plus this much, in metres'),
     ('watchdog_frozen_seconds', '0.5', 'rule (c): land if the pose is bit-identical this long while moving'),

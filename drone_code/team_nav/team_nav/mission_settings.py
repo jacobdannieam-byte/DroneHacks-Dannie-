@@ -41,10 +41,12 @@ class MissionSettings:
 
     # ------------------------------------------------------------------ position watchdog
     # (position_watchdog.py). Each one is also a launch argument of the same name.
-    # From the team (2026-11-07): rule (a), no new camera tracking report for this long. Raised from
-    # 0.2 s: the simulator's reports pause for 0.21 s now and then, and PX4 itself only gives up on
-    # them after about 0.4 s.
-    watchdog_odometry_timeout_seconds: float = 0.3
+    # From the team (2026-11-07): rule (a), no new camera tracking report for this long. Measured on
+    # drone 16: "ros2 topic hz" on /visual_slam/tracking/odometry showed gaps of up to 0.332 s at a
+    # normal 30 Hz, so 0.3 s would land the drone for nothing; the simulator's reports also pause for
+    # 0.21 to 0.3 s now and then. At 0.5 s this trips after PX4's own cut-off (it stops using the
+    # reports after about 0.4 s), so by then PX4 is already flying without them.
+    watchdog_odometry_timeout_seconds: float = 0.5
     # From the team: rule (b), a report may be at most this speed times the time between the two
     # reports' timestamps, plus this margin, from the report before it.
     watchdog_jump_speed_metres_per_second: float = 1.5

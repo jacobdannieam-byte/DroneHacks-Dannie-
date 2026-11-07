@@ -69,7 +69,7 @@ From takeoff until the motors stop, `position_watchdog.py` checks these rules. W
 
 | Rule | Trips when | Default threshold (launch argument) |
 |---|---|---|
-| (a) | No new camera tracking report arrives. | 0.3 s (`watchdog_odometry_timeout_seconds`). Raised from 0.2 s because the simulator's reports pause for 0.21 s now and then, and PX4 itself only gives up on them after about 0.4 s. |
+| (a) | No new camera tracking report arrives. | 0.5 s (`watchdog_odometry_timeout_seconds`). Measured on drone 16, `ros2 topic hz` on `/visual_slam/tracking/odometry` showed gaps of up to 0.332 s at a normal 30 Hz, so 0.3 s would land the drone for nothing. The simulator's reports also pause for 0.21 to 0.3 s at times. PX4 itself stops using the reports after about 0.4 s, so this rule trips after PX4 has already stopped using them. |
 | (b) | A report moved further from the one before than a believable speed allows. The time between them comes from the reports' own timestamps. | 1.5 m/s × time + 0.05 m (`watchdog_jump_speed_metres_per_second`, `watchdog_jump_margin_metres`) |
 | (c) | Position and orientation stay bit-identical while a target asks the drone to move. | 0.5 s (`watchdog_frozen_seconds`). "Asks to move" means a target over 0.05 m away, over 2° round, or a velocity over 0.02 m/s (`watchdog_motion_request_*`). |
 | (e) | `xy_reset_counter` or `heading_reset_counter` changes after takeoff. | No threshold. |

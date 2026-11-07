@@ -353,7 +353,7 @@ def test_watchdog_rule_a_lands_at_once_when_camera_tracking_reports_stop():
     mission, drone = Mission(ENDLESS_COURSE), FakeDrone()
     fly(mission, drone, 45.0, every_step=every_step_do(feed_course_inputs(), tracking_stops))
     tripped_at = first_time(mission, "watchdog rule (a) tripped")
-    assert tripped_at == pytest.approx(6.3, abs=0.01)                  # last report 5.9 s; more than 0.3 s at 6.3 s
+    assert tripped_at == pytest.approx(6.5, abs=0.01)                  # last report 5.9 s; more than 0.5 s at 6.5 s
     assert watchdog_line(mission, "a").endswith("landing now")
     assert phases(mission)[phases(mission).index("landing") - 1] == "flying_course"
     assert "touchdown confirmed: pushing down" not in reasons(mission)  # no stillness measure: PX4 lands it

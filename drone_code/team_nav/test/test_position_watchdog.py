@@ -21,12 +21,12 @@ def wobble(index):
 
 
 # ---------------------------------------------------------------- rule (a): reports stop
-def test_rule_a_trips_after_no_report_for_more_than_0_3_s():
+def test_rule_a_trips_after_no_report_for_more_than_0_5_s():
     watchdog = watching()
-    assert watchdog.check(0.21, motion_requested=False) is None          # the simulator's pauses: fine
-    assert watchdog.check(0.3, motion_requested=False) is None           # exactly 0.3 s: not yet
-    rule, reason = watchdog.check(0.31, motion_requested=False)
-    assert rule == "a" and "no new camera tracking report for 0.31 s (limit 0.3 s)" in reason
+    assert watchdog.check(0.332, motion_requested=False) is None         # the largest gap measured on drone 16
+    assert watchdog.check(0.5, motion_requested=False) is None           # exactly 0.5 s: not yet
+    rule, reason = watchdog.check(0.51, motion_requested=False)
+    assert rule == "a" and "no new camera tracking report for 0.51 s (limit 0.5 s)" in reason
 
 
 def test_rule_a_does_not_trip_while_reports_keep_arriving():
@@ -83,6 +83,13 @@ def test_rule_c_trips_after_0_5_s_of_identical_reports_while_a_target_asks_for_m
     frozen_reports(watchdog, 0.9, 0.95)
     rule, reason = watchdog.check(0.95, motion_requested=True)
     assert rule == "c" and "bit-identical for 0.50 s" in reason
+
+
+def test_reports_stopping_altogether_is_rule_a_not_a_freeze():
+    watchdog = watching()                                                 # one report at 0 s, then nothing
+    for tenth in range(0, 6):                                             # motion asked from 0 s
+        assert watchdog.check(tenth / 10, motion_requested=True) is None  # up to 0.5 s: neither rule
+    assert watchdog.check(0.51, motion_requested=True)[0] == "a"
 
 
 def test_rule_c_does_not_trip_while_no_motion_is_asked():
