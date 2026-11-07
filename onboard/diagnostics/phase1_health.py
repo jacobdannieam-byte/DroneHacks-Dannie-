@@ -107,7 +107,8 @@ def _stereo(events, grouped):
             "evicted_unmatched": dropped, "pending_unmatched": len(pending)}
 
 
-def _static_tf(rows, base, frames, stereo_frames, issues):
+def static_tf_tree(rows, base, issues):
+    """Resolve a recorded static rig into poses relative to its base frame."""
     parents = {}
     edges = defaultdict(dict)
     for row in rows:
@@ -134,14 +135,19 @@ def _static_tf(rows, base, frames, stereo_frames, issues):
             reached[next_frame] = (tuple(a + b for a, b in zip(origin, qrotate(orientation, position))),
                                    qmul(orientation, rotation))
             frontier.append(next_frame)
-    missing = sorted(frames - reached.keys())
-    if missing:
-        issues.add("tf_static:sensor_frame_disconnected")
     # A static rig is a tree. A component with at least as many undirected
     # edges as vertices has a loop. A reciprocal edge is invalid too.
     if (sum(len(edges[frame]) for frame in reached) // 2 >= len(reached)
             or any(parents.get(parent, (None,))[0] == child for child, (parent, *_) in parents.items())):
         issues.add("tf_static:cycle")
+    return parents, reached
+
+
+def _static_tf(rows, base, frames, stereo_frames, issues):
+    parents, reached = static_tf_tree(rows, base, issues)
+    missing = sorted(frames - reached.keys())
+    if missing:
+        issues.add("tf_static:sensor_frame_disconnected")
     baseline = None
     graph_invalid = bool(issues.intersection({"tf_static:invalid", "tf_static:conflicting_child", "tf_static:cycle"}))
     if not graph_invalid and len(stereo_frames) == 2 and all(frame in reached for frame in stereo_frames):

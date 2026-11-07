@@ -82,6 +82,8 @@ def _covariance_consistent(values, profile):
 class RecordedSpatialReplay:
     """Bounded message normalizer shared by the bag reader and offline tests."""
 
+    topics = TOPICS
+
     def __init__(self, profile):
         self.profile = profile
         self.world = SpatialWorld(profile.reference, profile.calibration)
@@ -90,10 +92,13 @@ class RecordedSpatialReplay:
         self._pose_capture = self._pending = None
         self._info_ok = self._clock_progress = False
 
-    def feed(self, topic, msg, received_ns):
-        if topic not in TOPICS or not stamp_ok(received_ns) or (self.now is not None and received_ns < self.now):
+    def _advance(self, topic, received_ns):
+        if topic not in self.topics or not stamp_ok(received_ns) or (self.now is not None and received_ns < self.now):
             raise ValueError("unexpected topic or backward bag receipt time")
         self.now = received_ns
+
+    def feed(self, topic, msg, received_ns):
+        self._advance(topic, received_ns)
         if topic == "/clock":
             clock = _ns(msg.clock)
             if (self._clock is not None and clock < self._clock) or abs(clock - received_ns) > CLOCK_SKEW_NS:
@@ -101,8 +106,7 @@ class RecordedSpatialReplay:
             self._clock_progress |= self._clock is not None and clock > self._clock
             self._clock = clock
             return
-        if self._clock is None or abs(received_ns - self._clock) > CLOCK_SKEW_NS:
-            raise ValueError("bag record time is unbound to the observed simulation clock")
+        self._require_clock(received_ns)
 
         if topic == "/camera/depth/camera_info":
             if not _calibration_matches(msg, self.profile.calibration):
@@ -133,6 +137,10 @@ class RecordedSpatialReplay:
             self._pending = DepthCapture(self.profile.reference, stamp, received_ns, msg.header.frame_id,
                                          f"depth-{stamp}", depth)
         self._flush()
+
+    def _require_clock(self, received_ns):
+        if self._clock is None or abs(received_ns - self._clock) > CLOCK_SKEW_NS:
+            raise ValueError("bag record time is unbound to the observed simulation clock")
 
     def _feed_pose(self, msg, received_ns):
         ref = self.profile.reference
@@ -178,10 +186,10 @@ def read_bag(path: Path, replay):
     reader.open(StorageOptions(uri=str(path), storage_id=""), ConverterOptions("", ""))
     try:
         types = {entry.name: entry.type for entry in reader.get_all_topics_and_types()}
-        if any(types.get(topic) != kind for topic, kind in TOPICS.items()):
+        if any(types.get(topic) != kind for topic, kind in replay.topics.items()):
             raise ValueError("bag lacks one or more required native topic/message pairs")
-        reader.set_filter(StorageFilter(topics=list(TOPICS)))
-        classes = {topic: get_message(kind) for topic, kind in TOPICS.items()}
+        reader.set_filter(StorageFilter(topics=list(replay.topics)))
+        classes = {topic: get_message(kind) for topic, kind in replay.topics.items()}
         count = 0
         while reader.has_next():
             topic, data, received_ns = reader.read_next()
