@@ -4,7 +4,8 @@ SIMULATOR ONLY.
 
 What this file does
 -------------------
-It reads the organizers' 3D model of the course and answers two questions:
+It reads a 3D model of the course and answers two questions. The model is the organizers'
+own, or one that course_mesh_from_map.py made from a course map file; world.py chooses which.
 
   1. "How far is this point from the nearest surface?"
   2. "If I shoot a ray from here in this direction, how far does it travel before it
@@ -48,7 +49,8 @@ GRID_LOWEST_CORNER_METRES = np.array([-3.10, -3.10, -0.10])
 GRID_HIGHEST_CORNER_METRES = np.array([3.10, 3.10, 3.10])
 
 # Surfaces that are flat on the floor, so they can never be flown into. These are the
-# starting words of the part names in the organizers' model.
+# starting words of the part names in the organizers' model, and course_mesh_from_map.py uses
+# the same words.
 FLOOR_LEVEL_PART_NAMES = ("Floor", "Guideline", "Landing", "Launch", "Approach ring")
 NET_PART_NAME = "Net"
 

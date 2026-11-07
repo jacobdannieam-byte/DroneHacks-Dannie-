@@ -3,15 +3,31 @@
 # Run this on the Mac, from anywhere. For example:
 #
 #   simulator/run_test_flight.sh landing_test.py --with-push-down
+#   simulator/run_test_flight.sh --world drone_code/team_nav/course_maps/phone_scan_2026-11-06.json landing_test.py
 #
-# The first argument names a file in simulator/test_flights. The rest go to that file.
+# --world, if given first, chooses the course the simulator flies in: a course map file, named
+# from the top of the repository. Without it, the simulator uses the organizers' drawing.
+# The next argument names a file in simulator/test_flights. The rest go to that file.
 # Each flight gets a fresh simulator, because a simulated drone starts only once.
 set -e
 
-test_file="$1"
-shift
 repository="$(cd "$(dirname "$0")/.." && pwd)"
 box_name=drone-simulator
+
+world_setting=()
+if [ "$1" = "--world" ]; then
+    if [ ! -f "$repository/$2" ]; then
+        echo "There is no map file at $2. Name it from the top of the repository, for example drone_code/team_nav/course_maps/phone_scan_2026-11-06.json."
+        exit 1
+    fi
+    # The simulator's programs read this setting (see course_simulator/world.py).
+    world_setting=(--env "SIMULATOR_WORLD_MAP=/repository/$2")
+    echo "The simulator will fly in the course described by $2."
+    shift 2
+fi
+
+test_file="$1"
+shift
 
 flight_records_folder="$repository/simulator/generated_files/flight_records"
 mkdir -p "$flight_records_folder"
@@ -25,6 +41,7 @@ docker rm --force "$box_name" > /dev/null 2>&1 || true
 
 docker run --detach --name "$box_name" \
     --volume "$repository:/repository" \
+    "${world_setting[@]}" \
     drone-simulator \
     bash -c "bash /repository/simulator/inside_the_box/build_our_packages.sh \
              && touch /tmp/our_packages_are_built \

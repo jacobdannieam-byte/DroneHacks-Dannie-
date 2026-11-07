@@ -18,8 +18,9 @@ Each set of directions (a "frame") is just an agreed meaning for x, y and z.
   - "Start frame": x is the way the nose pointed at takeoff, y is to the drone's left
     at takeoff, z is up. The real camera tracking reports positions in this frame,
     because it only knows where it started.
-  - "Course frame": the organizers' 3D model. x and y are along the floor, and z is
-    height above the floor.
+  - "Course frame": the course map's and the organizers' 3D model's. x and y are along
+    the floor, and z is height above the floor. The drone starts at the launch mark of the
+    simulator's world map (see world.py).
 
 "Body" means directions fixed to the drone, which move and tilt with it: forward,
 left, up.
@@ -35,8 +36,7 @@ from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile, QoSReli
 
 from px4_msgs.msg import VehicleAttitude, VehicleLocalPosition
 
-# The centre of the launch mark, measured from the "Launch mark" part in the course model.
-LAUNCH_MARK_POSITION_METRES = np.array([-2.5145, 0.914, 0.0])
+from course_simulator.world import load_world_map
 
 # Which way the drone faces at the start, as an angle measured from the course's x
 # axis, turning towards the y axis. 90 degrees faces along y, which is straight down
@@ -59,6 +59,8 @@ class TrueDroneState:
     """Listens to PX4's physics and always holds the latest true state of the drone."""
 
     def __init__(self, ros_node, start_heading_degrees=DEFAULT_START_HEADING_DEGREES):
+        # The drone starts on the floor at the centre of the world map's launch mark.
+        self.launch_mark_position_metres = np.append(load_world_map().launch_mark_centre_metres, 0.0)
         heading_radians = math.radians(start_heading_degrees)
         self._turn_start_frame_to_course_frame = np.array([
             [math.cos(heading_radians), -math.sin(heading_radians), 0.0],
@@ -102,7 +104,7 @@ class TrueDroneState:
     def position_on_course_metres(self):
         """Returns where the drone's centre truly is, in the course model's frame."""
         return (
-            LAUNCH_MARK_POSITION_METRES
+            self.launch_mark_position_metres
             + self._turn_start_frame_to_course_frame @ self.position_in_start_frame_metres
         )
 
@@ -112,6 +114,12 @@ class TrueDroneState:
         return self._turn_start_frame_to_course_frame @ rotation_matrix_from_quaternion(
             self.body_rotation_in_start_frame
         )
+
+    def heading_on_course_degrees(self):
+        """Returns which way the drone's nose points, as an angle measured from the course's
+        x axis, turning towards the y axis. It uses the same convention as the start heading."""
+        forward_direction = self.body_directions_on_course()[:, 0]
+        return math.degrees(math.atan2(forward_direction[1], forward_direction[0]))
 
     def body_points_on_course_metres(self, points_on_the_body_metres):
         """Converts points fixed to the drone (forward, left, up) into course positions."""

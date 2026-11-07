@@ -6,17 +6,18 @@ The plan tells you how sure we are about each number. "Measured" means it came f
 
 ## 1. The plan in short
 
-The drone has to fly through a known obstacle course by itself, with nobody controlling it, and then land on a pad and switch itself off. The organizers published an exact 3D model of the course, and the rules allow us to load that model onto the drone as a map.
+The drone has to fly through a known obstacle course by itself, with nobody controlling it, and then land on a pad and switch itself off. The organizers published a 3D model of the course. We also have a phone scan of the course as it was built on 2026-11-06, which is more accurate, and we may load it onto the drone as a map. The course may still change after the scan.
 
-Because we already have the map, the drone doesn't need to build one while flying. It needs to do three simpler things:
+Because we already have a map, the drone doesn't need to build one from scratch while flying. It needs to do three simpler things:
 
 1. Keep track of where it is, using its cameras.
-2. Compare what it sees with the map, and correct itself when it has drifted off.
+2. Compare what it sees with the map. Correct itself when it has drifted, and update the map when the course has changed.
 3. Work through the course one stage at a time: corridor, maze, tunnel, window, landing.
 
 The team has made these decisions:
 
 - **The route is worked out from the map when the program starts.** It is not typed into the code, because the judges take points off for routes written into code.
+- **The map starts from our scan, and the drone changes it when the course has changed.** If the cameras clearly see a wall where the map has none, or an opening where the map has a wall, the drone updates its map and plans a new route.
 - **The drone flies about 0.8 m above the floor.** This lets it fit through the window, whose top edge is 1.22 m high.
 - **When the cameras can't tell whether the path ahead is clear, the drone creeps forward if the map says the path is free.** It does not stop and wait, because plain walls could make the cameras unsure quite often.
 - **A run has no human pilot stage.** One flip of a switch begins the run (section 8), and everything after it is automatic.
@@ -82,6 +83,8 @@ The window has one risk. The bottom edge of the window is a 30 cm high piece of 
 
 **Checking the route.** I drew a draft route through the window and checked it against the course model at 0.8 m height. It is 18.15 m long. At its tightest, the centre of the drone is 41 cm from the nearest surface, which leaves about 16 cm after allowing for half the drone's width. When I picked points by hand for the Gate B route, one leg came within 12 cm of a wall, so hand-picking isn't good enough there. This is another reason to let the program calculate the route.
 
+These numbers come from the organizers' model. Our scan shows several inner walls 20 to 80 cm from where that model puts them, and one chicane wall slanting the other way. The planner will recalculate the route from the scan.
+
 **Boulders.** The course has five boulders, each 53 cm tall. The drone flies above them, but a boulder under the laser would look like a sudden height change. The draft route passes two boulders by only about 20 cm, so the route planner will treat each boulder as an area to stay away from.
 
 ## 5. How the drone knows where it is
@@ -102,9 +105,11 @@ There are three safeguards:
 - Corrections are applied slowly, about 5 cm per second, so the drone never jumps.
 - The correction only changes the target positions we send. We never change what PX4 thinks its position is. This follows the organizers' rules and keeps PX4's own control smooth.
 
-### Checking each opening
+### When the course differs from the map
 
-The map could be slightly wrong if a wall has moved a little. So just before each tight opening, the drone stops briefly, measures the opening's actual edges, and aims for the real centre. It only trusts a shift of up to about 15 cm. A larger shift is probably a bad measurement, so it ignores it and logs it.
+The course may change after our scan. So just before each tight opening, the drone stops briefly, measures the opening's actual edges, and aims for the real centre.
+
+A small difference, up to about 15 cm, is corrected straight away. A bigger difference could be a real change or a bad measurement. The drone believes it only if it sees the same thing in several pictures in a row, from 2 m away or closer, where the distance is accurate. It then moves that wall in its map and plans a new route. If it can't tell, it trusts the map.
 
 ### Knowing the starting position
 
@@ -120,7 +125,7 @@ If distance data turns out to be too poor on the real walls, a small lidar that 
 
 ### What we decided not to use
 
-Full mapping systems such as OctoMap, nvblox, SLAM Toolbox, ORB-SLAM and RTAB-Map rebuild a map we already have, and they use a lot of computing power. They would also take time away from flight testing. Reinforcement learning has the same problem. The rules also forbid saving a map or a recorded flight from one run and using it in a later run (rule 6.4). Our only map comes from the published course model.
+Full mapping systems such as OctoMap, nvblox, SLAM Toolbox, ORB-SLAM and RTAB-Map rebuild a map we already have, and they use a lot of computing power. They would also take time away from flight testing. Reinforcement learning has the same problem. The rules also forbid saving a map or a recorded flight from one run and using it in a later run (rule 6.4). Our map comes from the published course model and our phone scan, which was made outside any run.
 
 ## 6. How our software is organized
 
@@ -138,10 +143,10 @@ The main logic is ordinary Python that doesn't depend on the drone's software. T
 
 The judges use an AI review to look for routes, waypoints and timings written into the code. So the course details live in two files, separate from the code:
 
-- The **map file** holds the course model.
+- The **map file** holds the course, built from our scan. A different course needs only a different map file.
 - The **mission file** lists the gates in order, and says which general behaviour each one uses, such as "fly through a gap" or "land".
 
-At startup, the program calculates the route with the most room around it. To show the judges this really is general, we will run the planner on many slightly changed versions of the course and show the results.
+At startup, the program calculates the route with the most room around it. It calculates a new one whenever the drone changes its map in flight. To show the judges this really is general, we will run the planner on the organizers' model, on our scan, and on many changed versions of both, and show the results.
 
 ### Moving between points
 
@@ -167,7 +172,7 @@ Every stage has a clear job and a clear test for when it's complete.
 
 ### When something goes wrong
 
-If an opening looks blocked in several pictures in a row, the drone holds still and looks again. If the path ahead is simply unknown and the map says it's free, the drone creeps forward slowly.
+If an opening looks blocked in several pictures in a row, the drone holds still and looks again. If it is still blocked, the drone marks it blocked in its map and plans a new route, for example through Gate B instead of the window. If the path ahead is simply unknown and the map says it's free, the drone creeps forward slowly.
 
 The whole run must finish within 3 minutes. I estimate 90 to 120 seconds of normal flying, which leaves about 60 seconds for all the waiting and retrying. Once that time is used up, the drone stops waiting and creeps on.
 
@@ -222,14 +227,15 @@ We flew this landing in [our simulator](../simulator/README.md), which runs PX4'
 | With the push-down step | 0.9 to 1.1 | 3.1 to 3.8 | **5.2 to 5.8** |
 | Without the push-down step | 5.0 to 5.1 | 7.6 to 7.7 | **9.6 to 9.7** |
 
-Later flights with the push-down step took up to about 6 seconds, so treat 6 seconds as the normal upper end. I first estimated about 3 seconds in total. It takes longer because PX4 slows down its landing stages. It normally spends about a third of a second on each stage, but it spends a full second on each when it has a ground distance sensor and doesn't mark the distance as valid. That is the case on drone 16, as the first finding below explains.
+Later flights with the push-down step took up to about 6 seconds, so treat 6 seconds as the normal upper end. On 2026-11-07 we gave the simulator drone 16's motor positions and the laser's real reading rate (5 per second instead of 50), and the times stayed the same: 6.0 seconds with the push-down and 9.7 without. I first estimated about 3 seconds in total. It takes longer because PX4 slows down its landing stages. It normally spends about a third of a second on each stage, but it spends a full second on each when it has a ground distance sensor and doesn't mark the distance as valid. That is the case on drone 16, as the first finding below explains.
 
-The flights also taught us four things that should apply to the real drone, because they come from PX4's own logic and drone 16's settings. We have not checked any of them on the real drone yet:
+The flights and PX4's code also taught us five things that should apply to the real drone, because they come from PX4's own logic and drone 16's settings. We have not checked any of them on the real drone yet:
 
 - **PX4's "distance is valid" flag stays false for the whole flight.** PX4 reports the distance to the ground (`dist_bottom`) along with a flag saying it is valid (`dist_bottom_valid`). The flag only turns on when PX4 uses the laser to work out the height of the ground. Drone 16 uses the laser as its main height source instead (`EKF2_HGT_REF` = 2), so the flag never turns on. Our code must read the distance and ignore this flag.
 - **The distance never reads below 10 cm.** The setting `EKF2_MIN_RNG` = 0.1 raises any shorter reading to 0.1 m. So the floor reference will be about 0.10 m, and the distance stops changing during the last few centimetres of descent. This is why touchdown also needs "stopped moving down".
 - **Once the drone is on the floor, the distance drifts.** It rose from about 0.10 m to as much as 0.18 m over the next few seconds, while the drone sat still. So once the code has confirmed touchdown, it must not check the laser again, or it might decide the drone has lifted off.
 - **PX4 can stop believing the laser for a long time.** It compares the laser's changes with the drone's up-and-down speed. If they disagree while the drone has been moving sideways slower than about 0.32 m/s for 2 seconds, it stops using the laser. It only starts again once the drone moves up or down faster than 0.5 m/s. Until then, height comes mostly from the air pressure sensor, which PX4 barely trusts (`EKF2_BARO_NOISE` = 3.5 m). In one simulator flight, this let the drone sink from 0.77 m to the floor while PX4 kept reporting about 0.75 m. The trigger there was the simulated drone flying through a wall, which can't happen on the real drone, but a slow hover beside a boulder or the window's bottom edge could cause the same thing. So **the drone must never stop or crawl over an edge**. It should cross edges at more than about 0.4 m/s.
+- **PX4 stops using the laser when the drone flies fast.** Drone 16's setting `EKF2_RNG_CTRL` = 1 means PX4 uses the laser for height only while the drone moves sideways slower than 1 m/s (`EKF2_RNG_A_VMAX`) and is lower than 3 m (`EKF2_RNG_A_HMAX`). Once it stops, it only starts again below 0.7 m/s. Without the laser, height comes from the air pressure sensor, which PX4 barely trusts. So the drone should cruise below about 0.9 m/s. This comes from reading PX4's code; we have not yet flown faster than 1 m/s in the simulator to see it happen.
 
 ### What still has to be tested
 

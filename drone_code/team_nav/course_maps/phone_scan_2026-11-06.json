@@ -1,0 +1,288 @@
+{
+  "map_format_version": 1,
+  "name": "Phone scan of the real course",
+  "description": "The course as our phone scan recorded it on 2026-11-06. A1 and C1 are copied from the organizers' drawing until a photo confirms them, because the scan may have drawn them twice. M3 comes from the scan, but its exact angle needs a photo. C2b and the tunnel's cradles are left out because the scan does not show them. The course may have changed since the scan.",
+  "course_edges": {
+    "lowest_corner_metres": [
+      -3.048,
+      -3.048
+    ],
+    "highest_corner_metres": [
+      3.048,
+      3.048
+    ],
+    "wall_top_height_metres": 1.727,
+    "source": "From the organizers' drawing. The scanned net lines up with the drawing's net to within about 10 cm; a net sags, so it can't be placed more closely than that."
+  },
+  "launch_mark": {
+    "centre_metres": [
+      -2.5146,
+      0.9144
+    ],
+    "source": "From the organizers' drawing. The scan does not show floor markings clearly."
+  },
+  "landing_pad": {
+    "centre_metres": [
+      -2.0422,
+      -0.7925
+    ],
+    "outer_radius_metres": 0.762,
+    "approach_ring_radius_metres": 1.0033,
+    "source": "From the organizers' drawing. The scan does not show floor markings clearly."
+  },
+  "walls": [
+    {
+      "name": "Long barrier",
+      "start_metres": [
+        -3.048,
+        0.2911
+      ],
+      "end_metres": [
+        1.2885,
+        0.3
+      ],
+      "thickness_metres": 0.185,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.8734,
+      "openings": [],
+      "source": "Measured from our phone scan of 2026-11-06 by course_map_tools/measure_phone_scan.py, from the scan points in the box x -3.0 to 1.25 m, y 0.19 to 0.45 m. Its start is extended to meet the west net; its end is extended to meet the tunnel's west side."
+    },
+    {
+      "name": "M1 maze divider",
+      "start_metres": [
+        -2.0284,
+        0.2932
+      ],
+      "end_metres": [
+        -1.8514,
+        2.1912
+      ],
+      "thickness_metres": 0.1055,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.85,
+      "openings": [],
+      "source": "Measured from our phone scan of 2026-11-06 by course_map_tools/measure_phone_scan.py, from the scan points in the box x -2.05 to -1.75 m, y 0.55 to 2.2 m. Its start is extended to meet the Long barrier; its end is where the scan's points end."
+    },
+    {
+      "name": "M2 maze divider",
+      "start_metres": [
+        -0.5683,
+        1.4723
+      ],
+      "end_metres": [
+        -0.459,
+        3.048
+      ],
+      "thickness_metres": 0.1119,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7587,
+      "openings": [],
+      "source": "Measured from our phone scan of 2026-11-06 by course_map_tools/measure_phone_scan.py, from the scan points in the box x -0.8 to -0.3 m, y 1.45 to 2.95 m. Its start is where the scan's points end; its end is extended to meet the north net."
+    },
+    {
+      "name": "C2a chicane wall (window)",
+      "start_metres": [
+        -0.71,
+        -3.048
+      ],
+      "end_metres": [
+        -0.1945,
+        -1.432
+      ],
+      "thickness_metres": 0.1216,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7687,
+      "openings": [
+        {
+          "name": "window",
+          "start_along_wall_metres": 0.27,
+          "end_along_wall_metres": 1.26,
+          "bottom_height_metres": 0.81,
+          "top_height_metres": 1.56,
+          "source": "Measured from our phone scan of 2026-11-06 by course_map_tools/measure_phone_scan.py: the biggest hole in the scanned wall, to the nearest 3 cm. The organizers' drawing puts it 0.32 to 1.20 m high instead. Check with a photo."
+        }
+      ],
+      "source": "Measured from our phone scan of 2026-11-06 by course_map_tools/measure_phone_scan.py, from the scan points in the box x -0.85 to -0.1 m, y -3.0 to -1.35 m. Its start is extended to meet the south net; its end is where the scan's points end."
+    },
+    {
+      "name": "M3 maze divider",
+      "start_metres": [
+        0.8185,
+        0.299
+      ],
+      "end_metres": [
+        1.126,
+        2.2552
+      ],
+      "thickness_metres": 0.1197,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7478,
+      "openings": [],
+      "source": "Measured from our phone scan of 2026-11-06 by course_map_tools/measure_phone_scan.py, from the scan points in the box x 0.6 to 1.25 m, y 0.65 to 2.3 m. Its start is extended to meet the Long barrier; its end is where the scan's points end. It is turned by 9 degrees, which may be a scan error. Check with a photo."
+    },
+    {
+      "name": "A1 approach wall",
+      "start_metres": [
+        -0.9754,
+        -0.6223
+      ],
+      "end_metres": [
+        -0.9754,
+        0.4064
+      ],
+      "thickness_metres": 0.1016,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7272,
+      "openings": [],
+      "source": "Copied from the organizers' drawing. The scan shows this wall about 65 cm from where the drawing puts it, joined to an extra line of points just south of the barrier where nothing should be. The wall and the extra line are shifted by about the same amount, which suggests the phone lost track and drew them a second time."
+    },
+    {
+      "name": "C1 chicane wall",
+      "start_metres": [
+        0.9679,
+        -1.1269
+      ],
+      "end_metres": [
+        1.5305,
+        0.3855
+      ],
+      "thickness_metres": 0.1129,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7272,
+      "openings": [],
+      "source": "Copied from the organizers' drawing until a photo confirms it. The scan shows this wall slanted the other way (turned by about 36 degrees). Its points are smeared over about 30 cm, where the other walls show two sharp faces 10 cm apart, so the phone may have lost track here."
+    }
+  ],
+  "tubes": [
+    {
+      "name": "Tunnel",
+      "entrance_centre_metres": [
+        2.0811,
+        1.3282
+      ],
+      "exit_centre_metres": [
+        2.0542,
+        -0.2196
+      ],
+      "outside_width_metres": 1.5492,
+      "outside_height_metres": 1.6547,
+      "wall_thickness_metres": 0.0341,
+      "source": "Measured from our phone scan of 2026-11-06 by course_map_tools/measure_phone_scan.py: the ends and height from the scanned roof, and the width from the inside faces of the scanned sides at 0.6 to 1.0 m high. The direction and the wall thickness are copied from the organizers' drawing."
+    }
+  ],
+  "low_obstacles": [
+    {
+      "name": "Low object 1",
+      "centre_metres": [
+        -1.625,
+        -2.375
+      ],
+      "radius_metres": 0.125,
+      "top_height_metres": 0.2724,
+      "source": "Measured from our phone scan of 2026-11-06 by course_map_tools/measure_phone_scan.py. Something standing on the floor; the scan can't tell what. It may be a boulder."
+    },
+    {
+      "name": "Low object 2",
+      "centre_metres": [
+        1.525,
+        1.575
+      ],
+      "radius_metres": 0.125,
+      "top_height_metres": 0.3642,
+      "source": "Measured from our phone scan of 2026-11-06 by course_map_tools/measure_phone_scan.py. Something standing on the floor; the scan can't tell what. It may be a boulder."
+    },
+    {
+      "name": "Low object 3",
+      "centre_metres": [
+        2.8,
+        -0.525
+      ],
+      "radius_metres": 0.125,
+      "top_height_metres": 0.3001,
+      "source": "Measured from our phone scan of 2026-11-06 by course_map_tools/measure_phone_scan.py. Something standing on the floor; the scan can't tell what. It may be a boulder."
+    }
+  ],
+  "checkpoint_lines": [
+    {
+      "name": "end of first corridor",
+      "start_metres": [
+        -3.048,
+        2.1912
+      ],
+      "end_metres": [
+        -1.8514,
+        2.1912
+      ],
+      "far_side_point_metres": [
+        -2.4497,
+        2.6912
+      ],
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    },
+    {
+      "name": "Gate A",
+      "start_metres": [
+        1.1859,
+        0.299
+      ],
+      "end_metres": [
+        1.1859,
+        3.048
+      ],
+      "far_side_point_metres": [
+        1.6859,
+        1.6735
+      ],
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    },
+    {
+      "name": "tunnel exit",
+      "start_metres": [
+        1.2797,
+        -0.2061
+      ],
+      "end_metres": [
+        2.8286,
+        -0.2331
+      ],
+      "far_side_point_metres": [
+        2.0454,
+        -0.7196
+      ],
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    },
+    {
+      "name": "through the window",
+      "start_metres": [
+        -0.628,
+        -2.7908
+      ],
+      "end_metres": [
+        -0.3271,
+        -1.8476
+      ],
+      "far_side_point_metres": [
+        -0.9539,
+        -2.1672
+      ],
+      "opening_name": "window",
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    },
+    {
+      "name": "Gate B",
+      "start_metres": [
+        -0.9754,
+        -0.6223
+      ],
+      "end_metres": [
+        -0.1945,
+        -1.432
+      ],
+      "far_side_point_metres": [
+        -0.9448,
+        -1.3742
+      ],
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    }
+  ]
+}

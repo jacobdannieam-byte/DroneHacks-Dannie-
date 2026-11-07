@@ -1,0 +1,27 @@
+{
+  "mission_format_version": 1,
+  "name": "DroneHacks 2026 competition run",
+  "description": "The checkpoint lines the rulebook asks for, in order, before landing on the pad (the fifth checkpoint). This file only names the lines; the map file says where they are, so the same mission works on any map that has lines with these names.",
+  "source": "From the organizers' website (Dannie_Computer_Setup/Website_context.txt): five checkpoints, cleared in order, the fourth through Gate B or the window.",
+  "cruise_height_metres": 0.8,
+  "cruise_height_source": "Our own choice, agreed by the team on 2026-11-07. High enough for the bottom laser to see the floor clearly and to pass over the boulders, low enough to stay well below the walls (1.73 m). The route planner changes height only where a crossing needs it, such as the window.",
+  "checkpoints": [
+    {
+      "name": "First corridor",
+      "cross_one_of": ["end of first corridor"]
+    },
+    {
+      "name": "Maze",
+      "cross_one_of": ["Gate A"]
+    },
+    {
+      "name": "Tunnel",
+      "cross_one_of": ["tunnel exit"]
+    },
+    {
+      "name": "Chicane",
+      "cross_one_of": ["through the window", "Gate B"],
+      "why_this_order": "The planner tries these in order and uses the first that has a route. The window comes first because it earns 5 extra points, which is worth more than the few seconds it might cost."
+    }
+  ]
+}

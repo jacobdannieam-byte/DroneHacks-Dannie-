@@ -22,8 +22,8 @@ from rclpy.node import Node
 from sensor_msgs.msg import PointCloud2, PointField
 
 from course_simulator.course_model import CourseModel
-from course_simulator.paths import COURSE_MODEL_FILE, FOLDER_FOR_SAVED_TABLES
 from course_simulator.true_drone_state import DEFAULT_START_HEADING_DEGREES, TrueDroneState
+from course_simulator.world import course_model_file_and_tables_folder
 
 # Our own choice, to keep the simulator light on the Mac. We have not measured how often the real
 # depth calculation will run on the drone.
@@ -81,7 +81,7 @@ class PretendDepthCamera(Node):
         super().__init__("pretend_depth_camera")
         self.declare_parameter("start_heading_degrees", DEFAULT_START_HEADING_DEGREES)
         self.true_state = TrueDroneState(self, self.get_parameter("start_heading_degrees").value)
-        self.course = CourseModel(COURSE_MODEL_FILE, FOLDER_FOR_SAVED_TABLES)
+        self.course = CourseModel(*course_model_file_and_tables_folder())
         self.random = np.random.default_rng(3)
         self.ray_directions_on_body = build_ray_directions_on_body()
         self.publisher = self.create_publisher(PointCloud2, "/simulator_only/depth_points", 10)

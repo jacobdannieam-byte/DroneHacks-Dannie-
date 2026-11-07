@@ -10,9 +10,10 @@
 # file, saved on 2026-11-03. The real file has about a thousand lines; the rest are
 # for hardware we are not simulating, or they do not affect these behaviours.
 #
-# We did not copy the settings for the fast balancing loops (the "MC_" settings).
-# They were tuned for the real motors and frame, and could make PX4's simpler
-# simulated drone shake. PX4's simulator defaults stay in place for those.
+# The settings for the fast balancing loops (the "MC_" settings) are not listed,
+# because drone 16 uses PX4's default value for every one of them, and so does the
+# simulator. We checked this on 2026-11-07 against drone 16's file and PX4 1.16.2's
+# source code. Nobody has tuned these loops for the real frame yet.
 
 # ---- How the simulated body behaves. These are estimates, not drone 16 settings ---
 # The mass is estimated from the parts list. We have not weighed the drone.
@@ -25,6 +26,20 @@ export PX4_PARAM_SIH_T_MAX=7.21
 # floor. Our own pretend laser knows the course, so it can see boulders and walls.
 # PX4 turns its own version off when this setting is 10000 or more.
 export PX4_PARAM_SIH_DISTSNSR_OVR=20000
+
+# ---- Where the four motors sit, in metres from the drone's balance point ------------
+# From the organizers' file 07_airframe_geometry.params, measured on drone 20; they say
+# every drone uses the same frame. Forward (PX) and right (PY) are positive. PX4's
+# control part uses these to decide how hard each motor must push to tilt the drone.
+# The physics uses the same positions, through use_drone_16_motor_positions.py.
+export PX4_PARAM_CA_ROTOR0_PX=0.08        # Front right motor.
+export PX4_PARAM_CA_ROTOR0_PY=0.16
+export PX4_PARAM_CA_ROTOR1_PX=-0.15       # Back left motor.
+export PX4_PARAM_CA_ROTOR1_PY=-0.14
+export PX4_PARAM_CA_ROTOR2_PX=0.08        # Front left motor.
+export PX4_PARAM_CA_ROTOR2_PY=-0.16
+export PX4_PARAM_CA_ROTOR3_PX=-0.15       # Back right motor.
+export PX4_PARAM_CA_ROTOR3_PY=0.14
 
 # Tells PX4 to stamp each incoming message with its own clock at the moment it arrives.
 # This differs from the real drone, on purpose. Normally PX4 converts the time on each
@@ -93,10 +108,20 @@ export PX4_PARAM_EKF2_EVP_GATE=5.0        # How large a position surprise is sti
 export PX4_PARAM_EKF2_EVV_GATE=3.0        # How large a speed surprise is still believed.
 export PX4_PARAM_EKF2_HGT_REF=2           # The bottom laser is the main source of height.
 export PX4_PARAM_EKF2_BARO_CTRL=1         # The air pressure sensor is also used.
-export PX4_PARAM_EKF2_RNG_CTRL=1          # Use the bottom laser.
-export PX4_PARAM_EKF2_RNG_NOISE=0.01      # Expected laser error, metres.
+export PX4_PARAM_EKF2_RNG_CTRL=1          # Use the bottom laser only while the two
+                                          # conditions below hold. Otherwise PX4 uses
+                                          # the air pressure sensor for height.
+export PX4_PARAM_EKF2_RNG_A_VMAX=1.0      # Condition 1: moving sideways slower than this, m/s.
+export PX4_PARAM_EKF2_RNG_A_HMAX=3.0      # Condition 2: lower than this above the floor, m.
+export PX4_PARAM_EKF2_RNG_NOISE=0.010058  # Expected laser error, metres.
+export PX4_PARAM_EKF2_RNG_SFE=0.05        # Extra expected error per metre of distance.
 export PX4_PARAM_EKF2_RNG_GATE=5.0        # How large a laser surprise is still believed.
+export PX4_PARAM_EKF2_RNG_POS_Y=-0.027432 # The laser sits this far to the left of centre, m.
 export PX4_PARAM_EKF2_RNG_POS_Z=0.03445   # The laser sits this far below the drone's centre.
+export PX4_PARAM_EKF2_RNG_DELAY=5.0       # How late PX4 assumes laser readings are, ms.
+                                          # The real lag is nearer 100 ms (see
+                                          # pretend_bottom_laser.py). We copy the drone's
+                                          # value anyway, because we want the same mistake.
 export PX4_PARAM_EKF2_MIN_RNG=0.1         # The expected laser reading when on the ground.
 export PX4_PARAM_EKF2_NOAID_TOUT=5000000  # Microseconds of no position input before giving up.
 export PX4_PARAM_EKF2_MAG_TYPE=0          # Choose automatically how to use the compass.

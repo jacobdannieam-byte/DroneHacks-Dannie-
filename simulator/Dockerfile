@@ -52,8 +52,8 @@ RUN mkdir -p /opt/px4_messages/src \
 RUN git clone --depth 1 --branch v1.16.2 --recurse-submodules --shallow-submodules \
         --jobs 8 https://github.com/PX4/PX4-Autopilot.git /opt/PX4-Autopilot
 
-# Our three changes to PX4. Each script explains itself at the top. None of them
-# changes how PX4 flies. The first only shares more information, and the other two
+# Our four changes to PX4. Each script explains itself at the top. None of them
+# changes how PX4 flies. The first only shares more information, and the other three
 # change PX4's physics simulator, which the real drone doesn't use.
 COPY px4_changes/let_simulator_read_true_position.py /opt/
 RUN python3 /opt/let_simulator_read_true_position.py \
@@ -65,6 +65,10 @@ RUN python3 /opt/lower_simulated_motion_sensor_noise.py \
 
 COPY px4_changes/make_simulated_floor_solid.py /opt/
 RUN python3 /opt/make_simulated_floor_solid.py \
+        /opt/PX4-Autopilot/src/modules/simulation/simulator_sih/sih.cpp
+
+COPY px4_changes/use_drone_16_motor_positions.py /opt/
+RUN python3 /opt/use_drone_16_motor_positions.py \
         /opt/PX4-Autopilot/src/modules/simulation/simulator_sih/sih.cpp
 
 # PX4's build stops unless it can read the version label of NuttX. NuttX is the

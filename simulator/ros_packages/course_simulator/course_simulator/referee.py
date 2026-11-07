@@ -10,11 +10,17 @@ What it records
 
 Every sample also goes to a file, which plot_flight.py can turn into a picture of the run.
 
-THE CHECKPOINT LINES ARE A DRAFT
---------------------------------
-The rulebook describes the checkpoints in words. The regions below are our reading of those
-words, placed using the positions of walls in the course model. Check them against the
-organizers' rules before relying on them.
+Where the checkpoints come from
+-------------------------------
+The order of the checkpoints comes from the mission file (drone_code/team_nav/missions/), and
+the lines themselves from the simulator's world map (see world.py). A checkpoint is cleared at
+the first moment when every propeller is past one of its lines, while the drone's centre is
+level with that line rather than beyond one of its ends. The last checkpoint is landing with
+every propeller inside the pad's outer ring.
+
+THE CHECKPOINT LINES ARE A DRAFT. The rulebook describes them in words, and
+course_map_tools/checkpoint_line_rules.py is our reading of those words. Check them against
+the organizers' rules before relying on them.
 """
 import csv
 import json
@@ -26,9 +32,12 @@ import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 
+from team_nav.mission import check_mission_fits_map, load_mission
+
 from course_simulator.course_model import CourseModel
-from course_simulator.paths import COURSE_MODEL_FILE, FOLDER_FOR_FLIGHT_RECORDS, FOLDER_FOR_SAVED_TABLES
+from course_simulator.paths import FOLDER_FOR_FLIGHT_RECORDS, RULEBOOK_MISSION_FILE
 from course_simulator.true_drone_state import DEFAULT_START_HEADING_DEGREES, TrueDroneState
+from course_simulator.world import course_model_file_and_tables_folder, load_world_map, world_map_file
 
 CHECKS_PER_SECOND = 30.0
 
@@ -55,51 +64,27 @@ SECONDS_OF_CLEARANCE_BEFORE_NEXT_TOUCH_COUNTS = 1.0
 # From the rulebook: each touch adds this much to the finish time.
 PENALTY_SECONDS_PER_TOUCH = 5.0
 
-# From the course model: the top of the walls, and the edge of the course.
-WALL_TOP_HEIGHT_METRES = 1.727
-COURSE_EDGE_METRES = 3.048
-
 # We treat the drone as having left the launch mark once it is this high. Rule 7.5 starts the
 # clock when it leaves. The exact height is our own choice.
 HEIGHT_THAT_COUNTS_AS_TAKEN_OFF_METRES = 0.05
 
-# From the course model: the centre of the landing pad, its outer ring, and the approach ring.
-PAD_CENTRE_METRES = np.array([-2.042, -0.792])
-PAD_OUTER_RADIUS_METRES = 0.762
-APPROACH_RING_RADIUS_METRES = 1.003
+
+def whole_drone_is_past_line(line, propeller_points, drone_centre):
+    """True if every propeller is on the line's far side, and the drone's centre is level with
+    the line rather than beyond one of its ends."""
+    along = (line.end_metres - line.start_metres) / np.linalg.norm(line.end_metres - line.start_metres)
+    towards_far_side = np.array([-along[1], along[0]])
+    if np.dot(line.far_side_point_metres - line.start_metres, towards_far_side) < 0:
+        towards_far_side = -towards_far_side
+    every_propeller_past = np.all((propeller_points[:, :2] - line.start_metres) @ towards_far_side > 0)
+    centre_along_metres = np.dot(drone_centre[:2] - line.start_metres, along)
+    centre_is_level_with_line = 0.0 <= centre_along_metres <= np.linalg.norm(line.end_metres - line.start_metres)
+    return bool(every_propeller_past and centre_is_level_with_line)
 
 
-def past_first_corridor(propeller_points):
-    # Beyond the end of the first maze divider, whose far end is at y = 2.121.
-    return np.all(propeller_points[:, 1] > 2.121)
-
-
-def through_gate_a(propeller_points):
-    # Beyond the third maze divider, whose far side is at x = 0.356.
-    return np.all(propeller_points[:, 0] > 0.356)
-
-
-def through_tunnel(propeller_points):
-    # Out of the tunnel's far end at y = -0.305, on the tunnel's side of the course.
-    return np.all(propeller_points[:, 1] < -0.305) and np.all(propeller_points[:, 0] > 1.573)
-
-
-def inside_approach_ring(propeller_points):
-    distances = np.linalg.norm(propeller_points[:, :2] - PAD_CENTRE_METRES, axis=1)
-    return np.all(distances < APPROACH_RING_RADIUS_METRES)
-
-
-def inside_landing_pad(propeller_points):
-    distances = np.linalg.norm(propeller_points[:, :2] - PAD_CENTRE_METRES, axis=1)
-    return np.all(distances < PAD_OUTER_RADIUS_METRES)
-
-
-CHECKPOINTS_IN_ORDER = (
-    ("first corridor", past_first_corridor),
-    ("maze, through Gate A", through_gate_a),
-    ("tunnel", through_tunnel),
-    ("chicane, into the landing area", inside_approach_ring),
-)
+def inside_landing_pad(world_map, propeller_points):
+    distances = np.linalg.norm(propeller_points[:, :2] - world_map.landing_pad_centre_metres, axis=1)
+    return bool(np.all(distances < world_map.landing_pad_outer_radius_metres))
 
 
 def build_propeller_points_on_body():
@@ -122,7 +107,16 @@ class Referee(Node):
         super().__init__("referee")
         self.declare_parameter("start_heading_degrees", DEFAULT_START_HEADING_DEGREES)
         self.true_state = TrueDroneState(self, self.get_parameter("start_heading_degrees").value)
-        self.course = CourseModel(COURSE_MODEL_FILE, FOLDER_FOR_SAVED_TABLES)
+        self.world_map = load_world_map()
+        self.course_model_file, tables_folder = course_model_file_and_tables_folder()
+        self.course = CourseModel(self.course_model_file, tables_folder)
+        mission = load_mission(RULEBOOK_MISSION_FILE)
+        check_mission_fits_map(mission, self.world_map)
+        # For each checkpoint: its name, and the lines that clear it.
+        self.checkpoints_in_order = []
+        for checkpoint in mission.checkpoints:
+            lines = [self.world_map.checkpoint_line_named(name) for name in checkpoint.line_names_in_order_of_preference]
+            self.checkpoints_in_order.append((checkpoint.name, lines))
         self.propeller_points_on_body = build_propeller_points_on_body()
 
         self.drone_state = {}
@@ -131,6 +125,7 @@ class Referee(Node):
         self.landed_on_pad = False
         self.next_checkpoint_number = 0
         self.checkpoint_times = {}
+        self.checkpoint_lines_used = {}
         self.touch_count = 0
         self.last_contact_time_seconds = None
         self.went_above_walls = False
@@ -145,7 +140,7 @@ class Referee(Node):
         self.record_file = open(self.record_path, "w", newline="", encoding="utf-8")
         self.record_writer = csv.writer(self.record_file)
         self.record_writer.writerow((
-            "seconds", "course_x_metres", "course_y_metres", "height_metres",
+            "seconds", "course_x_metres", "course_y_metres", "height_metres", "heading_degrees",
             "nearest_obstacle_metres", "armed", "landed", "automatic_flight",
         ))
 
@@ -193,7 +188,7 @@ class Referee(Node):
         self.check_for_takeoff(position)
         self.check_for_touch(nearest_obstacle_metres)
         self.check_limits(position)
-        self.check_checkpoints(propeller_points)
+        self.check_checkpoints(propeller_points, position)
         self.check_for_finish(propeller_points)
         self.write_sample(position, nearest_obstacle_metres)
 
@@ -223,24 +218,31 @@ class Referee(Node):
             self.write_summary()
 
     def check_limits(self, position):
-        if position[2] > WALL_TOP_HEIGHT_METRES and not self.went_above_walls:
+        if position[2] > self.world_map.wall_top_height_metres and not self.went_above_walls:
             self.went_above_walls = True
             self.get_logger().warning("The drone went above the wall tops.")
-        if max(abs(position[0]), abs(position[1])) > COURSE_EDGE_METRES and not self.left_the_course:
+        outside_the_net = (
+            np.any(position[:2] < self.world_map.lowest_corner_metres)
+            or np.any(position[:2] > self.world_map.highest_corner_metres)
+        )
+        if outside_the_net and not self.left_the_course:
             self.left_the_course = True
             self.get_logger().warning("The drone left the course, which would hit the net.")
 
-    def check_checkpoints(self, propeller_points):
+    def check_checkpoints(self, propeller_points, position):
         if self.takeoff_time_seconds is None:
             return
-        if self.next_checkpoint_number >= len(CHECKPOINTS_IN_ORDER):
+        if self.next_checkpoint_number >= len(self.checkpoints_in_order):
             return
-        name, whole_drone_has_crossed = CHECKPOINTS_IN_ORDER[self.next_checkpoint_number]
-        if whole_drone_has_crossed(propeller_points):
-            self.checkpoint_times[name] = round(self.seconds_since_takeoff(), 2)
-            self.next_checkpoint_number += 1
-            self.get_logger().info(f"Checkpoint reached: {name}, at {self.checkpoint_times[name]} seconds.")
-            self.write_summary()
+        name, lines = self.checkpoints_in_order[self.next_checkpoint_number]
+        for line in lines:
+            if whole_drone_is_past_line(line, propeller_points, position):
+                self.checkpoint_times[name] = round(self.seconds_since_takeoff(), 2)
+                self.checkpoint_lines_used[name] = line.name
+                self.next_checkpoint_number += 1
+                self.get_logger().info(f"Checkpoint reached: {name}, through '{line.name}', at {self.checkpoint_times[name]} seconds.")
+                self.write_summary()
+                return
 
     def check_for_finish(self, propeller_points):
         if self.finish_time_seconds is not None or self.takeoff_time_seconds is None:
@@ -250,7 +252,7 @@ class Referee(Node):
         if not motors_are_off:
             return
         self.finish_time_seconds = round(self.seconds_since_takeoff(), 2)
-        self.landed_on_pad = bool(inside_landing_pad(propeller_points))
+        self.landed_on_pad = inside_landing_pad(self.world_map, propeller_points)
         self.get_logger().info(
             f"The motors switched off at {self.finish_time_seconds} seconds. "
             f"{'The whole drone is inside the pad.' if self.landed_on_pad else 'The drone is NOT inside the pad.'}"
@@ -261,6 +263,7 @@ class Referee(Node):
         self.record_writer.writerow((
             round(self.now_in_seconds(), 3),
             round(float(position[0]), 4), round(float(position[1]), 4), round(float(position[2]), 4),
+            round(self.true_state.heading_on_course_degrees(), 1),
             round(nearest_obstacle_metres, 4),
             self.drone_state.get("armed"), self.drone_state.get("landed"),
             self.drone_state.get("offboard_active"),
@@ -270,7 +273,10 @@ class Referee(Node):
     def write_summary(self):
         summary = {
             "flight_record": os.path.basename(self.record_path),
+            "world_map_file": world_map_file(),
+            "course_model_file": self.course_model_file,
             "checkpoint_seconds": self.checkpoint_times,
+            "checkpoint_lines_used": self.checkpoint_lines_used,
             "motors_off_seconds": self.finish_time_seconds,
             "landed_on_pad": self.landed_on_pad,
             "touches": self.touch_count,

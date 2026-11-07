@@ -36,7 +36,13 @@ Run a test flight. The first run takes about a minute longer because it prepares
 simulator/run_test_flight.sh landing_test.py --with-push-down
 ```
 
-Draw the newest flight from above. The picture is saved next to the flight's record in `simulator/generated_files/flight_records/`.
+Look at the newest flight in 3D. This makes a web page next to the flight's record in `simulator/generated_files/flight_records/`, and opens it in your browser. You can turn the course with the mouse and play the flight back. See [`flight_viewer/README.md`](flight_viewer/README.md).
+
+```bash
+python3 simulator/flight_viewer/make_flight_viewer.py
+```
+
+Or draw a flat picture of the newest flight, seen from above. The picture is saved next to the flight's record.
 
 ```bash
 docker run --rm --volume "$PWD:/repository" drone-simulator python3 /repository/simulator/plot_flight.py
@@ -47,7 +53,7 @@ Each flight leaves these files in `simulator/generated_files/`:
 | File | What it is |
 |---|---|
 | `flight_records/flight_*_summary.json` | The referee's summary: touches, checkpoints, finish time and PX4's clock speed. |
-| `flight_records/flight_*.csv` | The drone's true position 30 times per second. |
+| `flight_records/flight_*.csv` | The drone's true position and heading 30 times per second. |
 | `last_simulator_log.txt` | Everything the simulator printed. Look here first if something goes wrong. |
 | `px4_flight_logs/` | PX4's own detailed record of everything it did. It is a ULog file, and the Python package `pyulog` can read it. |
 
@@ -68,11 +74,12 @@ Check the clock speed in the summary. It should be close to 1.0, and ours were b
 |---|---|
 | `course_model/` | The organizers' 3D model of the course. |
 | `organizers_code/` | The organizers' programs, unchanged. See its [README](organizers_code/README.md). |
-| `px4_changes/` | Drone 16's settings, the script that starts PX4, and our three small edits to PX4: one shares the drone's true position with the simulator, one lowers the noise on the pretend motion sensor, and one makes the pretend floor solid. |
+| `px4_changes/` | Drone 16's settings, the script that starts PX4, and our four small edits to PX4: one shares the drone's true position with the simulator, one lowers the noise on the pretend motion sensor, one makes the pretend floor solid, and one puts the motors where drone 16's motors are. |
 | `ros_packages/course_simulator/` | Our pretend sensors, pretend remote control and referee. |
 | `ros_packages/isaac_ros_visual_slam_interfaces/` | A stand-in for one message definition from the real camera tracking software, so the organizers' code can run without that software. |
 | `inside_the_box/` | Small scripts that run inside the Docker box. |
 | `test_flights/` | Scripted flights that test the simulator. |
+| `flight_viewer/` | The tool that shows a flight in 3D, as a web page. |
 | `generated_files/` | Everything the simulator produces. Git ignores it, and you can delete it at any time. |
 
 ## What is real and what is pretend
@@ -101,8 +108,11 @@ Please keep these limits in mind when you read a result. A pass here means the l
 - **The vibration is an estimate.** We set the pretend motion sensor's noise to the level that drone 16's settings expect. If the real drone vibrates more, it will wander more than the simulated one, which held its position to within about 10 cm. See `px4_changes/lower_simulated_motion_sensor_noise.py`.
 - **Touching the floor is simplified.** The simulated legs stop the drone dead, with no bounce or slide.
 - **The weight and thrust are estimates.** We haven't weighed the drone or measured its thrust. They are labelled as estimates in `px4_changes/drone_16_settings.sh`.
-- **The frame's shape is simplified.** The simple physics treats the drone as a symmetric frame with default balance values, and we didn't copy drone 16's exact motor positions or control tuning. It won't wobble the way drone 16 does.
+- **The balance point is assumed.** The physics uses drone 16's motor positions, measured from the balance point that the organizers entered into PX4. We don't know whether that is where the drone really balances. If the battery sits further back, the real drone needs different motor power to stay level.
+- **How the body resists turning and moving through air is guessed.** These are PX4's default values for a generic drone, not measurements. The control tuning, on the other hand, is drone 16's own, because drone 16 also uses PX4's defaults.
+- **The bottom laser is a thin ray.** It gives 5 readings per second, each about 0.1 seconds late, which is what PX4's driver for the real sensor does. PX4's driver says the real sensor sees a cone 27 degrees wide, while the organizers say its beam is about 1 degree wide. If the cone is wide, the real drone notices an edge a little before it is over it.
 - **The course may change.** The organizers call this course model preliminary, and the checkpoint positions in `referee.py` are our own draft, because the exact lines haven't been published.
+- **The real course differs from the drawing.** A phone scan of the real course, taken on 2026-11-06, shows some walls up to 73 cm from where the drawing puts them, one wall slanted the other way, one wall missing, and the boulders elsewhere. The simulator still uses the drawing.
 - **The way a run starts is our best prediction.** See section 8 of [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md).
 
 ## Why this isn't the organizers' simulator
@@ -119,5 +129,6 @@ All of this was run on 2026-11-06, on an M1 Mac.
 - **Landing.** Six flights passed, three with the push-down and three without. The results are in section 7 of [`../docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md).
 - **Depth points.** One flight's points were correct: at cruise height, they showed the first wall where the course model says it is, with no invalid values. Nothing uses these points yet.
 - **The drone's package.** `drone_code/team_nav` builds here, but this simulator doesn't run its launch file.
+- **After the accuracy fixes (2026-11-07).** We added drone 16's motor positions, the laser's real reading rate and position, and the rest of drone 16's laser settings, then flew the landing test again, once with the push-down and once without. The motors stopped 6.0 and 9.7 seconds after touchdown, the same as before, with no touches. While hovering, the front motors ran at 65% power and the back motors at 35%, as drone 16's motor positions predict. The laser gave a reading every 0.2 seconds, and PX4 used it for height for the whole flight. The highest point was 0.89 m.
 
 We have not tested a full run of the course, because the mission program doesn't exist yet. We also haven't tested the bottom edge of the window, the boulders, or lost camera tracking. No result here has been compared with a real flight.
