@@ -4,8 +4,9 @@ What it records
 ---------------
   - Each time a propeller touches an obstacle. The simulated drone does NOT bounce or crash,
     because PX4's physics does not know about walls. It flies straight through, and the
-    touch is only written down. A touch like that could end a real run, so run_test_flight.sh
-    fails the test if the summary shows any touch.
+    touch is only written down. The team decided that any touch must stop the run, so the
+    referee also announces each touch on /simulator_only/touches. The test flight lands as
+    soon as it hears one, and run_test_flight.sh fails the test if the summary shows any touch.
   - Whether the drone went above the wall tops or left the course.
   - When each checkpoint was reached, and the finish time.
   - Each time the drone was above a boulder, and how far PX4's height estimate strayed from
@@ -151,6 +152,8 @@ class Referee(Node):
         ))
 
         self.create_subscription(String, "/skybeta/state", self.on_drone_state, 10)
+        # SIMULATOR ONLY. The real drone has no referee, so real flight code can't use this.
+        self.touch_announcer = self.create_publisher(String, "/simulator_only/touches", 10)
         self.create_timer(1.0 / CHECKS_PER_SECOND, self.check_the_drone)
         # run_test_flight.sh prints the newest summary when a flight ends. So every flight must
         # write its own summary early, even one that fails straight away. Otherwise a failed
@@ -224,11 +227,13 @@ class Referee(Node):
         self.last_contact_time_seconds = now
         if contact_is_new:
             self.touch_count += 1
-            self.get_logger().warning(
+            description = (
                 f"Touch number {self.touch_count}, with the drone's centre at ({position[0]:.2f}, "
                 f"{position[1]:.2f}) and {position[2]:.2f} m up. In a real run this adds "
                 f"{PENALTY_SECONDS_PER_TOUCH:.0f} seconds, and it could also end the run."
             )
+            self.get_logger().warning(description)
+            self.touch_announcer.publish(String(data=description))
             self.write_summary()
 
     def check_limits(self, position):

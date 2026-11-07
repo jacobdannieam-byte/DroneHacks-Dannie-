@@ -642,6 +642,26 @@ def distance_to_line_piece_metres(points_metres, start_metres, end_metres):
     return np.linalg.norm(points_metres - nearest_points, axis=1)
 
 
+def line_pieces_cross(first_start, first_end, second_start, second_end):
+    """True if two straight pieces, seen from above, cross each other. Touching at an end does
+    not count."""
+    return (
+        _on_opposite_sides(first_start, first_end, second_start, second_end)
+        and _on_opposite_sides(second_start, second_end, first_start, first_end)
+    )
+
+
+def _on_opposite_sides(point, other_point, line_start, line_end):
+    """True if the two points are on opposite sides of the line. A point on the line, or within
+    a millionth of a millimetre of it, is on neither side."""
+    def side(this_point):
+        value = (line_end[0] - line_start[0]) * (this_point[1] - line_start[1]) - (line_end[1] - line_start[1]) * (this_point[0] - line_start[0])
+        if abs(value) < 1e-9:
+            return 0
+        return 1 if value > 0 else -1
+    return side(point) * side(other_point) < 0
+
+
 def _cut_out(pieces, cut_start, cut_end):
     """Removes the stretch from cut_start to cut_end from a list of (start, end) pieces."""
     remaining = []

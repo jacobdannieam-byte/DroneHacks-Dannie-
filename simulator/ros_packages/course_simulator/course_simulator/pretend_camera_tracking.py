@@ -16,7 +16,9 @@ position and makes it worse in the same ways the real tracking is imperfect:
 
   - It arrives late, because processing pictures takes time.
   - It has small random jitter.
-  - It slowly drifts, by an amount that grows with the distance flown.
+  - It slowly drifts, by an amount that grows with the distance flown. Normally only
+    sideways. A flight can add a height drift too, with run_test_flight.sh's
+    --camera-height-drift, which sets SIMULATOR_CAMERA_HEIGHT_DRIFT_PER_METRE_FLOWN.
 
 It publishes the same message on the same topic, in the same directions, so the
 organizers' code and our flight code cannot tell the difference.
@@ -26,6 +28,7 @@ wall up close. Here, tracking only fails if you ask it to, with the
 "lose_tracking_after_seconds" setting. The simulator cannot predict when real tracking
 fails, because that depends on what the real walls look like.
 """
+import os
 from collections import deque
 
 import numpy as np
@@ -56,6 +59,10 @@ POSITION_JITTER_METRES = 0.005
 
 # Estimated: an error of 1% of the distance flown. We have not measured this yet.
 DRIFT_METRES_PER_METRE_FLOWN = 0.01
+# Normally zero: the reported height doesn't drift. Nobody has measured the real camera
+# tracking's height drift. A flight can set this, to see what a drift would do, for example 0.01
+# for 1 cm higher per metre flown (negative means lower).
+HEIGHT_DRIFT_METRES_PER_METRE_FLOWN = float(os.environ.get("SIMULATOR_CAMERA_HEIGHT_DRIFT_PER_METRE_FLOWN", "0"))
 
 # The size of error the program claims for itself, as a variance (error squared). The
 # real values were not recorded, so this assumes a claimed error of about 2 cm.
@@ -124,6 +131,7 @@ class PretendCameraTracking(Node):
 
     def build_report(self):
         drift_metres = self.drift_direction * self.distance_flown_metres * DRIFT_METRES_PER_METRE_FLOWN
+        drift_metres[2] += self.distance_flown_metres * HEIGHT_DRIFT_METRES_PER_METRE_FLOWN
         jitter_metres = self.random.normal(0.0, POSITION_JITTER_METRES, 3)
         reported_position = self.true_state.position_in_start_frame_metres + drift_metres + jitter_metres
 

@@ -6,6 +6,8 @@
 
 **Yes, it works.** PX4 1.16.2 flies a drone in Gazebo inside our Docker box on the Mac, and Gazebo draws depth pictures without a graphics card. A depth camera like the one we plan (512 × 320 pixels, 10 pictures per second) runs at full speed and costs about a quarter of one processor core extra. The pictures arrive on ROS 2 Humble topics, and they show the course where the map puts it.
 
+**The whole route flies in Gazebo too.** Our normal route test flight (`simulator/test_flights/route_test.py`) flew the phone-scan course end to end twice in Gazebo, with a Gazebo drone shaped like drone 16: all four checkpoints, no touches, landed inside the pad. Both flights still failed the referee's height check. One failure comes from Gazebo itself, and one is the real problem our normal simulator also shows at the window. See [The whole route in Gazebo](#the-whole-route-in-gazebo).
+
 **But we recommend not switching to Gazebo now.** For the job we need it for, which is testing what the drone does when its camera sees a wall that its map lacks, our current simulator already has the important parts: a ray-traced depth camera with stereo-like errors, and the physics we tuned to drone 16. Gazebo would add full-size pictures, real stereo pictures and solid walls. But it needs the Mac to itself: with the processors fully busy, its drone nearly hit the floor. The reasons, and when Gazebo would be worth it, are in [Should we switch?](#should-we-switch-to-gazebo) below.
 
 ## Words used here
@@ -56,6 +58,14 @@ simulator/gazebo_trial/run_px4_in_gazebo.sh
 The flight test's box has no network connection (`--network none`), so its ROS messages can't mix with those of another simulator on the same Mac. It still shares the Mac's processors, so don't run other heavy programs, such as our normal simulator, at the same time. [What doesn't work](#what-doesnt-work-or-isnt-done) explains both.
 
 Each run saves everything the programs printed, PX4's flight log and the processor load in `simulator/gazebo_trial/generated/last_run/`, and the depth picture in `simulator/gazebo_trial/generated/pictures/`.
+
+Fly any of our test flights in Gazebo, for example the whole route. It works like `simulator/run_test_flight.sh`, with the same arguments. This takes about 3 minutes.
+
+```bash
+simulator/gazebo_trial/run_full_route_in_gazebo.sh --world drone_code/team_nav/course_maps/phone_scan_2026-11-06.json route_test.py --drone-map drone_code/team_nav/course_maps/phone_scan_2026-11-06.json
+```
+
+It prints the referee's summary, says whether the test passed, and gives the command for the 3D view. Its flight records go to `simulator/gazebo_trial/generated/route_runs/`, and PX4's log and settings to `simulator/gazebo_trial/generated/last_route_run/`. Don't run it while the normal simulator flies.
 
 ## What works
 
@@ -109,11 +119,49 @@ The hover height varies a little from run to run, and it is not the camera. In t
 
 The camera bridge first used 0.45 of a core on its own, because ROS's Python library checked every byte of every picture. Handing it the bytes as an array brought that down to 0.03 (see the comment in [`gazebo_camera_to_ros.py`](gazebo_camera_to_ros.py)).
 
+## The whole route in Gazebo
+
+`run_full_route_in_gazebo.sh` starts our normal simulator with one change: Gazebo provides the physics and the solid course. Everything else is the same: drone 16's PX4 settings, our pretend camera tracking and pretend bottom laser (so PX4 finds its position the way drone 16 does, without GPS), the organizers' programs, the pretend remote control and the referee. So any test flight in `simulator/test_flights/` runs unchanged.
+
+Three things had to be built for it:
+
+- **A Gazebo drone shaped like drone 16** ([`make_drone_16_model.py`](make_drone_16_model.py)). PX4's x500 doesn't fit our route: its propeller tips reach about 0.37 m from its centre, more than the 0.35 m of room the route planner keeps, and its legs hold its centre 0.23 m above the floor, which would fail the referee's height check on every flight. The new model has drone 16's measured motor positions and 7-inch propellers, its weight (1.47 kg), our estimated thrust (7.21 N per motor), and the same turning inertia as our normal simulator. Its body rests with its centre 4 cm above the floor and its propellers 10 cm up, as the referee assumes. The motor speeds are set so that half and full power give the same thrust as in our normal simulator. It carries our pretend OAK-D S2 on its nose ([`models/drone_16_with_oak_d_s2/`](models/drone_16_with_oak_d_s2/model.sdf)).
+- **A world placed so that the drone starts on the launch mark** (`make_gazebo_world.py --for-full-simulator`). Our referee and pretend sensors read PX4's "true position", and assume it is measured from the launch mark and reads zero while the drone rests on the floor. Gazebo measures it from its world's centre, so the world is shifted to put the launch mark there, and down by 4 cm so that the resting drone reads zero. As a result, Gazebo's floor and obstacles sit 4 cm lower than where the referee and pretend sensors think they are. That is small next to the errors below.
+- **A start-up script** ([`inside_the_box/start_px4_in_gazebo.sh`](inside_the_box/start_px4_in_gazebo.sh)), used by [`full_route_in_gazebo.launch.py`](full_route_in_gazebo.launch.py). It starts Gazebo and PX4 with drone 16's settings, leaving out only those for PX4's own physics (`SIH_*`). It then undoes two changes made by PX4's x500 start-up file: hover power 0.60 instead of drone 16's 0.5, and refusing to arm without a ground station. It writes down the value PX4 really uses for every setting. On the second flight, all 72 matched what we asked for.
+
+### Results
+
+We flew `route_test.py` twice on 2026-11-07, in the phone-scan course, with the drone planning from the same map. Nothing else was flying on the Mac.
+
+| | Gazebo, flight 1 | Gazebo, flight 2 | Normal simulator, same map, same day |
+|---|---|---|---|
+| Checkpoints passed | all 4 | all 4 | all 4 in 3 of 4 flights |
+| Touches | 0 | 0 | 0 in 3 flights, 1 in the fourth |
+| Landed inside the pad | yes, motors off at 92.8 s | yes, motors off at 103.1 s | in 3 of 4 flights, motors off at 138 to 244 s |
+| Simulation speed | 0.95 | 0.95 | 0.97 to 1.01 |
+| Steady height error while cruising (PX4's estimate minus the truth) | +8 cm | −5 cm | 0 to 2 cm (two flights checked) |
+| Largest height error | 0.24 m, near the tunnel entrance | 0.18 m, after the window | 0.29 to 0.98 m, at or after the window |
+| Referee's height check | failed | failed | failed |
+
+The "same day" column comes from the normal simulator's flight records of that afternoon, flown by another session while it worked on the window problem below. They are not a controlled comparison.
+
+Both Gazebo flights failed the height check, for two different reasons.
+
+**1. Gaps in Gazebo's motion readings (a Gazebo problem).** PX4 normally gets a reading from its motion sensor (the accelerometer and gyroscope) every 4 ms. In Gazebo it sometimes got none for 20 to 44 ms: 6 times in flight 1 and 8 times in flight 2. In two normal-simulator flights it never did. (PX4's log shows this as `accelerometer_integral_dt` in `sensor_combined`.) After each gap of about 30 ms or more, PX4's estimate of how fast the drone was climbing jumped by about 0.2 m/s within a single step, although the drone wasn't climbing. The jump comes 0.14 to 0.16 s after the gap, because PX4's estimator works on readings that are that old. We have not found the exact place in PX4's code that does this. Believing it was climbing, PX4 reduced thrust, and the drone really sank. In flight 1, two gaps near the tunnel entrance took the drone from 0.72 m down to 0.23 m, while PX4 thought it was still above 0.5 m. The laser saw the drop, but PX4 corrected only slowly. A gap while the motors spun up on the floor left PX4's height 8 cm too high for the rest of that flight.
+
+The real drone cannot have these gaps: its flight controller reads its own motion sensor on its own clock, and our normal simulator makes the readings inside PX4. Our programs in the box were not busy: during flight 2, Gazebo used 30% of one core on average, the ray-cast depth camera 14% and PX4 8%, out of 6 cores. So the gaps probably come from the Mac briefly pausing the Linux machine that Docker runs in. The Mac's load average was 5 to 6 all afternoon, even with no simulator running. This is the "Gazebo does not wait for PX4" problem listed below, seen in more detail.
+
+**2. PX4 stops using the laser at the window (a real problem).** In both flights PX4 stopped using the bottom laser as the drone crossed the window's lower wall, and used only the air pressure sensor until landing: from about 63 s in flight 2, and 69 s in flight 1. Height errors of up to 0.2 m followed. Our normal simulator shows the same thing, and `docs/ARCHITECTURE.md` section 7 explains why. Gazebo has different physics and a different air pressure sensor, and still shows it. That is good evidence the problem lies in PX4's settings, not in either simulator.
+
+**Also worth knowing for the real drone:** while cruising, the two front motors ran at about 74% power and the two back ones at about 29%. The front motors are only 8 cm in front of the drone's centre and the back ones 15 cm behind, so the front pair carries nearly twice the load, and the camera's weight on the nose adds to it. Our normal simulator has the same motor positions and so the same imbalance. It leaves the front motors little spare power for steering. It all depends on where drone 16's centre of mass really is, which we have estimated, not measured.
+
+**What this means.** Gazebo is useful as a second, independent check of the whole route: different physics, solid walls and a different air pressure sensor. But on this Mac its timing gaps can cause height dips that the real drone would not have. So before blaming our flight code for a Gazebo failure, check PX4's log for motion-reading gaps just before the trouble.
+
 ## What doesn't work, or isn't done
 
-- **The drone is PX4's x500, not drone 16.** It is heavier, bigger, and has its motors in a perfect square. Our normal simulator's physics is tuned to drone 16's measured motor positions; this one is not. Building a drone 16 model for Gazebo is possible but not done, and its weight and thrust would still be estimates.
-- **PX4 finds its position by pretend GPS here,** which is PX4's x500 default. The real drone has no GPS indoors; it uses camera tracking and the bottom laser. Our normal simulator already pretends to be those, so they could be reused, but that is not done.
-- **Gazebo does not wait for PX4.** PX4 follows Gazebo's clock, but Gazebo keeps going if PX4 falls behind. With all 6 cores busy (see [Measured speeds](#measured-speeds)), PX4 lost track of its height and the drone nearly hit the floor. So when using Gazebo, run nothing else heavy at the same time. Our normal simulator doesn't have this weakness, because its physics runs inside PX4 and cannot get out of step with it.
+- **In the hover test, the drone is PX4's x500, not drone 16.** It is heavier, bigger, and has its motors in a perfect square. The route flight uses a drone shaped like drone 16 instead (see [The whole route in Gazebo](#the-whole-route-in-gazebo)), but its weight and thrust are estimates, and Gazebo's motor and air models are not the ones our normal simulator was tuned with.
+- **In the hover test, PX4 finds its position by pretend GPS,** which is PX4's x500 default. The real drone has no GPS indoors; it uses camera tracking and the bottom laser. The route flight uses our pretend camera tracking and bottom laser, like the normal simulator.
+- **Gazebo does not wait for PX4.** PX4 follows Gazebo's clock, but Gazebo keeps going if PX4 falls behind. With all 6 cores busy (see [Measured speeds](#measured-speeds)), PX4 lost track of its height and the drone nearly hit the floor. Even with the box lightly loaded, PX4's motion readings had gaps of up to 44 ms on the route flights, and those gaps made PX4 believe the drone was climbing when it wasn't (see [Results](#results)). So when using Gazebo, run nothing else heavy at the same time, and check PX4's log for gaps before trusting a failure. Our normal simulator doesn't have this weakness, because its physics runs inside PX4 and cannot get out of step with it.
 - **Two simulators on one Mac hear each other unless kept apart.** ROS 2 programs find each other automatically, even across Docker boxes on the same Mac. Before we took this box's network away, our normal simulator's referee heard this box's drone. In the other direction, this box's PX4 could hear the normal simulator's pretend remote control, pretend bottom laser and commands. In one early test, the drone hovered steadily for 5 minutes. Then, at about the moment the normal simulator started a flight, it climbed, drifted sideways into the net, and flipped. The cause could be the foreign messages, a lack of processor time, or both; that flight log is gone, so we can't tell. `run_px4_in_gazebo.sh` now starts its box with `--network none`. The flights in the table above and the full-processor test were made that way.
 - **The message agent's clock check keeps resetting** ("time jump detected" in PX4's output), probably because PX4 follows Gazebo's simulated clock, which doesn't run at exactly the speed of the computer's clock. Messages still flowed, but time stamps on PX4's ROS messages may be slightly off. We have not looked into it further.
 - **The depth is perfect.** The real camera's depth has errors that grow with distance, and holes on plain walls. Gazebo can't produce those by itself; we would have to add them, as [`../ros_packages/course_simulator/course_simulator/pretend_depth_camera.py`](../ros_packages/course_simulator/course_simulator/pretend_depth_camera.py) does.
@@ -137,15 +185,15 @@ Our normal simulator already has a depth camera: [`pretend_depth_camera.py`](../
 
 | | Switch to Gazebo | Keep our simulator and its ray-cast camera |
 |---|---|---|
-| Drone physics | PX4's x500. A drone 16 model would have to be built and checked. | Already drone 16's motor positions and settings. |
+| Drone physics | A drone 16 model with drone 16's motor positions and settings now flies the whole route. Its weight and thrust are estimates, and Gazebo's motor model is not the one we tuned. | Already drone 16's motor positions and settings. |
 | Depth camera | Drawn by Gazebo: 512 × 320 at 10/s measured, at full speed, for about a quarter of a core more than no camera. Perfect depth; errors would have to be added. | Already exists: 64 × 40 rays at 10/s, with stereo-like errors and missing points, in 12 ms per picture. Full-size 512 × 320 would take 787 ms per picture. |
 | True course from a map file | Done here, for all three maps. | Being added at the same time as this trial (not yet committed on 2026-11-07): `world.py` and `course_mesh_from_map.py` in `../ros_packages/course_simulator/` let the simulator fly in any map file while the drone plans from another. |
 | Walls are solid | Yes. A drone that hits a wall crashes. | No. The referee records each touch, and the drone flies through. |
 | Camera pictures for stereo matching or camera tracking | Possible: two 640 × 400 eyes at 15/s kept 0.98 speed. Two full-size eyes at 30/s gave 0.84 speed and filled the Mac's processors (0.54 when something else was running). | No pictures at all. |
-| Reliability on the Mac | Needs the Mac to itself. With all 6 cores busy, PX4 lost track of its height and the drone sank from 1.0 m to 0.17 m. | Physics runs inside PX4, so it cannot get out of step. |
-| Work still needed | A drone 16 model, the pretend camera tracking and bottom laser connected to it, depth errors, our launch and referee moved over. Days, not hours. | Point the existing camera at the true course, which the `world.py` change above does. |
+| Reliability on the Mac | Needs the Mac to itself, and even then not fully reliable. With all 6 cores busy, the drone sank from 1.0 m to 0.17 m. On the route flights, with the box lightly loaded, gaps in PX4's motion readings still made the drone sink from 0.72 m to 0.23 m once. | Physics runs inside PX4, so it cannot get out of step. |
+| Work still needed | Done for the route flight: the drone 16 model, the pretend camera tracking and bottom laser, our launch and referee. Still needed: depth errors, and a cure for the timing gaps. | Point the existing camera at the true course, which the `world.py` change above does. |
 
-**Recommendation:** keep our current simulator for the map-update work, and don't switch before the competition. A distance measured by tracing rays through the true course is just as true as one drawn by Gazebo, and the errors that matter (noise growing with distance, holes on plain walls) have to be added by hand either way; our camera already adds them. Switching would give us solid walls and pictures, but lose the physics we tuned to drone 16 and take days to rebuild around.
+**Recommendation:** keep our current simulator for the map-update work, and don't switch before the competition. A distance measured by tracing rays through the true course is just as true as one drawn by Gazebo, and the errors that matter (noise growing with distance, holes on plain walls) have to be added by hand either way; our camera already adds them. Switching would give us solid walls and pictures, but lose the physics we tuned to drone 16, and on this Mac Gazebo's timing gaps can make the drone sink for reasons the real drone doesn't have. Use the Gazebo route flight as a second opinion instead. It confirmed the window problem independently.
 
 Gazebo becomes worth it later if we want to test the parts that look at **pictures**: our own stereo matching, or, on a computer with an NVIDIA graphics processor, the camera tracking. Both would also need realistic wall textures. Even then, the better plan is probably to use Gazebo only as a camera: keep PX4's SIH physics, and each time PX4 reports the drone's true position, move a camera in Gazebo to the same place and draw the picture. That keeps drone 16's physics and avoids the out-of-step problem. We have not built or tested this. The world generator and camera model in this folder would carry over unchanged.
 
@@ -158,6 +206,7 @@ Gazebo becomes worth it later if we want to test the parts that look at **pictur
 5. [`run_px4_in_gazebo.sh`](run_px4_in_gazebo.sh), then [`inside_the_box/run_trial.sh`](inside_the_box/run_trial.sh): the flight test, step by step.
 6. [`gazebo_camera_to_ros.py`](gazebo_camera_to_ros.py) and [`save_depth_picture.py`](save_depth_picture.py): passing pictures to ROS 2, and checking them there.
 7. [`measure_rendering_speed.py`](measure_rendering_speed.py): the speed test.
-8. [`Dockerfile`](Dockerfile) and [`build_gazebo_image.sh`](build_gazebo_image.sh): the box.
+8. The whole route in Gazebo: [`run_full_route_in_gazebo.sh`](run_full_route_in_gazebo.sh) starts it, [`full_route_in_gazebo.launch.py`](full_route_in_gazebo.launch.py) lists the programs, and [`inside_the_box/start_px4_in_gazebo.sh`](inside_the_box/start_px4_in_gazebo.sh) starts Gazebo and PX4. [`make_drone_16_model.py`](make_drone_16_model.py) makes the drone, and [`models/drone_16_with_oak_d_s2/model.sdf`](models/drone_16_with_oak_d_s2/model.sdf) adds the camera.
+9. [`Dockerfile`](Dockerfile) and [`build_gazebo_image.sh`](build_gazebo_image.sh): the box.
 
 `generated/` holds everything the scripts make. Git ignores it, and you can delete it at any time.

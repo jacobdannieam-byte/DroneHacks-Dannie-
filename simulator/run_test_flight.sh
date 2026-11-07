@@ -5,11 +5,13 @@
 #   simulator/run_test_flight.sh landing_test.py --with-push-down
 #   simulator/run_test_flight.sh --world drone_code/team_nav/course_maps/phone_scan_2026-11-06.json landing_test.py
 #
-# Two options may come first, in either order:
+# These options may come first, in any order:
 #   --world <map file> chooses the course the simulator flies in: a course map file, named from
 #       the top of the repository. Without it, the simulator uses the organizers' drawing.
 #   --try-px4-setting NAME=VALUE runs PX4 with one setting that drone 16 does not have, to see
 #       what changing it would do. Drone 16 itself is never changed by this.
+#   --camera-height-drift METRES_PER_METRE makes the pretend camera tracking's height drift by
+#       this much per metre flown, for example 0.01. Normally it doesn't drift in height.
 # The next argument names a file in simulator/test_flights. The rest go to that file.
 # Each flight gets a fresh simulator, because a simulated drone starts only once.
 set -e
@@ -19,7 +21,8 @@ box_name=drone-simulator
 
 world_setting=()
 px4_setting_to_try=()
-while [ "$1" = "--world" ] || [ "$1" = "--try-px4-setting" ]; do
+camera_height_drift=()
+while [ "$1" = "--world" ] || [ "$1" = "--try-px4-setting" ] || [ "$1" = "--camera-height-drift" ]; do
     if [ "$1" = "--world" ]; then
         if [ ! -f "$repository/$2" ]; then
             echo "There is no map file at $2. Name it from the top of the repository, for example drone_code/team_nav/course_maps/phone_scan_2026-11-06.json."
@@ -28,6 +31,10 @@ while [ "$1" = "--world" ] || [ "$1" = "--try-px4-setting" ]; do
         # The simulator's programs read this setting (see course_simulator/world.py).
         world_setting=(--env "SIMULATOR_WORLD_MAP=/repository/$2")
         echo "The simulator will fly in the course described by $2."
+    elif [ "$1" = "--camera-height-drift" ]; then
+        # simulator/ros_packages/course_simulator/course_simulator/pretend_camera_tracking.py reads this.
+        camera_height_drift=(--env "SIMULATOR_CAMERA_HEIGHT_DRIFT_PER_METRE_FLOWN=$2")
+        echo "The pretend camera tracking's height will drift by $2 m per metre flown."
     else
         if [[ "$2" != *=* ]]; then
             echo "--try-px4-setting needs NAME=VALUE, for example EKF2_RNG_K_GATE=3."
@@ -61,6 +68,7 @@ docker run --detach --name "$box_name" \
     --volume "$repository:/repository" \
     "${world_setting[@]}" \
     "${px4_setting_to_try[@]}" \
+    "${camera_height_drift[@]}" \
     drone-simulator \
     bash -c "bash /repository/simulator/inside_the_box/build_our_packages.sh \
              && touch /tmp/our_packages_are_built \

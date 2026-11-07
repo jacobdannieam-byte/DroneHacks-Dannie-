@@ -34,11 +34,19 @@ simulator/run_test_flight.sh --world drone_code/team_nav/course_maps/phone_scan_
 
 To test a drone whose map is wrong, give a different world. [`../../course_map_tools/make_boulder_surprise_worlds.py`](../../course_map_tools/make_boulder_surprise_worlds.py) makes worlds where the boulders have been moved, added or removed, and prints the command for each.
 
+Two more options choose how the route is planned:
+
+- `--mission` picks the mission file. It defaults to `drone_code/team_nav/missions/dronehacks_2026_side_gap_first.json`, which goes through the side gap into the landing area, as the team chose for the first competition run. Give `drone_code/team_nav/missions/dronehacks_2026.json` to try the window first.
+- `--also-avoid-boulders-from` names other maps whose boulders the drone's stops should also keep away from. It defaults to the organizers' drawing. Give the option with no files to use only the drone's map.
+
+While following the route, the test lands at once, where the drone is, if the referee reports a touch, if the drone tilts or turns as if it hit something, or if PX4's height and the bottom laser's disagree over clear floor. `route_test.py`'s header explains each.
+
 ## What makes a flight fail
 
 `run_test_flight.sh` says TEST FAILED, and stops with an error, if:
 
 - the flight program itself gave up, for example because the drone never reached a target;
+- the flight program stopped the run early, after a touch or because PX4's height stopped matching the laser;
 - the drone touched anything;
 - the drone stayed above a boulder for more than 2 seconds;
 - PX4's height estimate strayed more than 10 cm from the true height.

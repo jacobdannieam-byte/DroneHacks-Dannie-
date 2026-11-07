@@ -24,4 +24,18 @@ def load_our_map(map_name):
 
 
 def load_rulebook_mission():
+    """The mission that tries the window first, for later competition runs."""
     return load_mission(os.path.join(MISSIONS_FOLDER, "dronehacks_2026.json"))
+
+
+def load_side_gap_first_mission():
+    """The mission the team chose for the first competition run."""
+    return load_mission(os.path.join(MISSIONS_FOLDER, "dronehacks_2026_side_gap_first.json"))
+
+
+def boulders_from_every_map():
+    """Every boulder in every map we keep. The same boulder may appear more than once."""
+    boulders = []
+    for map_name in ALL_OUR_MAPS:
+        boulders += load_our_map(map_name).low_obstacles
+    return boulders

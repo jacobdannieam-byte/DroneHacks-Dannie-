@@ -66,6 +66,11 @@ px4_command() {
 px4_settings() {
     (
         set +u
+        # start_px4 below exports every setting, so forget those first, or the model's settings
+        # would be listed twice.
+        for exported_name in $(compgen -e | grep '^PX4_PARAM_'); do
+            unset "$exported_name"
+        done
         source /repository/simulator/px4_changes/drone_16_settings.sh
         env | grep '^PX4_PARAM_' | grep -Ev "$settings_left_out_pattern" | sed -e 's/^PX4_PARAM_//' -e 's/=/ /'
     )
@@ -127,10 +132,11 @@ undo_the_x500_start_up_file() {
 }
 
 record_the_settings_px4_uses() {
-    # For the record: the value PX4 really uses for every setting we gave it.
+    # For the record: the value PX4 really uses for every setting we gave it, as "NAME VALUE".
+    # "param show -q" prints only the value, so we print the name in front of it.
     while read -r name _; do
-        px4_command param show -q "$name"
-    done < <(px4_settings) > "$log_folder/px4_settings_in_use.txt" 2>&1 || true
+        echo "$name $(px4_command param show -q "$name" 2>&1)"
+    done < <(px4_settings) > "$log_folder/px4_settings_in_use.txt" || true
     echo "The settings PX4 uses are listed in simulator/gazebo_trial/generated/last_route_run/px4_settings_in_use.txt"
 }
 

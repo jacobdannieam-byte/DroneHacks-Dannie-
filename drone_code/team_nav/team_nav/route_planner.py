@@ -22,6 +22,8 @@ How it works
   4. An opening such as the window is always crossed straight through its middle, at the
      opening's height (opening_crossings.py). Everywhere else the drone flies at the mission's
      cruise height.
+  5. The places where the drone will stop, at corners, are moved away from boulders where
+     possible (stopping_spots.py).
 
 "The whole drone crosses" a checkpoint line, so the planner aims to get the drone's centre at
 least one drone radius past each line.
@@ -33,10 +35,19 @@ Boulders
 --------
 The drone flies over boulders, but a boulder under the bottom laser makes the drone's height
 reading suddenly drop, and PX4 may then stop trusting the laser (docs/ARCHITECTURE.md, section 7).
-So the planner tries to keep the drone's centre, where the laser is, away from every boulder in
-the map, whatever its height. This is a strong preference, not a ban: if the only way through
-passes near a boulder, the route still goes there, and PlannedRoute.legs_near_boulders lists
-those legs, so the flight program can keep moving briskly over them instead of stopping.
+So the planner tries to keep the drone's centre, where the laser is, away from every boulder,
+whatever its height. This is a strong preference, not a ban: if the only way through passes
+near a boulder, the route still goes there, and PlannedRoute.legs_near_boulders lists those
+legs, so the flight program can keep moving briskly over them instead of stopping.
+
+Stops are kept further away than that, because a slow drone is when PX4 is most likely to stop
+trusting the laser. PlannedRoute.stops_near_boulders lists any stop that couldn't be moved far
+enough.
+
+Boulder positions are uncertain, so "every boulder" means every place a boulder might be: the
+ones in the drone's map, plus other_possible_boulders, which the flight program can take from
+other maps of the same course, such as the organizers' drawing. Those only matter for the laser.
+For the room the drone needs, only the drone's own map counts.
 
 What this file does not do: fly the route, or change the map. It only plans.
 """
@@ -49,10 +60,14 @@ import numpy as np
 
 from team_nav.boulder_distances import closest_approach_to_each_boulder_metres, distance_to_each_boulder_metres
 from team_nav.clearance_grid import GRID_SQUARE_METRES, make_clearance_grid, room_along_line_metres
-from team_nav.course_map import distance_to_shapes_metres
+from team_nav.course_map import distance_to_shapes_metres, line_pieces_cross
 from team_nav.drone_dimensions import DRONE_RADIUS_METRES, REQUIRED_ROOM_METRES, heights_spanned_metres
 from team_nav.mission import check_mission_fits_map
 from team_nav.opening_crossings import OpeningCrossing, OpeningCrossingNotPossible, plan_opening_crossing
+from team_nav.stopping_spots import (
+    MAY_MOVE_ANYWHERE_NEARBY, NEW_STOP_FURTHER_BACK, NEW_STOP_FURTHER_ON, STAYS_WHERE_IT_IS, HowWaypointMayMove,
+    keep_stops_away_from_boulders, stops_near_boulders,
+)
 
 # Our own choice. Room of this much or more is comfortable. With less, the route pays a penalty.
 COMFORTABLE_ROOM_METRES = 0.6
@@ -74,6 +89,9 @@ LASER_KEEP_OFF_BOULDER_METRES = 0.25
 # as much again the deeper inside the keep-off distance it is, so if the route has to pass a
 # boulder, it passes as far from the boulder as it can.
 BOULDER_COST_PER_METRE = 10.0
+# Our own choice. A boulder from another map whose centre and size are within this of one in
+# the drone's map is the same boulder, and is left out so that it isn't counted twice.
+SAME_BOULDER_TOLERANCE_METRES = 0.01
 
 # The eight moves from a square to a neighbouring one: (squares east, squares north, length in squares).
 NEIGHBOUR_MOVES = [
@@ -99,6 +117,7 @@ class PlannedRoute:
     least_room_metres: float            # The closest the drone's centre comes to anything it could hit.
     least_room_near: str                # The name of that thing.
     legs_near_boulders: list            # (number of the leg's first waypoint, boulder name, closest distance to its edge in metres; negative means over it)
+    stops_near_boulders: list           # (waypoint number, boulder name, distance to its edge in metres), for stops that couldn't be moved far enough
 
     def describe(self):
         lines = [
@@ -112,6 +131,11 @@ class PlannedRoute:
             lines.append(
                 f"  Between waypoints {leg_start_number + 1} and {leg_start_number + 2}, the drone's centre passes "
                 f"{distance_metres:.2f} m from the edge of {boulder_name}. Keep moving there."
+            )
+        for waypoint_number, boulder_name, distance_metres in self.stops_near_boulders:
+            lines.append(
+                f"  The drone stops at waypoint {waypoint_number + 1}, {distance_metres:.2f} m from the edge of "
+                f"{boulder_name}. No place further away was found."
             )
         lines.append("Waypoints (metres east, metres north, height above the floor):")
         for number, waypoint in enumerate(self.waypoints_metres):
@@ -129,15 +153,21 @@ class _FloorCrossing:
     towards_far_side: np.ndarray        # A unit vector at right angles to the line.
 
 
-def plan_route(course_map, mission, start_metres=None, checkpoints_already_cleared=0):
+def plan_route(course_map, mission, start_metres=None, checkpoints_already_cleared=0, other_possible_boulders=()):
     """Plans a route from start_metres (the launch mark if not given) that clears the mission's
     remaining checkpoints in order and ends above the centre of the landing pad. Returns a
-    PlannedRoute, or raises RoutePlanningError."""
+    PlannedRoute, or raises RoutePlanningError.
+
+    other_possible_boulders: boulders from other maps of the same course, which the bottom laser
+    should keep away from as well as the drone map's own (see "Boulders" above)."""
     check_mission_fits_map(mission, course_map)
     if start_metres is None:
         start_metres = course_map.launch_mark_centre_metres
     start_metres = np.asarray(start_metres, dtype=float)[:2]
-    cruise_grid = make_clearance_grid(course_map, *heights_spanned_metres(mission.cruise_height_metres))
+    cruise_grid = make_clearance_grid(
+        course_map, *heights_spanned_metres(mission.cruise_height_metres),
+        other_possible_boulders=_boulders_not_already_known(course_map.low_obstacles, other_possible_boulders),
+    )
     remaining_checkpoints = mission.checkpoints[checkpoints_already_cleared:]
 
     # Every way of choosing one line per checkpoint, most preferred first. For example, with
@@ -152,11 +182,31 @@ def plan_route(course_map, mission, start_metres=None, checkpoints_already_clear
     raise RoutePlanningError(f"Found no route on the map '{course_map.name}'. " + " ".join(reasons))
 
 
+def _boulders_not_already_known(known_boulders, other_possible_boulders):
+    """The other possible boulders, leaving out any that is the same as a known one or as an
+    earlier one in the list."""
+    kept = list(known_boulders)
+    new_ones = []
+    for boulder in other_possible_boulders:
+        is_a_repeat = False
+        for kept_boulder in kept:
+            same_place = np.linalg.norm(np.asarray(boulder.centre_metres) - np.asarray(kept_boulder.centre_metres)) < SAME_BOULDER_TOLERANCE_METRES
+            same_size = abs(boulder.radius_metres - kept_boulder.radius_metres) < SAME_BOULDER_TOLERANCE_METRES
+            if same_place and same_size:
+                is_a_repeat = True
+                break
+        if not is_a_repeat:
+            kept.append(boulder)
+            new_ones.append(boulder)
+    return new_ones
+
+
 def _plan_through_lines(course_map, mission, cruise_grid, start_metres, checkpoints, line_names):
     stages = [_make_stage(course_map, line_name, mission.cruise_height_metres) for line_name in line_names]
     goal_metres = course_map.landing_pad_centre_metres
     square_path = _search_for_square_path(cruise_grid, stages, start_metres, goal_metres)
     waypoints_metres, cleared_at = _straighten_and_join(square_path, stages, cruise_grid, start_metres, goal_metres, mission.cruise_height_metres)
+    waypoints_metres, cleared_at = _keep_stops_away_from_boulders(waypoints_metres, cleared_at, stages, cruise_grid, course_map)
     least_room_metres, least_room_near = _least_room_on_route(waypoints_metres, stages, cleared_at, cruise_grid)
     legs_near_boulders = _legs_near_boulders(waypoints_metres, cruise_grid)
 
@@ -171,6 +221,7 @@ def _plan_through_lines(course_map, mission, cruise_grid, start_metres, checkpoi
         least_room_metres=least_room_metres,
         least_room_near=least_room_near,
         legs_near_boulders=legs_near_boulders,
+        stops_near_boulders=stops_near_boulders(waypoints_metres, cruise_grid.boulders),
     )
 
 
@@ -434,7 +485,7 @@ class _Zigzag:
 def _straight_leg_is_acceptable(zigzag, first, last, grid, line_not_to_cross):
     """Can one straight leg replace the zigzag from point number first to point number last?"""
     start, end = zigzag.points[first], zigzag.points[last]
-    if line_not_to_cross is not None and _legs_cross(start, end, line_not_to_cross.start_metres, line_not_to_cross.end_metres):
+    if line_not_to_cross is not None and line_pieces_cross(start, end, line_not_to_cross.start_metres, line_not_to_cross.end_metres):
         return False
 
     room_on_zigzag = float(np.min(zigzag.room_metres[first:last + 1]))
@@ -461,23 +512,41 @@ def _boulder_distance_needed_on_leg(distance_on_zigzag_metres):
     return distance_on_zigzag_metres - STRAIGHTENING_TOLERANCE_METRES
 
 
-def _legs_cross(first_start, first_end, second_start, second_end):
-    """True if two straight pieces cross each other. Touching at an end does not count."""
-    return (
-        _on_opposite_sides(first_start, first_end, second_start, second_end)
-        and _on_opposite_sides(second_start, second_end, first_start, first_end)
+# ---- Step 5: moving stops away from boulders --------------------------------------------------
+
+def _keep_stops_away_from_boulders(waypoints_metres, cleared_at, stages, grid, course_map):
+    """Returns the waypoints with their stops moved or added (stopping_spots.py), and the new
+    number of the waypoint where each stage's line is cleared."""
+    how_each_may_move = _how_each_waypoint_may_move(waypoints_metres, cleared_at, stages)
+    result = keep_stops_away_from_boulders(
+        waypoints_metres, how_each_may_move, grid.boulders, grid.shapes, course_map.checkpoint_lines,
+        comfortable_room_metres=COMFORTABLE_ROOM_METRES, moving_keep_off_metres=LASER_KEEP_OFF_BOULDER_METRES,
     )
+    new_cleared_at = [result.new_number_of_each_old_waypoint[number] for number in cleared_at]
+    return result.waypoints_metres, new_cleared_at
 
 
-def _on_opposite_sides(point, other_point, line_start, line_end):
-    """True if the two points are on opposite sides of the line. A point on the line, or within
-    a millionth of a millimetre of it, is on neither side."""
-    def side(this_point):
-        value = (line_end[0] - line_start[0]) * (this_point[1] - line_start[1]) - (line_end[1] - line_start[1]) * (this_point[0] - line_start[0])
-        if abs(value) < 1e-9:
-            return 0
-        return 1 if value > 0 else -1
-    return side(point) * side(other_point) < 0
+def _how_each_waypoint_may_move(waypoints_metres, cleared_at, stages):
+    """The start, the end above the pad, and the points where a floor line is crossed stay where
+    they are. So do the two level points in an opening. The opening's line-up and exit points can
+    only gain a new stop along the crossing. Every other waypoint may move a little."""
+    rules = [HowWaypointMayMove(MAY_MOVE_ANYWHERE_NEARBY) for _ in waypoints_metres]
+    rules[0] = rules[-1] = HowWaypointMayMove(STAYS_WHERE_IT_IS)
+    for stage, waypoint_number in zip(stages, cleared_at):
+        if not isinstance(stage, OpeningCrossing):
+            rules[waypoint_number] = HowWaypointMayMove(STAYS_WHERE_IT_IS)
+            continue
+        # cleared_at points at the end of the level part (see _straighten_and_join).
+        line_up_number, level_start_number, level_end_number, exit_number = (
+            waypoint_number - 2, waypoint_number - 1, waypoint_number, waypoint_number + 1,
+        )
+        crossing = stage.exit_point_metres[:2] - stage.line_up_point_metres[:2]
+        crossing_direction = crossing / np.linalg.norm(crossing)
+        rules[line_up_number] = HowWaypointMayMove(NEW_STOP_FURTHER_BACK, crossing_direction)
+        rules[level_start_number] = rules[level_end_number] = HowWaypointMayMove(STAYS_WHERE_IT_IS)
+        if exit_number < len(rules) - 1:
+            rules[exit_number] = HowWaypointMayMove(NEW_STOP_FURTHER_ON, crossing_direction)
+    return rules
 
 
 # ---- Checking the finished route -------------------------------------------------------------

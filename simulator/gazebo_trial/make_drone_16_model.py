@@ -19,15 +19,16 @@ So this script reads PX4's x500 files and writes a copy with drone 16's numbers 
 
 The result goes to simulator/gazebo_trial/generated/models/drone_16_like/, with a list of the
 PX4 settings that must match it (px4_settings.txt). Gazebo finds the model there through the
-GZ_SIM_RESOURCE_PATH setting. models/drone_16_with_oak_d_s2/ adds our pretend camera to it. It still uses the x500's pictures (meshes) for
-its looks, which only matter to a camera, and the x500's pretend motion, pressure and compass
-sensors, which PX4 needs.
+GZ_SIM_RESOURCE_PATH setting, and models/drone_16_with_oak_d_s2/ adds our pretend camera to it.
+It still uses the x500's pictures (meshes) for its looks, which only matter to a camera, and the
+x500's pretend motion, pressure and compass sensors, which PX4 needs.
 
 Run it inside the drone-simulator-gazebo box, which has PX4's files:
 
     python3 /repository/simulator/gazebo_trial/make_drone_16_model.py
 
-whole_simulator_in_gazebo.launch.py runs it before every flight, so it is always up to date.
+inside_the_box/start_px4_in_gazebo.sh runs it before every flight in Gazebo, so it is always up
+to date.
 
 What it does not do
 -------------------

@@ -25,11 +25,14 @@ import time
 
 import rclpy
 from geometry_msgs.msg import PoseStamped, TwistStamped
-from px4_msgs.msg import VehicleLocalPosition
+from px4_msgs.msg import DistanceSensor, VehicleLocalPosition, VehicleOdometry
 from rclpy.node import Node
 from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
 from std_msgs.msg import String
 from std_srvs.srv import Trigger
+
+from team_nav.height_check import laser_height_above_launch_metres
+from team_nav.touch_detector import rotation_degrees_per_second, tilt_degrees
 
 # Our own choice. The organizers' program ignores a speed target older than 1 second, so 10
 # targets per second leaves plenty of margin.
@@ -73,6 +76,8 @@ class SimulatorTestFlight(Node):
         super().__init__(node_name)
         self.drone_state = None
         self.px4_position = None
+        self.laser_message = None
+        self.px4_odometry = None
         self.pose_publisher = self.create_publisher(PoseStamped, "/skybeta/setpoint/pose", 10)
         self.twist_publisher = self.create_publisher(TwistStamped, "/skybeta/setpoint/twist", 10)
         self.create_subscription(String, "/skybeta/state", self.on_drone_state, 10)
@@ -80,6 +85,10 @@ class SimulatorTestFlight(Node):
             VehicleLocalPosition, "/fmu/out/vehicle_local_position",
             self.on_px4_position, PX4_MESSAGE_SETTINGS,
         )
+        # The bottom laser's raw reading, which PX4 passes on.
+        self.create_subscription(DistanceSensor, "/fmu/out/distance_sensor", self.on_laser_reading, PX4_MESSAGE_SETTINGS)
+        # PX4's estimate of the drone's attitude and rotation speed, among other things.
+        self.create_subscription(VehicleOdometry, "/fmu/out/vehicle_odometry", self.on_px4_odometry, PX4_MESSAGE_SETTINGS)
         self.start_service = self.create_client(Trigger, "/simulator_only/start_run")
 
     def on_drone_state(self, message):
@@ -87,6 +96,12 @@ class SimulatorTestFlight(Node):
 
     def on_px4_position(self, message):
         self.px4_position = message
+
+    def on_laser_reading(self, message):
+        self.laser_message = message
+
+    def on_px4_odometry(self, message):
+        self.px4_odometry = message
 
     def say(self, text):
         print(f"[{time.strftime('%H:%M:%S')}] {text}", flush=True)
@@ -108,6 +123,30 @@ class SimulatorTestFlight(Node):
         if self.px4_position is None or not self.px4_position.z_valid:
             return None
         return float(self.px4_position.dist_bottom)
+
+    def raw_laser_reading_metres(self):
+        """Returns the bottom laser's latest raw reading, measured along the beam, or None if
+        none has arrived. Unlike laser_reading_metres, this is not PX4's estimate, so it stays
+        right even if PX4 stops trusting the laser."""
+        if self.laser_message is None:
+            return None
+        return float(self.laser_message.current_distance)
+
+    def tilt_degrees_now(self):
+        return tilt_degrees(self.px4_odometry.q)  # PX4 stores the quaternion as (w, x, y, z).
+
+    def rotation_degrees_per_second_now(self):
+        return rotation_degrees_per_second(self.px4_odometry.angular_velocity)
+
+    def laser_height_above_floor_metres(self):
+        """How far the laser has risen since the launch mark, from its raw reading, or None."""
+        reading = self.raw_laser_reading_metres()
+        if reading is None or self.px4_odometry is None:
+            return None
+        return laser_height_above_launch_metres(reading, self.floor_raw_laser_reading_metres, self.tilt_degrees_now())
+
+    def px4_height_risen_since_launch_metres(self):
+        return self.px4_z_on_launch_mark_metres - float(self.px4_position.z)  # PX4's z points down.
 
     def downward_speed_metres_per_second(self):
         return float(self.px4_position.vz)  # In PX4's directions, z points downward.
@@ -189,6 +228,8 @@ class SimulatorTestFlight(Node):
 
     def remember_the_floor(self):
         self.floor_laser_reading_metres = self.laser_reading_metres()
+        self.floor_raw_laser_reading_metres = self.raw_laser_reading_metres()
+        self.px4_z_on_launch_mark_metres = float(self.px4_position.z)
         self.start_position = list(self.tracked_position())
         self.say(f"On the launch mark, PX4's distance to the ground reads "
                  f"{self.floor_laser_reading_metres:.3f} m. This is our floor reference.")
@@ -217,11 +258,15 @@ class SimulatorTestFlight(Node):
 
     # ---- Landing -----------------------------------------------------------------------------
 
-    def descend_until_touchdown(self):
+    def descend_until_touchdown(self, height_above_floor=None):
+        """height_above_floor is the function that reads the height. Normally it is PX4's
+        estimate. After PX4's height has gone wrong, the flight passes in the laser's raw reading."""
+        if height_above_floor is None:
+            height_above_floor = self.height_above_floor_metres
         self.say("Descending.")
 
         def has_reached_gentle_height():
-            height = self.height_above_floor_metres()
+            height = height_above_floor()
             return height is not None and height < HEIGHT_TO_START_GENTLE_DESCENT_METRES
 
         self.run_until(has_reached_gentle_height,
@@ -231,7 +276,7 @@ class SimulatorTestFlight(Node):
         self.time_touchdown_conditions_began = None
 
         def has_touched_down():
-            height = self.height_above_floor_metres()
+            height = height_above_floor()
             conditions_are_met = (
                 height is not None
                 and height < TOUCHDOWN_LASER_TOLERANCE_METRES

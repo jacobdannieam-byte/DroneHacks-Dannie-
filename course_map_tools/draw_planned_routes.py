@@ -8,9 +8,10 @@ This runs on a laptop, inside the simulator's Linux box, which has the drawing l
         python3 course_map_tools/draw_planned_routes.py
 
 It takes about ten seconds and saves one picture per case in simulator/generated_files/route_pictures/
-(Git ignores that folder). The cases are our three map files, and a few changed courses. The
-changes are the same ones the route planner's tests make (drone_code/team_nav/test/course_changes.py),
-so the pictures show what the tests check.
+(Git ignores that folder). The first picture is the route the team chose for the first competition
+run, through the side gap into the landing area. The others try the window first: our three map
+files, and a few changed courses. The changes are the same ones the route planner's tests make
+(drone_code/team_nav/test/course_changes.py), so the pictures show what the tests check.
 
 What a picture shows, seen from above with north up:
   - Walls in dark grey. Walls lower than the drone's body at its usual height are light grey.
@@ -24,6 +25,8 @@ What a picture shows, seen from above with north up:
   - Walls and lines are named in plain words, such as "third maze wall" or "maze exit". The map
     files use the organizers' short codes (M3, Gate A), which mean nothing to a newcomer.
   - The planned route in blue, with its height wherever it climbs or descends from the usual height.
+    Small dots are waypoints the drone flies straight through. Large open circles are where it
+    stops, at corners (drone_code/team_nav/team_nav/stopping_spots.py).
   - At the route's tightest point, a dashed circle as wide as the drone plus its safety
     margin. It just touches the nearest thing there.
 """
@@ -38,13 +41,16 @@ from matplotlib.patches import Circle, Polygon
 
 from team_nav.drone_dimensions import REQUIRED_ROOM_METRES, heights_spanned_metres
 from team_nav.route_planner import RoutePlanningError, plan_route
+from team_nav.stopping_spots import find_stopping_spots
 
 # The changed courses and the route checks live with the planner's tests. We use them here
 # so that the pictures and the tests describe exactly the same cases.
 REPOSITORY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(REPOSITORY, "drone_code", "team_nav", "test"))
 import course_changes  # noqa: E402  (must come after the line above)
-from our_files import DRAWING_MAP, SCAN_MAP, SCAN_MAP_TRUSTING_EVERY_WALL, load_our_map, load_rulebook_mission  # noqa: E402
+from our_files import (  # noqa: E402
+    DRAWING_MAP, SCAN_MAP, SCAN_MAP_TRUSTING_EVERY_WALL, load_our_map, load_rulebook_mission, load_side_gap_first_mission,
+)
 from route_checks import least_room_along_route, points_along_route  # noqa: E402
 
 PICTURES_FOLDER = os.path.join(REPOSITORY, "simulator", "generated_files", "route_pictures")
@@ -85,6 +91,10 @@ LABELLED_WALLS = [name for name in PLAIN_NAMES if not name.startswith("Gate")]
 
 def main():
     os.makedirs(PICTURES_FOLDER, exist_ok=True)
+    first_run_path = os.path.join(PICTURES_FOLDER, "0_phone_scan_first_run_through_the_side_gap.png")
+    draw_one_case(load_our_map(SCAN_MAP), load_side_gap_first_mission(), first_run_path)
+    print(f"Saved {first_run_path}")
+
     mission = load_rulebook_mission()
     for file_name, course_map in cases_to_draw(mission):
         path = os.path.join(PICTURES_FOLDER, f"{file_name}.png")
@@ -236,6 +246,9 @@ def draw_route(axes, course_map, route, cruise_height_metres):
     axes.plot(waypoints[:, 0], waypoints[:, 1], color=ROUTE_COLOUR, linewidth=2.5, solid_capstyle="round", zorder=5)
     axes.plot(waypoints[:, 0], waypoints[:, 1], linestyle="none", marker="o", markersize=5,
               markerfacecolor=ROUTE_COLOUR, markeredgecolor=BACKGROUND_COLOUR, markeredgewidth=1.5, zorder=6)
+    stops = waypoints[np.array(find_stopping_spots(waypoints))]
+    axes.plot(stops[:, 0], stops[:, 1], linestyle="none", marker="o", markersize=10,
+              markerfacecolor="none", markeredgecolor=ROUTE_COLOUR, markeredgewidth=1.5, zorder=6)
     # Label the first waypoint of each stretch flown at another height, such as through the window.
     for number in range(1, len(waypoints)):
         at_another_height = not np.isclose(waypoints[number][2], cruise_height_metres)
@@ -254,8 +267,21 @@ def describe_route(route):
     lines_crossed = ", ".join(line_name for _, line_name, _ in route.checkpoints_cleared)
     return (
         f"{route.length_metres:.1f} m long. Least room {route.least_room_metres:.2f} m, next to the "
-        f"{route.least_room_near} (dashed circle). Crosses: {lines_crossed}."
+        f"{route.least_room_near} (dashed circle). Crosses: {lines_crossed}. Open circles are stops; "
+        f"the closest stop to a boulder is {_closest_stop_to_a_boulder_metres(route):.2f} m from its edge."
     )
+
+
+def _closest_stop_to_a_boulder_metres(route):
+    """How close the nearest stop comes to the edge of a boulder in the route's map."""
+    closest_metres = np.inf
+    for waypoint, is_stop in zip(route.waypoints_metres, find_stopping_spots(route.waypoints_metres)):
+        if not is_stop:
+            continue
+        for boulder in route.boulders_considered:
+            distance_metres = np.linalg.norm(waypoint[:2] - boulder.centre_metres) - boulder.radius_metres
+            closest_metres = min(closest_metres, distance_metres)
+    return closest_metres
 
 
 def describe_course(course_map):

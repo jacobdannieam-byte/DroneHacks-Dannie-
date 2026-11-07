@@ -11,6 +11,12 @@ drone's height, so it matters a great deal.
 Because the ray looks at the real course model, the height reading suddenly drops when the
 drone passes over a boulder or the bottom edge of the window. This is what we want to test.
 
+It also publishes the same reading on /fmu/out/distance_sensor, where our flight code reads it.
+On the real drone PX4 publishes that topic itself: the organizers' notebook (learn/) says their
+interface exports it, and that current_distance is the raw beam measurement. The standard
+PX4 1.16.2 that the simulator builds doesn't export it, so this program stands in for PX4 there.
+We have not yet checked on drone 16 that the topic exists (docs/ARCHITECTURE.md, section 12).
+
 The physics inside PX4 does not know about any of this. It has a flat floor and nothing else.
 
 How fast and how late the readings come
@@ -78,6 +84,15 @@ PX4_INPUT_SETTINGS = QoSProfile(
     depth=10,
 )
 
+# The delivery setting PX4 uses for the messages it sends out, so that programs written for the
+# real drone's topics can read this one too.
+PX4_OUTPUT_SETTINGS = QoSProfile(
+    reliability=QoSReliabilityPolicy.BEST_EFFORT,
+    durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
+    history=QoSHistoryPolicy.KEEP_LAST,
+    depth=5,
+)
+
 
 class PretendBottomLaser(Node):
 
@@ -88,6 +103,8 @@ class PretendBottomLaser(Node):
         self.course = CourseModel(*course_model_file_and_tables_folder())
         self.random = np.random.default_rng(2)
         self.publisher = self.create_publisher(DistanceSensor, "/fmu/in/distance_sensor", PX4_INPUT_SETTINGS)
+        # Stands in for PX4's own export of the reading (see the top of this file).
+        self.publisher_like_px4_output = self.create_publisher(DistanceSensor, "/fmu/out/distance_sensor", PX4_OUTPUT_SETTINGS)
 
         # The newest distance is added on the right. The oldest drops off the left by itself.
         self.recent_distances_metres = deque(maxlen=POSITIONS_KEPT)
@@ -138,6 +155,7 @@ class PretendBottomLaser(Node):
         reading.type = SENSOR_TYPE_LASER
         reading.orientation = SENSOR_POINTS_DOWN
         self.publisher.publish(reading)
+        self.publisher_like_px4_output.publish(reading)
 
 
 def main():

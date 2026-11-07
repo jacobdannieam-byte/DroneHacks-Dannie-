@@ -35,9 +35,10 @@ drone moves sideways slower than about 0.32 m/s (docs/ARCHITECTURE.md, section 7
 flight that paused just before and just after the window's bottom edge lost its height
 estimate by up to half a metre.
 
-So the drone pauses briefly at every real corner. The planner keeps corners off boulders where
-it can, but the drone's map may be wrong, so a corner can still be above a boulder nobody knew
-about. That is one of the things the simulator's boulder flights test.
+So the drone pauses briefly at every real corner. Which waypoints count as corners is decided by
+find_stopping_spots in stopping_spots.py, which the planner uses too. The planner moves corners
+away from every place a boulder might be, where it can, but a boulder may still be somewhere
+nobody knew about. That is one of the things the simulator's boulder flights test.
 
 What it does not do
 -------------------
@@ -45,6 +46,8 @@ It does not check for walls or boulders; the route planner already did. It does 
 or land; the flight program does those before and after.
 """
 import numpy as np
+
+from team_nav.stopping_spots import find_stopping_spots
 
 # Our own choice, using a measurement. In a simulator flight on 2026-11-07, PX4 flew the drone
 # at about 0.77 m/s sideways for each metre between it and its target, not the 0.95 that its
@@ -58,10 +61,6 @@ CRUISE_SPEED_METRES_PER_SECOND = 0.5
 CORNER_TOLERANCE_METRES = 0.05
 # Our own choice. The camera tracking's height and PX4's height can differ by this much.
 CORNER_HEIGHT_TOLERANCE_METRES = 0.10
-# Our own choice. A waypoint where the route turns less than this, seen from above, is passed
-# without stopping. test_route_follower.py checks that the drone cuts such a turn by less than
-# CORNER_TOLERANCE_METRES.
-STRAIGHT_ON_LARGEST_TURN_DEGREES = 10.0
 
 
 class RouteFollower:
@@ -72,7 +71,7 @@ class RouteFollower:
         self.target_metres = self.waypoints_metres[0].copy()
         # The waypoint the target is sliding towards.
         self.next_waypoint_number = 1
-        self.is_corner = _find_corners(self.waypoints_metres)
+        self.is_corner = find_stopping_spots(self.waypoints_metres)
 
     def has_finished(self, drone_position_metres):
         """True once the target has reached the last waypoint and the drone is there too."""
@@ -119,19 +118,3 @@ class RouteFollower:
         drone_position_metres = np.asarray(drone_position_metres, dtype=float)
         return float(np.linalg.norm(drone_position_metres[:2] - self.target_metres[:2]))
 
-
-def _find_corners(waypoints_metres):
-    """For each waypoint, True if the drone must stop there: the last waypoint, and every one
-    where the route turns by more than STRAIGHT_ON_LARGEST_TURN_DEGREES seen from above. A leg
-    that only climbs or descends, with no sideways part, also counts as a turn."""
-    is_corner = [True] * len(waypoints_metres)
-    for number in range(1, len(waypoints_metres) - 1):
-        arriving = waypoints_metres[number][:2] - waypoints_metres[number - 1][:2]
-        leaving = waypoints_metres[number + 1][:2] - waypoints_metres[number][:2]
-        arriving_length, leaving_length = np.linalg.norm(arriving), np.linalg.norm(leaving)
-        if arriving_length < CORNER_TOLERANCE_METRES or leaving_length < CORNER_TOLERANCE_METRES:
-            continue
-        cosine_of_turn = float(arriving @ leaving) / (arriving_length * leaving_length)
-        turn_degrees = np.degrees(np.arccos(np.clip(cosine_of_turn, -1.0, 1.0)))
-        is_corner[number] = turn_degrees > STRAIGHT_ON_LARGEST_TURN_DEGREES
-    return is_corner
