@@ -1,0 +1,184 @@
+"""A pretend drone for the tests: PX4 and the organizers' flight interface, reduced to what the
+mission program depends on. Test code only. It is never installed or run on the drone.
+
+What it imitates:
+* The hand-over (organizers' auto_offboard.py): Offboard starts only if the drone is armed, on the
+  ground, and has heard a target within the last second.
+* Position targets never go below 0.3 m above the start (organizers' envelope.py); velocity
+  commands expire after 1 s and are capped at 1.5 m/s (organizers' flight_interface.py).
+* The drone flies toward a position target at about 0.95 times the distance per second, at most
+  1 m/s (team plan, section 6), and follows velocity commands directly. The floor stops it.
+* PX4's land detector, simplified from the simulator results in the team plan (section 7): with a
+  descent commanded on the floor, the motors reach low power after about 1 s when pushing at
+  1 m/s, or about 5 s at a gentle speed; PX4 marks the drone landed 2.5 s later, and switches the
+  motors off 2 s after that.
+* The bottom laser never reads below 0.1 m (PX4 setting EKF2_MIN_RNG), and drifts upward by up to
+  8 cm while the drone sits on the floor (section 7).
+"""
+import math
+from collections import namedtuple
+
+LOWEST_POSITION_TARGET_METRES = 0.3
+VELOCITY_COMMAND_LIFETIME_SECONDS = 1.0
+FASTEST_VELOCITY_COMMAND_METRES_PER_SECOND = 1.5
+POSITION_RESPONSE_PER_SECOND = 0.95
+FASTEST_POSITION_FLIGHT_METRES_PER_SECOND = 1.0
+TURN_RATE_RADIANS_PER_SECOND = math.radians(60)
+LANDING_CHECK_DESCENT_METRES_PER_SECOND = 0.275
+LOW_POWER_SECONDS_WHEN_PUSHING = 1.0
+LOW_POWER_SECONDS_WHEN_GENTLE = 5.0
+LANDED_SECONDS_AFTER_LOW_POWER = 2.5
+MOTORS_OFF_SECONDS_AFTER_LANDED = 2.0
+LASER_LOWEST_READING_METRES = 0.1
+LASER_DRIFT_ON_FLOOR_METRES = 0.08
+LASER_DRIFT_PER_SECOND = 0.02
+
+
+class FakeDrone:
+    def __init__(self, heading_radians=0.0, laser_height_on_floor_metres=0.08,
+                 floor_height=lambda x, y: 0.0, motors_can_lift=True):
+        self.position = [0.0, 0.0, 0.0]
+        self.heading_radians = heading_radians
+        self.armed = False
+        self.offboard = False
+        self.landed = True
+        self.laser_height_on_floor_metres = laser_height_on_floor_metres
+        self.floor_height = floor_height
+        self.motors_can_lift = motors_can_lift
+        self.pose_target = None
+        self.pose_heading = None
+        self.pose_seconds = None
+        self.velocity_command = None
+        self.velocity_seconds = None
+        self.low_power_progress = 0.0
+        self.landed_timer_seconds = 0.0
+        self.motors_off_timer_seconds = 0.0
+        self.seconds_on_floor = 0.0
+        self.has_flown = False
+        self.sends_position_reports = True        # tests turn this off to imitate camera tracking stopping
+
+    # ------------------------------------------------------------------ what the mission hears
+    def flight_state(self):
+        return self.offboard, self.armed, self.landed
+
+    def laser_reading(self):
+        floor = self.floor_height(self.position[0], self.position[1])
+        reading = max(LASER_LOWEST_READING_METRES, self.position[2] - floor + self.laser_height_on_floor_metres)
+        if self.on_floor() and self.has_flown:
+            reading += min(LASER_DRIFT_ON_FLOOR_METRES, LASER_DRIFT_PER_SECOND * self.seconds_on_floor)
+        return reading
+
+    def on_floor(self):
+        return self.position[2] <= self.floor_height(self.position[0], self.position[1]) + 1e-9
+
+    # ------------------------------------------------------------------ the pilot and the hand-over
+    def arm(self):
+        self.armed = True
+
+    def switch_to_position_mode(self, now_seconds):
+        """The pilot's switch after arming. Returns True if Offboard started."""
+        heard = [stamp for stamp in (self.pose_seconds, self.velocity_seconds) if stamp is not None]
+        recent = heard and now_seconds - max(heard) <= VELOCITY_COMMAND_LIFETIME_SECONDS
+        if self.armed and self.landed and recent:
+            self.offboard = True
+        return self.offboard
+
+    # ------------------------------------------------------------------ what the mission sends
+    def receive(self, now_seconds, command):
+        if command.kind == "position":
+            x, y, z = command.position
+            self.pose_target = (x, y, max(z, LOWEST_POSITION_TARGET_METRES))
+            self.pose_heading = command.heading_radians
+            self.pose_seconds = now_seconds
+            self.velocity_command = None
+        elif command.kind == "velocity":
+            east, north, up = command.velocity
+            size = math.sqrt(east * east + north * north + up * up)
+            scale = min(1.0, FASTEST_VELOCITY_COMMAND_METRES_PER_SECOND / size) if size > 0 else 1.0
+            self.velocity_command = (east * scale, north * scale, up * scale)
+            self.velocity_seconds = now_seconds
+
+    # ------------------------------------------------------------------ physics, much simplified
+    def commanded_velocity(self, now_seconds):
+        if not (self.armed and self.offboard):
+            return 0.0, 0.0, 0.0
+        if self.velocity_command is not None and now_seconds - self.velocity_seconds < VELOCITY_COMMAND_LIFETIME_SECONDS:
+            return self.velocity_command
+        if self.pose_target is None:
+            return 0.0, 0.0, 0.0
+        difference = [target - now for target, now in zip(self.pose_target, self.position)]
+        velocity = [POSITION_RESPONSE_PER_SECOND * value for value in difference]
+        size = math.sqrt(sum(value * value for value in velocity))
+        if size > FASTEST_POSITION_FLIGHT_METRES_PER_SECOND:
+            velocity = [value * FASTEST_POSITION_FLIGHT_METRES_PER_SECOND / size for value in velocity]
+        return tuple(velocity)
+
+    def advance(self, now_seconds, seconds):
+        east, north, up = self.commanded_velocity(now_seconds)
+        if not self.motors_can_lift:
+            up = min(up, 0.0)
+        floor = self.floor_height(self.position[0], self.position[1])
+        if not self.on_floor() or up > 0.0:
+            self.position[0] += east * seconds
+            self.position[1] += north * seconds
+        self.position[2] = max(floor, self.position[2] + up * seconds)
+        if self.position[2] > floor + 0.05:
+            self.has_flown = True
+            self.landed = False
+        self.seconds_on_floor = self.seconds_on_floor + seconds if self.on_floor() else 0.0
+        if self.offboard and self.pose_heading is not None and self.velocity_command is None:
+            error = (self.pose_heading - self.heading_radians + math.pi) % (2 * math.pi) - math.pi
+            largest = TURN_RATE_RADIANS_PER_SECOND * seconds
+            self.heading_radians += max(-largest, min(largest, error))
+        self.run_land_detector(up, seconds)
+
+    def run_land_detector(self, commanded_up_metres_per_second, seconds):
+        descending_on_floor = (self.armed and self.has_flown and self.on_floor()
+                               and commanded_up_metres_per_second <= -LANDING_CHECK_DESCENT_METRES_PER_SECOND)
+        if not descending_on_floor:
+            self.low_power_progress = self.landed_timer_seconds = self.motors_off_timer_seconds = 0.0
+            return
+        pushing = commanded_up_metres_per_second <= -0.9
+        self.low_power_progress += seconds / (LOW_POWER_SECONDS_WHEN_PUSHING if pushing else LOW_POWER_SECONDS_WHEN_GENTLE)
+        if self.low_power_progress < 1.0:
+            return
+        self.landed_timer_seconds += seconds
+        if self.landed_timer_seconds < LANDED_SECONDS_AFTER_LOW_POWER:
+            return
+        self.landed = True
+        self.motors_off_timer_seconds += seconds
+        if self.motors_off_timer_seconds >= MOTORS_OFF_SECONDS_AFTER_LANDED:
+            self.armed = False
+
+
+# One step of a test flight: the time, what the mission published, its phase afterwards, and where
+# the drone was when the command was sent.
+FlightStep = namedtuple("FlightStep", ["seconds", "command", "phase", "drone_position"])
+
+
+def fly(mission, drone, seconds, step_seconds=0.1, arm_at_seconds=0.5, switch_at_seconds=1.0, every_step=None,
+        start_seconds=0.0):
+    """Run the mission against the fake drone. every_step(now_seconds, mission, drone) runs before
+    each step, for tests that change something mid-flight. Returns a list of FlightStep."""
+    record = []
+    now = start_seconds
+    switched = False
+    while now < start_seconds + seconds - 1e-9:
+        if every_step is not None:
+            every_step(now, mission, drone)
+        if now >= arm_at_seconds and not drone.armed and not drone.has_flown and not switched:
+            drone.arm()
+        if now >= switch_at_seconds and not switched and drone.armed:
+            switched = True
+            drone.switch_to_position_mode(now)
+        if drone.sends_position_reports:
+            mission.observe_position(now, tuple(drone.position), drone.heading_radians)
+        mission.observe_flight_state(now, *drone.flight_state())
+        mission.observe_laser(now, drone.laser_reading())
+        position_when_sent = tuple(drone.position)
+        command = mission.step(now)
+        drone.receive(now, command)
+        drone.advance(now, step_seconds)
+        record.append(FlightStep(now, command, mission.phase, position_when_sent))
+        now = round(now + step_seconds, 9)
+    return record

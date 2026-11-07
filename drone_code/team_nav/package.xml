@@ -2,11 +2,17 @@
 <package format="3">
   <name>team_nav</name>
   <version>0.0.1</version>
-  <description>Our team's code for the real drone. For now it starts no mission.</description>
+  <description>Our team's code for the real drone: the mission program and its launch file.</description>
   <maintainer email="team@example.com">Team drone 16</maintainer>
   <license>Apache-2.0</license>
 
   <exec_depend>skybeta_flight_interface</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>px4_msgs</exec_depend>
+  <test_depend>python3-pytest</test_depend>
 
   <export>
     <build_type>ament_python</build_type>
