@@ -29,6 +29,9 @@ At each waypoint, what happens depends on how much the next leg turns:
 * By less, and the next leg is at the same height: fly through. The carrot carries straight on
   along the next leg as soon as it reaches the waypoint, without stopping, and the heading turns
   toward the new leg at the same turn rate while flying.
+* Whatever the turn: the waypoints in must_fly_through (laser_rule.py, the bottom laser rule) are
+  always flown through, at the route speed. If the next leg is at another height, the height then
+  changes while flying that leg, at climb speed, because stopping is what the rule forbids.
 After the last waypoint the drone stops once more, and the route is complete.
 
 What it deliberately does not do: look for obstacles. The route is assumed clear; only the
@@ -61,11 +64,13 @@ def split_waypoints(waypoints):
 
 
 class RouteFlight:
-    def __init__(self, settings, waypoints_forward_left_metres):
+    def __init__(self, settings, waypoints_forward_left_metres, must_fly_through=None):
+        """must_fly_through: {waypoint index: why}, waypoints never to stop at (laser_rule.py)."""
         if not waypoints_forward_left_metres:
             raise ValueError("The route has no waypoints. Check the route file given by the route_file parameter.")
         self.settings = settings
         self.waypoints_forward_left_metres, self.heights_above_floor_metres = split_waypoints(waypoints_forward_left_metres)
+        self.must_fly_through = dict(must_fly_through or {})
         self.waypoints = []           # the same waypoints in the camera tracking frame (x, y)
         self.leg_heights_metres = []  # the height (camera tracking z) of the leg into each waypoint
         self.home = None              # (x, y) of the takeoff spot
@@ -146,8 +151,17 @@ class RouteFlight:
         self.setpoint_heading_radians = wrap_angle(self.setpoint_heading_radians + limit(error, largest_turn))
 
     def flies_through(self, index):
-        """Whether waypoint index is passed without stopping: not the last one, the next leg is at
-        the same height, and it turns by less than route_fly_through_degrees."""
+        """Whether waypoint index is passed without stopping: never the last one; always one the laser
+        rule names; otherwise when the next leg is at the same height and turns by less than
+        route_fly_through_degrees."""
+        if index >= len(self.waypoints) - 1:
+            return False
+        if index in self.must_fly_through:
+            return True
+        return self.flies_through_by_the_turn(index)
+
+    def flies_through_by_the_turn(self, index):
+        """The usual rule alone, without the laser rule."""
         if index >= len(self.waypoints) - 1:
             return False
         if self.leg_heights_metres[index + 1] != self.leg_heights_metres[index]:
@@ -214,6 +228,11 @@ class RouteFlight:
         along_east, along_north = (leg_east / leg_length, leg_north / leg_length) if leg_length > 1e-9 else (0.0, 0.0)
         # After flying through a waypoint the nose still points along the previous leg: blend it round.
         self.turn_setpoint_heading_toward(math.atan2(leg_north, leg_east), seconds_since_last_step)
+        # Normally the height already is the leg's (changed at the corner); after a waypoint the
+        # laser rule made us fly through, it changes here, at climb speed.
+        wanted_height = self.leg_heights_metres[self.next_waypoint]
+        self.height_metres += limit(wanted_height - self.height_metres,
+                                    settings.climb_speed_metres_per_second * seconds_since_last_step)
         # How far along the leg the drone itself is: the carrot never leads it by more than the lead.
         drone_along = (position[0] - self.corner[0]) * along_east + (position[1] - self.corner[1]) * along_north
         self.distance_along_leg_metres = min(

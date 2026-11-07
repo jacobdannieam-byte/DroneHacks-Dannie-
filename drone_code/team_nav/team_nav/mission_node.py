@@ -131,10 +131,16 @@ def read_route_waypoints(route_file):
     """The route mission's waypoints, [(forward, left) or (forward, left, height), ...] in metres,
     from a JSON file. A bare file name, such as route_waypoints_scan.json, means that file in this
     package's missions folder; a path is used as it is. With no file named, the default route."""
+    return read_route_file(route_file)[0]
+
+
+def read_route_file(route_file):
+    """(waypoints, the course map the route was planned on or None) from a route file."""
     route_file = file_in_package(route_file or DEFAULT_ROUTE_FILE, MISSIONS_FOLDER_IN_PACKAGE)
     try:
         with open(route_file, encoding="utf-8") as opened:
-            waypoints = json.load(opened)["waypoints_forward_left_metres"]
+            contents = json.load(opened)
+        waypoints = contents["waypoints_forward_left_metres"]
     except (OSError, ValueError, KeyError) as problem:
         raise ValueError(f"Could not read the route's waypoints from {route_file} ({problem}). Check the "
                          "route_file parameter, or that the package was built with its missions folder.")
@@ -144,12 +150,14 @@ def read_route_waypoints(route_file):
             raise ValueError(f"Waypoint {number} in {route_file} is {waypoint!r}; each waypoint must be [forward, left] "
                              "or [forward, left, height] in metres. Fix the route file.")
         route.append(tuple(float(value) for value in waypoint))
-    return route
+    planned_on = contents.get("planner_summary", {}).get("map_file")
+    return route, planned_on
 
 
 def read_map_ranging(course_map_file, start_heading_degrees):
-    """What the drift correction measures the map with: the course map, and where the drone starts
-    on it (its launch mark, facing start_heading_degrees)."""
+    """The course map and where the drone starts on it (its launch mark, facing
+    start_heading_degrees): the drift correction measures walls with it, and the route's laser rule
+    finds windows and boulders in it."""
     course_map_file = file_in_package(course_map_file or DEFAULT_COURSE_MAP_FILE, COURSE_MAPS_FOLDER_IN_PACKAGE)
     try:
         course_map = load_course_map(course_map_file)
@@ -200,10 +208,12 @@ class MissionNode(Node):
         settings = self.read_settings()
         mission_kind = self.declare_parameter("mission_kind", "stages").value
         route_file = self.declare_parameter("route_file", DEFAULT_ROUTE_FILE).value
-        route_waypoints = read_route_waypoints(route_file) if mission_kind == "route" else None
-        course_map_file = self.declare_parameter("course_map_file", DEFAULT_COURSE_MAP_FILE).value
+        route_waypoints, planned_on = read_route_file(route_file) if mission_kind == "route" else (None, None)
+        # Empty: the map the route file was planned on, else the organizers' drawing.
+        course_map_file = self.declare_parameter("course_map_file", "").value or planned_on or DEFAULT_COURSE_MAP_FILE
         map_ranging = None
-        if settings.drift_correction:
+        if settings.drift_correction or mission_kind == "route":
+            # The route's bottom laser rule needs the map's windows and boulders (laser_rule.py).
             map_ranging, course_map_file = read_map_ranging(course_map_file, settings.start_heading_degrees)
         self.mission = Mission(settings, vision_check=self.read_vision_check(), mission_kind=mission_kind,
                                route_waypoints=route_waypoints, map_ranging=map_ranging)
@@ -222,7 +232,8 @@ class MissionNode(Node):
             self.camera_exposure.check()
             self.create_timer(settings.camera_check_seconds, self.camera_exposure.check)
         if mission_kind == "route":
-            self.get_logger().info(f"The route comes from {route_file}: {len(route_waypoints)} waypoints.")
+            self.get_logger().info(f"The route comes from {route_file}: {len(route_waypoints)} waypoints, on the "
+                                   f"course map {course_map_file}.")
         self.get_logger().info(
             f"team_nav mission ready: the {mission_kind} mission. Hears {', '.join(heard)}; sends "
             f"{POSE_TARGET_TOPIC} and {VELOCITY_COMMAND_TOPIC}; cruise height "

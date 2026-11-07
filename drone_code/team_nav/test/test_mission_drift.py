@@ -3,12 +3,14 @@ with camera tracking drifting: at each stop corner, before turning, the depth st
 compared with a pretend map, the position estimate moves along the heading, every correction and
 every skip is logged, and the drone then really reaches the next waypoint."""
 import math
+import types
 
 import pytest
 
 from fake_drone import FakeDrone, fly
 from team_nav.mission import Mission
 from team_nav.mission_settings import MissionSettings
+from team_nav.start_frame import StartFrame
 
 # A pretend course: one wall across the route, 3 m in front of the takeoff spot (heading 0 = East).
 WALL_FORWARD_METRES = 3.0
@@ -24,6 +26,9 @@ class PretendMapRanging:
 
     def __init__(self):
         self.asked = []
+        # For the route's laser rule: a course with no windows and no boulders.
+        self.course_map = types.SimpleNamespace(walls=[], low_obstacles=[])
+        self.start_frame = StartFrame((0.0, 0.0), 0.0)
 
     def distance_ahead(self, forward_metres, left_metres, heading_from_start_radians, height_metres):
         self.asked.append((forward_metres, left_metres, heading_from_start_radians, height_metres))

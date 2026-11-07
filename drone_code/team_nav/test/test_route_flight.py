@@ -5,6 +5,7 @@ a leg faster than 0.5 m/s, lands at the end, and the watchdog stays active throu
 with a height has the leg into it flown at that height, changed while stopped before the leg."""
 import json
 import math
+import types
 from pathlib import Path
 
 import pytest
@@ -243,3 +244,74 @@ def test_the_scan_route_crosses_the_window_at_1_19_metres():
 def test_a_waypoint_with_the_wrong_count_of_numbers_is_refused():
     with pytest.raises(ValueError, match="Waypoint 2 of the route has 4 numbers"):
         Mission(mission_kind="route", route_waypoints=[(1.0, 0.0), (1.0, 1.0, 0.5, 9.0)])
+
+
+# ---------------------------------------------------------------------- the bottom laser rule
+# A pretend course (test_laser_rule.py): a window in a wall at x = 2, a boulder at (1, 3). The leg
+# into waypoint 2 crosses the window; waypoints 2 to 5 turn by 90 degrees, so the usual rule would
+# stop at each of them, and the leg into waypoint 3 is lower (0.6 m).
+LASER_ROUTE = [(1.5, -0.5), (3.0, -0.5), (3.0, 0.7, 0.6), (4.5, 0.7), (4.5, 3.5), (6.0, 3.5)]
+
+
+def fly_laser_route():
+    from test_laser_rule import COURSE, START
+    ranging = types.SimpleNamespace(course_map=COURSE, start_frame=START)
+    mission = Mission(mission_kind="route", route_waypoints=LASER_ROUTE, map_ranging=ranging)
+    drone = FakeDrone()
+    return mission, drone, fly(mission, drone, 120.0)
+
+
+def test_waypoints_within_8_s_after_a_window_or_height_change_are_flown_through_whatever_the_turn():
+    mission, drone, record = fly_laser_route()
+    for number in (2, 3, 4, 5):
+        assert f"route: reached waypoint {number} of 6 (flying through)" in reasons(mission), number
+        assert f"route: stopping at waypoint {number} of 6" not in reasons(mission), number
+    assert "route: route complete: reached waypoint 6 of 6" in reasons(mission)        # the last still stops
+
+
+def test_each_stop_the_laser_rule_turns_into_a_fly_through_is_logged_with_why():
+    mission, drone, record = fly_laser_route()
+    logged = [reason for reason in reasons(mission) if reason.startswith("laser rule:")]
+    assert logged[0] == ("laser rule: waypoint 2 is flown through at 0.5 m/s, not stopped at (within 8 s after the leg "
+                         "into waypoint 2, which crosses the window in the wall); the height changes while flying the next leg")
+    assert [line.split(" is flown")[0] for line in logged] == [f"laser rule: waypoint {n}" for n in (2, 3, 4, 5)]
+    assert "within 8 s after the leg into waypoint 4, which changes height from 0.60 to 0.80 m" in logged[3]
+
+
+def test_flying_through_a_laser_rule_waypoint_keeps_the_drone_moving():
+    mission, drone, record = fly_laser_route()
+    for number in (2, 3, 4, 5):
+        passing = next(step.seconds for step in record if step.command.reason == f"route: reached waypoint {number} of 6 (flying through)")
+        nearby = [math.dist(later.drone_position[:2], earlier.drone_position[:2]) / STEP_SECONDS
+                  for earlier, later in zip(record, record[1:]) if abs(earlier.seconds - passing) < 1.5]
+        assert min(nearby) > 0.3, (number, min(nearby))                  # stopped is under 0.1 m/s
+
+
+def test_after_a_laser_rule_fly_through_the_height_changes_while_flying_at_climb_speed():
+    mission, drone, record = fly_laser_route()
+    leg = route_steps(record, "flying to waypoint 3 of 6")
+    heights = [step.command.position[2] for step in leg]
+    assert heights[0] == pytest.approx(0.8, abs=0.06) and heights[-1] == pytest.approx(0.6)
+    for earlier, later in zip(leg, leg[1:]):
+        assert abs(later.command.position[2] - earlier.command.position[2]) <= SETTINGS.climb_speed_metres_per_second * STEP_SECONDS + 1e-9
+    assert not route_steps(record, "changing height")                    # never stopped to change height
+
+
+def test_without_a_course_map_the_laser_rule_is_off_and_says_so():
+    mission, drone, record = fly_route(route=LASER_ROUTE)
+    assert "laser rule: off, because no course map was given" in reasons(mission)
+    assert "route: reached waypoint 2 of 6" in reasons(mission)              # a stop, not "(flying through)"
+    assert "route: turning to face waypoint 3 of 6" in reasons(mission)
+
+
+def test_the_hand_over_and_every_waypoint_are_logged_with_the_odometry_position_and_heading():
+    mission, drone, record = fly_laser_route()
+    assert "hand-over: odometry (0.00, 0.00, 0.00) m, heading 0 deg (the start heading)" in reasons(mission)
+    at_waypoints = [reason for reason in reasons(mission) if reason.startswith("at waypoint")]
+    assert [line.split(":")[0] for line in at_waypoints] == [f"at waypoint {n} of 6" for n in range(1, 7)]
+    assert all(", heading " in line and "odometry (" in line for line in at_waypoints)
+
+
+def test_the_default_route_is_still_the_teams_gate_b_route():
+    """The real window height is uncertain, so the window routes are only flown when asked for."""
+    assert route_from_file() == TEAM_ROUTE

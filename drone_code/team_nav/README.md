@@ -79,6 +79,25 @@ The route's waypoints live in files in [`missions/`](missions/), not in code, be
 
 A waypoint is `[forward, left]`, or `[forward, left, height]` when the leg into it must be flown at a height other than cruise. The height is in metres above the launch floor. Each planned file sets the planner's window crossing height on its two window waypoints: **0.76 m** on the drawing (waypoints 19 and 20) and **1.19 m** on the scan (waypoints 22 and 23). The window on the scan's map is 0.81 to 1.56 m high, so 0.8 m there would hit its lower edge. The files also keep every height the planner wanted, in `planned_heights_metres`, for information only. A waypoint where the height changes is never flown through.
 
+## The bottom laser rule (route mission)
+
+PX4 takes the drone's height mainly from the bottom laser. When the laser's reading jumps, over the window's sill or a boulder, PX4 can reject the laser if the drone then slows below about 0.32 m/s within 6 to 10 s, and the height then drifts by 0.3 to 0.5 m (the team, 2026-11-07). In the simulator, after a boulder, the drone crossed the window about 0.35 m too high and clipped its top.
+
+So [`team_nav/laser_rule.py`](team_nav/laser_rule.py) finds every leg that crosses a window (an opening in a wall), changes height, or passes over a boulder. A leg counts as passing over a boulder if it comes within the boulder's radius plus 0.2 m, about the laser's footprint at 0.8 m. It uses the course map (`course_map_file`; empty means the map the route file was planned on). Every waypoint within 8 s of flight at 0.5 m/s after such a leg (`route_laser_rule_seconds`) is flown through, never stopped at, whatever its turn. The log says each time this turns a stop into a fly-through (`laser rule: waypoint N is flown through ...`).
+
+Where the next leg is at another height, the height then changes while flying that leg, at climb speed. That breaks the usual "change height before a leg" rule, because stopping is what this rule forbids. The last waypoint is always a stop, because the landing starts there.
+
+What it changes on each route:
+- `route_waypoints.json`, the team's Gate B route and still the default: nothing. It crosses no window and passes over no boulder.
+- `route_waypoints_drawing.json`: waypoints 18 to 21 must be flown through. Of those, 18, 20 and 21 were stops before; 19 already was a fly-through.
+- `route_waypoints_scan.json`: waypoints 21 to 24 must be flown through. Of those, 21, 23 and 24 were stops before; 22 already was a fly-through.
+
+At a 90° corner flown through, the pretend drone in the tests slows to about 0.33 m/s, only just above 0.32 m/s, because it cuts the corner while the carrot turns. Watch the real speed in the log.
+
+The window routes are not the default, because the real window height is uncertain.
+
+The log also gives camera tracking's position and heading at the hand-over (`hand-over: odometry (...)`), and each time the route counts a waypoint reached (`at waypoint N of M: odometry (...)`). For a waypoint flown through, that is when the carrot reaches it, about 0.5 m before the drone does.
+
 ## The drift correction (route mission, off by default)
 
 Camera tracking has no loop closure, so its error grows with distance flown. In the simulator, with its pretend drift of 1% of the distance flown, the drone ended about 0.2 m from where it thought it was. With `drift_correction:=true`, each time the route stops at a corner, before it turns:

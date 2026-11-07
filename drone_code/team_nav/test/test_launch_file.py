@@ -165,7 +165,7 @@ def test_the_drift_correction_is_off_by_default_and_its_inputs_are_launch_argume
     assert declared["drift_correction"] == "false"
     assert MissionSettings().drift_correction is False
     assert declared["depth_topic"] == "/team/depth_points"                 # team_nav depth_points
-    assert declared["course_map_file"] == "organizers_drawing.json"
+    assert declared["course_map_file"] == ""                               # the route file's own map
     assert float(declared["start_heading_degrees"]) == MissionSettings().start_heading_degrees == 90.0
     for name in ("drift_correction", "depth_topic", "course_map_file", "start_heading_degrees"):
         assert mission_parameters(launched)[name].name == name, name

@@ -97,8 +97,9 @@ ARGUMENTS = [
     ('mission', 'stages', 'our mission: stages (the course stages), route (missions/route_waypoints.json), '
                           'or none (start only the flight interface)'),
     ('route_file', 'route_waypoints.json',
-     'route mission: which waypoints to fly; a file name in the package\'s missions folder '
-     '(route_waypoints.json, route_waypoints_drawing.json, route_waypoints_scan.json) or a full path'),
+     'route mission: which waypoints to fly; a file name in the package\'s missions folder or a full path. '
+     'The default is the team\'s Gate B route, because the real window height is uncertain; the planned '
+     'window routes are route_waypoints_drawing.json and route_waypoints_scan.json'),
     ('route_speed_metres_per_second', '0.5', 'route mission: speed along each leg'),
     ('route_turn_rate_degrees_per_second', '25.0', 'route mission: fastest turn, in place or while flying through'),
     ('route_arrive_metres', '0.10', 'route mission: a waypoint where the drone stops counts as reached this close'),
@@ -122,12 +123,13 @@ ARGUMENTS = [
     ('depth_topic', '/team/depth_points',
      'drift correction: topic of the depth points (sensor_msgs/PointCloud2, forward/left/up from the '
      'drone centre); team_nav depth_points publishes /team/depth_points'),
-    ('course_map_file', 'organizers_drawing.json',
-     'drift correction: the course map; a file name in the package\'s course_maps folder '
-     '(organizers_drawing.json, phone_scan_2026-11-06.json) or a full path'),
+    ('course_map_file', '',
+     'route mission: the course map, for the bottom laser rule and the drift correction; a file name in the '
+     'package\'s course_maps folder (organizers_drawing.json, phone_scan_2026-11-06.json) or a full path. '
+     'Empty: the map the route file was planned on, else organizers_drawing.json'),
     ('start_heading_degrees', '90.0',
-     'drift correction: the way the nose points at takeoff, anticlockwise from the map\'s east; 90 is north, '
-     'up the first corridor'),
+     'route mission: the way the nose points at takeoff, anticlockwise from the map\'s east; 90 is north, '
+     'up the first corridor (the planner\'s and the simulator\'s assumption)'),
 ] + WATCHDOG_ARGUMENTS
 
 

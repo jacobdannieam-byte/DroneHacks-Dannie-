@@ -99,6 +99,10 @@ class MissionSettings:
     route_corner_settle_time_limit_seconds: float = 3.0
     # Our own choice: the turn is done when the nose is within this of the next leg's direction.
     route_heading_tolerance_degrees: float = 3.0
+    # From the team (2026-11-07), the bottom laser rule (laser_rule.py): every waypoint within this
+    # many seconds of flight after a leg that crosses a window, changes height or passes over a
+    # boulder is flown through at route speed, never stopped at.
+    route_laser_rule_seconds: float = 8.0
     # Our own choice: before a leg flown at another height (a waypoint's third number), the height
     # change is done when the drone is within this of the new height, or after this long at most once
     # the target has got there (PX4's height hold can sit a few centimetres off).

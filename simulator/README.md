@@ -181,4 +181,8 @@ All of this was run on 2026-11-06, on an M1 Mac.
   - Most skips were "no good depth reading": too few depth points within 3° of straight ahead, often because the wall ahead is beyond the pretend camera's reach or the points there are missing. One was the safety net.
   - Each result is a single run.
 
+- **The bottom laser rule** (2026-11-07, same Mac). One run of the drawing route, drift on, drift correction off (flight_20261107_224759). The rule turned the stops at waypoints 18, 20 and 21 into fly-throughs.
+  - All 22 waypoints. Motors off 134.4 s after the hand-over, against 154 to 161 s in the two runs before. 0 touches. The drone crossed the window at its true 0.80 m and passed 1.5 cm from the window frame.
+  - **The height still went wrong after the window.** From about 115 s, the drone sank to 0.40 to 0.61 m true height while PX4 believed 0.66 to 0.84 m. That happened while it kept moving at about 0.38 m/s. The bottom laser read about right, and so did camera tracking (0.55 m at waypoint 22); PX4's estimate lagged. It touched nothing because the obstacles were behind it. So this run does not show the rule preventing the height error. One run, and the simulator's laser and PX4 may not behave like the real drone's.
+
 We have not tested a full run of the course, because the mission's detectors (the line, the pad and the depth clearances) don't exist yet. We also haven't tested the bottom edge of the window, the boulders, or lost camera tracking. No result here has been compared with a real flight.

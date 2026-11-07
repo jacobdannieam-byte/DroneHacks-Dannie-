@@ -29,6 +29,11 @@ STEP_SECONDS = 1.0 / MissionSettings().steps_per_second           # the node's t
 @pytest.fixture
 def build_node():
     fake_ros.install()
+    # Where the package is installed: here, the source folder, which has missions/ and course_maps/.
+    installed = types.ModuleType("ament_index_python.packages")
+    installed.get_package_share_directory = lambda package: str(Path(__file__).resolve().parents[1])
+    sys.modules["ament_index_python"] = types.ModuleType("ament_index_python")
+    sys.modules["ament_index_python.packages"] = installed
     sys.modules.pop("team_nav.mission_node", None)
     node_module = importlib.import_module("team_nav.mission_node")
 
@@ -39,6 +44,8 @@ def build_node():
     yield build
     fake_ros.Node.parameter_overrides = {}
     sys.modules.pop("team_nav.mission_node", None)
+    sys.modules.pop("ament_index_python", None)
+    sys.modules.pop("ament_index_python.packages", None)
     fake_ros.uninstall()
 
 
@@ -227,15 +234,7 @@ def test_the_route_mission_reads_its_waypoints_from_the_route_file(build_node):
 @pytest.mark.parametrize("route_file, count", [("route_waypoints.json", 20), ("route_waypoints_drawing.json", 22),
                                                ("route_waypoints_scan.json", 25)])
 def test_a_bare_route_file_name_means_that_file_in_the_packages_missions_folder(build_node, route_file, count):
-    installed = types.ModuleType("ament_index_python.packages")      # where the package is installed
-    installed.get_package_share_directory = lambda package: str(Path(__file__).resolve().parents[1])
-    sys.modules["ament_index_python"] = types.ModuleType("ament_index_python")
-    sys.modules["ament_index_python.packages"] = installed
-    try:
-        node = build_node(mission_kind="route", route_file=route_file)
-    finally:
-        sys.modules.pop("ament_index_python", None)
-        sys.modules.pop("ament_index_python.packages", None)
+    node = build_node(mission_kind="route", route_file=route_file)
     assert len(node.mission.route_waypoints) == count
     assert node.parameters["route_file"] == route_file
     with_height = sum(len(waypoint) == 3 for waypoint in node.mission.route_waypoints)
@@ -412,3 +411,25 @@ def test_the_corner_count_reaches_the_pre_start_check(build_node):
     deliver(node, CORNER_COUNT_TOPIC, fake_ros.Int32(123))
     assert node.mission.prestart.corner_count == 123
     assert node.mission.prestart.corner_count_seconds == 2.0
+
+
+# ---------------------------------------------------------------- the route's course map
+@pytest.mark.parametrize("route_file, map_file", [("route_waypoints.json", "organizers_drawing.json"),
+                                                  ("route_waypoints_drawing.json", "organizers_drawing.json"),
+                                                  ("route_waypoints_scan.json", "phone_scan_2026-11-06.json")])
+def test_a_route_mission_loads_the_map_its_route_was_planned_on(build_node, route_file, map_file):
+    node = build_node(mission_kind="route", route_file=route_file)
+    assert node.mission.map_ranging is not None
+    assert any(text.endswith(f"on the course map {Path(__file__).resolve().parents[1] / 'course_maps' / map_file}.")
+               for text in logged(node))
+
+
+def test_the_course_map_can_be_chosen_and_the_laser_rule_uses_it(build_node):
+    node = build_node(mission_kind="route", route_file="route_waypoints_drawing.json")
+    assert sorted(node.mission.route_must_fly_through) == [17, 18, 19, 20]   # waypoints 18 to 21
+    node = build_node(mission_kind="route", route_file="route_waypoints.json")
+    assert node.mission.route_must_fly_through == {}                       # Gate B: no window, no boulder
+
+
+def test_a_stages_mission_loads_no_map(build_node):
+    assert build_node().mission.map_ranging is None

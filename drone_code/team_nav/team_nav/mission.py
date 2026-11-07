@@ -85,6 +85,7 @@ from dataclasses import dataclass, field
 
 from .course_stages import Course, world_to_body, wrap_angle
 from .drift_correction import decide_correction
+from .laser_rule import legs_that_upset_the_laser, waypoints_to_fly_through
 from .landing import Landing
 from .mission_inputs import MissionInputs, is_finite_number
 from .mission_settings import MissionSettings
@@ -124,8 +125,9 @@ class Mission:
         """vision_check=False is for the simulator only (see fly_course); mission_node.py refuses it
         anywhere else. mission_kind is "stages" or "route"; a route needs its waypoints, each
         (forward, left) or (forward, left, height) in metres from the takeoff spot. map_ranging
-        (drift_correction.MapRanging) measures the course map's distance to the wall straight ahead;
-        the drift correction needs it."""
+        (drift_correction.MapRanging) holds the course map and where the route starts on it: the
+        drift correction measures walls with it, and the route's bottom laser rule (laser_rule.py)
+        finds the windows and boulders in it."""
         if mission_kind not in MISSION_KINDS:
             raise ValueError(f"The mission must be one of {', '.join(MISSION_KINDS)}, not {mission_kind!r}. "
                              "Fix the mission launch argument.")
@@ -136,6 +138,7 @@ class Mission:
             raise ValueError("The drift correction needs a course map, and none was given. Check the course_map_file "
                              "parameter, or launch with drift_correction:=false.")
         self.map_ranging = map_ranging
+        self.route_must_fly_through, self.route_laser_notes = self.work_out_the_laser_rule(mission_kind, route_waypoints)
         self.vision_check = vision_check
         self.mission_kind = mission_kind
         self.route_waypoints = route_waypoints
@@ -176,7 +179,9 @@ class Mission:
         drift correction, the landing, the watchdog's trip, the timers, the position watch and the
         detector reports."""
         self.course = Course(self.settings)
-        self.route = RouteFlight(self.settings, self.route_waypoints) if self.mission_kind == "route" else None
+        self.route = None
+        if self.mission_kind == "route":
+            self.route = RouteFlight(self.settings, self.route_waypoints, self.route_must_fly_through)
         self.landing = None
         self.position_watch.reset()
         self.inputs.clear()
@@ -195,6 +200,37 @@ class Mission:
         self.start_heading_radians = None
         self.floor_reading_metres = None
         self.position_correction_metres = (0.0, 0.0)   # (x, y) added to camera tracking's position
+
+    def work_out_the_laser_rule(self, mission_kind, route_waypoints):
+        """({waypoint index: why}, [log lines]): the waypoints the route must fly through (laser_rule.py)."""
+        if mission_kind != "route":
+            return {}, []
+        if self.map_ranging is None:
+            return {}, ["laser rule: off, because no course map was given"]
+        places = [tuple(waypoint[:2]) for waypoint in route_waypoints]
+        heights = [waypoint[2] if len(waypoint) == 3 else None for waypoint in route_waypoints]
+        events = legs_that_upset_the_laser(self.map_ranging.course_map, self.map_ranging.start_frame, places, heights,
+                                           self.settings.cruise_height_metres)
+        must, last_note = waypoints_to_fly_through(places, events, self.settings.route_speed_metres_per_second,
+                                                   self.settings.route_laser_rule_seconds)
+        notes = [f"laser rule: {last_note}"] if last_note else []
+        return must, notes
+
+    def log_the_laser_rule(self, now_seconds):
+        """At the route's start: each stop the laser rule turns into a fly-through, and why."""
+        for index, why in sorted(self.route_must_fly_through.items()):
+            if self.route.flies_through_by_the_turn(index):
+                continue                             # flown through anyway: the rule changes nothing
+            text = f"laser rule: waypoint {index + 1} is flown through at {self.settings.route_speed_metres_per_second:g} m/s, not stopped at ({why})"
+            if self.route.leg_heights_metres[index + 1] != self.route.leg_heights_metres[index]:
+                text += "; the height changes while flying the next leg"
+            self.log(now_seconds, text)
+        for note in self.route_laser_notes:
+            self.log(now_seconds, note)
+
+    def odometry_text(self):
+        x, y, z = self.position
+        return f"odometry ({x:.2f}, {y:.2f}, {z:.2f}) m, heading {math.degrees(self.heading_radians):.0f} deg"
 
     # ------------------------------------------------------------------ reports from mission_node.py
     def observe_position(self, now_seconds, position, heading_radians, stamp_seconds=None, orientation=None):
@@ -436,6 +472,7 @@ class Mission:
         self.log(now_seconds, f"new run: home ({self.home[0]:.2f}, {self.home[1]:.2f}), ground height "
                               f"{self.ground_height_metres:.2f} m, heading {math.degrees(self.heading_radians):.0f} deg, "
                               f"laser floor reading {floor_text}")
+        self.log(now_seconds, f"hand-over: {self.odometry_text()} (the start heading)")
         warning = origin_warning(self.position, self.settings)
         if warning is not None:
             self.log(now_seconds, warning)
@@ -547,6 +584,7 @@ class Mission:
             if self.route is not None:
                 self.route.start(now_seconds, cruise, self.ground_height_metres)
                 self.phase = "flying_route"
+                self.log_the_laser_rule(now_seconds)
             else:
                 self.course.start(now_seconds, cruise)
                 self.phase = "flying_course"
@@ -586,6 +624,8 @@ class Mission:
             return held
         decision = self.route.step(now_seconds, seconds_since_last_step, self.corrected_position(),
                                    self.heading_radians, self.position_watch.latest_horizontal_speed_metres_per_second)
+        if decision.reason.startswith("reached waypoint"):
+            self.log(now_seconds, f"at waypoint {self.route.reached} of {len(self.route.waypoints)}: {self.odometry_text()}")
         if decision.stopped_at_corner and self.settings.drift_correction:
             self.correct_drift(now_seconds)
         setpoint = self.uncorrected_setpoint(decision.setpoint)
