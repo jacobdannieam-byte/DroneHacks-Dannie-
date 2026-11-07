@@ -1,0 +1,244 @@
+# TAMU HPRC Grace Cluster & Isaac Sim 5.1.0 Complete Operating Guide
+
+![Isaac Sim 5.1.0 running on Grace Cluster node r001 with drone_course_sim_ready_2.usd](isaac_sim_vnc_course_running.jpg)
+
+---
+
+## 1. System Architecture Overview
+
+| Component | Location / Setting | Details |
+|---|---|---|
+| **Cluster** | TAMU HPRC Grace (`grace.hprc.tamu.edu`) | RHEL 8.10 host, SLURM batch scheduler |
+| **Login Nodes** | `grace1` – `grace5` | Shared CPU head nodes. **No heavy compute, no GPU.** |
+| **GPU Compute Node** | `r001` (or allocated node) | 2x NVIDIA Quadro RTX 6000 (24 GB VRAM each), 48 CPU cores, 384 GB RAM |
+| **Web Portal** | `portal-grace.hprc.tamu.edu` | Open OnDemand TurboVNC GUI session |
+| **Singularity SIF** | `/sw/hprc/sw/bio/containers/isaac-sim/isaac-sim_5.1.0.sif` | Ubuntu 24.04 noble container with Isaac Sim 5.1.0 |
+| **User Scratch** | `/scratch/user/jacob.dannie.am/` | 1.0 TB limit, 400,000 file limit |
+| **User Home** | `/home/jacob.dannie.am/` | **10.0 GB limit, 10,000 file limit** (Strict!) |
+
+---
+
+## 2. Strict Cluster Rules & Storage Quotas
+
+> [!CAUTION]
+> **NEVER write caches, datasets, or run containers in `$HOME` (`/home/jacob.dannie.am`)!**
+> The quota is strictly 10 GB and 10,000 files. NVIDIA Omniverse Kit generates thousands of shader cache files. If Isaac Sim writes to `~/.nvidia-omniverse` or `~/.cache`, your account will hit `Disk quota exceeded` and lock your session immediately.
+
+* **Always work in `$SCRATCH`**:
+  ```bash
+  cd $SCRATCH
+  ```
+* **Verify quotas**:
+  ```bash
+  showquota
+  ```
+* **Internet access on compute nodes**: Compute nodes (`r001`) have no external internet routing by default. To enable package downloads or web requests:
+  ```bash
+  module load WebProxy
+  ```
+
+---
+
+## 3. How to Connect SSH to the Active VNC Desktop
+
+When you log in via SSH, your terminal lands on a login node (e.g., `grace5`). Your Open OnDemand VNC desktop runs on an allocated GPU compute node (e.g., `r001`).
+
+### Step 3.1: Locate your active GPU node
+```bash
+squeue -u $USER
+```
+Look at the `NODELIST` column (for example, `r001`).
+
+### Step 3.2: SSH into the GPU node
+```bash
+ssh r001
+```
+
+### Step 3.3: Detect your TurboVNC Display
+Run:
+```bash
+ps -u $USER -o pid,cmd | grep -E "Xvnc|Xorg"
+```
+You will see output similar to:
+```text
+3902363 /sw/hprc/sw/ood/TurboVNC/bin/Xvnc :2 -desktop TurboVNC: r001:2 ...
+```
+Note the display number (here `:2`). Export the display and authority in your shell:
+```bash
+export DISPLAY=:2
+export XAUTHORITY=/home/jacob.dannie.am/.Xauthority
+```
+
+---
+
+## 4. The Critical Container Rule: Why Native Host Execution Fails
+
+> [!WARNING]
+> Do **NOT** run `my_isaac_sim/isaac-sim/isaac-sim.sh` directly on the host!
+> Grace runs Red Hat Enterprise Linux 8 (`glibc 2.28`). Isaac Sim 5.1.0 binaries (`kit`) require `glibc 2.34` (Ubuntu 22.04+). Running natively on the host fails with:
+> `kit: /lib64/libc.so.6: version 'GLIBC_2.34' not found`
+> Every Isaac Sim command **must** run through `singularity exec`.
+
+---
+
+## 5. Headless Course USD Conversion Workflow
+
+To convert a raw Scaniverse point cloud (`.ply`) into a simulation-ready OpenUSD stage (`.usd` and `.usdz`):
+
+### Conversion Script (`$SCRATCH/Dronehacks_isaac/convert_course_v2.py`)
+```bash
+cat << 'EOF' > $SCRATCH/Dronehacks_isaac/convert_course_v2.py
+import sys, os
+import numpy as np
+
+# 1. SimulationApp MUST initialize first to mount 'pxr' into sys.path
+from isaacsim import SimulationApp
+simulation_app = SimulationApp({"headless": True})
+
+from pxr import Usd, UsdGeom, UsdPhysics, UsdLux, Sdf, Vt, Gf
+try:
+    from pxr import UsdUtils
+    has_usdz = True
+except Exception:
+    has_usdz = False
+
+PLY_PATH = "/scratch/user/jacob.dannie.am/Dronehacks_isaac/dronehacks-course-scan-2026-11-06.ply"
+USD_PATH = "/scratch/user/jacob.dannie.am/Dronehacks_isaac/drone_course_sim_ready_2.usd"
+USDZ_PATH = "/scratch/user/jacob.dannie.am/Dronehacks_isaac/drone_course_sim_ready_2.usdz"
+
+print(f"[1/4] Reading PLY scan: {PLY_PATH}")
+with open(PLY_PATH, "rb") as f:
+    props, in_v, n_verts = [], False, 0
+    while True:
+        line = f.readline().decode("ascii", errors="ignore").strip()
+        if line.startswith("element vertex "):
+            n_verts = int(line.split()[2])
+            in_v = True
+        elif line.startswith("element ") and not line.startswith("element vertex"):
+            in_v = False
+        elif line.startswith("property ") and in_v:
+            p = line.split()
+            if p[1] != "list":
+                m = {"float": "<f4", "uchar": "u1", "uint8": "u1", "int": "<i4"}
+                props.append((p[2], m.get(p[1], "<f4")))
+        elif line == "end_header":
+            break
+    data = np.fromfile(f, dtype=np.dtype(props), count=n_verts)
+
+pts = np.stack([data["x"], data["y"], data["z"]], axis=-1).astype(np.float32)
+
+# Zero floor at Z = 0.0 (1st percentile outlier rejection)
+ground_z = float(np.percentile(pts[:, 2], 1.0))
+pts[:, 2] -= ground_z
+
+r = data["red"].astype(np.float32) / 255.0
+g = data["green"].astype(np.float32) / 255.0
+b = data["blue"].astype(np.float32) / 255.0
+colors = np.stack([r, g, b], axis=-1)
+print(f"      Loaded {n_verts:,} points. Floor zeroed at Z=0.0 (offset: {-ground_z:+.3f}m).")
+
+print(f"[2/4] Initializing clean OpenUSD Stage (Z-up, 1.0 m/unit)...")
+if os.path.exists(USD_PATH):
+    os.remove(USD_PATH)
+stage = Usd.Stage.CreateNew(USD_PATH)
+UsdGeom.SetStageUpAxis(stage, UsdGeom.Tokens.z)
+UsdGeom.SetStageMetersPerUnit(stage, 1.0)
+
+world = UsdGeom.Xform.Define(stage, "/World")
+stage.SetDefaultPrim(world.GetPrim())
+
+scene = UsdPhysics.Scene.Define(stage, "/World/PhysicsScene")
+scene.CreateGravityDirectionAttr().Set(Gf.Vec3f(0.0, 0.0, -1.0))
+scene.CreateGravityMagnitudeAttr().Set(9.81)
+
+# 1. Point Cloud Prim
+pc = UsdGeom.Points.Define(stage, "/World/DroneCourse/ScaniversePointCloud")
+pc.CreatePointsAttr(Vt.Vec3fArray.FromNumpy(pts))
+pc.CreateWidthsAttr(Vt.FloatArray([0.015] * len(pts)))
+color_pv = UsdGeom.PrimvarsAPI(pc).CreatePrimvar("displayColor", Sdf.ValueTypeNames.Color3fArray, UsdGeom.Tokens.vertex)
+color_pv.Set(Vt.Vec3fArray.FromNumpy(colors))
+pc.CreateExtentAttr([Gf.Vec3f(*[float(v) for v in pts.min(axis=0)]), Gf.Vec3f(*[float(v) for v in pts.max(axis=0)])])
+
+# 2. 15 cm Voxel Collision Mesh
+print(f"[3/4] Generating 15 cm colored voxel mesh...")
+voxel_size = 0.15
+coords, inv_indices = np.unique(np.floor(pts / voxel_size).astype(np.int32), axis=0, return_inverse=True)
+n_vox = len(coords)
+
+voxel_colors = np.zeros((n_vox, 3), dtype=np.float32)
+np.add.at(voxel_colors, inv_indices, colors)
+counts = np.bincount(inv_indices, minlength=n_vox)[:, None]
+voxel_colors /= np.maximum(counts, 1)
+
+cube_v = np.array([[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0,0,1],[1,0,1],[1,1,1],[0,1,1]], dtype=np.float32) * voxel_size
+cube_f = np.array([0,2,1,0,3,2, 4,5,6,4,6,7, 0,1,5,0,5,4, 2,3,7,2,7,6, 0,4,7,0,7,3, 1,2,6,1,6,5], dtype=np.int32)
+all_v = ((coords * voxel_size)[:, None, :] + cube_v[None, :, :]).reshape(-1, 3)
+all_idx = ((np.arange(n_vox, dtype=np.int32) * 8)[:, None] + cube_f[None, :]).reshape(-1)
+face_cnt = np.full(n_vox * 12, 3, dtype=np.int32)
+mesh_colors = np.repeat(voxel_colors, 8, axis=0)
+
+mesh = UsdGeom.Mesh.Define(stage, "/World/DroneCourse/CollisionProxy")
+mesh.CreatePointsAttr(Vt.Vec3fArray.FromNumpy(all_v))
+mesh.CreateFaceVertexCountsAttr(Vt.IntArray.FromNumpy(face_cnt))
+mesh.CreateFaceVertexIndicesAttr(Vt.IntArray.FromNumpy(all_idx))
+mesh.CreateExtentAttr([Gf.Vec3f(*[float(v) for v in all_v.min(axis=0)]), Gf.Vec3f(*[float(v) for v in all_v.max(axis=0)])])
+
+mesh_col_pv = UsdGeom.PrimvarsAPI(mesh).CreatePrimvar("displayColor", Sdf.ValueTypeNames.Color3fArray, UsdGeom.Tokens.vertex)
+mesh_col_pv.Set(Vt.Vec3fArray.FromNumpy(mesh_colors))
+
+UsdPhysics.CollisionAPI.Apply(mesh.GetPrim())
+col_api = UsdPhysics.MeshCollisionAPI.Apply(mesh.GetPrim())
+col_api.CreateApproximationAttr("none")
+print(f"      Built {n_vox:,} voxel cubes ({len(all_v):,} vertices, {len(face_cnt):,} triangles).")
+
+print(f"[4/4] Saving USD and packaging USDZ for web viewers...")
+stage.Save()
+print(f"      Saved: {USD_PATH}")
+
+if has_usdz:
+    if os.path.exists(USDZ_PATH):
+        os.remove(USDZ_PATH)
+    UsdUtils.CreateNewUsdzPackage(Sdf.AssetPath(USD_PATH), USDZ_PATH)
+    print(f"      Saved web-compatible USDZ: {USDZ_PATH}")
+
+print("=== SUCCESS: drone_course_sim_ready_2 ready! ===")
+simulation_app.close()
+EOF
+```
+
+### Running the Converter (with Write Cache Binding)
+```bash
+mkdir -p $SCRATCH/cache/Kit/107.3/69cbf6ad
+singularity exec --nv --writable-tmpfs --bind $SCRATCH:$SCRATCH --bind $SCRATCH/cache:/isaac-sim/kit/cache /sw/hprc/sw/bio/containers/isaac-sim/isaac-sim_5.1.0.sif /isaac-sim/python.sh $SCRATCH/Dronehacks_isaac/convert_course_v2.py
+```
+
+---
+
+## 6. Launching Visual Isaac Sim 5.1.0 on the VNC Desktop
+
+To inspect the 3D course and run PX4 SITL physics simulations:
+
+```bash
+export DISPLAY=:2
+export XAUTHORITY=/home/jacob.dannie.am/.Xauthority
+
+singularity exec --nv --writable-tmpfs --bind $SCRATCH:$SCRATCH --bind $SCRATCH/cache:/isaac-sim/kit/cache /sw/hprc/sw/bio/containers/isaac-sim/isaac-sim_5.1.0.sif /isaac-sim/isaac-sim.sh --open $SCRATCH/Dronehacks_isaac/drone_course_sim_ready_2.usd
+```
+
+### Navigating the Viewport
+1. **Focus/Frame Course**: In the Stage tree on the right, click `/World/DroneCourse/CollisionProxy` and press **`F`**.
+2. **Fly Navigation**: Hold **Right Mouse Button** and use **`W` / `A` / `S` / `D` / `Q` / `E`** to fly through the obstacles.
+3. **Orbit Navigation**: Hold **Alt + Left Mouse Button** and drag to orbit around the stage.
+4. **Pegasus Simulator Tab**: On the right panel, the **Pegasus Simulator** tab provides the `PX4` streaming backend with `Auto-launch PX4` checkbox for flight simulation.
+
+---
+
+## 7. Troubleshooting & FAQ
+
+| Error Encountered | Root Cause | Solution |
+|---|---|---|
+| `GLIBC_2.34 not found` | Script executed on Grace host instead of inside container. | Wrap command in `singularity exec --nv ...`. |
+| `GLFW initialization failed` | `DISPLAY` variable not exported or pointing to wrong display. | Run `ps -u $USER -o pid,cmd \| grep Xvnc`, find display `:N`, and run `export DISPLAY=:N`. |
+| `FileNotFoundError: material_cache.json` | Singularity `.sif` is read-only; Kit cannot create `/isaac-sim/kit/cache/...`. | Pass `--writable-tmpfs` and `--bind $SCRATCH/cache:/isaac-sim/kit/cache`. |
+| `ModuleNotFoundError: No module named 'pxr'` | `from pxr import ...` called before `SimulationApp` initializes. | Call `from isaacsim import SimulationApp; app = SimulationApp({"headless": True})` at the top of the script. |
+| Online 3D viewer rejects `.usd` | Stage only had `Points` or was in binary Crate 0.9.0. | Use `drone_course_sim_ready_2.usd` (has polygonal `Mesh`) or `drone_course_sim_ready_2.usdz`. |
