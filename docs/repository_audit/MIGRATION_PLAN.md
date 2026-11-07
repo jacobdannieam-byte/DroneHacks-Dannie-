@@ -34,9 +34,12 @@ removed after checking all open PR bases and heads. Their commits,
 | Hybrid | Start as a configuration of the managed stack after native acceptance | Uses the same state, metric map and command owner. A separate branch would add maintenance without a separate runtime. |
 | Neural and RL | Defer branches | No independently runnable strategies found in the audited refs. |
 
-All feature refs remain review anchors until the relevant PRs and archive
-decisions are resolved. See the [branch inventory](BRANCH_INVENTORY.md) for
-each named branch and immutable commit reference.
+The 14 feature refs and the Phase 4 integration base were retired after
+verifying that all 15 tips are ancestors of readiness at `78ef913`.
+PRs #1–14 were closed as superseded by
+[draft PR #15](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/pull/15),
+which now targets `main`. The [branch inventory](BRANCH_INVENTORY.md)
+retains the original branch names and commit IDs.
 
 ## Integration sequence and PR boundaries
 
@@ -57,20 +60,16 @@ each named branch and immutable commit reference.
    before arming. Review directional probes and any broader decoder
    unification separately with calibrated native fixtures and byte-order
    tests.
-3. **Review shared changes in dependency order.** P1 #1, D0 #3 and
-   Phase 1 diagnostics #7 now target `main` after verifying identical
-   patches. Review Phase 1 independently. Review P1 #1 → I0–I4 #2 →
-   Phase 2 #8. In parallel, review D0 #3 → D1 #4 → D2 #5 → A1 #6 →
-   A2 #9. Keep source commits, checkpoints, seeds and benchmark
+3. **Review the integrated draft by dependency.** In PR #15, review
+   localization, world state and spatial replay, then dynamics and
+   predictor selection, and then the trajectory, planning and handoff
+   diagnostics. Use the superseded PRs for focused diffs and benchmark
+   evidence. Keep source commits, checkpoints, seeds and benchmark
    contracts with their changes.
-4. **Land accepted slices incrementally.** Preserve the parent commits.
-   For each stacked child, verify the accepted parent is reachable from
-   `main` and inspect the resulting patch before retargeting. Use
-   `integration/unified-phase4-base@d6c363c` and readiness
-   `78ef913` to compare the integration results. Review Phase 4 #10
-   after Phase 2 and Phase 3, then review Phases 5–8 in order. Separate
-   approval for shared modules from the later review of any code that
-   hands planner output to the PX4 command owner.
+4. **Review runtime evidence before landing the integrated draft.**
+   Use the Phase 4 merge at `d6c363c` and readiness at `78ef913` as
+   comparison points. Review any future path that hands planner
+   output to the PX4 command owner separately.
 5. **Review the two classical lanes with their owners.** For the
    `classical` emulator, verify the documented build and landing command
    at `1f60fb5`, archive the image digest, OBJ, referee outputs and ULogs,
@@ -93,9 +92,8 @@ each named branch and immutable commit reference.
 7. **Retire only after evidence and approval.** Recheck ownership, recent
    commits, worktrees, external asset availability and all open PR bases.
    Mark approved archival refs and publish the preserved SHAs before a
-   separate deletion decision. Review the remaining deprecated pointers
-   with their owners, including local `experimental` and
-   `integration/unified-phase4-base`.
+   separate deletion decision. Review local `experimental` and
+   any remaining team branches with their owners.
 
 ## Conflicts and validation
 
@@ -105,10 +103,9 @@ each named branch and immutable commit reference.
   and safety interactions to review. In particular, the organizer's
   auto-Offboard interface and managed `refnav.node` are separate owners,
   and the optional Soham core hook touches supervisory control flow.
-- PR #1 forks one commit before the native baseline. Preserve the
-  notebook on the target and the semantic commits on the head. Keep the
-  Phase 4 integration base and the Phase 1 merge parents until their
-  dependent reviews are reconciled.
+- The semantic world-model review in PR #1 forked one commit before
+  the native baseline. Readiness preserves the native notebook, semantic
+  commits, Phase 4 merge and Phase 1 merge parents.
 - Future README and dependency changes may overlap the classical lane.
   Scope any consolidation to emulator files and review shell modes,
   container builds and source pins on their own. Retain its OBJ and
@@ -128,10 +125,10 @@ each named branch and immutable commit reference.
 Record full SHAs for every source, target, PR head and merge result. Obtain
 separate approval for annotated archive tags and protect their refs where
 the repository supports it. Verify that a fresh fetch can resolve each
-archive and recover the pinned data and launch recipe. Example proposed
-labels are `archive/baseline-original` and
-`archive/phase4-integration-base`. Preserve active team branches until
-their owners confirm the archive and PR dependencies are clear.
+archive and recover the pinned data and launch recipe. The retired
+baseline and milestone tips are reachable through `main` or readiness.
+Preserve active team branches until their owners confirm the archive and
+PR dependencies are clear.
 
 Use the last accepted build SHA and matching runtime configuration for
 simulator rollback. Revert a faulty merged PR with a new reviewed commit

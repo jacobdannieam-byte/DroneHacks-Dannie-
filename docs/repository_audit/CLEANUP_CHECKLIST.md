@@ -11,6 +11,9 @@
   #1, #3 and #7 to `main`.
 - [x] Publish the decoder regression and fix in
   [draft PR #17](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/pull/17).
+- [x] Retarget [draft PR #15](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/pull/15)
+  to `main`, close superseded PRs #1–14 and retire the 15 milestone refs.
+  Preserve their commit IDs in the [branch inventory](BRANCH_INVENTORY.md).
 
 ## P0 — Establish the integration baseline
 
@@ -31,8 +34,8 @@
 
 ## P1 — Review shared changes and the two runtimes
 
-- [ ] Review the semantic and dynamics stacks plus Phase 1 in the order
-  in the [migration plan](MIGRATION_PLAN.md). Reuse their existing joins.
+- [ ] Review the managed stack in draft PR #15 in the order described
+  in the [migration plan](MIGRATION_PLAN.md).
 - [ ] Review Soham's directional probes and staged mission separately.
   Require native detector and timing evidence before enabling
   `use_stages`.
