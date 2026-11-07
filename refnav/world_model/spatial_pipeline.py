@@ -1,10 +1,14 @@
 """Join recorded depth and estimated pose into independent metric and semantic evidence."""
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 import math
 from threading import RLock
+from types import MappingProxyType
 
 import numpy as np
+
+from refnav.integration_timing import measure
 
 from .observations import Config, Observation, validate
 from .spatial_input import DepthCalibration, DepthCapture, NS, PoseBuffer, PoseSample, SpatialReference, stamp_ok
@@ -23,8 +27,16 @@ class SpatialUpdate:
 @dataclass(frozen=True)
 class SpatialSnapshot:
     metric: MetricSnapshot
-    semantic: dict
+    semantic: Mapping
     semantic_time_origin_ns: int | None
+
+
+def _freeze_semantic(value):
+    if isinstance(value, dict):
+        return MappingProxyType({key: _freeze_semantic(item) for key, item in value.items()})
+    if isinstance(value, (list, tuple)):
+        return tuple(_freeze_semantic(item) for item in value)
+    return value
 
 
 class SpatialWorld:
@@ -32,7 +44,7 @@ class SpatialWorld:
 
     def __init__(self, reference, calibration, *, policy=MapPolicy(),
                  max_pose_gap_ns=80_000_000, max_capture_age_ns=250_000_000,
-                 linear_limit_mps=3.0, angular_limit_rad_s=4.0):
+                 linear_limit_mps=3.0, angular_limit_rad_s=4.0, timings=None):
         if (not isinstance(reference, SpatialReference) or not isinstance(calibration, DepthCalibration)
                 or calibration.body_frame != reference.body_frame or not isinstance(policy, MapPolicy)):
             raise ValueError("calibration and map must agree on body frame")
@@ -41,6 +53,7 @@ class SpatialWorld:
                 or not all(math.isfinite(v) and 0 < v <= 20 for v in (linear_limit_mps, angular_limit_rad_s))):
             raise ValueError("invalid synchronization or motion bounds")
         self._ref = reference
+        self._timings = timings
         self._calibration = calibration
         self._policy = policy
         self._max_age = max_capture_age_ns
@@ -56,6 +69,7 @@ class SpatialWorld:
         self._poses.clear()
         self._volume.clear()
         self._now = self._last_capture = self._last_id = self._time_origin = self._last_loss = None
+        self._last_received = None
         self._ready = self._reset_required = False
 
     def reset_reference(self, reference):
@@ -118,7 +132,7 @@ class SpatialWorld:
             if self._last_loss is not None and frame.capture_ns <= self._last_loss:
                 return SpatialUpdate(False, "pose_health_loss")
 
-            pose = self._poses.at(frame.capture_ns, now_ns)
+            pose = measure(self._timings, "pose_alignment", self._poses.at, frame.capture_ns, now_ns)
             if pose is None:
                 self._revoke()
                 return SpatialUpdate(False, "missing_healthy_capture_pose")
@@ -152,23 +166,32 @@ class SpatialWorld:
             if reason:
                 self._revoke()
                 return SpatialUpdate(False, reason)
-            prepared = self._volume.prepare(depth, self._calibration, pose)
-            semantic = self._world.process(obs, now_s)
+            prepared = measure(self._timings, "metric_prepare", self._volume.prepare, depth, self._calibration, pose)
+            semantic = measure(self._timings, "worldstate_update", self._world.process, obs, now_s)
             if not semantic["accepted"]:
                 self._reset_required = semantic["rejection"] in (
                     "pose_jump_reset_required", "reference_reset_required")
                 self._revoke()
                 return SpatialUpdate(False, semantic["rejection"])
-            self._volume.apply(prepared, frame.capture_ns)
+            measure(self._timings, "metric_apply", self._volume.apply, prepared, frame.capture_ns)
             self._last_capture, self._last_id, self._time_origin = frame.capture_ns, frame.observation_id, origin
+            self._last_received = frame.received_ns
             self._ready = True
             return SpatialUpdate(True, "accepted", pose.bracket_ns, tuple(semantic["events"]))
 
-    def snapshot(self, *, now_ns):
+    @property
+    def observations_available(self):
+        with self._lock:
+            return self._ready
+
+    def snapshot(self, *, now_ns, immutable_semantic=False):
         with self._lock:
             if not stamp_ok(now_ns) or (self._now is not None and now_ns < self._now):
                 raise ValueError("snapshot time precedes the current reference")
             metric = self._volume.snapshot(self._ref, now_ns, self._last_capture, self._last_id,
-                                           self._calibration.calibration_id, self._ready)
+                                           self._calibration.calibration_id, self._ready,
+                                           received_ns=self._last_received)
             semantic_time = None if self._time_origin is None else (now_ns - self._time_origin) / NS
-            return SpatialSnapshot(metric, self._world.semantic_snapshot(semantic_time), self._time_origin)
+            semantic = self._world.semantic_snapshot(semantic_time)
+            return SpatialSnapshot(metric, _freeze_semantic(semantic) if immutable_semantic else semantic,
+                                   self._time_origin)

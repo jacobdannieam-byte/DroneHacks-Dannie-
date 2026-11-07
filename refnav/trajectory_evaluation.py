@@ -9,6 +9,7 @@ from onboard.adapters.geometry import R_ENU_NED, rot_z
 from refnav.dynamics import DroneState, DynamicsModel, LocalNED, PositionSetpoint, Prediction, PredictedState
 from refnav.dynamics.history import MotionHistory, STEP_SECONDS
 from refnav.dynamics.validation import finite_real, vector3, wrap_yaw
+from refnav.integration_timing import measure
 from refnav.reasoning import GoalProposal, ReasoningContext, WorldReference, build_context, validate_proposal
 from refnav.world_model.spatial_input import MAX_LOCAL_M, NS, SpatialReference, stamp_ok
 from refnav.world_model.spatial_pipeline import SpatialSnapshot
@@ -43,6 +44,7 @@ class FrameAlignment:
     position_error_m: float
     angle_error_rad: float
     provenance: str
+    estimator_reset_counter: int | None = None
 
     def __post_init__(self):
         if not isinstance(self.ned, LocalNED) or not isinstance(self.map, SpatialReference):
@@ -57,6 +59,9 @@ class FrameAlignment:
         object.__setattr__(self, "ned_origin_in_map_m", origin)
         _bounded(self.position_error_m, "alignment position error", 0., 1.)
         _bounded(self.angle_error_rad, "alignment angle error", 0., .5)
+        counter = self.estimator_reset_counter
+        if counter is not None and (type(counter) is not int or not 0 <= counter <= 255):
+            raise ValueError("estimator reset counter must be uint8")
 
 
 @dataclass(frozen=True)
@@ -182,6 +187,11 @@ class _Geometry:
         return int(np.count_nonzero(occupied)), int(np.count_nonzero(unknown))
 
 
+def state_capture_ns(state, alignment):
+    """Convert the relative dynamics stamp using the caller's clock origin."""
+    return alignment.time_origin_ns + round(state.timestamp_s * NS) if abs(state.timestamp_s) < 1e10 else -1
+
+
 def _shared_reasons(state, metric, alignment, now_ns, policy):
     if state.reference != alignment.ned or metric.reference != alignment.map:
         return ("frame_or_reference_mismatch",)
@@ -189,7 +199,7 @@ def _shared_reasons(state, metric, alignment, now_ns, policy):
         return ("clock_domain_mismatch",)
     if state.reference.reference_epoch != metric.reference.epoch:
         return ("reference_epoch_mismatch",)
-    stamp = alignment.time_origin_ns + round(state.timestamp_s * NS) if abs(state.timestamp_s) < 1e10 else -1
+    stamp = state_capture_ns(state, alignment)
     reasons = []
     if not stamp_ok(stamp) or not 0 <= now_ns - stamp <= policy.state_age_ns:
         reasons.append("stale_or_future_state")
@@ -234,7 +244,7 @@ def _resolve_goal(snapshot, goal, now_ns):
     return np.asarray(target.geometry.center), None, ()
 
 
-def _forecast(candidate, state, predictor, history):
+def _forecast(candidate, state, predictor, history, timings):
     for index, command in enumerate(candidate.schedule):
         start = state.timestamp_s + index * STEP_SECONDS
         end = state.timestamp_s + (index + 1) * STEP_SECONDS
@@ -243,7 +253,8 @@ def _forecast(candidate, state, predictor, history):
                 or command.effective_from_s - start > slack or end - command.effective_until_s > slack):
             raise ValueError("candidate setpoint does not cover the effective interval")
     kwargs = {"history": history} if history is not None else {}
-    trajectory = predictor.rollout(state, candidate.schedule, dt=STEP_SECONDS, **kwargs)
+    trajectory = measure(timings, "prediction_rollout", predictor.rollout, state, candidate.schedule,
+                         dt=STEP_SECONDS, **kwargs)
     if not isinstance(trajectory, tuple) or len(trajectory) != len(candidate.schedule):
         raise ValueError("forecast shape mismatch")
     effort = 0.
@@ -264,9 +275,10 @@ def _forecast(candidate, state, predictor, history):
     return points, effort
 
 
-def _evaluate_one(candidate, state, predictor, history, transform, alignment, vehicle, geometry, goal_point):
+def _evaluate_one(candidate, state, predictor, history, transform, alignment, vehicle, geometry, goal_point,
+                  timings):
     try:
-        points, effort = _forecast(candidate, state, predictor, history)
+        points, effort = _forecast(candidate, state, predictor, history, timings)
     except (TypeError, ValueError, OverflowError):
         return CandidateDiagnostic(candidate.candidate_id, "rejected", ("invalid_schedule_or_prediction",), "invalid")
     margin = (vehicle.state_position_error_m + vehicle.tracking_error_m + alignment.position_error_m
@@ -292,7 +304,8 @@ def _evaluate_one(candidate, state, predictor, history, transform, alignment, ve
 
 
 def evaluate_candidates(state, candidates, snapshot, *, now_ns, alignment, vehicle,
-                        goal=None, predictor=None, model_id=None, history=None, policy=EvaluationPolicy(), interrupted=None):
+                        goal=None, predictor=None, model_id=None, history=None, policy=EvaluationPolicy(), interrupted=None,
+                        timings=None):
     """Rank feasible supplied candidates against current, static observed evidence."""
     if (not isinstance(state, DroneState) or not isinstance(snapshot, SpatialSnapshot)
             or not isinstance(snapshot.metric, MetricSnapshot) or not isinstance(alignment, FrameAlignment)
@@ -329,7 +342,7 @@ def evaluate_candidates(state, candidates, snapshot, *, now_ns, alignment, vehic
             if interruption is not None:
                 break
             evaluated.append(_evaluate_one(item, state, predictor, history, transform, alignment, vehicle,
-                                           geometry, goal_point))
+                                           geometry, goal_point, timings))
         diagnostics = tuple(evaluated)
 
     if interruption is None and interrupted is not None:

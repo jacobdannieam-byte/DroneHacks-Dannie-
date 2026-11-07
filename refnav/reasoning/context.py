@@ -1,4 +1,5 @@
 """Read-only WorldState/snapshot adapter. Unknown information is never filled in."""
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
 import math
 
@@ -39,7 +40,9 @@ def _summary(item, now, query_stamp, stale_after, reference, config):
             'unsafe_traversability_claim')
     require(item.get('traversability', 'unknown') in ('unknown', 'blocked', 'insufficient_clearance'),
             'unsafe_traversability_claim')
-    geometry = GeometryEstimate.from_dict(item['geometry'])
+    raw_geometry = item['geometry']
+    require(isinstance(raw_geometry, Mapping), 'invalid_object')
+    geometry = GeometryEstimate.from_dict(dict(raw_geometry))
     age = float(now - last)
     status = item['status']
     if age > stale_after and status != 'invalidated':
@@ -113,7 +116,7 @@ def build_context(source, mission_goal=None, *, now, reference, config=None):
                                             preferred_entity_id=mission_goal.target_entity_id)
         else:
             doc = source
-        require(isinstance(doc, dict), 'missing_world_state')
+        require(isinstance(doc, Mapping), 'missing_world_state')
         require(type(doc['schema_version']) is int and doc['schema_version'] == 1, 'unsupported_world_schema')
         require(WorldReference(doc['frame_id'], doc['epoch'], doc['clock_id']) == reference, 'world_reference_mismatch')
         require(type(doc['reset_required']) is bool and not doc['reset_required'], 'world_reference_reset')

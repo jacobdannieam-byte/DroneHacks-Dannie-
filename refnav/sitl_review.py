@@ -24,6 +24,8 @@ class ProposalReceipt:
     alignment: FrameAlignment
     metric: MetricSnapshot
     decision_ns: int
+    state_received_ns: int | None = None
+    estimator_reset_counter: int | None = None
 
 
 def review(receipt, *, state, alignment, metric, now_ns, owner_output, vehicle,
@@ -39,6 +41,14 @@ def review(receipt, *, state, alignment, metric, now_ns, owner_output, vehicle,
             or vehicle.pos_ok is not True or owner_output.phase != "go"
             or owner_output.stream is not True or owner_output.setpoint is None or owner_output.commands):
         return "owner_gate_closed"
+    return validate_receipt(receipt, state=state, alignment=alignment, metric=metric, now_ns=now_ns)
+
+
+def validate_receipt(receipt, *, state, alignment, metric, now_ns):
+    """Check proposal evidence independently of the planner and command owner."""
+    if (not isinstance(state, DroneState) or not isinstance(alignment, FrameAlignment)
+            or not isinstance(metric, MetricSnapshot) or not stamp_ok(now_ns)):
+        return "invalid_review_input"
     if receipt is None:
         return "proposal_absent"
     if not isinstance(receipt, ProposalReceipt) or not isinstance(receipt.plan, Plan):

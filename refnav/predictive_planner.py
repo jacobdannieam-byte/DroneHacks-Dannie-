@@ -9,6 +9,7 @@ from onboard.adapters.geometry import R_ENU_NED, rot_z
 from refnav.dynamics import DroneState, PositionSetpoint
 from refnav.dynamics.history import STEP_SECONDS
 from refnav.dynamics.validation import finite_real, wrap_yaw
+from refnav.integration_timing import measure
 from refnav.trajectory_evaluation import (
     CLEARANCE_PROBE_M, Candidate, Evaluation, FrameAlignment, GoalBinding, MetricGoal, evaluate_candidates,
 )
@@ -33,6 +34,7 @@ class Plan:
     reason: str
     ranked_ids: tuple[str, ...] = ()
     evaluation: Evaluation | None = None
+    deadline_monotonic_s: float | None = None
 
 
 def _generate(state, objective, alignment):
@@ -68,9 +70,15 @@ def _generate(state, objective, alignment):
                           state.position_m[2] + climb * scale), state.yaw_rad + yaw_step)
 
 
+def candidate_for_id(state, objective, alignment, candidate_id):
+    """Recover the exact bounded D5 candidate from its original in-process inputs."""
+    return next((item for item in _generate(state, objective, alignment)
+                 if item.candidate_id == candidate_id), None)
+
+
 def plan(state, snapshot, *, now_ns, alignment, vehicle, objective, goal=None,
          predictor=None, model_id=None, history=None, min_clearance_m=CLEARANCE_PROBE_M,
-         budget_s=.025, monotonic=perf_counter, cancelled=None):
+         budget_s=.025, monotonic=perf_counter, cancelled=None, timings=None):
     """Generate up to eight local candidates and return IDs, or request a safe stop."""
     clearance = finite_real(min_clearance_m, "minimum clearance")
     budget = finite_real(budget_s, "planner budget")
@@ -92,21 +100,23 @@ def plan(state, snapshot, *, now_ns, alignment, vehicle, objective, goal=None,
 
     reason = interrupted()
     if reason:
-        return Plan("safe_stop_requested", reason)
+        return Plan("safe_stop_requested", reason, deadline_monotonic_s=deadline)
     candidates = tuple(_generate(state, objective, alignment))
-    evaluation = evaluate_candidates(state, candidates, snapshot, now_ns=now_ns, alignment=alignment,
-                                     vehicle=vehicle, goal=objective if goal is None else goal,
-                                     predictor=predictor, model_id=model_id, history=history,
-                                     interrupted=interrupted)
+    evaluation = measure(timings, "d3_evaluation", evaluate_candidates, state, candidates, snapshot,
+                         now_ns=now_ns, alignment=alignment, vehicle=vehicle,
+                         goal=objective if goal is None else goal, predictor=predictor,
+                         model_id=model_id, history=history, interrupted=interrupted, timings=timings)
     reason = interrupted()
     if reason or evaluation.fallback_reason in ("cancelled", "deadline_exceeded"):
-        return Plan("safe_stop_requested", reason or evaluation.fallback_reason)
+        return Plan("safe_stop_requested", reason or evaluation.fallback_reason, deadline_monotonic_s=deadline)
     eligible = [entry for entry in evaluation.candidates if entry.candidate_id != "hold" and entry.status == "feasible"
                 and entry.clearance_lower_bound_m >= clearance and entry.progress_m >= MIN_PROGRESS_M]
     ordered = sorted(eligible, key=lambda entry: (-(entry.score - .10 * entry.inflation_m), entry.candidate_id))
     reason = interrupted()
     if reason:
-        return Plan("safe_stop_requested", reason)
+        return Plan("safe_stop_requested", reason, deadline_monotonic_s=deadline)
     if not ordered:
-        return Plan("safe_stop_requested", "no_verified_progress", evaluation=evaluation)
-    return Plan("candidate_proposed", "verified_progress", tuple(entry.candidate_id for entry in ordered), evaluation)
+        return Plan("safe_stop_requested", "no_verified_progress", evaluation=evaluation,
+                    deadline_monotonic_s=deadline)
+    return Plan("candidate_proposed", "verified_progress", tuple(entry.candidate_id for entry in ordered),
+                evaluation, deadline)
