@@ -10,19 +10,16 @@ Only these branches were merged into `main`:
 
 No other branch was modified or merged.
 
-## Merge result
+## Merge and squash result
 
-All three merges completed without textual conflicts using Git's `ort`
-strategy. The merges were performed in this order:
+The depth and mission contributions were consolidated into one commit:
 
-1. `soham-depth`
-2. `soham-mission`
-3. `soham-stages`
+- `Squash Soham depth and mission changes`
 
-`soham-mission` already contains the `soham-depth` commit, so the second
-merge added the mission/stages work while retaining the depth changes. The
-explicit first merge preserves `soham-depth` as a separately represented
-branch integration in `main`.
+`soham-mission` already contained the `soham-depth` commit, so squashing the
+mission tip included both contributions without duplicating the depth files.
+The `soham-stages` contribution remains a separate merge commit. The source
+branch refs were not rewritten.
 
 ## Potential conflicts and issues considered
 
@@ -50,12 +47,13 @@ branch integration in `main`.
 
 The branches were rechecked after the latest reported push:
 
-- `origin/soham-depth` is an ancestor of `origin/main`.
-- `origin/soham-mission` is an ancestor of `origin/main`.
-- `origin/soham-stages` is an ancestor of `origin/main`.
-- No new commits were present on those branches after the previous report.
-- The latest remote branch tips remain `7781aff` (`soham-depth`), `dd09b79`
+- The content from `origin/soham-depth` and `origin/soham-mission` is present
+  in the squash commit.
+- `origin/soham-stages` remains represented by its merge commit in `main`.
+- The source branch tips remain `7781aff` (`soham-depth`), `dd09b79`
   (`soham-mission`), and `45f7e4c` (`soham-stages`).
+- The post-squash tree is identical to the pre-squash `main` tree.
+- `main` was updated with `--force-with-lease`; no other branch was pushed.
 - `git diff --check` passed.
 - Python bytecode compilation passed for the merged Python trees.
 
