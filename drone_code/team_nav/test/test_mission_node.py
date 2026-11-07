@@ -218,8 +218,8 @@ def test_the_node_starts_without_the_visual_slam_package(build_node):
 def test_the_route_mission_reads_its_waypoints_from_the_route_file(build_node):
     route_file = Path(__file__).resolve().parents[1] / "missions" / "route_waypoints.json"
     node = build_node(mission_kind="route", route_file=str(route_file))
-    assert node.mission.mission_kind == "route" and len(node.mission.route_waypoints) == 14
-    assert node.mission.route_waypoints[0] == (1.613, -0.241)
+    assert node.mission.mission_kind == "route" and len(node.mission.route_waypoints) == 20
+    assert node.mission.route_waypoints[0] == (1.513, -0.141)
 
 
 def test_a_route_file_that_cannot_be_read_is_a_clear_error(build_node):

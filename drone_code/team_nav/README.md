@@ -24,7 +24,7 @@ All flight decisions are plain Python with no ROS in them, so they run and are t
 1. [`team_nav/mission.py`](team_nav/mission.py) covers the whole flight: waiting on the launch mark, the takeoff, the course, the landing, and the rules checked at every step.
 2. [`team_nav/position_watchdog.py`](team_nav/position_watchdog.py) decides when the position can no longer be trusted, which lands the drone at once.
 3. [`team_nav/course_stages.py`](team_nav/course_stages.py) covers the stages between takeoff and landing: follow_line, gate_a, tunnel_align, tunnel_cross, tunnel_exit, chicane and find_pad.
-4. [`team_nav/route_flight.py`](team_nav/route_flight.py) is the route mission. It flies the waypoints one leg at a time, stops at each corner, and turns in place no faster than 15°/s.
+4. [`team_nav/route_flight.py`](team_nav/route_flight.py) is the route mission. It flies the waypoints one leg at a time at 0.5 m/s. At a corner that turns by 25° or more it stops and turns in place at up to 25°/s; at a shallower one it flies straight through and lets the heading blend round.
 5. [`team_nav/landing.py`](team_nav/landing.py) is the landing from section 7.
 6. [`team_nav/position_watch.py`](team_nav/position_watch.py) spots frozen tracking before a start, and measures the speed actually flown.
 7. [`team_nav/mission_inputs.py`](team_nav/mission_inputs.py) holds what the detectors report, and decides whether each report can still be trusted.
@@ -67,7 +67,7 @@ From takeoff until the motors stop, `position_watchdog.py` checks these rules. W
 
 | Rule | Trips when | Default threshold (launch argument) |
 |---|---|---|
-| (a) | No new camera tracking report arrives. | 0.2 s (`watchdog_odometry_timeout_seconds`) |
+| (a) | No new camera tracking report arrives. | 0.3 s (`watchdog_odometry_timeout_seconds`). Raised from 0.2 s because the simulator's reports pause for 0.21 s now and then, and PX4 itself only gives up on them after about 0.4 s. |
 | (b) | A report moved further from the one before than a believable speed allows. The time between them comes from the reports' own timestamps. | 1.5 m/s × time + 0.05 m (`watchdog_jump_speed_metres_per_second`, `watchdog_jump_margin_metres`) |
 | (c) | Position and orientation stay bit-identical while a target asks the drone to move. | 0.5 s (`watchdog_frozen_seconds`). "Asks to move" means a target over 0.05 m away, over 2° round, or a velocity over 0.02 m/s (`watchdog_motion_request_*`). |
 | (e) | `xy_reset_counter` or `heading_reset_counter` changes after takeoff. | No threshold. |

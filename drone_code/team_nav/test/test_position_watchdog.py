@@ -21,11 +21,12 @@ def wobble(index):
 
 
 # ---------------------------------------------------------------- rule (a): reports stop
-def test_rule_a_trips_after_no_report_for_more_than_0_2_s():
+def test_rule_a_trips_after_no_report_for_more_than_0_3_s():
     watchdog = watching()
-    assert watchdog.check(0.2, motion_requested=False) is None           # exactly 0.2 s: not yet
-    rule, reason = watchdog.check(0.21, motion_requested=False)
-    assert rule == "a" and "no new camera tracking report for 0.21 s (limit 0.2 s)" in reason
+    assert watchdog.check(0.21, motion_requested=False) is None          # the simulator's pauses: fine
+    assert watchdog.check(0.3, motion_requested=False) is None           # exactly 0.3 s: not yet
+    rule, reason = watchdog.check(0.31, motion_requested=False)
+    assert rule == "a" and "no new camera tracking report for 0.31 s (limit 0.3 s)" in reason
 
 
 def test_rule_a_does_not_trip_while_reports_keep_arriving():

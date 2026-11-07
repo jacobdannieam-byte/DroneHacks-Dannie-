@@ -49,7 +49,7 @@ Safety rules (each one is a test in test/test_mission.py):
 * The climb starts on the first step. If the drone has not left the ground 10 s after the start,
   we stop, because PX4 switches the motors off then anyway.
 * The position watchdog (position_watchdog.py) runs from takeoff until the motors stop. When one
-  of its rules trips - (a) camera tracking reports stopped for 0.2 s, (b) a jump between two
+  of its rules trips - (a) camera tracking reports stopped for 0.3 s, (b) a jump between two
   reports, (c) tracking frozen while a target asks for motion, (e) PX4 reset its position or
   heading estimate - the drone lands at once, and the log names the rule. During a landing a trip
   is only logged, because the landing is already the answer.

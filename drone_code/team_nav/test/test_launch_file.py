@@ -96,16 +96,18 @@ def test_every_watchdog_threshold_is_a_launch_argument_with_the_teams_default(la
     for name in WATCHDOG_THRESHOLDS:
         assert float(arguments(launched)[name]) == getattr(defaults, name), name
         assert mission_parameters(launched)[name].name == name, name
-    team_defaults = {"watchdog_odometry_timeout_seconds": 0.2, "watchdog_jump_speed_metres_per_second": 1.5,
+    team_defaults = {"watchdog_odometry_timeout_seconds": 0.3, "watchdog_jump_speed_metres_per_second": 1.5,
                      "watchdog_jump_margin_metres": 0.05, "watchdog_frozen_seconds": 0.5}
     for name, value in team_defaults.items():
         assert getattr(defaults, name) == value, name
 
 
-def test_the_route_speeds_are_launch_arguments(launched):
-    assert float(arguments(launched)["route_speed_metres_per_second"]) == MissionSettings().route_speed_metres_per_second == 0.4
-    assert float(arguments(launched)["route_turn_rate_degrees_per_second"]) == MissionSettings().route_turn_rate_degrees_per_second == 15.0
-    assert mission_parameters(launched)["route_speed_metres_per_second"].name == "route_speed_metres_per_second"
+def test_the_route_settings_are_launch_arguments_with_the_teams_defaults(launched):
+    team_defaults = {"route_speed_metres_per_second": 0.5, "route_turn_rate_degrees_per_second": 25.0,
+                     "route_arrive_metres": 0.10, "route_fly_through_degrees": 25.0}
+    for name, value in team_defaults.items():
+        assert float(arguments(launched)[name]) == getattr(MissionSettings(), name) == value, name
+        assert mission_parameters(launched)[name].name == name, name
 
 
 def test_the_vision_check_is_on_unless_the_simulator_script_switches_it_off(launched):

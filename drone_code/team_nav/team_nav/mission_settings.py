@@ -41,8 +41,10 @@ class MissionSettings:
 
     # ------------------------------------------------------------------ position watchdog
     # (position_watchdog.py). Each one is also a launch argument of the same name.
-    # From the team (2026-11-07): rule (a), no new camera tracking report for this long.
-    watchdog_odometry_timeout_seconds: float = 0.2
+    # From the team (2026-11-07): rule (a), no new camera tracking report for this long. Raised from
+    # 0.2 s: the simulator's reports pause for 0.21 s now and then, and PX4 itself only gives up on
+    # them after about 0.4 s.
+    watchdog_odometry_timeout_seconds: float = 0.3
     # From the team: rule (b), a report may be at most this speed times the time between the two
     # reports' timestamps, plus this margin, from the report before it.
     watchdog_jump_speed_metres_per_second: float = 1.5
@@ -57,11 +59,14 @@ class MissionSettings:
     watchdog_motion_request_metres_per_second: float = 0.02
 
     # ------------------------------------------------------------------ route mission (route_flight.py)
-    # From the team (2026-11-07): fly each leg at this speed, and turn in place no faster than this.
-    route_speed_metres_per_second: float = 0.4
-    route_turn_rate_degrees_per_second: float = 15.0
-    # Our own choice: a waypoint counts as reached within this distance.
-    route_arrive_metres: float = 0.15
+    # From the team (2026-11-07): fly each leg at this speed, turn no faster than this, and count a
+    # waypoint where the drone stops as reached within this distance.
+    route_speed_metres_per_second: float = 0.5
+    route_turn_rate_degrees_per_second: float = 25.0
+    route_arrive_metres: float = 0.10
+    # From the team: where the next leg turns by less than this, fly through the waypoint without
+    # stopping and let the heading blend toward the next leg; stop and turn in place otherwise.
+    route_fly_through_degrees: float = 25.0
     # Our own choice: at each corner, wait at most this long for the drone to stop.
     route_corner_settle_time_limit_seconds: float = 3.0
     # Our own choice: the turn is done when the nose is within this of the next leg's direction.

@@ -1,8 +1,9 @@
 {
-  "description": "The route mission's waypoints, given by the team on 2026-11-07. Each is [forward, left] in metres from the takeoff spot, with forward being where the nose points at takeoff. Read by team_nav/mission_node.py when launched with mission:=route.",
+  "description": "The route mission's waypoints, given by the team on 2026-11-07. It keeps 0.40 m from the walls everywhere except Gate B. Each is [forward, left] in metres from the takeoff spot, with forward being where the nose points at takeoff. Read by team_nav/mission_node.py when launched with mission:=route.",
   "waypoints_forward_left_metres": [
-    [1.613, -0.241], [1.513, -1.042], [0.113, -1.341], [0.213, -2.142], [1.613, -2.542],
-    [1.513, -3.392], [0.263, -4.792], [-1.837, -4.442], [-2.537, -3.442], [-2.087, -2.992],
-    [-1.187, -3.142], [-0.987, -2.341], [-2.137, -1.642], [-1.687, -0.492]
+    [1.513, -0.141], [1.663, -0.591], [1.513, -1.042], [0.163, -1.292], [0.063, -1.942],
+    [0.463, -2.242], [1.563, -2.442], [1.663, -3.091], [0.413, -4.742], [-1.737, -4.492],
+    [-2.537, -3.641], [-2.337, -2.992], [-1.837, -3.042], [-1.487, -3.142], [-1.137, -3.091],
+    [-0.987, -2.642], [-1.187, -2.142], [-1.937, -1.892], [-1.937, -0.992], [-1.687, -0.492]
   ]
 }

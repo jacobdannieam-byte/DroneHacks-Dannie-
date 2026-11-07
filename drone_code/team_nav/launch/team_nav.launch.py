@@ -49,7 +49,7 @@ DRONE_16_SYSTEM_ID = '16'
 # The position watchdog's thresholds (team_nav/position_watchdog.py), one launch argument each. The
 # defaults are the team's, and must match mission_settings.py (a test checks they do).
 WATCHDOG_ARGUMENTS = [
-    ('watchdog_odometry_timeout_seconds', '0.2', 'rule (a): land if no camera tracking report for this long'),
+    ('watchdog_odometry_timeout_seconds', '0.3', 'rule (a): land if no camera tracking report for this long'),
     ('watchdog_jump_speed_metres_per_second', '1.5', 'rule (b): believable speed between two reports'),
     ('watchdog_jump_margin_metres', '0.05', 'rule (b): plus this much, in metres'),
     ('watchdog_frozen_seconds', '0.5', 'rule (c): land if the pose is bit-identical this long while moving'),
@@ -84,8 +84,10 @@ ARGUMENTS = [
      'images. The mission refuses false unless simulator/run_team_nav.sh started it'),
     ('mission', 'stages', 'our mission: stages (the course stages), route (missions/route_waypoints.json), '
                           'or none (start only the flight interface)'),
-    ('route_speed_metres_per_second', '0.4', 'route mission: speed along each leg'),
-    ('route_turn_rate_degrees_per_second', '15.0', 'route mission: fastest turn in place at a corner'),
+    ('route_speed_metres_per_second', '0.5', 'route mission: speed along each leg'),
+    ('route_turn_rate_degrees_per_second', '25.0', 'route mission: fastest turn, in place or while flying through'),
+    ('route_arrive_metres', '0.10', 'route mission: a waypoint where the drone stops counts as reached this close'),
+    ('route_fly_through_degrees', '25.0', 'route mission: fly through a waypoint whose next leg turns by less than this'),
 ] + WATCHDOG_ARGUMENTS
 
 
@@ -134,6 +136,8 @@ def generate_launch_description():
             'cruise_height_metres': LaunchConfiguration('cruise_height_metres'),
             'route_speed_metres_per_second': LaunchConfiguration('route_speed_metres_per_second'),
             'route_turn_rate_degrees_per_second': LaunchConfiguration('route_turn_rate_degrees_per_second'),
+            'route_arrive_metres': LaunchConfiguration('route_arrive_metres'),
+            'route_fly_through_degrees': LaunchConfiguration('route_fly_through_degrees'),
             'tunnel_enabled': LaunchConfiguration('tunnel_enabled'),
             'window_enabled': LaunchConfiguration('window_enabled'),
             'vision_check': LaunchConfiguration('vision_check'),

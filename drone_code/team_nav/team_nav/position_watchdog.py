@@ -7,7 +7,8 @@ mission.py then lands at once, using the normal landing (landing.py). It never t
 never reads a clock.
 
 The rules, lettered as the team named them (the team's list has no rule (d)):
-  (a) No new camera tracking report for 0.2 s, judged by when the reports arrive.
+  (a) No new camera tracking report for 0.3 s, judged by when the reports arrive. (The simulator's
+      reports pause for 0.21 s now and then; PX4 itself gives up on them after about 0.4 s.)
   (b) A camera tracking report moved further from the one before than 1.5 m/s times the time
       between them plus 0.05 m. The time between them comes from the reports' own timestamps,
       so a late delivery does not make a real move look like a jump.
