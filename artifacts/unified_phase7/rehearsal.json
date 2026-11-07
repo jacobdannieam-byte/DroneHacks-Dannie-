@@ -1,0 +1,102 @@
+{
+  "evidence": "synthetic_handoff_rehearsal",
+  "native_gate": "open",
+  "checks": [
+    {
+      "scenario": "fresh_proposal",
+      "expected": "eligible_for_offline_review",
+      "observed": "eligible_for_offline_review",
+      "matched": true
+    },
+    {
+      "scenario": "missing_output",
+      "expected": "proposal_absent",
+      "observed": "proposal_absent",
+      "matched": true
+    },
+    {
+      "scenario": "deadline_miss",
+      "expected": "deadline_exceeded",
+      "observed": "deadline_exceeded",
+      "matched": true
+    },
+    {
+      "scenario": "cancelled",
+      "expected": "cancelled",
+      "observed": "cancelled",
+      "matched": true
+    },
+    {
+      "scenario": "unknown_map",
+      "expected": "unavailable_or_future_geometry",
+      "observed": "unavailable_or_future_geometry",
+      "matched": true
+    },
+    {
+      "scenario": "no_verified_route",
+      "expected": "no_verified_progress",
+      "observed": "no_verified_progress",
+      "matched": true
+    },
+    {
+      "scenario": "stale_map",
+      "expected": "stale_geometry",
+      "observed": "stale_geometry",
+      "matched": true
+    },
+    {
+      "scenario": "expired_output",
+      "expected": "proposal_age_exceeded",
+      "observed": "proposal_age_exceeded",
+      "matched": true
+    },
+    {
+      "scenario": "future_output",
+      "expected": "proposal_age_exceeded",
+      "observed": "proposal_age_exceeded",
+      "matched": true
+    },
+    {
+      "scenario": "state_changed",
+      "expected": "proposal_input_changed",
+      "observed": "proposal_input_changed",
+      "matched": true
+    },
+    {
+      "scenario": "reference_reset",
+      "expected": "frame_or_reference_mismatch",
+      "observed": "frame_or_reference_mismatch",
+      "matched": true
+    },
+    {
+      "scenario": "vio_loss",
+      "expected": "owner_gate_closed",
+      "observed": "owner_gate_closed",
+      "matched": true
+    },
+    {
+      "scenario": "invalid_position",
+      "expected": "owner_gate_closed",
+      "observed": "owner_gate_closed",
+      "matched": true
+    },
+    {
+      "scenario": "operator_takeover",
+      "expected": "offboard_authority_absent",
+      "observed": "offboard_authority_absent",
+      "matched": true
+    },
+    {
+      "scenario": "px4_auto_land",
+      "expected": "offboard_authority_absent",
+      "observed": "offboard_authority_absent",
+      "matched": true
+    },
+    {
+      "scenario": "owner_waits",
+      "expected": "owner_gate_closed",
+      "observed": "owner_gate_closed",
+      "matched": true
+    }
+  ]
+}
