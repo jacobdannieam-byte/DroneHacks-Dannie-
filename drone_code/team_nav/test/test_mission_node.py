@@ -44,7 +44,7 @@ def deliver(node, topic, message):
 def deliver_reports(node, drone):
     odometry = fake_ros.Odometry()
     position = odometry.pose.pose.position
-    position.x, position.y, position.z = drone.position
+    position.x, position.y, position.z = drone.reported_position()
     odometry.pose.pose.orientation = fake_ros.Quaternion(z=math.sin(drone.heading_radians / 2),
                                                          w=math.cos(drone.heading_radians / 2))
     deliver(node, POSITION_TOPIC, odometry)
@@ -208,7 +208,7 @@ def test_the_landing_sends_a_pose_at_the_drone_then_twists_at_20_hz_until_the_mo
     assert topic == POSE_TOPIC and seconds == sent[first_twist][0]        # same step, just before
     drone_then = dict(positions_when_sent)[seconds]
     position = pose.pose.position
-    assert math.dist((position.x, position.y, position.z), drone_then) < 1e-9
+    assert math.dist((position.x, position.y, position.z), drone_then) < 1e-5   # tracking wobbles by 1e-6 m
     twist_times = [seconds for seconds, topic, _ in sent[first_twist:] if topic == TWIST_TOPIC]
     assert all(topic == TWIST_TOPIC for _, topic, _ in sent[first_twist:])
     gaps = [later - earlier for earlier, later in zip(twist_times, twist_times[1:])]

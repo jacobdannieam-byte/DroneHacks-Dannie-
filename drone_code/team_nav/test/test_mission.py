@@ -150,7 +150,7 @@ def test_a_position_target_at_the_drone_is_sent_just_before_the_first_velocity_c
     first = first_velocity_step(record)
     hold_point = first.command.position_before_velocity
     assert hold_point is not None
-    assert math.dist(hold_point[:3], first.drone_position) < 1e-9          # exactly where the drone is
+    assert math.dist(hold_point[:3], first.drone_position) < 1e-5          # where the drone is (tracking wobbles 1e-6 m)
     later = [step.command for step in record if step.command.kind == "velocity" and step is not first]
     assert all(command.position_before_velocity is None for command in later)
 
@@ -187,7 +187,7 @@ def test_position_targets_stay_within_half_a_metre_of_the_drone():
     flying = [step for step in record if step.seconds >= SWITCH_AT_SECONDS and step.command.kind == "position"]
     furthest = max(math.hypot(step.command.position[0] - step.drone_position[0],
                               step.command.position[1] - step.drone_position[1]) for step in flying)
-    assert furthest <= MissionSettings().carrot_lead_metres + 1e-9
+    assert furthest <= MissionSettings().carrot_lead_metres + 1e-5      # tracking wobbles by 1e-6 m
     assert furthest > 0.45                                                  # the limit was really reached
 
 
@@ -241,6 +241,58 @@ def test_position_reports_stopping_holds_then_lands_and_px4_finishes_the_landing
     assert "camera tracking position reports stopped, holding" in reasons(mission)
     assert "touchdown confirmed: pushing down" not in reasons(mission)    # no stillness measure: no push
     assert "finished" in phases(mission) and not drone.armed               # PX4 landed it by itself
+
+
+# ---------------------------------------------------------------- frozen camera tracking
+def freeze_tracking_from(seconds):
+    def freeze(now_seconds, mission, drone):
+        drone.tracking_frozen = now_seconds >= seconds
+    return freeze
+
+
+def test_frozen_tracking_before_the_start_sends_no_target_so_the_hand_over_is_refused():
+    mission, drone = Mission(), FakeDrone()
+    record = fly(mission, drone, 5.0, switch_at_seconds=3.0, every_step=freeze_tracking_from(0.0))
+    frozen_at = first_time(mission, "not ready: camera tracking is frozen")
+    assert frozen_at == pytest.approx(1.0, abs=0.11)               # the eleventh identical report
+    assert all(command.kind == "nothing" for command in commands_after(record, frozen_at))
+    assert not drone.offboard and mission.phase == "waiting_for_start"   # the organizers' code refused
+    assert max(step.drone_position[2] for step in record) == 0.0
+
+
+def test_offboard_beginning_while_frozen_refuses_the_start_and_keeps_the_drone_down():
+    mission, drone = Mission(), FakeDrone(disarms_if_not_flown_after_seconds=10.0)
+    record = fly(mission, drone, 14.0, switch_at_seconds=1.5, every_step=freeze_tracking_from(0.0))
+    refused_at = first_time(mission, "refused to start: camera tracking frozen")
+    assert refused_at == pytest.approx(1.5)                        # its last target was still recent
+    assert any(reason.endswith("so the position is not changing at all") for reason in reasons(mission))
+    motors_off_at = first_time(mission, "PX4 switched the motors off after the refused start")
+    held_down = [step.command for step in record if refused_at <= step.seconds < motors_off_at]
+    assert held_down and all(command.velocity == (0.0, 0.0, -0.35) for command in held_down)
+    assert "taking_off" not in phases(mission)
+    assert max(step.drone_position[2] for step in record) == 0.0  # never left the ground
+
+
+def test_tracking_freezing_in_flight_holds_then_lands_without_trusting_the_frozen_position():
+    mission, drone = Mission(ENDLESS_COURSE), FakeDrone()
+    fly(mission, drone, 45.0, every_step=every_step_do(feed_course_inputs(), freeze_tracking_from(6.0)))
+    held_at = first_time(mission, "camera tracking frozen (the same position more than 10 times in a row), holding")
+    assert held_at == pytest.approx(7.0, abs=0.11)
+    assert first_time(mission, "camera tracking frozen (the same position more than 10 times in a row) for 5 s, "
+                               "landing") - held_at == pytest.approx(5.0, abs=0.11)
+    assert "touchdown confirmed: pushing down" not in reasons(mission)   # a frozen position shows no stillness
+    assert "finished" in phases(mission) and not drone.armed             # PX4 landed it by itself
+
+
+def test_tracking_freezing_during_the_descent_is_never_taken_for_stillness():
+    def freeze_in_the_gentle_descent(now_seconds, mission, drone):
+        if mission.phase == "landing" and mission.landing.step_name == "descending_gentle":
+            drone.tracking_frozen = True
+    mission, drone = Mission(), FakeDrone()
+    fly(mission, drone, 45.0, every_step=freeze_in_the_gentle_descent)
+    assert "descending gently" in reasons(mission)
+    assert "touchdown confirmed: pushing down" not in reasons(mission)   # frozen: no stillness measure
+    assert "finished" in phases(mission)                                 # PX4 landed it by itself
 
 
 # ---------------------------------------------------------------- control that stops being ours
@@ -380,6 +432,7 @@ def test_a_second_run_starts_with_every_run_derived_memory_cleared():
     mission.course.pad_position = (9.0, 9.0)                          # pretend memories of the first run
     mission.inputs.set_line(29.9, True, 0.0, 0.0, end_seen=True)
     drone.has_flown = False                                            # the pilot arms again
+    drone.position = [1.5, -0.5, 0.0]                                  # from a different launch spot
     second_start = first_run[-1].seconds + STEP_SECONDS
     snapshot = SnapshotAtTakeoff()
     fly(mission, drone, 25.0, start_seconds=second_start, arm_at_seconds=second_start + 0.5,
@@ -387,6 +440,9 @@ def test_a_second_run_starts_with_every_run_derived_memory_cleared():
     assert snapshot.course is not old_course and snapshot.pad_position is None
     assert snapshot.line_stamp is None and snapshot.fault is None and snapshot.peak_speed < 0.1
     assert phases(mission).count("finished") == 2                      # the second run landed too
+    assert snapshot.home == pytest.approx((1.5, -0.5), abs=1e-5)       # re-anchored where it now stood
+    new_runs = [reason for reason in reasons(mission) if reason.startswith("new run: home")]
+    assert new_runs[0].startswith("new run: home (0.00, 0.00)") and new_runs[1].startswith("new run: home (1.50, -0.50)")
 
 
 def test_offboard_still_reported_after_disarming_is_not_a_start_and_gets_no_target():
@@ -415,6 +471,7 @@ class SnapshotAtTakeoff:
         self.line_stamp = mission.inputs.line_stamp_seconds
         self.fault = mission.fault
         self.peak_speed = mission.position_watch.peak_horizontal_speed_metres_per_second
+        self.home = mission.home
 
 
 def test_every_change_of_reason_is_logged_once():

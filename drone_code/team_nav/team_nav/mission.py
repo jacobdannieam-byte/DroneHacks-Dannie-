@@ -24,9 +24,18 @@ Phases:
   flying_course      course_stages.py decides.
   landing            landing.py decides.
   faulted            The position jumped. Only a zero velocity is sent; the pilot recovers the drone.
+                     (If this program then died, the organizers' code would fly back to the last
+                     position target, which the jump has moved. The team accepts this: the pilot
+                     recovers the drone.)
+  start_refused      Offboard began while camera tracking was frozen. A gentle descent is sent, so
+                     the drone stays on the ground until PX4 switches the motors off.
   finished           PX4 switched the motors off after landing.
   stopped            Control is not ours any more. Nothing is published until the drone is disarmed
                      on the ground, after which a new run can start (all run state is cleared then).
+
+Every start re-anchors: home, the ground height, the heading and the laser's floor reading are
+recorded afresh from where the drone sits at that moment, so each attempt in a block starts from its
+own launch position without restarting the drone's software.
 
 A trap in the organizers' code (from the organizer code audit): when a velocity command expires, or
 when /skybeta/hold is called, the drone flies back to the LAST POSITION TARGET it was sent, wherever
@@ -43,6 +52,9 @@ Safety rules (each one is a test in test/test_mission.py):
 * Nothing advances unless camera tracking reports and PX4's position reports are each freshly
   received, and the flight state is fresh and says the link to PX4 is up. (The flight state repeats
   old values, so it cannot vouch for the other two.) Otherwise hold, and land if that lasts 5 s.
+* Camera tracking that repeats a bit-identical position more than 10 times in a row has frozen, and
+  counts as unhealthy, like reports that stopped. While it is frozen before a start, no target is
+  sent, so control cannot be handed over; the reason is logged.
 * Every position target stays within 0.5 m of the drone, sideways.
 * A position jump of more than 0.5 m between steps latches a fault: stop advancing, send nothing
   but a zero velocity, and leave the recovery to the pilot.
@@ -87,7 +99,8 @@ class Mission:
         self.settings = settings or MissionSettings()
         self.inputs = MissionInputs()            # detector reports; all missing until detectors exist
         self.position_watch = PositionWatch(self.settings.position_jump_limit_metres,
-                                            1.0 / self.settings.steps_per_second)
+                                            1.0 / self.settings.steps_per_second,
+                                            self.settings.frozen_tracking_identical_reports)
         self.phase = "waiting_for_start"
         self.reason = ""
         self.history = []                        # [(seconds, phase, reason)] at every change
@@ -187,6 +200,8 @@ class Mission:
         ended = self.check_control_is_still_ours(now_seconds)
         if ended is not None:
             return ended
+        if self.phase == "start_refused":
+            return self.keep_on_the_ground()
         if self.phase != "faulted":
             self.check_for_position_jump(now_seconds)
         if self.phase == "faulted":
@@ -235,6 +250,14 @@ class Mission:
     def position_is_fresh(self, now_seconds):
         return self.received_within(self.position_seconds, now_seconds, self.settings.position_report_max_age_seconds)
 
+    def position_is_usable(self, now_seconds):
+        """Freshly received, and not frozen."""
+        return self.position_is_fresh(now_seconds) and not self.position_watch.tracking_frozen()
+
+    def frozen_tracking_reason(self):
+        repeats = self.position_watch.identical_reports_in_a_row
+        return f"camera tracking frozen (the same position {repeats} times in a row)"
+
     def laser_is_fresh(self, now_seconds):
         return self.received_within(self.laser_seconds, now_seconds, self.settings.laser_report_max_age_seconds)
 
@@ -246,6 +269,8 @@ class Mission:
         settings = self.settings
         if not self.position_is_fresh(now_seconds):
             return "camera tracking position reports stopped"
+        if self.position_watch.tracking_frozen():
+            return f"camera tracking frozen (the same position more than {settings.frozen_tracking_identical_reports} times in a row)"
         if not self.received_within(self.px4_report_seconds, now_seconds, settings.px4_report_max_age_seconds):
             return "PX4 position reports stopped"
         if not self.flight_state_is_fresh(now_seconds):
@@ -271,6 +296,10 @@ class Mission:
                 return self.try_to_start(now_seconds)
         if not self.position_is_fresh(now_seconds):
             return Command("nothing", reason="waiting for position reports from camera tracking")
+        if self.position_watch.tracking_frozen():
+            # Without a recent target the organizers' code will not hand over control.
+            return Command("nothing", reason="not ready: camera tracking is frozen (its position is not changing "
+                                             "at all), so no target is sent and control cannot be handed over")
         x, y, z = self.position
         # A target just above the drone: the lowest the organizers' code allows. It does nothing
         # until Offboard starts, and then it lifts the drone off at once.
@@ -288,6 +317,8 @@ class Mission:
         if self.position is None:
             return self.stop(now_seconds, "Offboard became active but no position report has ever arrived "
                                           "from camera tracking: cannot take off")
+        if self.position_watch.tracking_frozen():
+            return self.refuse_start(now_seconds)
         floor_reading = self.median_floor_reading()
         self.reset_run_state()
         self.start_seconds = now_seconds
@@ -299,7 +330,25 @@ class Mission:
                                  self.ground_height_metres + self.settings.lowest_position_target_metres,
                                  self.start_heading_radians)
         self.phase = "taking_off"
+        floor_text = "none recorded" if floor_reading is None else f"{floor_reading:.2f} m"
+        self.log(now_seconds, f"new run: home ({self.home[0]:.2f}, {self.home[1]:.2f}), ground height "
+                              f"{self.ground_height_metres:.2f} m, heading {math.degrees(self.heading_radians):.0f} deg, "
+                              f"laser floor reading {floor_text}")
         return self.take_off(now_seconds)
+
+    def refuse_start(self, now_seconds):
+        """Offboard has begun, but camera tracking is frozen: no mission. The organizers' code is
+        already flying to our last target, just above the drone, so keep commanding a gentle
+        descent until PX4 switches the motors off. On the floor this cannot move the drone."""
+        self.phase = "start_refused"
+        self.log(now_seconds, f"refused to start: {self.frozen_tracking_reason()}, so the position is not "
+                              "changing at all")
+        return self.keep_on_the_ground()
+
+    def keep_on_the_ground(self):
+        descent = self.settings.gentle_descent_speed_metres_per_second
+        return Command("velocity", velocity=(0.0, 0.0, -descent),
+                       reason="start refused: keeping the drone on the ground until PX4 switches the motors off")
 
     def median_floor_reading(self):
         readings = sorted(distance for _, distance in self.floor_laser_readings)
@@ -309,6 +358,8 @@ class Mission:
 
     # ------------------------------------------------------------------ rules checked every step
     def check_control_is_still_ours(self, now_seconds):
+        if self.phase == "start_refused" and self.armed is False:
+            return self.stop(now_seconds, "PX4 switched the motors off after the refused start")
         if self.armed is False:
             if self.phase == "landing":
                 return self.end_flight(now_seconds, "finished", "landed: PX4 switched the motors off")
@@ -320,7 +371,7 @@ class Mission:
         return None
 
     def check_for_position_jump(self, now_seconds):
-        if not self.position_is_fresh(now_seconds):
+        if not self.position_is_usable(now_seconds):
             return
         if self.phase == "landing" and self.landing.touched_down:
             return                               # on the floor, pushing down: position no longer used
@@ -408,7 +459,7 @@ class Mission:
         self.phase = "landing"
 
     def land(self, now_seconds):
-        position = self.position if self.position_is_fresh(now_seconds) else None
+        position = self.position if self.position_is_usable(now_seconds) else None
         laser = self.laser_metres if self.laser_is_fresh(now_seconds) else None
         landing_command = self.landing.step(now_seconds, position, laser)
         if landing_command.hold_position is not None:
@@ -430,7 +481,7 @@ class Mission:
     def keep_close_to_the_drone(self, now_seconds, setpoint):
         """PX4 flies to a position target as fast as 12 m/s, so a target is never sent further than
         the carrot's 0.5 m from the drone, sideways."""
-        if not self.position_is_fresh(now_seconds):
+        if not self.position_is_usable(now_seconds):
             return tuple(setpoint)
         east, north = setpoint[0] - self.position[0], setpoint[1] - self.position[1]
         distance = math.hypot(east, north)

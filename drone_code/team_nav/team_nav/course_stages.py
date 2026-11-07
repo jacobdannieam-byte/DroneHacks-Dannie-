@@ -397,6 +397,10 @@ class Course:
         return StageAction("tunnel disabled: hovering at the tunnel entrance")
 
     def stage_tunnel_cross(self, now_seconds, position, heading_radians, view):
+        # Measured on drone 16: camera tracking (cuVSLAM) runs with enable_imu_fusion false, pure
+        # stereo visual odometry with no motion sensor to carry it through darkness, and with
+        # enable_localization_n_mapping false, so drift picked up in here is never corrected by the
+        # tracker. That is why this stage only moves on space seen free and is off by default.
         settings, memory = self.settings, self.stage_memory
         if "start" not in memory:
             memory["start"] = (position[0], position[1])

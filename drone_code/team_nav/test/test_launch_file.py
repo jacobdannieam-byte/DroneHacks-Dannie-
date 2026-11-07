@@ -14,11 +14,13 @@ from team_nav.mission_settings import MissionSettings
 PACKAGE_FOLDER = Path(__file__).resolve().parents[1]
 LAUNCH_FILE = PACKAGE_FOLDER / "launch" / "team_nav.launch.py"
 # From the organizers' example launch file (competitor.launch.py, skybeta 0.3.2): the parameters
-# it gives flight_interface, and their defaults.
+# it gives flight_interface, and their defaults. We add only target_system (see below).
 EXAMPLE_FLIGHT_INTERFACE_DEFAULTS = {
     "max_altitude_m": "3.0", "min_altitude_m": "0.3", "max_speed_mps": "1.5", "setpoint_rate_hz": "10.0",
     "allow_mode_request": "false", "auto_offboard_on_arm": "true", "odometry_topic": "/visual_slam/tracking/odometry",
 }
+# Measured on drone 16: MAV_SYS_ID is 16; flight_interface would otherwise address PX4 as system 1.
+DRONE_16_SYSTEM_ID = "16"
 MISSION_NODE_PARAMETERS_NOT_IN_SETTINGS = {"position_topic", "flight_state_topic", "px4_local_position_topic"}
 
 
@@ -43,14 +45,19 @@ def node(description, executable):
                 if isinstance(entity, fake_launch.Node) and entity.settings["executable"] == executable)
 
 
-def test_flight_interface_starts_exactly_as_in_the_organizers_example(launched):
+def test_flight_interface_starts_as_in_the_organizers_example_plus_target_system(launched):
     flight_interface = node(launched, "flight_interface")
     assert flight_interface["package"] == "skybeta_flight_interface"
     passed = {name: value.name for name, value in flight_interface["parameters"][0].items()}
-    assert passed == {name: name for name in EXAMPLE_FLIGHT_INTERFACE_DEFAULTS}
+    assert passed == {name: name for name in list(EXAMPLE_FLIGHT_INTERFACE_DEFAULTS) + ["target_system"]}
     declared = arguments(launched)
     for name, default in EXAMPLE_FLIGHT_INTERFACE_DEFAULTS.items():
         assert declared[name] == default, name
+
+
+def test_the_offboard_request_is_addressed_to_drone_16(launched):
+    assert arguments(launched)["target_system"] == DRONE_16_SYSTEM_ID
+    assert node(launched, "flight_interface")["parameters"][0]["target_system"].name == "target_system"
 
 
 def test_the_hand_over_to_software_is_on_and_mode_requests_are_off(launched):

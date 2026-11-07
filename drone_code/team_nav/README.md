@@ -3,8 +3,10 @@
 This is our team's ROS 2 package for the real drone. It holds the mission program, which flies the course stages and lands with the bottom laser sensor (section 7 of [`docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md)).
 
 [`launch/team_nav.launch.py`](launch/team_nav.launch.py) starts two programs on the drone, the same way the organizers' example launch file does:
-- the organizers' flight interface, with `auto_offboard_on_arm` on;
+- the organizers' flight interface, with `auto_offboard_on_arm` on and `target_system` set to 16;
 - our mission program.
+
+`target_system` is drone 16's PX4 system ID (`MAV_SYS_ID` is 16, measured in `~/skybeta/px4/params/fleet/drone16-vio-2026-11-03.params`). The flight interface in skybeta 0.3.2 defaults it to 1, and then its Offboard request would go to a system that isn't there.
 
 Nothing moves until a person acts. Only the pilot can arm the drone, on the remote control. Control passes to the mission only after the pilot arms on the ground and then flips the switch to Position. The pilot can take the drone back at any moment, and the mission then stops sending targets. Rehearse the start with the propellers off before the first flight.
 
@@ -46,6 +48,7 @@ These come from reading the organizers' flight interface. Each one has a test.
 - **The flight state repeats old values.** Before anything advances, the mission checks three things separately: camera tracking reports have arrived recently, PX4's position reports have arrived recently, and the flight state is fresh and says the PX4 link is up. If any check fails, the drone holds, and it lands if that lasts 5 s.
 - **After a position jump, the pilot recovers the drone.** The mission stops advancing and sends only a zero velocity. It sends no position hold, because the position no longer means anything. The pilot then takes over.
 - **Touchdown needs three signs together.** The mission must be commanding a descent, position reports must show the drone has stopped moving down, and the laser must be at the floor reading. The laser never reads below 0.1 m, so it can't confirm touchdown alone. Without a usable laser or position reports, the drone keeps descending gently, and PX4 lands it a few seconds later.
+- **Frozen camera tracking counts as unhealthy.** On drone 16, odometry once kept arriving 30 times a second with a bit-identical position for many seconds after tracking died. More than 10 identical positions in a row now counts as frozen. In flight, a freeze means hold, then land, as when reports stop. The landing never treats a frozen position as stillness. Before a start, no target is sent while tracking is frozen, so the organizers' code can't hand over control, and the log says why. If Offboard still begins in the moment before the freeze is spotted, the start is refused. The mission then commands a gentle descent, which keeps the drone on the floor until PX4 switches the motors off.
 - **Each run starts clean.** When a run starts, everything learned in the previous run is cleared: the pad position, the space seen free, the counts, the fault, the timers and the detector reports. Once PX4 has disarmed the drone on the ground, the mission is ready for another run. A new run starts the same way as the first: the pilot arms, then flips the switch to Position. PX4 can still report Offboard after disarming. That is never treated as a start, and the drone gets no target while it lasts.
 
 ## What it does today
@@ -58,6 +61,14 @@ The line detector, pad detector, depth clearances and camera tracking health don
 4. It lands using the section 7 landing.
 
 This matches test steps 7 and 8 of the plan: a short low hover, then an automatic landing. As each detector starts writing to `Mission.inputs`, the stages that use it begin to work.
+
+## Camera tracking on drone 16
+
+Both of these were measured on the drone:
+- cuVSLAM runs with `enable_imu_fusion` false. It's pure stereo visual odometry, and no motion sensor carries the estimate through darkness or a blank view. That is why the tunnel stage is off by default.
+- It also runs with `enable_localization_n_mapping` false. There's no loop closure, so the tracker never corrects drift itself.
+
+So it can freeze, jump or slowly drift, and the tracker won't notice. `position_watch.py` watches for the first two.
 
 ## Tests
 

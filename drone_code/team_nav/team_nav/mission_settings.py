@@ -45,6 +45,10 @@ class MissionSettings:
     # ------------------------------------------------------------------ freshness of inputs
     # From the team plan (section 11): if position reports stop for more than 0.2 s, hold.
     position_report_max_age_seconds: float = 0.2
+    # Measured on drone 16 (2026-11-07): when camera tracking died, its reports kept coming 30 times a
+    # second with a bit-identical position for many seconds. More identical positions in a row than
+    # this means tracking has frozen (about a third of a second at 30 reports per second).
+    frozen_tracking_identical_reports: int = 10
     # Our own choice: the organizers' code reports the flight state 5 times per second.
     flight_state_max_age_seconds: float = 1.0
     # Our own choice: PX4 sends its position report many times per second.
@@ -93,7 +97,9 @@ class MissionSettings:
 
     # ------------------------------------------------------------------ stage settings
     # Our own choice: off until the tunnel crossing has been tested. Off means the drone hovers
-    # at the tunnel entrance and lands there, which keeps checkpoints 1 and 2.
+    # at the tunnel entrance and lands there, which keeps checkpoints 1 and 2. Measured on drone 16:
+    # camera tracking runs without the motion sensor (cuVSLAM enable_imu_fusion false), so nothing
+    # carries the position estimate through a dark stretch.
     tunnel_enabled: bool = False
     # Our own choice: off until a window detector exists. On only says so and uses Gate B.
     window_enabled: bool = False
@@ -182,8 +188,7 @@ class MissionSettings:
     # From the organizer code audit: cap the camera's automatic exposure, so a long exposure in dim
     # light does not blur the pictures camera tracking depends on.
     cap_camera_exposure: bool = True
-    # Estimated from the camera topic names (/oak/left/..., /oak/right/...). Check on the drone with
-    # "ros2 param list /oak".
+    # Measured on drone 16: "ros2 param get /oak left.r_auto_exposure_limit" works there.
     camera_node_name: str = "/oak"
     # From the organizer code audit: the longest automatic exposure, in microseconds.
     camera_auto_exposure_limit_microseconds: int = 8000

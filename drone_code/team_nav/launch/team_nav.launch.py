@@ -2,8 +2,8 @@
 our mission program.
 
 This follows the organizers' example launch file (competitor_example/launch/competitor.launch.py,
-skybeta 0.3.2): the flight_interface node is started exactly as the example starts it, and our
-mission node takes the place of their square_mission demo. Their guide says a team's launch file
+skybeta 0.3.2): the flight_interface node is started as the example starts it, and our mission node
+takes the place of their square_mission demo. The one addition is target_system, explained below. Their guide says a team's launch file
 must start flight_interface with auto_offboard_on_arm set to true, or the drone stays under the
 pilot's control.
 
@@ -39,6 +39,12 @@ from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
+# Measured on drone 16: its PX4 system ID (MAV_SYS_ID) is 16, in
+# ~/skybeta/px4/params/fleet/drone16-vio-2026-11-03.params. The flight interface in skybeta 0.3.2
+# addresses its Offboard request to target_system, which defaults to 1, so without this the request
+# would go to a system that is not there and the hand-over would never happen.
+DRONE_16_SYSTEM_ID = '16'
+
 # name -> (default, help). The flight interface values are the organizers' example defaults, so the
 # safety limits are exactly theirs unless someone tightens them on the command line.
 ARGUMENTS = [
@@ -55,6 +61,8 @@ ARGUMENTS = [
      'stays in Position under the pilot'),
     ('odometry_topic', '/visual_slam/tracking/odometry',
      'source of the ENU pose the altitude band is measured against'),
+    ('target_system', DRONE_16_SYSTEM_ID,
+     'PX4 system ID (MAV_SYS_ID) that the Offboard request is addressed to; 16 on drone 16'),
     ('cruise_height_metres', '0.8', 'our mission: flight height above the launch floor, metres'),
     ('tunnel_enabled', 'false', 'our mission: false hovers at the tunnel entrance, then lands'),
     ('window_enabled', 'false', 'our mission: false goes through Gate B'),
@@ -82,6 +90,7 @@ def generate_launch_description():
             'allow_mode_request': LaunchConfiguration('allow_mode_request'),
             'auto_offboard_on_arm': LaunchConfiguration('auto_offboard_on_arm'),
             'odometry_topic': LaunchConfiguration('odometry_topic'),
+            'target_system': LaunchConfiguration('target_system'),
         }],
     )
 

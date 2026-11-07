@@ -15,6 +15,11 @@ What it imitates:
   motors off 2 s after that.
 * The bottom laser never reads below 0.1 m (PX4 setting EKF2_MIN_RNG), and drifts upward by up to
   8 cm while the drone sits on the floor (section 7).
+* Camera tracking's reported position wobbles by a few micrometres from report to report, as real
+  tracking does even when the drone is still. tracking_frozen makes it repeat one position exactly,
+  as drone 16's did after tracking died (2026-11-07).
+* Optionally, PX4 switches the motors off if the drone has not taken off within 10 s of arming
+  (PX4 setting COM_DISARM_PRFLT).
 """
 import math
 from collections import namedtuple
@@ -33,11 +38,13 @@ MOTORS_OFF_SECONDS_AFTER_LANDED = 2.0
 LASER_LOWEST_READING_METRES = 0.1
 LASER_DRIFT_ON_FLOOR_METRES = 0.08
 LASER_DRIFT_PER_SECOND = 0.02
+# Our own choice for the tests: far too small to matter, but enough that no two reports are identical.
+TRACKING_WOBBLE_METRES = 1e-6
 
 
 class FakeDrone:
     def __init__(self, heading_radians=0.0, laser_height_on_floor_metres=0.08,
-                 floor_height=lambda x, y: 0.0, motors_can_lift=True):
+                 floor_height=lambda x, y: 0.0, motors_can_lift=True, disarms_if_not_flown_after_seconds=None):
         self.position = [0.0, 0.0, 0.0]
         self.heading_radians = heading_radians
         self.armed = False
@@ -60,8 +67,26 @@ class FakeDrone:
         self.sends_px4_reports = True             # ... or PX4's position reports stopping
         self.sends_flight_state = True            # ... or the organizers' flight state stopping
         self.px4_link = True                      # what the flight state says about the link to PX4
+        self.tracking_frozen = False              # tests turn this on to imitate camera tracking freezing
+        self.frozen_report = None
+        self.reports_made = 0
+        self.last_reported = (0.0, 0.0, 0.0)
+        self.disarms_if_not_flown_after_seconds = disarms_if_not_flown_after_seconds
+        self.armed_at_seconds = None
 
     # ------------------------------------------------------------------ what the mission hears
+    def reported_position(self):
+        """What camera tracking reports: the position with a tiny wobble, or a frozen copy."""
+        if self.tracking_frozen:
+            if self.frozen_report is None:
+                self.frozen_report = self.last_reported
+            return self.frozen_report
+        self.frozen_report = None
+        self.reports_made += 1
+        wobble = TRACKING_WOBBLE_METRES * (self.reports_made % 3 - 1)
+        self.last_reported = (self.position[0] + wobble, self.position[1], self.position[2])
+        return self.last_reported
+
     def flight_state(self):
         return self.offboard, self.armed, self.landed, self.px4_link
 
@@ -76,8 +101,9 @@ class FakeDrone:
         return self.position[2] <= self.floor_height(self.position[0], self.position[1]) + 1e-9
 
     # ------------------------------------------------------------------ the pilot and the hand-over
-    def arm(self):
+    def arm(self, now_seconds=None):
         self.armed = True
+        self.armed_at_seconds = now_seconds
 
     def switch_to_position_mode(self, now_seconds):
         """The pilot's switch after arming. Returns True if Offboard started."""
@@ -141,6 +167,14 @@ class FakeDrone:
             largest = TURN_RATE_RADIANS_PER_SECOND * seconds
             self.heading_radians += max(-largest, min(largest, error))
         self.run_land_detector(up, seconds)
+        self.disarm_if_never_took_off(now_seconds)
+
+    def disarm_if_never_took_off(self, now_seconds):
+        limit = self.disarms_if_not_flown_after_seconds
+        if limit is None or not self.armed or self.has_flown or self.armed_at_seconds is None:
+            return
+        if now_seconds - self.armed_at_seconds >= limit:
+            self.armed = False
 
     def run_land_detector(self, commanded_up_metres_per_second, seconds):
         descending_on_floor = (self.armed and self.has_flown and self.on_floor()
@@ -178,12 +212,12 @@ def fly(mission, drone, seconds, step_seconds=0.1, arm_at_seconds=0.5, switch_at
         if every_step is not None:
             every_step(now, mission, drone)
         if now >= arm_at_seconds and not drone.armed and not drone.has_flown and not switched:
-            drone.arm()
+            drone.arm(now)
         if now >= switch_at_seconds and not switched and drone.armed:
             switched = True
             drone.switch_to_position_mode(now)
         if drone.sends_position_reports:
-            mission.observe_position(now, tuple(drone.position), drone.heading_radians)
+            mission.observe_position(now, drone.reported_position(), drone.heading_radians)
         if drone.sends_flight_state:
             mission.observe_flight_state(now, *drone.flight_state())
         if drone.sends_px4_reports:
