@@ -1,0 +1,18 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Onboard service runtime logs, locks, and state receipts
+.onboard/
+
+# Logs and scratch text files
+*.log
+combined_code.txt
+
+# Editor / OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
