@@ -22,6 +22,7 @@ hand instead:  ros2 run team_nav mission
 """
 import json
 import math
+import os
 from dataclasses import fields
 
 import rclpy
@@ -44,6 +45,16 @@ DEFAULT_FLIGHT_STATE_TOPIC = "/skybeta/state"
 DEFAULT_PX4_LOCAL_POSITION_TOPIC = "/fmu/out/vehicle_local_position"
 POSE_TARGET_TOPIC = "/skybeta/setpoint/pose"
 VELOCITY_COMMAND_TOPIC = "/skybeta/setpoint/twist"
+# SIMULATOR ONLY. The simulator publishes no camera images, so nothing reports camera tracking
+# health and every stage would hold for it. simulator/run_team_nav.sh launches with
+# vision_check:=false to treat it as healthy. This program accepts that only when both of these
+# show it is that script, inside the simulator box, so the check can never be switched off on the
+# drone: the script sets this environment variable, and the simulator box shares the repository at
+# /repository, a folder the drone does not have.
+SIMULATOR_RUN_VARIABLE = "TEAM_NAV_STARTED_BY"
+SIMULATOR_RUN_VALUE = "simulator/run_team_nav.sh"
+SIMULATOR_FOLDER = "/repository/simulator"
+
 # The camera tracking frame. The organizers' code ignores the frame named in a message (organizer
 # code audit): positions are always camera tracking ENU, and velocities always world ENU (x East,
 # y North, z Up), whatever way the nose points. We fill it in only so the messages read correctly.
@@ -87,10 +98,15 @@ def setting_value(name, default, value):
                      f"{type(default).__name__} like its default {default!r}. Fix it in the launch command.")
 
 
+def vision_check_may_be_switched_off():
+    started_by_the_simulator_script = os.environ.get(SIMULATOR_RUN_VARIABLE) == SIMULATOR_RUN_VALUE
+    return started_by_the_simulator_script and os.path.isdir(SIMULATOR_FOLDER)
+
+
 class MissionNode(Node):
     def __init__(self):
         super().__init__("team_nav_mission")
-        self.mission = Mission(self.read_settings())
+        self.mission = Mission(self.read_settings(), vision_check=self.read_vision_check())
         position_topic = self.declare_parameter("position_topic", DEFAULT_POSITION_TOPIC).value
         flight_state_topic = self.declare_parameter("flight_state_topic", DEFAULT_FLIGHT_STATE_TOPIC).value
         local_position_topic = px4_local_position_topic(
@@ -128,6 +144,20 @@ class MissionNode(Node):
             value = self.declare_parameter(setting.name, default, any_type).value
             setattr(settings, setting.name, setting_value(setting.name, default, value))
         return settings
+
+    def read_vision_check(self):
+        """True unless this is a simulator run that asked for vision_check:=false."""
+        any_type = ParameterDescriptor(dynamic_typing=True)
+        wanted = setting_value("vision_check", True, self.declare_parameter("vision_check", True, any_type).value)
+        if wanted:
+            return True
+        if vision_check_may_be_switched_off():
+            self.get_logger().warn("SIMULATOR ONLY: vision_check is false, so camera tracking health is treated as "
+                                   "healthy. This must never happen on the drone.")
+            return False
+        self.get_logger().error("vision_check:=false is only for the simulator, started by "
+                                "simulator/run_team_nav.sh. This is not that run, so the vision check stays on.")
+        return True
 
     def now_seconds(self):
         return self.get_clock().now().nanoseconds * 1e-9

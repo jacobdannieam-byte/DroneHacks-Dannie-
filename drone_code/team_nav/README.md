@@ -78,7 +78,7 @@ From the top of the repository, run:
 python3 -m pytest drone_code/team_nav/test
 ```
 
-Four helper files in `test/` exist only for the tests and never run on the drone. `fake_drone.py` stands in for PX4 and the organizers' flight interface. `fake_ros.py` stands in for ROS 2, including the parameter client, so `mission_node.py` and `camera_exposure.py` can be tested without ROS. `fake_launch.py` does the same for the launch file. `conftest.py` lets the tests find the package. A real flight check still has to happen in the simulator and then on the drone. None of this has flown yet.
+Four helper files in `test/` exist only for the tests and never run on the drone. `fake_drone.py` stands in for PX4 and the organizers' flight interface. `fake_ros.py` stands in for ROS 2, including the parameter client, so `mission_node.py` and `camera_exposure.py` can be tested without ROS. `fake_launch.py` does the same for the launch file. `conftest.py` lets the tests find the package. To fly the package in the simulator, with this launch file, run `simulator/run_team_nav.sh` from the top of the repository. It launches with two simulator-only settings: `target_system:=1` and `vision_check:=false`. The simulator has no camera images, so nothing reports camera tracking health. `vision_check` defaults to true, and the mission refuses false unless that script started it inside the simulator box. None of this has flown on the drone yet.
 
 ## Other files
 

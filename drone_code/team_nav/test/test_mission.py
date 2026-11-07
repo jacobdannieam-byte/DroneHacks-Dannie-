@@ -132,6 +132,14 @@ def test_with_no_detectors_it_takes_off_holds_and_lands_by_section_7():
     assert motors_off_at - first_time(mission, "settling") < 12.0
 
 
+def test_without_the_vision_check_it_holds_for_the_missing_line_instead_and_lands():
+    mission, drone = Mission(vision_check=False), FakeDrone()       # the simulator's setting
+    fly(mission, drone, 40.0)
+    assert "follow_line: line missing, holding" in reasons(mission)
+    assert not any("camera tracking missing" in reason for reason in reasons(mission))
+    assert "touchdown confirmed: pushing down" in reasons(mission) and "finished" in phases(mission)
+
+
 def test_inputs_from_detectors_reach_the_course():
     mission, drone = Mission(ENDLESS_COURSE), FakeDrone()
     fly(mission, drone, 10.0, every_step=feed_course_inputs())

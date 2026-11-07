@@ -95,8 +95,11 @@ class Command:
 
 
 class Mission:
-    def __init__(self, settings=None):
+    def __init__(self, settings=None, vision_check=True):
+        """vision_check=False is for the simulator only (see fly_course); mission_node.py refuses it
+        anywhere else."""
         self.settings = settings or MissionSettings()
+        self.vision_check = vision_check
         self.inputs = MissionInputs()            # detector reports; all missing until detectors exist
         self.position_watch = PositionWatch(self.settings.position_jump_limit_metres,
                                             1.0 / self.settings.steps_per_second,
@@ -436,6 +439,10 @@ class Mission:
         held = self.hold_while_reports_stopped(now_seconds)
         if held is not None:
             return held
+        if not self.vision_check:
+            # SIMULATOR ONLY: the simulator has no camera images, so nothing reports camera
+            # tracking health, and every stage would hold for it. Treat it as healthy.
+            self.inputs.set_vision(now_seconds, True)
         if self.laser_is_fresh(now_seconds):
             floor = self.floor_reading_metres
             if floor is None:

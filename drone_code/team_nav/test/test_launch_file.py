@@ -21,7 +21,8 @@ EXAMPLE_FLIGHT_INTERFACE_DEFAULTS = {
 }
 # Measured on drone 16: MAV_SYS_ID is 16; flight_interface would otherwise address PX4 as system 1.
 DRONE_16_SYSTEM_ID = "16"
-MISSION_NODE_PARAMETERS_NOT_IN_SETTINGS = {"position_topic", "flight_state_topic", "px4_local_position_topic"}
+MISSION_NODE_PARAMETERS_NOT_IN_SETTINGS = {"position_topic", "flight_state_topic", "px4_local_position_topic",
+                                           "vision_check"}
 
 
 @pytest.fixture
@@ -73,6 +74,11 @@ def test_our_mission_starts_too_unless_switched_off(launched):
     known = {setting.name for setting in fields(MissionSettings)} | MISSION_NODE_PARAMETERS_NOT_IN_SETTINGS
     assert set(mission["parameters"][0]) <= known                  # no misspelt parameter names
     assert mission["parameters"][0]["position_topic"].name == "odometry_topic"   # same odometry as the interface
+
+
+def test_the_vision_check_is_on_unless_the_simulator_script_switches_it_off(launched):
+    assert arguments(launched)["vision_check"] == "true"
+    assert node(launched, "mission")["parameters"][0]["vision_check"].name == "vision_check"
 
 
 def test_the_mission_program_the_launch_file_names_is_installed():

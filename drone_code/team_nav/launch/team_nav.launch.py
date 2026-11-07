@@ -66,6 +66,9 @@ ARGUMENTS = [
     ('cruise_height_metres', '0.8', 'our mission: flight height above the launch floor, metres'),
     ('tunnel_enabled', 'false', 'our mission: false hovers at the tunnel entrance, then lands'),
     ('window_enabled', 'false', 'our mission: false goes through Gate B'),
+    ('vision_check', 'true',
+     'SIMULATOR ONLY: false treats camera tracking health as OK, because the simulator has no camera '
+     'images. The mission refuses false unless simulator/run_team_nav.sh started it'),
     ('mission', 'true', 'also start our mission program'),
 ]
 
@@ -105,6 +108,7 @@ def generate_launch_description():
             'cruise_height_metres': LaunchConfiguration('cruise_height_metres'),
             'tunnel_enabled': LaunchConfiguration('tunnel_enabled'),
             'window_enabled': LaunchConfiguration('window_enabled'),
+            'vision_check': LaunchConfiguration('vision_check'),
             'position_topic': LaunchConfiguration('odometry_topic'),
         }],
     )

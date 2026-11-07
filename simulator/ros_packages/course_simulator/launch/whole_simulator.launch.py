@@ -3,9 +3,16 @@
 This list is the clearest picture of how the simulator fits together. Read it from top to
 bottom. Parts marked REAL are the same software the drone runs. Parts marked PRETEND stand
 in for hardware or people, because those do not exist on a laptop.
+
+start_flight_interface:=false leaves out the organizers' flight interface. Use it when the flight
+code's own launch file starts that program, as drone_code/team_nav/launch/team_nav.launch.py does
+(simulator/run_team_nav.sh). The organizers' guide warns that two flight interfaces fight over the
+control flags.
 """
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess
+from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.conditions import IfCondition
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 REPOSITORY = "/repository"
@@ -18,13 +25,17 @@ RUN_THE_ORGANIZERS_BRIDGE = (
 )
 
 
-def run_program(package, program_name, settings=None):
+def run_program(package, program_name, settings=None, condition=None):
     return Node(package=package, executable=program_name, name=program_name,
-                output="screen", parameters=[settings or {}])
+                output="screen", parameters=[settings or {}], condition=condition)
 
 
 def generate_launch_description():
     return LaunchDescription([
+        DeclareLaunchArgument(
+            "start_flight_interface", default_value="true",
+            description="false when the flight code's launch file starts the flight interface itself"),
+
         # REAL: the flight control software. It simulates the drone's physics inside itself.
         ExecuteProcess(cmd=["bash", f"{REPOSITORY}/simulator/px4_changes/start_px4.sh"], output="screen"),
 
@@ -38,7 +49,8 @@ def generate_launch_description():
         # settings as the organizers' launch file: it enters automatic flight when the switch
         # flips to Position after arming, and it refuses mode requests from software.
         run_program("skybeta_flight_interface", "flight_interface",
-                    {"auto_offboard_on_arm": True, "allow_mode_request": False}),
+                    {"auto_offboard_on_arm": True, "allow_mode_request": False},
+                    condition=IfCondition(LaunchConfiguration("start_flight_interface"))),
 
         # PRETEND: stands in for the camera tracking program, which needs real pictures.
         run_program("course_simulator", "pretend_camera_tracking"),

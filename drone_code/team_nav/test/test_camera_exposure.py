@@ -1,4 +1,4 @@
-"""camera_exposure.py with a stand-in parameter client (fake_ros.py): it waits for the camera, sends
+"""camera_exposure.py with stand-in parameter services (fake_ros.py): it waits for the camera, sends
 one setting at a time with the numbers first, and applies the cap again whenever the camera loses
 it."""
 import importlib
@@ -27,10 +27,26 @@ def make_cap():
     def make():
         node = fake_ros.Node("test")
         cap = camera_exposure.CameraExposureCap(node, "/oak", LIMIT_MICROSECONDS)
-        return cap, fake_ros.AsyncParameterClient.made[-1], node
+        return cap, CameraServices(node), node
     yield make
     sys.modules.pop("team_nav.camera_exposure", None)
     fake_ros.uninstall()
+
+
+class CameraServices:
+    """The camera's two stand-in parameter services (set and get), handled as one."""
+
+    def __init__(self, node):
+        self.node = node
+        assert set(node.service_clients) == {"/oak/set_parameters", "/oak/get_parameters"}
+
+    @property
+    def requests(self):
+        return self.node.service_requests
+
+    def set_ready(self, ready):
+        for service_client in self.node.service_clients.values():
+            service_client.ready = ready
 
 
 def accepted():
@@ -73,7 +89,7 @@ def test_waits_for_the_camera_then_sets_one_setting_at_a_time_numbers_first(make
     cap, client, node = make_cap()
     cap.check()
     assert client.requests == []                               # no camera yet: nothing sent
-    client.services_ready = True
+    client.set_ready(True)
     cap.check()
     assert answer_every_set_in_turn(cap, client) == EXPECTED_ORDER
     assert cap.state == "applied"
@@ -82,7 +98,7 @@ def test_waits_for_the_camera_then_sets_one_setting_at_a_time_numbers_first(make
 
 def test_a_read_back_that_matches_changes_nothing_and_one_that_differs_reapplies(make_cap):
     cap, client, _ = make_cap()
-    client.services_ready = True
+    client.set_ready(True)
     cap.check()
     answer_every_set_in_turn(cap, client)
     cap.check()
@@ -99,21 +115,21 @@ def test_a_read_back_that_matches_changes_nothing_and_one_that_differs_reapplies
 
 def test_the_cap_is_applied_again_when_the_camera_comes_back(make_cap):
     cap, client, node = make_cap()
-    client.services_ready = True
+    client.set_ready(True)
     cap.check()
     answer_every_set_in_turn(cap, client)
-    client.services_ready = False
+    client.set_ready(False)
     cap.check()
     assert cap.state == "waiting_for_camera"
     assert any(level == "warn" and "has gone" in text for level, text in node.log_lines)
-    client.services_ready = True
+    client.set_ready(True)
     cap.check()
     assert answer_every_set_in_turn(cap, client) == EXPECTED_ORDER
 
 
 def test_a_refused_setting_starts_the_whole_sequence_again_at_the_next_check(make_cap):
     cap, client, node = make_cap()
-    client.services_ready = True
+    client.set_ready(True)
     cap.check()
     for _ in range(2):
         unanswered(client)[0][2].finish(accepted())

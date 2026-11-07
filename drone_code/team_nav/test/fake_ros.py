@@ -4,6 +4,10 @@ laptop without ROS installed. Test code only: it is never installed or run on th
 install() puts these stand-ins where Python looks for rclpy and the message packages. Each topic a
 node subscribes to or publishes on is recorded, so a test can deliver a message straight to the
 node's callback and read back what it published.
+
+Only imitate what ROS 2 Humble really has (the drone runs Humble). A stand-in for something Humble
+lacks lets a test pass for code that crashes on the drone: that happened once, with
+rclpy.parameter_client, which only exists from ROS 2 Iron onward.
 """
 import math
 import sys
@@ -66,6 +70,8 @@ class Node:
         self.subscriptions = {}                  # topic -> (message type, callback, quality of service)
         self.publishers = {}                     # topic -> Publisher
         self.timers = []                         # [(period seconds, callback)]
+        self.service_clients = {}                # service name -> ServiceClient
+        self.service_requests = []               # [(kind, payload, future)], in the order made
         self.log_lines = []
         self.parameters = {}
 
@@ -81,6 +87,11 @@ class Node:
         publisher = Publisher(topic, message_type)
         self.publishers[topic] = publisher
         return publisher
+
+    def create_client(self, service_type, service_name):
+        client = ServiceClient(self, service_type, service_name)
+        self.service_clients[service_name] = client
+        return client
 
     def create_timer(self, period_seconds, callback):
         self.timers.append((period_seconds, callback))
@@ -189,29 +200,44 @@ class ParameterStandIn:
         self.name = name
         self.value = value
 
+    def to_parameter_msg(self):
+        return types.SimpleNamespace(name=self.name, value=self.value)
 
-class AsyncParameterClient:
-    """rclpy.parameter_client.AsyncParameterClient. Tests set services_ready and answer each request
-    in the order it was made; every request is recorded in requests."""
-    made = []                                     # every client made, newest last
 
-    def __init__(self, node, remote_node_name):
-        self.remote_node_name = remote_node_name
-        self.services_ready = False
-        self.requests = []                        # [(kind, payload, future)]
-        AsyncParameterClient.made.append(self)
+class SetParameters:
+    """rcl_interfaces.srv.SetParameters."""
+    class Request:
+        def __init__(self):
+            self.parameters = []
 
-    def services_are_ready(self):
-        return self.services_ready
 
-    def set_parameters(self, parameters):
+class GetParameters:
+    """rcl_interfaces.srv.GetParameters."""
+    class Request:
+        def __init__(self):
+            self.names = []
+
+
+class ServiceClient:
+    """A client made by node.create_client. Tests set ready on it, and answer each recorded request
+    through its future. Every request goes in the node's service_requests, in the order made."""
+
+    def __init__(self, node, service_type, service_name):
+        self.node = node
+        self.service_type = service_type
+        self.service_name = service_name
+        self.ready = False
+
+    def service_is_ready(self):
+        return self.ready
+
+    def call_async(self, request):
         future = FakeFuture()
-        self.requests.append(("set", [(parameter.name, parameter.value) for parameter in parameters], future))
-        return future
-
-    def get_parameters(self, names):
-        future = FakeFuture()
-        self.requests.append(("get", list(names), future))
+        if self.service_type is SetParameters:
+            payload = [(parameter.name, parameter.value) for parameter in request.parameters]
+            self.node.service_requests.append(("set", payload, future))
+        else:
+            self.node.service_requests.append(("get", list(request.names), future))
         return future
 
 
@@ -235,9 +261,9 @@ def module(name, **contents):
     return made
 
 
-STAND_IN_MODULES = ("rclpy", "rclpy.node", "rclpy.qos", "rclpy.parameter", "rclpy.parameter_client", "geometry_msgs", "geometry_msgs.msg", "nav_msgs",
+STAND_IN_MODULES = ("rclpy", "rclpy.node", "rclpy.qos", "rclpy.parameter", "geometry_msgs", "geometry_msgs.msg", "nav_msgs",
                     "nav_msgs.msg", "std_msgs", "std_msgs.msg", "px4_msgs", "px4_msgs.msg", "rcl_interfaces",
-                    "rcl_interfaces.msg")
+                    "rcl_interfaces.msg", "rcl_interfaces.srv")
 
 
 def uninstall():
@@ -250,7 +276,6 @@ def install():
                                   ok=lambda: False, shutdown=lambda: None)
     sys.modules["rclpy.node"] = module("rclpy.node", Node=Node)
     sys.modules["rclpy.parameter"] = module("rclpy.parameter", Parameter=ParameterStandIn)
-    sys.modules["rclpy.parameter_client"] = module("rclpy.parameter_client", AsyncParameterClient=AsyncParameterClient)
     sys.modules["rclpy.qos"] = module("rclpy.qos", QoSProfile=QoSProfile, QoSReliabilityPolicy=Policy,
                                       QoSDurabilityPolicy=Policy, QoSHistoryPolicy=Policy)
     sys.modules["geometry_msgs"] = module("geometry_msgs")
@@ -263,3 +288,5 @@ def install():
     sys.modules["px4_msgs.msg"] = module("px4_msgs.msg", VehicleLocalPosition=VehicleLocalPosition)
     sys.modules["rcl_interfaces"] = module("rcl_interfaces")
     sys.modules["rcl_interfaces.msg"] = module("rcl_interfaces.msg", ParameterDescriptor=ParameterDescriptor)
+    sys.modules["rcl_interfaces.srv"] = module("rcl_interfaces.srv", SetParameters=SetParameters,
+                                               GetParameters=GetParameters)

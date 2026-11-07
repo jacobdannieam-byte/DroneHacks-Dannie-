@@ -152,9 +152,31 @@ def test_launch_values_are_converted_to_each_settings_type(build_node):
 
 def test_the_node_caps_the_camera_exposure_on_the_camera_named_by_a_parameter(build_node):
     node = build_node(camera_node_name="/front_camera")
-    assert fake_ros.AsyncParameterClient.made[-1].remote_node_name == "/front_camera"
+    assert set(node.service_clients) == {"/front_camera/set_parameters", "/front_camera/get_parameters"}
     assert (MissionSettings().camera_check_seconds, node.camera_exposure.check) in node.timers
     assert build_node(cap_camera_exposure=False).camera_exposure is None
+
+
+def test_the_vision_check_is_on_by_default(build_node):
+    assert build_node().mission.vision_check is True
+
+
+def test_vision_check_false_is_refused_outside_a_simulator_run(build_node, monkeypatch, tmp_path):
+    monkeypatch.delenv("TEAM_NAV_STARTED_BY", raising=False)
+    node = build_node(vision_check=False)
+    assert node.mission.vision_check is True
+    assert any(level == "error" and "only for the simulator" in text for level, text in node.log_lines)
+    monkeypatch.setenv("TEAM_NAV_STARTED_BY", "simulator/run_team_nav.sh")   # the variable alone is not enough
+    monkeypatch.setattr(sys.modules["team_nav.mission_node"], "SIMULATOR_FOLDER", str(tmp_path / "not_here"))
+    assert build_node(vision_check=False).mission.vision_check is True
+
+
+def test_vision_check_false_is_accepted_in_a_simulator_run(build_node, monkeypatch, tmp_path):
+    monkeypatch.setenv("TEAM_NAV_STARTED_BY", "simulator/run_team_nav.sh")
+    monkeypatch.setattr(sys.modules["team_nav.mission_node"], "SIMULATOR_FOLDER", str(tmp_path))
+    node = build_node(vision_check="false")
+    assert node.mission.vision_check is False
+    assert any(level == "warn" and "SIMULATOR ONLY" in text for level, text in node.log_lines)
 
 
 def test_the_laser_distance_is_read_even_though_px4_marks_it_invalid(build_node):
