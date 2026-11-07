@@ -57,7 +57,7 @@ Camera tracking has no loop closure, so its error grows with distance flown. In 
 
 The correction is added to camera tracking's position before the route sees it, and taken off every target sent. PX4's own estimate is never touched. The watchdog and the landing never see the correction, and it is cleared at every start.
 
-On the drone this needs two things that don't exist yet. One is a program publishing depth points as `sensor_msgs/PointCloud2`: x, y, z float32 = forward, left, up in metres from the drone's centre (the simulator's pretend depth camera publishes exactly that on `/simulator_only/depth_points`). The other is the right start heading: `start_heading_degrees` (default 90, north up the first corridor, as the simulator and Kenny's planner assume). The course maps and the code that reads them (`course_map.py`, `start_frame.py`, `course_maps/`) are Kenny's, copied unchanged from `origin/classical`.
+On the drone this needs two things that don't exist yet. One is a program publishing depth points as `sensor_msgs/PointCloud2`: x, y, z float32 = forward, left, up in metres from the drone's centre (the simulator's pretend depth camera publishes exactly that on `/simulator_only/depth_points`). The other is the right start heading: `start_heading_degrees` (default 90, north up the first corridor, as the simulator and Kenny's planner assume). The course maps and the code that reads them (`course_map.py`, `start_frame.py`, `course_maps/`) are Kenny's, copied unchanged from `origin/classical` at commit `8d848da` (the commit the planned routes came from). That branch has since added `line_pieces_cross` to `course_map.py`; we don't use it.
 
 ## What it hears and sends
 
