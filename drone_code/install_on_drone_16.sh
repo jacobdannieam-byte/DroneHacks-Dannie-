@@ -1,36 +1,29 @@
 #!/bin/bash
-# Copies our team_nav package onto drone 16. Run this on the Mac.
+# Copies our team_nav package onto drone 16. Run this on the Mac, from anywhere:
 #
-# It refuses to do anything unless the computer it reaches calls itself skybeta-16. The rules say
-# that logging in to any other team's drone gets us disqualified, and the drone's address
-# (192.168.55.1 over USB) is the same for every drone, so the address alone proves nothing.
+#   drone_code/install_on_drone_16.sh skybeta-16.local     # over the DroneHacks Wi-Fi
+#   drone_code/install_on_drone_16.sh                      # over USB (192.168.55.1)
 #
-# It only adds files to ~/team_ws/src, the folder the organizers set aside for team code.
-# It does not change how the drone starts. See drone_code/README.md for that step.
+# The address can also come from DRONE_HOST. The script refuses to do anything unless the computer
+# it reaches calls itself skybeta-16 (see drone_16_common.sh).
 #
-# If your computer has not connected to this drone before, you can pass your own ssh options:
-#   DRONE_SSH_OPTIONS="-o UserKnownHostsFile=/path/to/file" drone_code/install_on_drone_16.sh
+# It only replaces ~/team_ws/src/team_nav, in the folder the organizers set aside for team code.
+# The drone builds the whole of ~/team_ws each time its software (the "stack") starts, and if any
+# package fails to build, nothing of ours starts. So restart and check afterwards:
+#   drone_code/restart_drone_16.sh skybeta-16.local
 set -e
-
-drone_address="${DRONE_ADDRESS:-192.168.55.1}"
-drone_login="dronehacks@$drone_address"
-required_drone_name="skybeta-16"
-ssh_options="${DRONE_SSH_OPTIONS:-}"
 folder_of_this_script="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=drone_16_common.sh
+source "$folder_of_this_script/drone_16_common.sh"
 
-# shellcheck disable=SC2086  # The options are meant to split into separate words.
-actual_drone_name="$(ssh $ssh_options "$drone_login" hostname)"
+confirm_it_is_drone_16
+echo "Copying team_nav to ~/team_ws/src/team_nav on the drone."
+on_drone "rm -rf ~/team_ws/src/team_nav && mkdir -p ~/team_ws/src"
+# Copy without Python's cache folders, which would only be rebuilt there.
+staging="$(mktemp -d)"
+trap 'rm -rf "$staging"' EXIT
+rsync -a --exclude '__pycache__' --exclude '.pytest_cache' "$folder_of_this_script/team_nav" "$staging/"
+copy_to_drone -r "$staging/team_nav" "$drone_login:team_ws/src/team_nav"
 
-if [ "$actual_drone_name" != "$required_drone_name" ]; then
-    echo "Stopping. This computer calls itself '$actual_drone_name', not '$required_drone_name'."
-    echo "It is not our drone, so nothing has been changed. Disconnect from it now."
-    exit 1
-fi
-
-echo "Confirmed: this is $required_drone_name. Copying team_nav to the team folder."
-# shellcheck disable=SC2086
-ssh $ssh_options "$drone_login" "rm -rf ~/team_ws/src/team_nav && mkdir -p ~/team_ws/src"
-# shellcheck disable=SC2086
-scp $ssh_options -r "$folder_of_this_script/team_nav" "$drone_login:team_ws/src/team_nav"
-
-echo "Done. The drone will build the package the next time its software starts."
+echo "Done. It is built the next time the stack starts. To restart it now and check the drone:"
+echo "  drone_code/restart_drone_16.sh $drone_host"

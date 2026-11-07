@@ -1,60 +1,96 @@
 # Code that runs on the real drone
 
-Everything in this folder is copied to drone 16 and runs there. Simulator code lives in
-`simulator/` and must never be imported from here.
+Everything in `team_nav/` is copied to drone 16 and runs there. Simulator code lives in
+`simulator/` and must never be imported from here. The scripts in this folder run on the Mac.
 
-## What is here today
+## What is here
 
 `team_nav` is our team's ROS package. It replaces the organizers' demo, which would climb to 1.5 m
 and fly a 5 m square into the course walls as soon as someone armed the drone and flipped the
-switch to Position.
+switch to Position. Its launch file starts exactly one copy of the organizers' flight interface
+with the hand-over to software switched on, our mission, and our helper programs. Nothing moves
+until the pilot arms the drone and flips the switch to Position. See
+[`team_nav/README.md`](team_nav/README.md).
 
-It contains our mission program (see [`team_nav/README.md`](team_nav/README.md)). Its launch file
-starts the organizers' flight interface with the hand-over to software switched on, like the
-organizers' example, together with our mission. Nothing moves until the pilot arms the drone and
-flips the switch to Position. Rehearse that start with the propellers off before the first flight.
+The scripts, all run on the Mac. Each takes the drone's address as its first argument, or from
+`DRONE_HOST`: `skybeta-16.local` over the DroneHacks Wi-Fi, or `192.168.55.1` (the default) over
+USB. Each first checks that the computer it reaches calls itself `skybeta-16`, because logging in
+to another team's drone gets us disqualified.
 
-Read these two files, in this order:
+| Script | What it does |
+|---|---|
+| [`install_on_drone_16.sh`](install_on_drone_16.sh) | Copies `team_nav` into `~/team_ws/src` on the drone. |
+| [`restart_drone_16.sh`](restart_drone_16.sh) | Restarts the drone's software (the "stack"), waits for our mission to start, then runs the check. |
+| [`check_drone_16.sh`](check_drone_16.sh) | Prints one line per check and ends with **READY TO FLY** or **NOT READY** and the reasons. It only reads. |
+| [`drone_16_check_on_drone.sh`](drone_16_check_on_drone.sh) | The checks themselves; `check_drone_16.sh` runs them on the drone. |
+| [`drone_16_common.sh`](drone_16_common.sh) | Shared by the scripts: the address, the name check, one reused ssh connection. |
 
-1. [`team_nav/launch/team_nav.launch.py`](team_nav/launch/team_nav.launch.py) says what starts on
-   the drone.
-2. [`install_on_drone_16.sh`](install_on_drone_16.sh) copies the package onto the drone.
+None of them reads, sets or resets a PX4 parameter; the organizers require PX4's default parameters.
+
+## Start-of-flight checklist
+
+Do these in order, every flight.
+
+1. **Put the drone on the takeoff spot first**, before anything else. Camera tracking's position
+   starts at (0, 0, 0) wherever the drone is when the stack starts. Every target is held at least
+   0.3 m above that point, so a drone carried to the net afterwards climbs to 0.3 m above the old
+   start point (on 2026-11-07 that was 2.4 m above the floor).
+2. **Unplug the Pixhawk USB cable.** PX4 will not arm while it is plugged in.
+3. Run the restart, and wait for **READY TO FLY**:
+   ```bash
+   drone_code/restart_drone_16.sh skybeta-16.local
+   ```
+   If it says NOT READY, fix the first reason and run `drone_code/check_drone_16.sh skybeta-16.local`
+   again.
+4. **Don't move the drone after this.**
+5. The pilot arms with the mode switch on **Altitude**, throttle low.
+6. Within a few seconds (PX4 disarms 10 s after arming if it has not taken off), the pilot switches
+   to **Position**, throttle still low. The drone lifts off at once.
+7. If nothing happens, switch out of Position and back in. Each arming gets one attempt at the
+   hand-over; if it still does not start, disarm, then run the check again.
+
+The pilot takes the drone back by moving a stick (raise the throttle towards centre), as the
+organizers' guide says.
 
 ## How to install it on the drone
 
-Run these from the top of the repository, with the drone connected by USB.
+Run these from the top of the repository.
 
-Step 1. Copy the package onto the drone. The script first checks that it is really talking to
-drone 16, because logging in to another team's drone gets us disqualified.
-
-```bash
-drone_code/install_on_drone_16.sh
-```
-
-Step 2. Tell the drone to start our package instead of the demo. This changes a protected file,
-so it asks for the shared drone password. Please type it yourself. It must never be saved in any
-file. You need to do this only once.
+Step 1. Copy the package onto the drone:
 
 ```bash
-ssh -t dronehacks@192.168.55.1 "sudo sed -i 's/^COMPETITOR_PKG=.*/COMPETITOR_PKG=team_nav/; s/^COMPETITOR_LAUNCH=.*/COMPETITOR_LAUNCH=team_nav.launch.py/' /etc/skybeta/drone.env"
+drone_code/install_on_drone_16.sh skybeta-16.local
 ```
 
-To fly the route mission instead of the course stages, use `COMPETITOR_LAUNCH=team_nav_route.launch.py` in that command. That file is identical to `team_nav.launch.py`, except that it starts the route mission by default.
-
-Step 3. Restart the drone's software so that the change takes effect. It comes back by itself
-about 10 seconds later. The organizers' guide also says to power-cycle the flight controller after
-stopping this software, until we have confirmed it runs their patched firmware.
+Step 2, once only. Tell the drone to start our package instead of the demo. This changes a
+protected file, so it asks for the shared drone password. Please type it yourself; it must never
+be saved in any file.
 
 ```bash
-ssh dronehacks@192.168.55.1 "docker rm -f skybeta-stack"
+ssh -t dronehacks@skybeta-16.local "sudo sed -i 's/^COMPETITOR_PKG=.*/COMPETITOR_PKG=team_nav/; s/^COMPETITOR_LAUNCH=.*/COMPETITOR_LAUNCH=team_nav.launch.py/' /etc/skybeta/drone.env"
 ```
 
-## How to check that it worked
+To fly the route mission instead of the course stages, use
+`COMPETITOR_LAUNCH=team_nav_route.launch.py` in that command. That file is identical to
+`team_nav.launch.py`, except that it starts the route mission by default.
 
-The demo program should be gone, and the organizers' interface and our mission should be running:
+Step 3. Restart and check, with the drone on the takeoff spot:
 
 ```bash
-ssh dronehacks@192.168.55.1 "docker exec skybeta-stack pgrep -af 'square_mission|flight_interface|team_nav'"
+drone_code/restart_drone_16.sh skybeta-16.local
 ```
 
-You should see `flight_interface` and `team_nav/mission` in the output, and no `square_mission`.
+At every start the drone builds the whole of `~/team_ws`. If any package in it fails to build,
+nothing of ours starts and there is no hand-over; the check says so on its "last team_ws build"
+line.
+
+## Tests for the scripts
+
+`tests/` runs `drone_16_check_on_drone.sh` against stand-in `docker` and `ros2` commands playing a
+healthy drone and broken ones, and the Mac-side scripts against a stand-in `ssh`:
+
+```bash
+python3 -m pytest drone_code/tests
+```
+
+They have not been run against the real drone yet.
