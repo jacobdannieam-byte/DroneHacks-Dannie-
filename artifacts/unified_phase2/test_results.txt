@@ -1,0 +1,32 @@
+Unified Phase 2 verification
+Base b026465d1c57a056a423e51872164b7474abbf9a (semantic reasoning PR #2).
+Windows AMD64, Intel Family 6 Model 183, Python 3.11.9, NumPy 2.3.5.
+OPENBLAS_NUM_THREADS=1 and OMP_NUM_THREADS=1 for tests and benchmark.
+
+python -m pytest -q tests
+Semantic baseline: 160 passed in 9.92 s.
+Phase 2 branch: 180 passed in 10.46 s.
+The first focused run failed three assertions that expected an opening to
+have a valid rear-wall return at 7 m, outside the configured 6 m optical
+depth range. The fixture now places the rear wall at 5.4 m. The configured
+range and unknown-space behavior were preserved.
+
+Compatibility: archived b026465, applied the path deltas from feb55b6 to
+c36918e (A1) and ef22933 (Phase 1), then overlaid the Phase 2 source and tests.
+python -B -m pytest -q -p no:cacheprovider tests
+286 passed in 14.12 s. This was an isolated test overlay, not a merge.
+
+python -m examples.unified_spatial_replay synthetic --repeats 40 --output <new-dir>
+python -m examples.unified_spatial_replay synthetic --skip-timing --output <new-dir>
+Both runs produced byte-identical replay JSON and map SVG on this host.
+The observed corridor was verified free under the synthetic bounds. The
+ceiling, floor, and narrow-gap sweeps reported occupied. The space behind
+a wall and the near-camera blind region remained unknown.
+The 640x400 synthetic processing measured 30.85 ms p95 and 33.69 ms worst
+across 40 frames. No sample exceeded the 66.67 ms nominal 15 Hz period.
+This is offline host timing. See benchmark.json for hardware and dimensions.
+
+The recorded-message tests exercised ROS-shaped Clock, Image, CameraInfo,
+Odometry, health and EV reset inputs without ROS. The native bag command
+exited 2 with "No module named 'rclpy'" and generated no native output.
+No native recording, live graph, SITL maneuver or Orin timing was run.
