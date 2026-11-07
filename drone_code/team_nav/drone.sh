@@ -3,9 +3,9 @@
 # drone's computer), after you log in with ssh:
 #
 #     cd ~/team_ws
-#     ./ours.sh status                         show what runs and if the hand-over is on
-#     ./ours.sh start watch_only               start a launch file (here: nothing can fly)
-#     ./ours.sh hand_test all_table_checks     run one of our programs, with its arguments
+#     ./drone.sh status                         show what runs and if the hand-over is on
+#     ./drone.sh start watch_only               start a launch file (here: nothing can fly)
+#     ./drone.sh hand_test all_table_checks     run one of our programs, with its arguments
 #
 # drone_code/TEST_SEQUENCE.md gives the commands for each test, in order.
 #
@@ -18,7 +18,7 @@
 # watch_only, so no program can fly after a restart.
 #
 # "start" stops the program in the competitor window and starts the launch file that you name,
-# in a new window with the name "ours". It does not change a settings file and needs no password.
+# in a new window with the name "team_launch". It does not change a settings file and needs no password.
 #
 # Only one launch file can run at a time. Each launch file starts the organizers'
 # flight_interface, and only one program must send commands to PX4. Thus "start" waits until
@@ -31,7 +31,7 @@ set -u
 CONTAINER="skybeta-stack"
 TMUX_SESSION="skybeta"
 ORGANIZERS_WINDOW="competitor"
-OUR_WINDOW="ours"
+OUR_WINDOW="team_launch"
 
 # In the container, the drone's ~/team_ws is /root/team_ws. The organizers' skybeta_env.sh
 # makes the packages built from ~/team_ws/src available.
@@ -46,7 +46,7 @@ SECONDS_TO_WAIT_FOR_STOP=20
 SECONDS_TO_WAIT_FOR_START=40
 
 # Settings our programs read from the environment (run_mode.py, run_log.py). If you set one
-# before ./ours.sh, it is passed into the container.
+# before ./drone.sh, it is passed into the container.
 PASSED_SETTINGS="TEAM_NAV_RUN_MODE TEAM_NAV_STOP_AFTER_STAGE TEAM_NAV_RECORDS_FOLDER"
 
 
@@ -165,6 +165,11 @@ start_launch_file() {
 
     stop_window "$ORGANIZERS_WINDOW"
     stop_window "$OUR_WINDOW"
+    if flight_interface_is_running; then
+        echo "Stopping. A flight_interface still runs in a window that this script does not know."
+        echo "A second one must not start. Restart the drone software: docker rm -f $CONTAINER"
+        exit 1
+    fi
 
     echo "Starting: ros2 launch $package_and_file (in the '$OUR_WINDOW' window)."
     # When the launch ends, the window keeps a shell open so its last messages stay readable.
@@ -189,7 +194,7 @@ run_our_program() {
         fi
     done
     # -it gives the program this terminal, so it can ask you to press Enter and Ctrl+C reaches it.
-    docker exec -it "${settings[@]}" "$CONTAINER" bash -c "$SET_UP_ROS && ros2 run team_nav \"\$@\"" ours "$@"
+    docker exec -it "${settings[@]}" "$CONTAINER" bash -c "$SET_UP_ROS && ros2 run team_nav \"\$@\"" drone "$@"
     local exit_code=$?
     give_records_back_to_dronehacks
     return $exit_code

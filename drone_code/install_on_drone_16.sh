@@ -18,10 +18,10 @@
 #        drone_code/team_nav        ->  ~/team_ws/src/team_nav
 #        drone_code/smoke_flights   ->  ~/team_ws/src/team_smoke_flights
 #   4. It builds them with the organizers' build script, team_build.sh.
-#   5. It puts a link to our helper, ours.sh, in ~/team_ws.
+#   5. It puts a link to our helper, drone.sh, in ~/team_ws.
 #
 # It does not restart the drone's software. Programs that run now keep the old code. To use the
-# new code, type "./ours.sh start watch_only" on the drone.
+# new code, type "./drone.sh start watch_only" on the drone.
 #
 # It never arms the drone, never turns a motor and never changes a PX4 setting or a settings file.
 #
@@ -75,7 +75,7 @@ echo "Building them with the organizers' build script (about a minute)."
 ssh $ssh_options "$drone_login" "docker exec skybeta-stack team_build.sh"
 
 # shellcheck disable=SC2086
-ssh $ssh_options "$drone_login" "chmod +x ~/team_ws/src/team_nav/ours.sh && ln -sfn src/team_nav/ours.sh ~/team_ws/ours.sh"
+ssh $ssh_options "$drone_login" "chmod +x ~/team_ws/src/team_nav/drone.sh && ln -sfn src/team_nav/drone.sh ~/team_ws/drone.sh"
 
 echo "Done. The new code is on the drone. To use it, type on the drone:"
-echo "    cd ~/team_ws && ./ours.sh start watch_only"
+echo "    cd ~/team_ws && ./drone.sh start watch_only"

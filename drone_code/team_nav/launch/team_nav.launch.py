@@ -3,7 +3,7 @@
 The drone's settings file (/etc/skybeta/drone.env) names this file. This file starts
 watch_only.launch.py and nothing else. Thus, after each restart, no program can fly the drone.
 
-To fly, type "./ours.sh start <name>" on the drone. drone_code/TEST_SEQUENCE.md gives the steps.
+To fly, type "./drone.sh start <name>" on the drone. drone_code/TEST_SEQUENCE.md gives the steps.
 team_nav/launch_pieces.py compares the launch files.
 """
 import os

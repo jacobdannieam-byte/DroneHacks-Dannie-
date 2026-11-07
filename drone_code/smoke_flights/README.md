@@ -37,5 +37,5 @@ drone.
 `drone_code/TEST_SEQUENCE.md`, step 6, gives the commands for this flight:
 
 ```bash
-./ours.sh start rise_and_land
+./drone.sh start rise_and_land
 ```

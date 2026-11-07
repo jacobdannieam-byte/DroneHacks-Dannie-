@@ -25,7 +25,7 @@ means restarting the drone's software with another launch file.
 
 This file does not decide which launch file runs. After a restart, the drone starts
 team_nav.launch.py, which starts watch_only. To start a different one, type
-"./ours.sh start <name>" on the drone (team_nav/ours.sh).
+"./drone.sh start <name>" on the drone (team_nav/drone.sh).
 """
 from launch_ros.actions import Node
 

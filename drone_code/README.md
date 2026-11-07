@@ -38,7 +38,7 @@ The settings file `/etc/skybeta/drone.env` names `team_nav` and `team_nav.launch
 |---|---|
 | `~/team_ws/src/team_nav` | Our main package (from `drone_code/team_nav`). |
 | `~/team_ws/src/team_smoke_flights` | Our hover-and-land flight (from `drone_code/smoke_flights`). |
-| `~/team_ws/ours.sh` | A link to our helper. Use it for all tests. |
+| `~/team_ws/drone.sh` | A link to our helper. Use it for all tests. |
 | `~/team_ws/flight_records` | The records of all our programs. |
 | `~/archive` | Old code that we moved away. Nothing runs it. |
 
@@ -88,7 +88,7 @@ Ctrl+C.
 ## Settings for our programs
 
 Put a setting before the command. Example:
-`TEAM_NAV_RUN_MODE=practice ./ours.sh practice_flight out_and_back`
+`TEAM_NAV_RUN_MODE=practice ./drone.sh practice_flight out_and_back`
 
 | Setting | Values | Meaning |
 |---|---|---|
@@ -103,7 +103,7 @@ Put a setting before the command. Example:
 | [`TEST_SEQUENCE.md`](TEST_SEQUENCE.md) | The commands for each test, in order. |
 | [`install_on_drone_16.sh`](install_on_drone_16.sh) | Mac. Copies our two packages to the drone and builds them. |
 | [`collect_flight_records.sh`](collect_flight_records.sh) | Mac. Copies the records from the drone. [`COLLECTING_RECORDS.md`](COLLECTING_RECORDS.md) explains it. |
-| [`team_nav/`](team_nav/README.md) | Our main package. `team_nav/ours.sh` is the helper. |
+| [`team_nav/`](team_nav/README.md) | Our main package. `team_nav/drone.sh` is the helper. |
 | [`smoke_flights/`](smoke_flights/README.md) | The hover-and-land flight. |
 | [`hardware_checks/`](hardware_checks/README.md) | A quick check of the drone from the Mac, over the USB cable. |
 
