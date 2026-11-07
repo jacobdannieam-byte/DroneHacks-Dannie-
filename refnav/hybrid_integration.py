@@ -4,6 +4,7 @@ from dataclasses import dataclass, replace
 from time import perf_counter
 
 from refnav.dynamics import DroneState
+from refnav.integration_timing import measure
 from refnav.predictive_planner import Plan, plan
 from refnav.sitl_review import ProposalReceipt, validate_receipt
 from refnav.trajectory_evaluation import (
@@ -48,7 +49,7 @@ def _input_reason(state, metric, alignment, now_ns, state_received_ns,
 
 def assess(state, snapshot, *, now_ns, alignment, vehicle, objective,
            state_received_ns, estimator_reset_counter, estimator_healthy,
-           goal=None, budget_s=.025, monotonic=perf_counter, cancelled=None):
+           goal=None, budget_s=.025, monotonic=perf_counter, cancelled=None, timings=None):
     """Run D5 and independently review the receipt within its wall-clock budget.
 
     Health describes the normalized state sample. A caller must advance its
@@ -66,16 +67,17 @@ def assess(state, snapshot, *, now_ns, alignment, vehicle, objective,
     reason = _input_reason(state, metric, alignment, now_ns, state_received_ns,
                            estimator_reset_counter, estimator_healthy, objective)
     if reason is None:
-        decision = plan(state, snapshot, now_ns=now_ns, alignment=alignment, vehicle=vehicle,
-                        objective=objective, goal=goal, budget_s=budget_s, monotonic=monotonic,
-                        cancelled=cancelled)
+        decision = measure(timings, "d5_planning", plan, state, snapshot, now_ns=now_ns,
+                           alignment=alignment, vehicle=vehicle, objective=objective, goal=goal,
+                           budget_s=budget_s, monotonic=monotonic, cancelled=cancelled, timings=timings)
     else:
         decision = Plan("safe_stop_requested", reason)
 
     receipt = ProposalReceipt(decision, state, alignment, metric, now_ns,
                               state_received_ns=state_received_ns, estimator_reset_counter=estimator_reset_counter)
     if reason is None:
-        reason = validate_receipt(receipt, state=state, alignment=alignment, metric=metric, now_ns=now_ns)
+        reason = measure(timings, "receipt_validation", validate_receipt, receipt, state=state,
+                         alignment=alignment, metric=metric, now_ns=now_ns)
         if decision.decision == "candidate_proposed":
             if cancelled is not None and cancelled():
                 reason = "cancelled"

@@ -14,6 +14,7 @@ from onboard.diagnostics.phase1_health import static_tf_tree
 from onboard.diagnostics.phase1_probe import RESET_FIELDS, payloads
 from refnav.dynamics import DroneState, LocalNED
 from refnav.hybrid_integration import assess
+from refnav.integration_timing import measure
 from refnav.reasoning import DeterministicReasoner, WorldReference, build_context
 from refnav.reasoning.schema import MissionGoal
 from refnav.trajectory_evaluation import EvaluationPolicy, FrameAlignment, GoalBinding, MetricGoal, VehicleBounds
@@ -106,8 +107,14 @@ class HybridBagProfile:
 class HybridBagReplay(RecordedSpatialReplay):
     """Reuse the Phase 2 reader, retaining at most one PX4 state and pending depth."""
 
-    def __init__(self, profile, *, planner_budget_s=.025, monotonic=None):
-        super().__init__(profile.spatial)
+    def __init__(self, profile, *, planner_budget_s=.025, monotonic=None, continuous=False, timings=None):
+        super().__init__(profile.spatial, timings=timings)
+        self.continuous = continuous
+        self.dropped_depth = 0
+        self.startup_depth_discarded = 0
+        if continuous:
+            self.rows = deque(maxlen=1)
+        self._snapshot = self._goal = None
         self.hybrid = profile
         self.planner_budget_s = planner_budget_s
         self.monotonic = monotonic
@@ -130,10 +137,19 @@ class HybridBagReplay(RecordedSpatialReplay):
                 if topic == "/fmu/in/vehicle_visual_odometry" and msg.reset_counter != self.hybrid.ev_reset_counter:
                     raise ValueError("ev_reset_requires_new_epoch")
                 if topic == "/camera/depth/image_raw":
+                    if self.continuous and (not self._extrinsics_ok or not self._info_ok
+                                            or not self._clock_progress or self._ev_reset is None):
+                        self._advance(topic, received_ns)
+                        self._require_clock(received_ns)
+                        self.startup_depth_discarded += 1
+                        return
                     if not self._extrinsics_ok:
                         raise ValueError("missing_reviewed_depth_extrinsics")
                     if self._pending is not None:
-                        raise ValueError("depth_queue_overload")
+                        if not self.continuous:
+                            raise ValueError("depth_queue_overload")
+                        self._pending = self._snapshot = None
+                        self.dropped_depth += 1
                 super().feed(topic, msg, received_ns)
             else:
                 self._advance(topic, received_ns)
@@ -248,59 +264,79 @@ class HybridBagReplay(RecordedSpatialReplay):
         self._state_reason = None
 
     def _flush(self, force=False):
-        prior = len(self.rows)
+        prior = self.rows[-1] if self.rows else None
         start = perf_counter_ns()
         super()._flush(force)
-        if len(self.rows) == prior:
+        if not self.rows or self.rows[-1] is prior:
             return
         row = self.rows[-1]
         row["map_update_ms"] = (perf_counter_ns() - start) / 1e6
         if row["reason"] == "reference_reset_required":
             raise ValueError("vio_pose_reset_requires_new_epoch")
-        row["hybrid"] = self.diagnostic() if row["accepted"] else {"reason": row["reason"]}
+        self._snapshot = (self.world.snapshot(now_ns=self.now, immutable_semantic=self.continuous)
+                          if row["accepted"] else None)
+        self._goal = None
+        if not self.continuous:
+            row["hybrid"] = self.diagnostic() if row["accepted"] else {"reason": row["reason"]}
+
+    def _select_goal(self, snapshot):
+        ref = self.hybrid.alignment.map
+        context = build_context(snapshot.semantic, self.hybrid.mission_goal,
+                                now=snapshot.semantic["query_timestamp"],
+                                reference=WorldReference(ref.frame_id, ref.epoch, ref.clock_id))
+        return GoalBinding(context, DeterministicReasoner().propose(context))
+
+    @property
+    def px4_sample_us(self):
+        return None if self._state is None else self._state[3]
+
+    def prepare(self, now_ns):
+        """Return a refusal reason or one normalized H0 input set."""
+        if self.fault is not None:
+            return self.fault, None
+        if not stamp_ok(now_ns) or self.now is None or now_ns < self.now:
+            return "unbound_assessment_time", None
+        if self._pending is not None:
+            return "awaiting_capture_pose", None
+        snapshot = self._snapshot
+        if snapshot is None:
+            return "missing_synchronized_depth", None
+        if not self.world.observations_available:
+            return "geometry_unavailable", None
+        if now_ns - snapshot.metric.capture_ns > EvaluationPolicy().map_age_ns:
+            return "stale_geometry", None
+        if (self._tracking is None or not self._tracking[1] or now_ns - self._tracking[0] > HEALTH_MAX_AGE_NS
+                or any(stamp not in self._visual for stamp in self.rows[-1]["pose_bracket_ns"])):
+            return "unconfirmed_or_stale_visual_tracking", None
+        if (self._health is None or not self._health[1] or now_ns - self._health[0] > HEALTH_MAX_AGE_NS
+                or self._ev_received is None or now_ns - self._ev_received > HEALTH_MAX_AGE_NS
+                or any(sample is None or not sample[1] or now_ns - sample[0] > HEALTH_MAX_AGE_NS
+                       for sample in (self._flags, self._local))):
+            return "estimator_health_missing_or_stale", None
+        if self._state is None:
+            return self._state_reason, None
+        state, capture, received, _, _ = self._state
+        clock = self.hybrid.clock
+        if now_ns > clock.valid_until_ns or now_ns - capture + clock.max_error_ns > EvaluationPolicy().state_age_ns:
+            return "stale_state_or_clock_mapping", None
+        alignment = replace(self.hybrid.alignment, capture_ns=capture)
+        if self._goal is None and self.hybrid.mission_goal is not None:
+            self._goal = measure(self.timings, "semantic_goal", self._select_goal, snapshot)
+        return None, dict(state=state, snapshot=snapshot, now_ns=now_ns, alignment=alignment,
+                          vehicle=self.hybrid.vehicle, objective=self.hybrid.objective, goal=self._goal,
+                          state_received_ns=received, estimator_reset_counter=alignment.estimator_reset_counter,
+                          estimator_healthy=True)
 
     def diagnostic(self):
-        """Read the most recent synchronized snapshot without storing a trajectory or publisher."""
-        if self.fault is not None:
-            return {"reason": self.fault}
-        if self._pending is not None:
-            return {"reason": "awaiting_capture_pose"}
-        if not self.rows or not self.rows[-1]["accepted"]:
-            return {"reason": "missing_synchronized_depth"}
-        snapshot = self.world.snapshot(now_ns=self.now)
-        if not snapshot.metric.available:
-            return {"reason": "geometry_unavailable"}
-        if self.now - snapshot.metric.capture_ns > EvaluationPolicy().map_age_ns:
-            return {"reason": "stale_geometry"}
-        if (self._tracking is None or not self._tracking[1] or self.now - self._tracking[0] > HEALTH_MAX_AGE_NS
-                or any(stamp not in self._visual for stamp in self.rows[-1]["pose_bracket_ns"])):
-            return {"reason": "unconfirmed_or_stale_visual_tracking"}
-        if (self._health is None or not self._health[1] or self.now - self._health[0] > HEALTH_MAX_AGE_NS
-                or self._ev_received is None or self.now - self._ev_received > HEALTH_MAX_AGE_NS
-                or any(sample is None or not sample[1] or self.now - sample[0] > HEALTH_MAX_AGE_NS
-                       for sample in (self._flags, self._local))):
-            return {"reason": "estimator_health_missing_or_stale"}
-        if self._state is None:
-            return {"reason": self._state_reason}
-        state, capture, received, sample_us, variances = self._state
-        clock = self.hybrid.clock
-        if (self.now > clock.valid_until_ns
-                or self.now - capture + clock.max_error_ns > EvaluationPolicy().state_age_ns):
-            return {"reason": "stale_state_or_clock_mapping"}
-        alignment = replace(self.hybrid.alignment, capture_ns=capture)
-        goal = None
-        if self.hybrid.mission_goal is not None:
-            ref = alignment.map
-            context = build_context(snapshot.semantic, self.hybrid.mission_goal,
-                                    now=snapshot.semantic["query_timestamp"],
-                                    reference=WorldReference(ref.frame_id, ref.epoch, ref.clock_id))
-            goal = GoalBinding(context, DeterministicReasoner().propose(context))
+        """Run one H1 replay assessment and summarize its evidence."""
+        reason, inputs = self.prepare(self.now)
+        if inputs is None:
+            return {"reason": "missing_synchronized_depth" if self.now is None and self.fault is None else reason}
+        _, capture, received, sample_us, variances = self._state
+        snapshot = inputs["snapshot"]
         start = perf_counter_ns()
         clock_arg = {} if self.monotonic is None else {"monotonic": self.monotonic}
-        result = assess(state, snapshot, now_ns=self.now, alignment=alignment, vehicle=self.hybrid.vehicle,
-                        objective=self.hybrid.objective, goal=goal, state_received_ns=received,
-                        estimator_reset_counter=alignment.estimator_reset_counter, estimator_healthy=True,
-                        budget_s=self.planner_budget_s, **clock_arg)
+        result = assess(**inputs, budget_s=self.planner_budget_s, timings=self.timings, **clock_arg)
         plan = result.receipt.plan
         return {"reason": result.validation_reason, "decision": plan.decision, "ranked_ids": plan.ranked_ids,
                 "px4_sample_us": sample_us, "state_capture_ns": capture, "state_received_ns": received,

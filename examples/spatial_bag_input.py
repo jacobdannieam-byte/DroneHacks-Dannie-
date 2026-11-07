@@ -6,6 +6,7 @@ import math
 
 import numpy as np
 
+from refnav.integration_timing import measure
 from refnav.world_model.spatial_input import DepthCalibration, DepthCapture, PoseSample, SpatialReference
 from refnav.world_model.spatial_input import decode_rectified_depth, stamp_ok
 from refnav.world_model.spatial_pipeline import SpatialWorld
@@ -84,9 +85,10 @@ class RecordedSpatialReplay:
 
     topics = TOPICS
 
-    def __init__(self, profile):
+    def __init__(self, profile, *, timings=None):
         self.profile = profile
-        self.world = SpatialWorld(profile.reference, profile.calibration)
+        self.timings = timings
+        self.world = SpatialWorld(profile.reference, profile.calibration, timings=timings)
         self.rows = []
         self.now = self._clock = self._health = self._ev_reset = self._ev_received = None
         self._pose_capture = self._pending = None
@@ -130,9 +132,9 @@ class RecordedSpatialReplay:
                 raise ValueError("depth needs prior CameraInfo, an advancing /clock and EV epoch evidence")
             if msg.header.frame_id != self.profile.calibration.camera_frame:
                 raise ValueError("depth optical frame differs from reviewed calibration")
-            depth = decode_rectified_depth(msg.data, encoding=msg.encoding, width=int(msg.width),
-                                           height=int(msg.height), step=int(msg.step),
-                                           bigendian=bool(msg.is_bigendian))
+            depth = measure(self.timings, "depth_normalization", decode_rectified_depth,
+                            msg.data, encoding=msg.encoding, width=int(msg.width),
+                            height=int(msg.height), step=int(msg.step), bigendian=bool(msg.is_bigendian))
             stamp = _ns(msg.header.stamp)
             self._pending = DepthCapture(self.profile.reference, stamp, received_ns, msg.header.frame_id,
                                          f"depth-{stamp}", depth)

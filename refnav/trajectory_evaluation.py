@@ -9,6 +9,7 @@ from onboard.adapters.geometry import R_ENU_NED, rot_z
 from refnav.dynamics import DroneState, DynamicsModel, LocalNED, PositionSetpoint, Prediction, PredictedState
 from refnav.dynamics.history import MotionHistory, STEP_SECONDS
 from refnav.dynamics.validation import finite_real, vector3, wrap_yaw
+from refnav.integration_timing import measure
 from refnav.reasoning import GoalProposal, ReasoningContext, WorldReference, build_context, validate_proposal
 from refnav.world_model.spatial_input import MAX_LOCAL_M, NS, SpatialReference, stamp_ok
 from refnav.world_model.spatial_pipeline import SpatialSnapshot
@@ -243,7 +244,7 @@ def _resolve_goal(snapshot, goal, now_ns):
     return np.asarray(target.geometry.center), None, ()
 
 
-def _forecast(candidate, state, predictor, history):
+def _forecast(candidate, state, predictor, history, timings):
     for index, command in enumerate(candidate.schedule):
         start = state.timestamp_s + index * STEP_SECONDS
         end = state.timestamp_s + (index + 1) * STEP_SECONDS
@@ -252,7 +253,8 @@ def _forecast(candidate, state, predictor, history):
                 or command.effective_from_s - start > slack or end - command.effective_until_s > slack):
             raise ValueError("candidate setpoint does not cover the effective interval")
     kwargs = {"history": history} if history is not None else {}
-    trajectory = predictor.rollout(state, candidate.schedule, dt=STEP_SECONDS, **kwargs)
+    trajectory = measure(timings, "prediction_rollout", predictor.rollout, state, candidate.schedule,
+                         dt=STEP_SECONDS, **kwargs)
     if not isinstance(trajectory, tuple) or len(trajectory) != len(candidate.schedule):
         raise ValueError("forecast shape mismatch")
     effort = 0.
@@ -273,9 +275,10 @@ def _forecast(candidate, state, predictor, history):
     return points, effort
 
 
-def _evaluate_one(candidate, state, predictor, history, transform, alignment, vehicle, geometry, goal_point):
+def _evaluate_one(candidate, state, predictor, history, transform, alignment, vehicle, geometry, goal_point,
+                  timings):
     try:
-        points, effort = _forecast(candidate, state, predictor, history)
+        points, effort = _forecast(candidate, state, predictor, history, timings)
     except (TypeError, ValueError, OverflowError):
         return CandidateDiagnostic(candidate.candidate_id, "rejected", ("invalid_schedule_or_prediction",), "invalid")
     margin = (vehicle.state_position_error_m + vehicle.tracking_error_m + alignment.position_error_m
@@ -301,7 +304,8 @@ def _evaluate_one(candidate, state, predictor, history, transform, alignment, ve
 
 
 def evaluate_candidates(state, candidates, snapshot, *, now_ns, alignment, vehicle,
-                        goal=None, predictor=None, model_id=None, history=None, policy=EvaluationPolicy(), interrupted=None):
+                        goal=None, predictor=None, model_id=None, history=None, policy=EvaluationPolicy(), interrupted=None,
+                        timings=None):
     """Rank feasible supplied candidates against current, static observed evidence."""
     if (not isinstance(state, DroneState) or not isinstance(snapshot, SpatialSnapshot)
             or not isinstance(snapshot.metric, MetricSnapshot) or not isinstance(alignment, FrameAlignment)
@@ -338,7 +342,7 @@ def evaluate_candidates(state, candidates, snapshot, *, now_ns, alignment, vehic
             if interruption is not None:
                 break
             evaluated.append(_evaluate_one(item, state, predictor, history, transform, alignment, vehicle,
-                                           geometry, goal_point))
+                                           geometry, goal_point, timings))
         diagnostics = tuple(evaluated)
 
     if interruption is None and interrupted is not None:

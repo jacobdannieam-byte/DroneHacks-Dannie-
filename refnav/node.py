@@ -119,6 +119,12 @@ class RefNav(Node):
         self.rejects = {}
         self.done_at = None
         self._wait_log_t = None
+        # No launcher supplies either hook. A future reviewed SITL composition
+        # must do so inside this owner, using the same process and clock.
+        self._hybrid_gateway = self._hybrid_inputs = None
+        self._hybrid_generation = 0
+        self._hybrid_reports = {}
+        self._hybrid_clock_ns = None
         self.create_timer(0.05, self._tick)            # node clock: pauses with a paused simulator
         self.create_timer(0.5, self._publish_status)
         self.get_logger().info(f"route {len(route)} legs; depth {self.depth_topic}; health {self.health_topic}; "
@@ -127,6 +133,18 @@ class RefNav(Node):
     # ------------------------------------------------------------------ inputs
     def _now(self):
         return self.get_clock().now().nanoseconds * 1e-9
+
+    def _invalidate_hybrid(self):
+        if self._hybrid_gateway is not None:
+            self._hybrid_gateway.invalidate()
+            self._hybrid_generation += 1
+
+    def _note_hybrid_report(self, key, identity):
+        now = self.get_clock().now().nanoseconds
+        previous = self._hybrid_reports.get(key)
+        if previous is not None and (now < previous[0] or identity != previous[1]):
+            self._invalidate_hybrid()
+        self._hybrid_reports[key] = (now, identity)
 
     def _on_est_flags(self, m):
         self._yaw_align = (bool(m.cs_yaw_align), self._now())
@@ -143,6 +161,9 @@ class RefNav(Node):
         heading_ok = bool(m.heading_good_for_control) or (ya and ya_t is not None and self._now() - ya_t <= 3.0)
         self.v.pos_ok = bool(m.xy_valid and m.z_valid and heading_ok
                              and all(math.isfinite(c) for c in (m.x, m.y, m.z, m.heading)))
+        if self._hybrid_gateway is not None:
+            from onboard.diagnostics.phase1_probe import RESET_FIELDS
+            self._note_hybrid_report("position", tuple(getattr(m, field, None) for field in RESET_FIELDS))
 
     def _on_att(self, m):
         self.v.q = tuple(float(c) for c in m.q)
@@ -150,12 +171,18 @@ class RefNav(Node):
     def _on_status(self, m):
         self.v.armed = m.arming_state == 2
         self.v.nav_state = int(m.nav_state)
+        if self._hybrid_gateway is not None:
+            self._note_hybrid_report("authority", (self.v.armed, self.v.nav_state))
 
     def _on_land(self, m):
         self.v.landed = bool(m.landed)
+        if self._hybrid_gateway is not None:
+            self._note_hybrid_report("landed", self.v.landed)
 
     def _on_health(self, m):
         self.mission.on_health(self._now(), m.data)
+        if not m.data:
+            self._invalidate_hybrid()
 
     def _on_info(self, m):
         if m.k[0] > 0 and m.k[4] > 0:
@@ -168,6 +195,7 @@ class RefNav(Node):
             return
         if req.get("request") == "land" and (not self.run_id or req.get("run_id") == self.run_id):
             self.get_logger().info(f"landing requested by the runtime ({req.get('why', 'operator')})")
+            self._invalidate_hybrid()
             self.mission.request_land(req.get("why") or "operator")
 
     def _reject(self, key, detail=None, record=True):
@@ -232,8 +260,48 @@ class RefNav(Node):
         c.from_external = True
         self.pub_cmd.publish(c)
 
+    def _hybrid_setpoint(self, out, now_ns):
+        gateway = self._hybrid_gateway
+        if gateway is None or not gateway.pending:
+            return out.setpoint
+        if self._hybrid_inputs is None:
+            self._invalidate_hybrid()
+            return out.setpoint
+        from onboard.diagnostics.sitl_graph import inspect as inspect_command_graph
+
+        simulation = self.get_parameter("use_sim_time").value is True
+        now = now_ns * 1e-9
+        health = self.mission.health
+        # Use fresh owner receipts in addition to H1's independent sensor gates.
+        fresh = (len(self._hybrid_reports) == 3 and
+                 all(0 <= now_ns - stamp <= 300_000_000 for stamp, _ in self._hybrid_reports.values()))
+        try:
+            inputs = self._hybrid_inputs(now_ns) if simulation and out.phase == "go" else None
+            ready = (simulation and fresh and health.last_ok is True and health.last_t is not None
+                     and 0 <= now - health.last_t <= health.stale_s
+                     and self.mission.depth_fresh(now) and self.mission.corridor_fresh(now)
+                     and self.mission.depth_t <= now and self.mission.corr_t <= now
+                     and all(counter is not None for counter in self._hybrid_reports["position"][1])
+                     and not inspect_command_graph(self, self.get_fully_qualified_name())["issues"])
+            decision = gateway.choose(inputs=inputs, now_ns=now_ns, owner_output=out, vehicle=self.v,
+                                      owner_ready=ready, owner_generation=self._hybrid_generation,
+                                      simulation=simulation)
+            self.get_logger().debug(f"hybrid_handoff tick_ns={now_ns} generation={self._hybrid_generation} "
+                                    f"reason={decision.reason}")
+            return decision.setpoint
+        except (ValueError, TypeError, KeyError, AttributeError, RuntimeError) as error:
+            self._invalidate_hybrid()
+            self.get_logger().warning(f"hybrid handoff refused: {type(error).__name__}")
+            return out.setpoint
+
     def _tick(self):
-        now = self._now()
+        now_ns = self.get_clock().now().nanoseconds
+        now = now_ns * 1e-9
+        if self._hybrid_gateway is not None:
+            if self._hybrid_clock_ns is not None and now_ns < self._hybrid_clock_ns:
+                self._hybrid_reports.clear()
+                self._invalidate_hybrid()
+            self._hybrid_clock_ns = now_ns
         if now <= 0.0:
             return                                   # sim time before the first /clock
         out = self.mission.step(now, self.v)
@@ -247,17 +315,20 @@ class RefNav(Node):
                 self._wait_log_t = now
         if out.events:
             self._publish_status()
+        if not out.stream or out.commands or out.phase != "go":
+            self._invalidate_hybrid()
         if out.stream and out.setpoint is not None:
+            setpoint = self._hybrid_setpoint(out, now_ns)
             o = self._OCM()
             o.timestamp = self._sys_us()
             o.position = True
             self.pub_ocm.publish(o)
             s = self._TSP()
             s.timestamp = o.timestamp
-            s.position = [float(c) for c in out.setpoint[:3]]
+            s.position = [float(c) for c in setpoint[:3]]
             s.velocity = [math.nan] * 3
             s.acceleration = [math.nan] * 3
-            s.yaw = float(out.setpoint[3])
+            s.yaw = float(setpoint[3])
             self.pub_sp.publish(s)
         for c in out.commands:
             if c == "offboard":

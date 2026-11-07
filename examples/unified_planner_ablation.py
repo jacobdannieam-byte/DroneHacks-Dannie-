@@ -137,15 +137,15 @@ def _truth(case, candidate):
 
 
 def exercise(repeats, checkpoint):
-    learned = AdaptiveDynamicsModel(AdaptiveNetwork.load(checkpoint))
     geometric = StraightLine()
     variants = (
         ("reactive_geometry", geometric, False, False),
         ("worldstate_only", geometric, True, False),
         ("selected_d0", None, True, False),
-        ("ridge", OnlineFitDynamicsModel(), True, True),
-        ("gru64", learned, True, True),
     )
+    if checkpoint is not None:
+        learned = AdaptiveDynamicsModel(AdaptiveNetwork.load(checkpoint))
+        variants += (("ridge", OnlineFitDynamicsModel(), True, True), ("gru64", learned, True, True))
     results = {}
     for case in cases():
         candidates = {candidate.candidate_id: candidate for candidate in _generate(case.state, case.objective,
@@ -179,7 +179,7 @@ def exercise(repeats, checkpoint):
             }
         results[case.name] = reports
     return {"scope": "synthetic_one_second_open_loop", "host": platform.platform(), "repeats_per_case": repeats,
-            "budget_ms": 25, "learned_checkpoint": checkpoint.name, "cases": results}
+            "budget_ms": 25, "learned_checkpoint": checkpoint.name if checkpoint is not None else None, "cases": results}
 
 
 def main(argv=None):

@@ -79,10 +79,10 @@ def odometry(t, x, velocity=0.):
                velocity_variance=(1e-6,) * 3)
 
 
-def depth(t, x, *, invalid=False, cal=None):
+def depth(t, x, *, invalid=False, cal=None, blocked=False):
     cal = cal or calibration()
     offset = cal.t_body_optical_m[0] - calibration().t_body_optical_m[0]
-    surface = scene(rear=False) + [(0, 4.3 if offset else 5.4, (-5., 5.), (-1., 4.))]
+    surface = scene(rear=False, blocked=blocked) + [(0, 4.3 if offset else 5.4, (-5., 5.), (-1., 4.))]
     image = render(surface, (x + offset, .10, 1.3))
     if invalid:
         image.fill(np.nan)
@@ -99,7 +99,7 @@ def setup(replay):
                 p=(fx, 0, cx, 0, 0, fy, cy, 0, 0, 0, 1, 0)), 90 * MS)
 
 
-def tick(replay, t, x, *, with_depth=True):
+def tick(replay, t, x, *, with_depth=True, blocked=False):
     replay.feed("/clock", clock(t), t * MS)
     replay.feed(HEALTH, Msg(data=True), t * MS)
     replay.feed("/fmu/in/vehicle_visual_odometry", Msg(reset_counter=7), t * MS)
@@ -114,7 +114,7 @@ def tick(replay, t, x, *, with_depth=True):
     replay.feed(PX4_TOPICS["vehicle_odometry"], odometry(t, x), received)
     replay.feed(TRACKING, tracking(t), received)
     if with_depth:
-        replay.feed(DEPTH, depth(t, x, cal=replay.profile.calibration), received)
+        replay.feed(DEPTH, depth(t, x, cal=replay.profile.calibration, blocked=blocked), received)
     replay.feed(VIO, pose(t, x), (t + 3) * MS)
 
 
