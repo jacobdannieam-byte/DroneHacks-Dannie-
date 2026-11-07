@@ -1,3 +1,12 @@
+# Our team's work (drone 16)
+
+Start with these. Everything from the next heading down describes the starter project.
+
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): the plan for the whole competition.
+- [`simulator/README.md`](simulator/README.md): the simulator that runs on a Mac.
+- [`drone_code/README.md`](drone_code/README.md): the code that runs on the real drone.
+- [`docs/READABLE_CODE.md`](docs/READABLE_CODE.md): how we write code here.
+
 # DroneHacks Autonomous Drone Companion Project
 
 This is the team's persistent DroneHacks companion project. It runs inside the companion container (Linux / ROS 2 Jazzy) on the NVIDIA Jetson Orin Nano / simulation environment, communicating with the PX4 autopilot via Micro XRCE-DDS in Offboard Mode.

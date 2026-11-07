@@ -1,5 +1,8 @@
 # DroneHacks participant workspace
 
+Read `docs/READABLE_CODE.md` before writing any code, and again after every
+context compaction. All code here must follow it.
+
 Read `AI_CONTEXT.md` before changing or running code. This file is for the
 student's coding agent, not for the simulator's maintainers.
 

@@ -1,0 +1,4 @@
+# The Dockerfile only needs px4_changes. Everything else is shared with the box
+# when it starts, so there is no need to copy it during the build.
+*
+!px4_changes

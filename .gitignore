@@ -16,3 +16,6 @@ combined_code.txt
 .DS_Store
 Thumbs.db
 
+
+# Files the simulator generates when it runs. They can always be made again.
+simulator/generated_files/
