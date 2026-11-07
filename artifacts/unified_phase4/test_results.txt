@@ -1,0 +1,23 @@
+Unified Phase 4 verification
+Integration base d6c363c (Phase 2 67b70ed and Phase 3 5816a04).
+Windows AMD64, Intel Family 6 Model 183, Python 3.11.9.
+OPENBLAS_NUM_THREADS=1 and OMP_NUM_THREADS=1.
+
+python -m pytest -q tests
+Before Phase 4 changes: 279 passed in 13.91 s.
+Phase 4 branch: 291 passed in 13.13 s (12 new cases).
+Focused trajectory and spatial suite: 25 passed in 0.88 s.
+
+python -m examples.unified_trajectory_replay --output <new-evidence-dir> --repeats 100
+python -m examples.unified_trajectory_replay --output <repeat-dir> --skip-timing
+Both replay JSON files matched byte for byte.
+SHA-256 9a13c5153d9426f1eb116a194b97e0eff7a38e93a6f9af11f46052b8aaf897ec.
+Observed geometry ranked advance first. The wall scenario rejected the only
+candidate even though its semantic opening hint remained valid. Stale
+geometry produced no ranked candidate. The overhead/uncertainty test
+rejected the swept envelope when it intersected the ceiling.
+
+Eight 50-step D0 candidates including validation and ranking:
+13.35 ms median, 14.09 ms p95, 15.88 ms p99, 17.58 ms worst.
+0 of 100 samples exceeded the provisional 25 ms total budget.
+This timing is synthetic and offline. No ROS, PX4, SITL or Orin run was made.

@@ -11,6 +11,14 @@ from .spatial_input import MAX_LOCAL_M, SpatialReference, stamp_ok
 TILE = 8
 
 
+def swept_cell_bounds(points, radius, resolution, origin_index):
+    """Unclipped, half-open voxel boxes enclosing every continuous segment."""
+    before, after = (points[:-1], points[1:]) if len(points) > 1 else (points, points)
+    lo = np.floor(np.nextafter((np.minimum(before, after) - radius) / resolution, -np.inf))
+    hi = np.floor(np.nextafter((np.maximum(before, after) + radius) / resolution, np.inf)) + 1
+    return lo.astype(int) - origin_index, hi.astype(int) - origin_index
+
+
 class Cell(IntEnum):
     UNKNOWN = 0
     FREE = 1
@@ -86,14 +94,9 @@ class MetricSnapshot:
         cells = self.cells_at(now_ns, reference)
         seen = np.zeros(cells.shape, dtype=bool)
         radius = vehicle_radius_m + margin_m
-        segments = zip(points[:-1], points[1:]) if len(points) > 1 else [(points[0], points[0])]
+        lower_boxes, upper_boxes = swept_cell_bounds(points, radius, self.policy.resolution_m, self.origin_index)
         outside = False
-        for a, b in segments:
-            # Each expanded segment box is a superset of the continuous swept sphere.
-            lo = np.floor(np.nextafter((np.minimum(a, b) - radius) / self.policy.resolution_m, -np.inf))
-            hi = np.floor(np.nextafter((np.maximum(a, b) + radius) / self.policy.resolution_m, np.inf)) + 1
-            lo = lo.astype(int) - self.origin_index
-            hi = hi.astype(int) - self.origin_index
+        for lo, hi in zip(lower_boxes, upper_boxes):
             outside |= bool(np.any(lo < 0) or np.any(hi > self.policy.shape))
             lower = np.maximum(lo, 0)
             upper = np.minimum(hi, self.policy.shape)

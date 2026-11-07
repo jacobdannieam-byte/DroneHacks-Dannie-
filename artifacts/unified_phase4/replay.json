@@ -1,0 +1,181 @@
+{
+  "evidence": "synthetic_static_geometry",
+  "scenarios": {
+    "observed_with_goal": {
+      "candidates": [
+        {
+          "candidate_id": "hold",
+          "status": "feasible",
+          "reasons": [
+            "observed_swept_volume"
+          ],
+          "evidence": "verified_observed_volume",
+          "clearance_lower_bound_m": 0.1,
+          "inflation_m": 0.03494368201377621,
+          "progress_m": 0.0,
+          "effort": 0.0,
+          "score": 0.010000000000000002,
+          "rank": 3,
+          "occupied_segments": 0,
+          "unknown_segments": 0
+        },
+        {
+          "candidate_id": "advance",
+          "status": "feasible",
+          "reasons": [
+            "observed_swept_volume"
+          ],
+          "evidence": "verified_observed_volume",
+          "clearance_lower_bound_m": 0.1,
+          "inflation_m": 0.03614468738334586,
+          "progress_m": 0.6790330078860871,
+          "effort": 1.6077477838176286,
+          "score": 0.6568780522097346,
+          "rank": 1,
+          "occupied_segments": 0,
+          "unknown_segments": 0
+        },
+        {
+          "candidate_id": "high_climb",
+          "status": "feasible",
+          "reasons": [
+            "observed_swept_volume"
+          ],
+          "evidence": "verified_observed_volume",
+          "clearance_lower_bound_m": 0.1,
+          "inflation_m": 0.036574144732967495,
+          "progress_m": 0.5658751296012459,
+          "effort": 2.2001191552349564,
+          "score": 0.5318727464965467,
+          "rank": 2,
+          "occupied_segments": 0,
+          "unknown_segments": 0
+        }
+      ],
+      "ranked_candidate_ids": [
+        "advance",
+        "high_climb",
+        "hold"
+      ],
+      "fallback_reason": null,
+      "model_id": "d0",
+      "map_reference": {
+        "frame_id": "odom",
+        "clock_id": "synthetic",
+        "epoch": 0,
+        "body_frame": "base_link"
+      },
+      "map_capture_ns": 100000000,
+      "observation_id": "frame-100000000",
+      "calibration_id": "synthetic-rig-x1",
+      "alignment_provenance": "synthetic-frame-calibration",
+      "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b"
+    },
+    "wall_with_opening_hint": {
+      "candidates": [
+        {
+          "candidate_id": "through_wall",
+          "status": "rejected",
+          "reasons": [
+            "occupied_swept_volume"
+          ],
+          "evidence": "occupied",
+          "clearance_lower_bound_m": null,
+          "inflation_m": 0.03847705368482051,
+          "progress_m": 1.7600345066984937,
+          "effort": 1.744383457095983,
+          "score": null,
+          "rank": null,
+          "occupied_segments": 15,
+          "unknown_segments": 7
+        }
+      ],
+      "ranked_candidate_ids": [],
+      "fallback_reason": "no_verified_candidate",
+      "model_id": "d0",
+      "map_reference": {
+        "frame_id": "odom",
+        "clock_id": "synthetic",
+        "epoch": 0,
+        "body_frame": "base_link"
+      },
+      "map_capture_ns": 100000000,
+      "observation_id": "frame-100000000",
+      "calibration_id": "synthetic-rig-x1",
+      "alignment_provenance": "synthetic-frame-calibration",
+      "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b"
+    },
+    "stale_geometry": {
+      "candidates": [
+        {
+          "candidate_id": "hold",
+          "status": "unknown",
+          "reasons": [
+            "stale_or_future_state",
+            "stale_or_unaligned_transform",
+            "stale_geometry"
+          ],
+          "evidence": "unverified",
+          "clearance_lower_bound_m": null,
+          "inflation_m": null,
+          "progress_m": null,
+          "effort": null,
+          "score": null,
+          "rank": null,
+          "occupied_segments": 0,
+          "unknown_segments": 0
+        },
+        {
+          "candidate_id": "advance",
+          "status": "unknown",
+          "reasons": [
+            "stale_or_future_state",
+            "stale_or_unaligned_transform",
+            "stale_geometry"
+          ],
+          "evidence": "unverified",
+          "clearance_lower_bound_m": null,
+          "inflation_m": null,
+          "progress_m": null,
+          "effort": null,
+          "score": null,
+          "rank": null,
+          "occupied_segments": 0,
+          "unknown_segments": 0
+        },
+        {
+          "candidate_id": "high_climb",
+          "status": "unknown",
+          "reasons": [
+            "stale_or_future_state",
+            "stale_or_unaligned_transform",
+            "stale_geometry"
+          ],
+          "evidence": "unverified",
+          "clearance_lower_bound_m": null,
+          "inflation_m": null,
+          "progress_m": null,
+          "effort": null,
+          "score": null,
+          "rank": null,
+          "occupied_segments": 0,
+          "unknown_segments": 0
+        }
+      ],
+      "ranked_candidate_ids": [],
+      "fallback_reason": "no_verified_candidate",
+      "model_id": "d0",
+      "map_reference": {
+        "frame_id": "odom",
+        "clock_id": "synthetic",
+        "epoch": 0,
+        "body_frame": "base_link"
+      },
+      "map_capture_ns": 100000000,
+      "observation_id": "frame-100000000",
+      "calibration_id": "synthetic-rig-x1",
+      "alignment_provenance": "synthetic-frame-calibration",
+      "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b"
+    }
+  }
+}
