@@ -1,7 +1,8 @@
 # Adaptive dynamics roadmap
 
 D0 is the position-setpoint baseline. D1 adds a trained offline residual
-predictor. D2–D5 describe future work.
+predictor. D2 adds causal adaptation and a classical online identification
+baseline. D3–D5 describe future work.
 The progression adds learned correction, adaptation, environment evaluation,
 observational integration, and then planning in separate stages.
 
@@ -32,15 +33,14 @@ needed to select a deployment model. [D1 implementation and evidence](adaptive_d
 
 ## D2 adaptive context
 
-Add an explicit bounded history of aligned estimated states, effective
-setpoints, measured transitions and optional prediction residuals. End the
-window at the current capture time, clear it on reference resets, and represent
-missing or stale samples. A history MLP or 32/64-unit GRU can map it to an 8–16
-dimensional context. Keep inference weights fixed while updating the context
-from observations. Compare with D1 and a simple online parameter estimator.
-Measure the time to recover after a dynamics change, latent stability, held-out
-generalization, rollout error and incremental cost. Physical interpretation of
-latent coordinates requires independent identification evidence.
+D2 uses up to 20 completed transitions at 20 ms intervals. A history MLP and
+32/64-unit GRUs each produce eight context coordinates with frozen weights.
+The comparison includes an online ridge fit of acceleration gain and damping,
+and a pre-switch frozen-context ablation. History improved the selected GRU's
+post-switch forecasts relative to the frozen context. The online fit achieved
+lower shifted-cohort rollout error and preserved matched-nominal accuracy more
+closely. The selected GRU remains an offline research candidate.
+[D2 implementation and evidence](adaptive_dynamics_d2.md)
 
 ## D3 predictive evaluation against the world
 

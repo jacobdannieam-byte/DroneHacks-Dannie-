@@ -1,0 +1,31 @@
+Environment
+Windows AMD64, Intel64 Family 6 Model 183 Stepping 1, GenuineIntel
+Python 3.11.9, NumPy 2.3.5, PyTorch 2.11.0.dev20260208+cu128
+PyTorch training ran on CPU with one intra-op and one inter-op thread.
+
+D1 baseline 8f695cdbb60fdbdbf815cb340fa9c69b3b95c97d
+python -m pytest -q tests
+101 passed in 7.70s
+
+D2 source and checkpoint commit 8107a64e1c162c84f249f0023a107976b61217d9
+python -m pytest -q tests
+111 passed in 7.38s
+Compared the default D1 simulator in the parent revision with the extended
+simulator for train, validation, test, and shifted splits. Response fingerprints,
+steps, commands and state arrays matched exactly.
+
+Detached semantic compatibility checkout
+Base b026465d1c57a056a423e51872164b7474abbf9a with the D0, D1 and D2 source
+commits cherry-picked. Temporary HEAD dcc80e18dae43f809cac3b48b969ee01fe82beed.
+python -m pytest -q tests
+241 passed in 11.10s
+
+Training and evaluation with OPENBLAS_NUM_THREADS=1 and OMP_NUM_THREADS=1
+python -m examples.train_adaptive_dynamics_d2
+MLP selected epoch 17, validation MSE 0.025215
+GRU-32 selected epoch 18, validation MSE 0.019569
+GRU-64 selected epoch 18, validation MSE 0.019520
+Selected GRU-64. The exported NumPy checkpoints passed PyTorch parity checks.
+python -m examples.evaluate_adaptive_dynamics_d2
+Exit code 0. Evaluated 32 in-range and 24 shifted switched episodes, one
+matched-nominal control and one equilibrium control. All runs were offline.
