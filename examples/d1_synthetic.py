@@ -40,7 +40,8 @@ class Episode:
         return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
-def generate(split, *, seed=SEED, count=None, steps=STEPS, step_seconds=None, change_step=None):
+def generate(split, *, seed=SEED, count=None, steps=STEPS, step_seconds=None, change_step=None,
+             position_delay_steps=None, yaw_delay_steps=None):
     """Use separate random streams and full response configurations per episode."""
     count = COUNTS[split] if count is None else count
     rng = np.random.default_rng(np.random.SeedSequence([seed, SEED_OFFSETS[split]]))
@@ -49,6 +50,11 @@ def generate(split, *, seed=SEED, count=None, steps=STEPS, step_seconds=None, ch
     response = rng.uniform(ranges[:, 0], ranges[:, 1], size=(count, len(RESPONSE_NAMES)))
     position_delay = rng.integers(3, 7, count) if shifted else rng.integers(0, 3, count)
     yaw_delay = rng.integers(5, 10, count) if shifted else rng.integers(0, 5, count)
+    for values, override in ((position_delay, position_delay_steps), (yaw_delay, yaw_delay_steps)):
+        if override is not None:
+            if type(override) is not int or not 0 <= override < steps or change_step is not None:
+                raise ValueError("fixed delay requires a stationary episode and a valid step count")
+            values.fill(override)
     if step_seconds is not None:
         dt = np.full(count, step_seconds)
     else:
