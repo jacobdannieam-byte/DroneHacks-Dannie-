@@ -35,7 +35,15 @@ All flight decisions are plain Python with no ROS in them, so they run and are t
 10. [`team_nav/camera_exposure.py`](team_nav/camera_exposure.py) caps the camera's automatic exposure, so the pictures camera tracking depends on stay sharp.
 11. [`launch/team_nav.launch.py`](launch/team_nav.launch.py) says what starts on the drone, and why that is safe.
 
-The route's waypoints live in [`missions/route_waypoints.json`](missions/route_waypoints.json), not in code, because the judges take points off for routes written into code.
+The route's waypoints live in files in [`missions/`](missions/), not in code, because the judges take points off for routes written into code. The launch argument `route_file` picks one by name:
+
+| File | What it is |
+|---|---|
+| `route_waypoints.json` (the default) | The team's hand-made 20-waypoint route. It keeps 0.40 m from walls except at Gate B. |
+| `route_waypoints_drawing.json` | Planned by Kenny's route planner (`origin/classical`) on the organizers' drawing, at 0.8 m. |
+| `route_waypoints_scan.json` | Planned by the same planner on the phone scan of the real course (2026-11-06), at 0.8 m. |
+
+Each planned file also keeps the heights the planner wanted. Through the window those are 0.76 m on the drawing and **1.19 m on the scan**. The route mission ignores them and flies every leg at its cruise height (0.8 m). On the scan's map, 0.8 m through the window hits the window's lower wall. So don't fly `route_waypoints_scan.json` on the real course until the route mission can change height at the window.
 
 ## What it hears and sends
 

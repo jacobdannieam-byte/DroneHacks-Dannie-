@@ -154,6 +154,18 @@ def test_the_watchdog_stays_active_during_the_route():
     assert any(reason.startswith("landed: PX4 switched the motors off") for reason in reasons(mission))
 
 
+@pytest.mark.parametrize("name, count", [("route_waypoints_drawing.json", 22), ("route_waypoints_scan.json", 25)])
+def test_the_planned_routes_fly_to_the_end_and_land(name, count):
+    with open(ROUTE_FILE.parent / name, encoding="utf-8") as opened:
+        document = json.load(opened)
+    route = [tuple(waypoint) for waypoint in document["waypoints_forward_left_metres"]]
+    assert len(route) == count == len(document["planned_heights_metres"])
+    assert route[-1] == (-1.707, -0.472)                                   # both end over the landing pad
+    mission, drone, record = fly_route(route=route)
+    assert f"route: route complete: reached waypoint {count} of {count}" in reasons(mission)
+    assert any(reason.startswith("landed: PX4 switched the motors off") for reason in reasons(mission))
+
+
 def test_a_route_mission_without_waypoints_is_refused():
     with pytest.raises(ValueError, match="needs waypoints"):
         Mission(mission_kind="route", route_waypoints=[])

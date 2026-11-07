@@ -5,6 +5,7 @@
 #   simulator/run_team_nav.sh            # the course stages (mission:=stages)
 #   simulator/run_team_nav.sh route      # the route in drone_code/team_nav/missions/route_waypoints.json
 #   simulator/run_team_nav.sh route route_fly_through_degrees:=45
+#   simulator/run_team_nav.sh route route_file:=route_waypoints_scan.json
 #   SIMULATOR_ARGUMENTS="tracking_drift_metres_per_metre:=0.0" simulator/run_team_nav.sh route
 #
 # Any words after the mission are passed to our launch file as launch arguments (name:=value).
@@ -35,6 +36,13 @@ set -e
 mission_kind="${1:-stages}"
 shift || true
 team_nav_arguments="$*"
+# The watcher must check the same route the mission flies.
+route_file=route_waypoints.json
+for argument in "$@"; do
+    case "$argument" in
+        route_file:=*) route_file="${argument#route_file:=}" ;;
+    esac
+done
 simulator_arguments="${SIMULATOR_ARGUMENTS:-}"
 if [ "$mission_kind" != "stages" ] && [ "$mission_kind" != "route" ]; then
     echo "The mission must be 'stages' or 'route', not '$mission_kind'. For example: simulator/run_team_nav.sh route"
@@ -108,5 +116,5 @@ docker exec --detach \
 docker exec "$box_name" bash -c "
     until [ -f /tmp/our_packages_are_built ]; do sleep 1; done
     source /repository/simulator/inside_the_box/load_ros_environment.sh
-    python3 /repository/simulator/test_flights/team_nav_flight.py --mission $mission_kind
+    python3 /repository/simulator/test_flights/team_nav_flight.py --mission $mission_kind --route-file $route_file
 "

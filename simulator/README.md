@@ -162,4 +162,8 @@ All of this was run on 2026-11-06, on an M1 Mac.
 
   Both runs reached the first four checkpoints, including the chicane into the landing area, and the watchdog never tripped. Neither met the team's target of 120 s. Of the first run's time, 69 s was flying (the drone trails its carrot, then creeps the last stretch into each of the 17 stop corners), 48 s turning in place, 10 s stopping, 7 s taking off and 11 s landing. Two touch spots repeated in both runs, late in the route, where the simulator's deliberate tracking drift is largest.
 
+- **Kenny's planned routes** (2026-11-07, same Mac, PX4's clock at 0.90). Two runs, current settings (25° fly-through), drift on. The simulator's walls come from the organizers' drawing.
+  - **Drawing route:** all 22 waypoints. Motors off 147.2 s after the hand-over. 1 touch, in the window (C2a chicane wall).
+  - **Scan route:** all 25 waypoints. Motors off 150.4 s after the hand-over. 2 touches, on the M2 maze divider and the M3 maze divider. The scan puts those two walls somewhere other than the drawing: on the scan, both touch points are 0.55 m from the nearest wall. So these touches show where the two maps disagree, not a fault in the route.
+
 We have not tested a full run of the course, because the mission's detectors (the line, the pad and the depth clearances) don't exist yet. We also haven't tested the bottom edge of the window, the boulders, or lost camera tracking. No result here has been compared with a real flight.

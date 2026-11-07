@@ -84,6 +84,9 @@ ARGUMENTS = [
      'images. The mission refuses false unless simulator/run_team_nav.sh started it'),
     ('mission', 'stages', 'our mission: stages (the course stages), route (missions/route_waypoints.json), '
                           'or none (start only the flight interface)'),
+    ('route_file', 'route_waypoints.json',
+     'route mission: which waypoints to fly; a file name in the package\'s missions folder '
+     '(route_waypoints.json, route_waypoints_drawing.json, route_waypoints_scan.json) or a full path'),
     ('route_speed_metres_per_second', '0.5', 'route mission: speed along each leg'),
     ('route_turn_rate_degrees_per_second', '25.0', 'route mission: fastest turn, in place or while flying through'),
     ('route_arrive_metres', '0.10', 'route mission: a waypoint where the drone stops counts as reached this close'),
@@ -136,6 +139,7 @@ def generate_launch_description(mission_default='stages'):
         condition=LaunchConfigurationNotEquals('mission', 'none'),
         parameters=[{
             'mission_kind': LaunchConfiguration('mission'),
+            'route_file': LaunchConfiguration('route_file'),
             'cruise_height_metres': LaunchConfiguration('cruise_height_metres'),
             'route_speed_metres_per_second': LaunchConfiguration('route_speed_metres_per_second'),
             'route_turn_rate_degrees_per_second': LaunchConfiguration('route_turn_rate_degrees_per_second'),

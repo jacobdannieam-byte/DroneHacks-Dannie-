@@ -222,6 +222,22 @@ def test_the_route_mission_reads_its_waypoints_from_the_route_file(build_node):
     assert node.mission.route_waypoints[0] == (1.513, -0.141)
 
 
+@pytest.mark.parametrize("route_file, count", [("route_waypoints.json", 20), ("route_waypoints_drawing.json", 22),
+                                               ("route_waypoints_scan.json", 25)])
+def test_a_bare_route_file_name_means_that_file_in_the_packages_missions_folder(build_node, route_file, count):
+    installed = types.ModuleType("ament_index_python.packages")      # where the package is installed
+    installed.get_package_share_directory = lambda package: str(Path(__file__).resolve().parents[1])
+    sys.modules["ament_index_python"] = types.ModuleType("ament_index_python")
+    sys.modules["ament_index_python.packages"] = installed
+    try:
+        node = build_node(mission_kind="route", route_file=route_file)
+    finally:
+        sys.modules.pop("ament_index_python", None)
+        sys.modules.pop("ament_index_python.packages", None)
+    assert len(node.mission.route_waypoints) == count
+    assert node.parameters["route_file"] == route_file
+
+
 def test_a_route_file_that_cannot_be_read_is_a_clear_error(build_node):
     with pytest.raises(ValueError, match="Could not read the route's waypoints from /no/such/route.json"):
         build_node(mission_kind="route", route_file="/no/such/route.json")

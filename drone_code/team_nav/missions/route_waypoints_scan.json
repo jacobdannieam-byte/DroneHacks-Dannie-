@@ -1,0 +1,194 @@
+{
+  "description": "The route planned on the phone scan of the real course (2026-11-06). Planned on 2026-11-07 by Kenny's route planner, used unchanged (drone_code/team_nav/team_nav/route_planner.py on origin/classical, commit 8d848da), on the map course_maps/phone_scan_2026-11-06.json with the mission missions/dronehacks_2026.json, cruise height 0.8 m. Converted to this file's frame with his start_frame.py: each waypoint is [forward, left] in metres from the launch mark, with forward being where the nose points at takeoff, taken as 90 degrees from the course's east direction (north, along the first corridor), as in his route test and our simulator. The planner's first waypoint, the launch mark itself, is left out. Read by team_nav/mission_node.py when launched with mission:=route and route_file:=route_waypoints_scan.json.",
+  "waypoints_forward_left_metres": [
+    [
+      1.577,
+      -0.156
+    ],
+    [
+      1.713,
+      -0.692
+    ],
+    [
+      1.463,
+      -1.292
+    ],
+    [
+      0.313,
+      -1.342
+    ],
+    [
+      0.013,
+      -1.792
+    ],
+    [
+      0.063,
+      -2.342
+    ],
+    [
+      0.463,
+      -2.642
+    ],
+    [
+      1.713,
+      -3.292
+    ],
+    [
+      1.763,
+      -3.692
+    ],
+    [
+      1.704,
+      -4.001
+    ],
+    [
+      0.713,
+      -4.442
+    ],
+    [
+      0.063,
+      -4.492
+    ],
+    [
+      -1.436,
+      -4.69
+    ],
+    [
+      -2.387,
+      -4.592
+    ],
+    [
+      -2.987,
+      -4.142
+    ],
+    [
+      -2.937,
+      -3.692
+    ],
+    [
+      -2.787,
+      -3.492
+    ],
+    [
+      -2.737,
+      -3.142
+    ],
+    [
+      -3.037,
+      -2.842
+    ],
+    [
+      -3.337,
+      -2.792
+    ],
+    [
+      -3.602,
+      -3.191
+    ],
+    [
+      -3.419,
+      -2.619
+    ],
+    [
+      -3.048,
+      -1.455
+    ],
+    [
+      -2.866,
+      -0.884
+    ],
+    [
+      -1.707,
+      -0.472
+    ]
+  ],
+  "planned_heights_metres": [
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    0.8,
+    1.185,
+    1.185,
+    0.8,
+    0.8
+  ],
+  "planned_heights_note": "Information only: the route mission flies every leg at its cruise height and ignores these. The planner asks for 1.19 m through the window, where it crosses.",
+  "planner_summary": {
+    "map_file": "phone_scan_2026-11-06.json",
+    "length_metres": 18.75,
+    "least_room_metres": 0.352,
+    "least_room_near": "M3 maze divider",
+    "checkpoints_cleared_at_waypoint": [
+      [
+        "First corridor",
+        "end of first corridor",
+        1
+      ],
+      [
+        "Maze",
+        "Gate A",
+        10
+      ],
+      [
+        "Tunnel",
+        "tunnel exit",
+        13
+      ],
+      [
+        "Chicane",
+        "through the window",
+        23
+      ]
+    ],
+    "legs_near_boulders": [
+      [
+        13,
+        "Boulder 2",
+        0.231
+      ],
+      [
+        14,
+        "Boulder 2",
+        0.231
+      ],
+      [
+        20,
+        "Boulder 3",
+        0.119
+      ],
+      [
+        21,
+        "Boulder 3",
+        0.131
+      ],
+      [
+        22,
+        "Boulder 5",
+        0.144
+      ],
+      [
+        23,
+        "Boulder 5",
+        0.089
+      ]
+    ],
+    "numbering_note": "Waypoint numbers here count from 1 in this file's list (the planner's numbers minus one). A leg numbered n runs from waypoint n to n+1, with leg 0 starting at the launch mark."
+  }
+}

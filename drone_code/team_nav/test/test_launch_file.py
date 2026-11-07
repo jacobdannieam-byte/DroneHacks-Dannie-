@@ -113,6 +113,11 @@ def test_every_watchdog_threshold_is_a_launch_argument_with_the_teams_default(la
         assert getattr(defaults, name) == value, name
 
 
+def test_the_route_file_is_a_launch_argument_defaulting_to_the_current_route(launched):
+    assert arguments(launched)["route_file"] == "route_waypoints.json"
+    assert mission_parameters(launched)["route_file"].name == "route_file"
+
+
 def test_the_route_settings_are_launch_arguments_with_the_teams_defaults(launched):
     team_defaults = {"route_speed_metres_per_second": 0.5, "route_turn_rate_degrees_per_second": 25.0,
                      "route_arrive_metres": 0.10, "route_fly_through_degrees": 25.0}
@@ -146,5 +151,7 @@ def test_the_mission_program_the_launch_file_names_is_installed():
     assert re.search(r'"mission = team_nav\.mission_node:main"', setup_text)
     assert '"launch/team_nav.launch.py"' in setup_text
     assert '"launch/team_nav_route.launch.py"' in setup_text
-    assert '"missions/route_waypoints.json"' in setup_text
+    for route_file in ("route_waypoints.json", "route_waypoints_drawing.json", "route_waypoints_scan.json"):
+        assert f'"missions/{route_file}"' in setup_text, route_file
+        assert (PACKAGE_FOLDER / "missions" / route_file).is_file(), route_file
     assert "install_scripts=$base/lib/team_nav" in (PACKAGE_FOLDER / "setup.cfg").read_text()

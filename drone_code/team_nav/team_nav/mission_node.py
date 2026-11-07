@@ -59,7 +59,9 @@ DEFAULT_PX4_STATUS_TOPIC = "/fmu/out/vehicle_status_v1"
 DEFAULT_VISUAL_SLAM_STATUS_TOPIC = "/visual_slam/status"
 # From the message definition read on drone 16 (VisualSlamStatus.msg).
 VO_STATE_NAMES = {0: "unknown", 1: "tracking", 2: "lost"}
-ROUTE_FILE_IN_PACKAGE = "missions/route_waypoints.json"
+# The route files installed with this package live in its missions folder.
+MISSIONS_FOLDER_IN_PACKAGE = "missions"
+DEFAULT_ROUTE_FILE = "route_waypoints.json"
 POSE_TARGET_TOPIC = "/skybeta/setpoint/pose"
 VELOCITY_COMMAND_TOPIC = "/skybeta/setpoint/twist"
 # SIMULATOR ONLY. The simulator publishes no camera images, so nothing reports camera tracking
@@ -99,11 +101,13 @@ def px4_topic(requested_topic, uorb_name, plain_topic):
 
 
 def read_route_waypoints(route_file):
-    """The route mission's waypoints, [(forward, left), ...] in metres, from a JSON file. With no
-    file named, the one installed with this package."""
-    if not route_file:
+    """The route mission's waypoints, [(forward, left), ...] in metres, from a JSON file. A bare
+    file name, such as route_waypoints_scan.json, means that file in this package's missions folder;
+    a path is used as it is. With no file named, the default route."""
+    route_file = route_file or DEFAULT_ROUTE_FILE
+    if os.path.dirname(route_file) == "":
         from ament_index_python.packages import get_package_share_directory
-        route_file = os.path.join(get_package_share_directory("team_nav"), ROUTE_FILE_IN_PACKAGE)
+        route_file = os.path.join(get_package_share_directory("team_nav"), MISSIONS_FOLDER_IN_PACKAGE, route_file)
     try:
         with open(route_file, encoding="utf-8") as opened:
             waypoints = json.load(opened)["waypoints_forward_left_metres"]
@@ -140,7 +144,7 @@ class MissionNode(Node):
         super().__init__("team_nav_mission")
         settings = self.read_settings()
         mission_kind = self.declare_parameter("mission_kind", "stages").value
-        route_file = self.declare_parameter("route_file", "").value
+        route_file = self.declare_parameter("route_file", DEFAULT_ROUTE_FILE).value
         route_waypoints = read_route_waypoints(route_file) if mission_kind == "route" else None
         self.mission = Mission(settings, vision_check=self.read_vision_check(), mission_kind=mission_kind,
                                route_waypoints=route_waypoints)
@@ -156,6 +160,8 @@ class MissionNode(Node):
                                                      settings.camera_auto_exposure_limit_microseconds)
             self.camera_exposure.check()
             self.create_timer(settings.camera_check_seconds, self.camera_exposure.check)
+        if mission_kind == "route":
+            self.get_logger().info(f"The route comes from {route_file}: {len(route_waypoints)} waypoints.")
         self.get_logger().info(
             f"team_nav mission ready: the {mission_kind} mission. Hears {', '.join(heard)}; sends "
             f"{POSE_TARGET_TOPIC} and {VELOCITY_COMMAND_TOPIC}; cruise height "

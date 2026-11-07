@@ -52,8 +52,8 @@ SECONDS_TO_SETTLE_BEFORE_START = 5.0
 OUR_TARGETS_COUNT_AS_LIVE_SECONDS = 0.5
 PUSH_DOWN_SEEN_AT_METRES_PER_SECOND = 0.9       # a command at least this fast downward
 
-# The route mission's waypoints, the same file the mission reads.
-ROUTE_FILE = "/repository/drone_code/team_nav/missions/route_waypoints.json"
+# The route mission's waypoints: the same files the mission reads (--route-file picks one).
+MISSIONS_FOLDER = "/repository/drone_code/team_nav/missions"
 # Our own choice: the drone counts as having reached a waypoint within this distance (the mission
 # itself uses 0.15 m).
 WAYPOINT_REACHED_METRES = 0.2
@@ -75,9 +75,10 @@ PX4_MESSAGE_SETTINGS = QoSProfile(
 
 class TeamNavFlightWatcher(Node):
 
-    def __init__(self, mission_kind):
+    def __init__(self, mission_kind, route_file):
         super().__init__("team_nav_flight_watcher")
         self.mission_kind = mission_kind
+        self.route_file = route_file
         self.tracked_position = None
         self.tracked_heading_radians = None
         self.waypoints = []                      # (x, y) in the camera tracking frame, set at the start
@@ -181,14 +182,14 @@ class TeamNavFlightWatcher(Node):
     def remember_the_route(self):
         """The route's waypoints in the camera tracking frame, from where the drone sits and the way
         its nose points now, just as the mission works them out at takeoff."""
-        with open(ROUTE_FILE, encoding="utf-8") as opened:
+        with open(f"{MISSIONS_FOLDER}/{self.route_file}", encoding="utf-8") as opened:
             route = json.load(opened)["waypoints_forward_left_metres"]
         start_east, start_north = self.tracked_position
         cos_heading, sin_heading = math.cos(self.tracked_heading_radians), math.sin(self.tracked_heading_radians)
         self.waypoints = [(start_east + cos_heading * forward - sin_heading * left,
                            start_north + sin_heading * forward + cos_heading * left) for forward, left in route]
         self.closest_approach_metres = [math.inf] * len(self.waypoints)
-        self.say(f"The route has {len(self.waypoints)} waypoints.")
+        self.say(f"The route in {self.route_file} has {len(self.waypoints)} waypoints.")
 
     def press_start(self):
         if self.mission_kind == "route":
@@ -256,9 +257,11 @@ class TeamNavFlightWatcher(Node):
 def main():
     parser = argparse.ArgumentParser(description="Press start for team_nav in the simulator and watch it fly.")
     parser.add_argument("--mission", choices=["stages", "route"], default="stages")
+    parser.add_argument("--route-file", default="route_waypoints.json",
+                        help="the route file in drone_code/team_nav/missions that the mission flies")
     arguments = parser.parse_args()
     rclpy.init()
-    watcher = TeamNavFlightWatcher(arguments.mission)
+    watcher = TeamNavFlightWatcher(arguments.mission, arguments.route_file)
     try:
         everything_expected = watcher.run()
     except TimeoutError as problem:
