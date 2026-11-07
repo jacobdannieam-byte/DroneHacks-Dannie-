@@ -1,14 +1,17 @@
 """Landing with the bottom laser sensor, following section 7 of docs/ARCHITECTURE.md.
 
 How it fits: mission.py starts a Landing whenever the flight must end (the course is finished, a
-time limit ran out, a stage cannot go on, or something went wrong), then calls step ten times a
-second. Each step returns either a position target (while settling over the spot) or a velocity
-command (while descending), with a reason. mission.py sees when PX4 switches the motors off and
-ends the flight there. This file never talks to ROS and never reads a clock.
+time limit ran out, or a stage cannot go on), then calls step twenty times a second. Each step
+returns either a position target (while settling over the spot) or a velocity command (while
+descending), with a reason. mission.py sees when PX4 switches the motors off and ends the flight
+there. This file never talks to ROS and never reads a clock.
 
 Why velocity commands: the organizers' code never lets a position target go below 0.3 m above the
 starting height, so the descent uses velocity commands, which have no such floor. A velocity
-command expires after 1 s, so mission.py resends one every step.
+command expires after 1 s, so mission.py resends one every step until the motors are off.
+Velocity commands are in world directions (x East, y North, z Up), whatever way the nose points:
+the organizers' code ignores the frame named in the message. So the sideways corrections here are
+worked out in world directions too.
 
 Why the laser: PX4 switches the motors off by itself once it decides the drone has landed, and one
 of its tests is that the motors are at low power. Commanding a fast descent lowers the power
@@ -21,15 +24,21 @@ mission.py before takeoff):
   3. check that the laser reads about the height we expect; if not, hold and look again
   4. descend at 0.5 m/s until 0.3 m above the floor
   5. descend at 0.35 m/s; no sideways corrections below 0.2 m
-  6. touchdown: the laser within 3 cm of the floor reading and the drone not moving down, both for
-     0.3 s (with the fallbacks section 7 lists for a stuck or silent laser)
+  6. touchdown: all three of these, together, for 0.3 s: we are commanding a descent fast enough for
+     PX4's landing check; position reports show the drone has stopped moving down; and the laser
+     reads within 3 cm of the floor reading
   7. push down at 1 m/s
   8. wait for the motors to switch off; after 15 s, lift to 0.3 m and try once more
 
-One addition of ours: a drone that is hovering is also "not moving down", and its laser reading is
-also "not changing". So the fallbacks that do without the laser are only allowed after the drone
-has been seen moving down during this descent. Otherwise the start of a descent from a hover would
-look like a touchdown, and the drone would push down at 1 m/s from 0.8 m.
+Two changes from section 7, from the organizer code audit and our own checks:
+* The laser is never enough on its own, and neither is stopping. PX4 never reports less than 0.1 m
+  (EKF2_MIN_RNG), so a laser at the floor reading can still mean a few centimetres up. Without a
+  usable laser or without position reports, touchdown is never confirmed: the drone keeps
+  descending gently, which PX4's own landing check accepts, and PX4 lands it a few seconds later.
+* A drone that is hovering is also "not moving down". So stopping only counts after the drone has
+  been seen moving down during this descent. Otherwise a broken laser stuck at the floor reading
+  would make the start of a descent look like a touchdown, and the drone would push down at 1 m/s
+  from 0.8 m.
 
 What it does not do: choose where to land, or switch the motors off (only PX4 can).
 """
@@ -38,6 +47,9 @@ from dataclasses import dataclass
 
 # Our own choice: the drone counts as really descending once seen moving down this fast.
 DESCENDING_FOR_REAL_METRES_PER_SECOND = 0.15
+# From PX4 source code: its landing check needs a commanded descent of at least
+# 1.1 x LNDMC_Z_VEL_MAX, which is 0.25 m/s on drone 16.
+PX4_LANDING_CHECK_DESCENT_METRES_PER_SECOND = 0.275
 # Our own choice: speeds are measured over about this much position history.
 SPEED_WINDOW_SECONDS = 0.3
 
@@ -61,24 +73,19 @@ class Landing:
         self.step_start_seconds = None
         self.landing_spot = None              # (x, y): the drone stays over it while above 0.2 m
         self.hold_target = None               # (x, y, z, heading) while settling and checking
-        self.sideways_goal_allowed = True
         self.position_history = []            # [(seconds, x, y, z)]
         self.laser_history = []               # [(seconds, distance)]
         self.touching_since_seconds = None
         self.seen_descending = False
         self.retries_used = 0
+        self.touched_down = False             # touchdown confirmed and pushing down
 
     # ------------------------------------------------------------------ calls from mission.py
-    def begin(self, now_seconds, position, setpoint, sideways_goal_allowed=True):
+    def begin(self, now_seconds, position, setpoint):
         """position = where the drone is now; setpoint = (x, y, z, heading) it was flying to."""
         self.landing_spot = (float(position[0]), float(position[1]))
         self.hold_target = (self.landing_spot[0], self.landing_spot[1], float(setpoint[2]), float(setpoint[3]))
-        self.sideways_goal_allowed = sideways_goal_allowed
         self.go_to("settling", now_seconds)
-
-    def drop_sideways_goal(self):
-        """After the camera tracking jumps, the landing spot means nothing: no more corrections."""
-        self.sideways_goal_allowed = False
 
     def step(self, now_seconds, position, laser_metres):
         """position = (x, y, z) or None when position reports have stopped; laser_metres = the
@@ -92,6 +99,7 @@ class Landing:
         self.step_name = step_name
         self.step_start_seconds = now_seconds
         self.touching_since_seconds = None
+        self.touched_down = step_name == "pushing_down"
 
     def remember(self, now_seconds, position, laser_metres):
         oldest_kept = now_seconds - 2 * SPEED_WINDOW_SECONDS
@@ -137,12 +145,13 @@ class Landing:
         return None if position is None else position[2] - self.ground_height_metres
 
     def sideways_correction(self, position, laser_metres):
-        """Velocity (east, north) back over the landing spot, or zero when corrections are off."""
+        """Velocity (east, north), in world directions, back over the landing spot; zero when
+        too low, or when the position is not known."""
         settings = self.settings
         heights = [height for height in (self.laser_height_above_floor(laser_metres),
                                          self.tracking_height_above_ground(position)) if height is not None]
         too_low = not heights or min(heights) < settings.no_sideways_corrections_below_metres
-        if not self.sideways_goal_allowed or position is None or too_low:
+        if position is None or too_low:
             return 0.0, 0.0
         east = settings.landing_sideways_gain_per_second * (self.landing_spot[0] - position[0])
         north = settings.landing_sideways_gain_per_second * (self.landing_spot[1] - position[1])
@@ -167,7 +176,7 @@ class Landing:
         settings = self.settings
         if laser_metres is None:
             self.go_to("descending_gentle", now_seconds)
-            return LandingCommand("laser has no reading: descending gently, touchdown from stopping alone",
+            return LandingCommand("laser has no reading: descending gently, PX4 will detect the landing",
                                   velocity=(0.0, 0.0, -settings.gentle_descent_speed_metres_per_second))
         expected = (self.hold_target[2] - self.ground_height_metres) + self.floor_reading_metres
         if abs(laser_metres - expected) <= settings.laser_expected_tolerance_metres:
@@ -196,33 +205,34 @@ class Landing:
 
     def step_descending_gentle(self, now_seconds, position, laser_metres):
         settings = self.settings
+        descent = settings.gentle_descent_speed_metres_per_second
         self.note_if_descending()
-        if self.touchdown_confirmed(now_seconds, laser_metres):
+        if self.touchdown_confirmed(now_seconds, descent, laser_metres):
             self.go_to("pushing_down", now_seconds)
             return LandingCommand("touchdown confirmed: pushing down", velocity=(0.0, 0.0, -settings.push_down_speed_metres_per_second))
         east, north = self.sideways_correction(position, laser_metres)
-        return LandingCommand("descending gently", velocity=(east, north, -settings.gentle_descent_speed_metres_per_second))
+        reason = "descending gently"
+        if laser_metres is None or self.laser_is_stuck() or position is None:
+            reason = "descending gently; touchdown cannot be confirmed, PX4 will detect the landing"
+        return LandingCommand(reason, velocity=(east, north, -descent))
 
     def note_if_descending(self):
         speed = self.downward_speed()
         if speed is not None and speed >= DESCENDING_FOR_REAL_METRES_PER_SECOND:
             self.seen_descending = True
 
-    def touching_floor_now(self, laser_metres):
+    def touching_floor_now(self, commanded_descent_metres_per_second, laser_metres):
+        """All three signs at once; none of them is enough alone."""
         settings = self.settings
+        commanding_descent = commanded_descent_metres_per_second >= PX4_LANDING_CHECK_DESCENT_METRES_PER_SECOND
         speed = self.downward_speed()
         stopped = speed is not None and speed < settings.stopped_moving_down_metres_per_second
         laser_on_floor = (laser_metres is not None
                           and abs(laser_metres - self.floor_reading_metres) <= settings.touchdown_laser_tolerance_metres)
-        if speed is None:
-            return laser_on_floor                      # no position reports: the laser alone
-        if laser_on_floor:
-            return stopped                             # the normal case: both agree
-        laser_unusable = laser_metres is None or self.laser_is_stuck()
-        return stopped and laser_unusable and self.seen_descending
+        return commanding_descent and stopped and self.seen_descending and laser_on_floor
 
-    def touchdown_confirmed(self, now_seconds, laser_metres):
-        if not self.touching_floor_now(laser_metres):
+    def touchdown_confirmed(self, now_seconds, commanded_descent_metres_per_second, laser_metres):
+        if not self.touching_floor_now(commanded_descent_metres_per_second, laser_metres):
             self.touching_since_seconds = None
             return False
         if self.touching_since_seconds is None:

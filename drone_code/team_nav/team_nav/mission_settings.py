@@ -31,13 +31,15 @@ class MissionSettings:
     cruise_height_tolerance_metres: float = 0.1
     # Our own choice: if cruise height is not reached in this time, land.
     takeoff_time_limit_seconds: float = 15.0
-    # From the team plan (section 10): targets go to the drone about 10 times per second.
-    steps_per_second: float = 10.0
+    # From the organizer code audit: velocity commands must keep coming at 20 Hz through the whole
+    # landing (one expires after 1 s, and then the drone flies back to the last position target).
+    # The whole mission steps at this rate.
+    steps_per_second: float = 20.0
     # From the rulebook: a run has 3 minutes (180 s). Our own choice: start landing at 170 s,
     # which leaves about 10 s for the landing itself (section 7 measured about 9 s).
     flight_time_limit_seconds: float = 170.0
-    # Our own choice: the drone cannot really move this far in a tenth of a second, so a jump this
-    # big means the camera tracking has jumped, and every position goal is now wrong.
+    # Our own choice: the drone cannot really move this far in one step (a twentieth of a second), so
+    # a jump this big means camera tracking has jumped, and every position goal is now wrong.
     position_jump_limit_metres: float = 0.5
 
     # ------------------------------------------------------------------ freshness of inputs
@@ -45,6 +47,8 @@ class MissionSettings:
     position_report_max_age_seconds: float = 0.2
     # Our own choice: the organizers' code reports the flight state 5 times per second.
     flight_state_max_age_seconds: float = 1.0
+    # Our own choice: PX4 sends its position report many times per second.
+    px4_report_max_age_seconds: float = 0.5
     # Our own choice, for the bottom laser sensor and every detector input below.
     laser_report_max_age_seconds: float = 0.5
     line_max_age_seconds: float = 0.5
@@ -173,3 +177,16 @@ class MissionSettings:
     laser_floor_reading_if_unrecorded_metres: float = 0.1
     # Our own choice: how many seconds of laser readings on the launch mark make the floor reading.
     floor_reading_window_seconds: float = 2.0
+
+    # ------------------------------------------------------------------ camera exposure
+    # From the organizer code audit: cap the camera's automatic exposure, so a long exposure in dim
+    # light does not blur the pictures camera tracking depends on.
+    cap_camera_exposure: bool = True
+    # Estimated from the camera topic names (/oak/left/..., /oak/right/...). Check on the drone with
+    # "ros2 param list /oak".
+    camera_node_name: str = "/oak"
+    # From the organizer code audit: the longest automatic exposure, in microseconds.
+    camera_auto_exposure_limit_microseconds: int = 8000
+    # Our own choice: how often to check that the camera still has the cap (it loses it if the
+    # camera program restarts).
+    camera_check_seconds: float = 5.0

@@ -339,6 +339,25 @@ def test_the_carrot_stops_short_of_an_obstacle_it_sees():
     assert flight.ended[1] == "obstacle ahead for 5 s, landing"
 
 
+class StuckFlight(Flight):
+    """A drone that does not follow its setpoint at all, so the carrot runs as far ahead as allowed."""
+
+    def fly_toward(self, setpoint):
+        pass
+
+
+def test_the_carrot_is_never_more_than_half_a_metre_from_the_drone():
+    def line_far_to_the_left(flight, seconds):
+        healthy_tracking_and_laser(flight, seconds)
+        flight.inputs.set_line(seconds, True, 2.0, 0.0)              # wants forward and sideways at once
+        flight.inputs.set_clearances(seconds, clearances())
+    flight = StuckFlight(None, line_far_to_the_left).run(4)
+    distances = [math.hypot(setpoint[0] - position[0], setpoint[1] - position[1])
+                 for _, _, _, position, setpoint in flight.trace]
+    assert max(distances) <= MissionSettings().carrot_lead_metres + 1e-9
+    assert max(distances) > 0.45
+
+
 def test_drop_world_goals_forgets_the_pad():
     flight = Flight(TUNNEL_ON, whole_course)
     flight.run(150, until=lambda f: f.course.stage == "find_pad")

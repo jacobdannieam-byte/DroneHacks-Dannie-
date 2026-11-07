@@ -5,7 +5,8 @@ What it imitates:
 * The hand-over (organizers' auto_offboard.py): Offboard starts only if the drone is armed, on the
   ground, and has heard a target within the last second.
 * Position targets never go below 0.3 m above the start (organizers' envelope.py); velocity
-  commands expire after 1 s and are capped at 1.5 m/s (organizers' flight_interface.py).
+  commands expire after 1 s and are capped at 1.5 m/s, and when one expires the drone flies back to
+  the last position target (organizers' flight_interface.py).
 * The drone flies toward a position target at about 0.95 times the distance per second, at most
   1 m/s (team plan, section 6), and follows velocity commands directly. The floor stops it.
 * PX4's land detector, simplified from the simulator results in the team plan (section 7): with a
@@ -56,10 +57,13 @@ class FakeDrone:
         self.seconds_on_floor = 0.0
         self.has_flown = False
         self.sends_position_reports = True        # tests turn this off to imitate camera tracking stopping
+        self.sends_px4_reports = True             # ... or PX4's position reports stopping
+        self.sends_flight_state = True            # ... or the organizers' flight state stopping
+        self.px4_link = True                      # what the flight state says about the link to PX4
 
     # ------------------------------------------------------------------ what the mission hears
     def flight_state(self):
-        return self.offboard, self.armed, self.landed
+        return self.offboard, self.armed, self.landed, self.px4_link
 
     def laser_reading(self):
         floor = self.floor_height(self.position[0], self.position[1])
@@ -85,18 +89,24 @@ class FakeDrone:
 
     # ------------------------------------------------------------------ what the mission sends
     def receive(self, now_seconds, command):
+        before = getattr(command, "position_before_velocity", None)
+        if command.kind == "velocity" and before is not None:
+            self.receive_position_target(now_seconds, before[:3], before[3])
         if command.kind == "position":
-            x, y, z = command.position
-            self.pose_target = (x, y, max(z, LOWEST_POSITION_TARGET_METRES))
-            self.pose_heading = command.heading_radians
-            self.pose_seconds = now_seconds
-            self.velocity_command = None
+            self.receive_position_target(now_seconds, command.position, command.heading_radians)
         elif command.kind == "velocity":
             east, north, up = command.velocity
             size = math.sqrt(east * east + north * north + up * up)
             scale = min(1.0, FASTEST_VELOCITY_COMMAND_METRES_PER_SECOND / size) if size > 0 else 1.0
             self.velocity_command = (east * scale, north * scale, up * scale)
             self.velocity_seconds = now_seconds
+
+    def receive_position_target(self, now_seconds, position, heading_radians):
+        x, y, z = position
+        self.pose_target = (x, y, max(z, LOWEST_POSITION_TARGET_METRES))
+        self.pose_heading = heading_radians
+        self.pose_seconds = now_seconds
+        self.velocity_command = None
 
     # ------------------------------------------------------------------ physics, much simplified
     def commanded_velocity(self, now_seconds):
@@ -157,9 +167,10 @@ FlightStep = namedtuple("FlightStep", ["seconds", "command", "phase", "drone_pos
 
 
 def fly(mission, drone, seconds, step_seconds=0.1, arm_at_seconds=0.5, switch_at_seconds=1.0, every_step=None,
-        start_seconds=0.0):
+        start_seconds=0.0, until=None):
     """Run the mission against the fake drone. every_step(now_seconds, mission, drone) runs before
-    each step, for tests that change something mid-flight. Returns a list of FlightStep."""
+    each step, for tests that change something mid-flight; until(flight_step) ends the run after
+    the first step for which it is true. Returns a list of FlightStep."""
     record = []
     now = start_seconds
     switched = False
@@ -173,12 +184,16 @@ def fly(mission, drone, seconds, step_seconds=0.1, arm_at_seconds=0.5, switch_at
             drone.switch_to_position_mode(now)
         if drone.sends_position_reports:
             mission.observe_position(now, tuple(drone.position), drone.heading_radians)
-        mission.observe_flight_state(now, *drone.flight_state())
-        mission.observe_laser(now, drone.laser_reading())
+        if drone.sends_flight_state:
+            mission.observe_flight_state(now, *drone.flight_state())
+        if drone.sends_px4_reports:
+            mission.observe_px4_position_report(now, drone.laser_reading())
         position_when_sent = tuple(drone.position)
         command = mission.step(now)
         drone.receive(now, command)
         drone.advance(now, step_seconds)
         record.append(FlightStep(now, command, mission.phase, position_when_sent))
         now = round(now + step_seconds, 9)
+        if until is not None and until(record[-1]):
+            break
     return record

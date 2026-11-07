@@ -14,7 +14,8 @@ software. It keeps the connection to PX4 alive, applies the safety limits (heigh
 to every target, and hands control to our code at the start of a run.
 
 team_nav mission (ours, team_nav/mission_node.py) sends targets to flight_interface: a target just
-above the drone while it waits, then the takeoff, the course and the landing.
+above the drone while it waits, then the takeoff, the course and the landing. It also caps the
+camera's automatic exposure (team_nav/camera_exposure.py).
 
 Why this is safe
 ----------------

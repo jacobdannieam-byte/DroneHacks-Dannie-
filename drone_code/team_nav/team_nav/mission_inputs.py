@@ -13,7 +13,7 @@ Directions follow the ROS convention: forward and left of the drone's nose are p
 angles are positive anticlockwise seen from above (turning left).
 """
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 
 @dataclass
@@ -47,6 +47,11 @@ class MissionInputs:
     vision_ok: bool = False                       # camera tracking is following real visual detail
     height_stamp_seconds: float | None = None
     height_above_floor_metres: float | None = None    # from the bottom laser sensor
+
+    def clear(self):
+        """Forget every report, as at the start of a run."""
+        for setting in fields(MissionInputs):
+            setattr(self, setting.name, setting.default)
 
     def set_line(self, stamp_seconds, valid, offset_left_metres=math.nan, angle_left_radians=math.nan,
                  end_seen=False):

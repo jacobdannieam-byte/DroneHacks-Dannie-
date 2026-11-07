@@ -1,7 +1,8 @@
 """The ROS 2 program that flies the mission on the real drone (drone 16).
 
-How it fits: this file only moves messages. It hands every report it hears to mission.py, and ten
-times a second publishes whatever mission.py decides. All flight decisions live in mission.py,
+How it fits: this file only moves messages. It hands every report it hears to mission.py, and
+twenty times a second publishes whatever mission.py decides. It also starts camera_exposure.py,
+which caps the camera's automatic exposure. All flight decisions live in mission.py,
 course_stages.py and landing.py, which do not need ROS, so they can be tested on a laptop.
 
 Topics:
@@ -10,7 +11,8 @@ Topics:
          /fmu/out/vehicle_local_position   PX4's position report; we read only dist_bottom, the
                                            bottom laser distance. Read only.
   sends  /skybeta/setpoint/pose            position targets while waiting, climbing and cruising
-         /skybeta/setpoint/twist           velocity commands while landing
+         /skybeta/setpoint/twist           velocity commands while landing (world directions)
+  sets   the camera driver's exposure parameters (camera_exposure.py)
 
 It never publishes to /fmu/in/*: the organizers' rules say only their flight interface talks to
 PX4. It does not arm the drone, ask for Offboard, or call /skybeta/hold.
@@ -31,6 +33,7 @@ from rclpy.node import Node
 from rclpy.qos import QoSDurabilityPolicy, QoSHistoryPolicy, QoSProfile, QoSReliabilityPolicy
 from std_msgs.msg import String
 
+from .camera_exposure import CameraExposureCap
 from .mission import Mission
 from .mission_settings import MissionSettings
 
@@ -41,7 +44,9 @@ DEFAULT_FLIGHT_STATE_TOPIC = "/skybeta/state"
 DEFAULT_PX4_LOCAL_POSITION_TOPIC = "/fmu/out/vehicle_local_position"
 POSE_TARGET_TOPIC = "/skybeta/setpoint/pose"
 VELOCITY_COMMAND_TOPIC = "/skybeta/setpoint/twist"
-# The frame the organizers' code expects targets in: the camera tracking frame.
+# The camera tracking frame. The organizers' code ignores the frame named in a message (organizer
+# code audit): positions are always camera tracking ENU, and velocities always world ENU (x East,
+# y North, z Up), whatever way the nose points. We fill it in only so the messages read correctly.
 TARGET_FRAME_ID = "odom"
 
 
@@ -101,6 +106,13 @@ class MissionNode(Node):
         self.pose_publisher = self.create_publisher(PoseStamped, POSE_TARGET_TOPIC, 10)
         self.twist_publisher = self.create_publisher(TwistStamped, VELOCITY_COMMAND_TOPIC, 10)
         self.create_timer(1.0 / self.mission.settings.steps_per_second, self.on_step)
+        self.camera_exposure = None
+        settings = self.mission.settings
+        if settings.cap_camera_exposure:
+            self.camera_exposure = CameraExposureCap(self, settings.camera_node_name,
+                                                     settings.camera_auto_exposure_limit_microseconds)
+            self.camera_exposure.check()
+            self.create_timer(settings.camera_check_seconds, self.camera_exposure.check)
         self.get_logger().info(
             f"team_nav mission ready. Hears {position_topic}, {flight_state_topic}, {local_position_topic}; "
             f"sends {POSE_TARGET_TOPIC} and {VELOCITY_COMMAND_TOPIC}; cruise height "
@@ -137,13 +149,15 @@ class MissionNode(Node):
             return
         if not isinstance(state, dict):
             return
+        # The organizers' code repeats its last known values here, so this can only say what PX4's
+        # mode was, not that position reports are still arriving: mission.py checks those itself.
         self.mission.observe_flight_state(self.now_seconds(), state.get("offboard_active"), state.get("armed"),
-                                          state.get("landed"))
+                                          state.get("landed"), state.get("px4_link"))
 
     def on_px4_local_position(self, message):
         # PX4 also sends dist_bottom_valid, but on drone 16 it stays false for the whole flight
         # (docs/ARCHITECTURE.md, section 7), so it is ignored on purpose.
-        self.mission.observe_laser(self.now_seconds(), float(message.dist_bottom))
+        self.mission.observe_px4_position_report(self.now_seconds(), float(message.dist_bottom))
 
     # ------------------------------------------------------------------ what we send
     def on_step(self):
@@ -153,6 +167,11 @@ class MissionNode(Node):
         if command.kind == "position":
             self.publish_pose_target(command.position, command.heading_radians)
         elif command.kind == "velocity":
+            if command.position_before_velocity is not None:
+                # Sent first, so that if the velocity commands ever stop, the organizers' code holds
+                # the drone here rather than flying back to an older position target.
+                hold_point = command.position_before_velocity
+                self.publish_pose_target(hold_point[:3], hold_point[3])
             self.publish_velocity_command(command.velocity)
 
     def publish_pose_target(self, position, heading_radians):

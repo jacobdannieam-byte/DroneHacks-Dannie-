@@ -18,7 +18,7 @@ FLIGHT_STATE_TOPIC = "/skybeta/state"
 PX4_LOCAL_POSITION_TOPIC = "/fmu/out/vehicle_local_position"
 POSE_TOPIC = "/skybeta/setpoint/pose"
 TWIST_TOPIC = "/skybeta/setpoint/twist"
-STEP_SECONDS = 0.1
+STEP_SECONDS = 1.0 / MissionSettings().steps_per_second           # the node's timer period: 20 Hz
 
 
 @pytest.fixture
@@ -48,8 +48,9 @@ def deliver_reports(node, drone):
     odometry.pose.pose.orientation = fake_ros.Quaternion(z=math.sin(drone.heading_radians / 2),
                                                          w=math.cos(drone.heading_radians / 2))
     deliver(node, POSITION_TOPIC, odometry)
-    offboard, armed, landed = drone.flight_state()
-    state = {"offboard_active": offboard, "armed": armed, "landed": landed, "nav_state_name": "whatever"}
+    offboard, armed, landed, px4_link = drone.flight_state()
+    state = {"offboard_active": offboard, "armed": armed, "landed": landed, "px4_link": px4_link,
+             "nav_state_name": "whatever"}
     deliver(node, FLIGHT_STATE_TOPIC, fake_ros.String(json.dumps(state)))
     local_position = fake_ros.VehicleLocalPosition()
     local_position.dist_bottom = drone.laser_reading()
@@ -149,6 +150,13 @@ def test_launch_values_are_converted_to_each_settings_type(build_node):
         build_node(cruise_height_metres="high")
 
 
+def test_the_node_caps_the_camera_exposure_on_the_camera_named_by_a_parameter(build_node):
+    node = build_node(camera_node_name="/front_camera")
+    assert fake_ros.AsyncParameterClient.made[-1].remote_node_name == "/front_camera"
+    assert (MissionSettings().camera_check_seconds, node.camera_exposure.check) in node.timers
+    assert build_node(cap_camera_exposure=False).camera_exposure is None
+
+
 def test_the_laser_distance_is_read_even_though_px4_marks_it_invalid(build_node):
     node = build_node()
     report = fake_ros.VehicleLocalPosition()
@@ -179,10 +187,40 @@ def test_a_whole_flight_through_the_topics(build_node):
     assert not drone.armed and drone.landed
     motors_off_at = next(seconds for seconds, phase, _ in node.mission.history if phase == "finished")
     assert all(seconds < motors_off_at for seconds, _, _ in sent)       # nothing published once the motors are off
+    assert drone.offboard                                               # PX4 still shows Offboard while disarmed
     for line in ("waiting_for_start: ready: waiting for Offboard (the pilot's switch to Position after arming)",
                  "flying_course: follow_line: camera tracking missing, holding",
-                 "landing: touchdown confirmed: pushing down", "finished: landed: PX4 switched the motors off"):
+                 "landing: touchdown confirmed: pushing down"):
         assert line in logged(node), line
+    assert any(line.startswith("finished: landed: PX4 switched the motors off (peak horizontal speed")
+               for line in logged(node))
+
+
+def test_the_landing_sends_a_pose_at_the_drone_then_twists_at_20_hz_until_the_motors_are_off(build_node):
+    node, drone = build_node(), FakeDrone()
+    positions_when_sent = []
+
+    def remember_position(now_seconds, node, drone):
+        positions_when_sent.append((now_seconds, tuple(drone.position)))
+    sent = fly_node(node, drone, 40.0, every_step=remember_position)
+    first_twist = next(index for index, (_, topic, _) in enumerate(sent) if topic == TWIST_TOPIC)
+    seconds, topic, pose = sent[first_twist - 1]
+    assert topic == POSE_TOPIC and seconds == sent[first_twist][0]        # same step, just before
+    drone_then = dict(positions_when_sent)[seconds]
+    position = pose.pose.position
+    assert math.dist((position.x, position.y, position.z), drone_then) < 1e-9
+    twist_times = [seconds for seconds, topic, _ in sent[first_twist:] if topic == TWIST_TOPIC]
+    assert all(topic == TWIST_TOPIC for _, topic, _ in sent[first_twist:])
+    gaps = [later - earlier for earlier, later in zip(twist_times, twist_times[1:])]
+    assert max(gaps) == pytest.approx(STEP_SECONDS)                     # one every 0.05 s, no gaps
+    motors_off_at = next(seconds for seconds, phase, _ in node.mission.history if phase == "finished")
+    assert twist_times[-1] == pytest.approx(motors_off_at - STEP_SECONDS)  # right up to the motors stopping
+
+
+def test_the_flight_states_px4_link_reaches_the_mission(build_node):
+    node = build_node()
+    deliver(node, FLIGHT_STATE_TOPIC, fake_ros.String(json.dumps({"px4_link": False, "armed": False})))
+    assert node.mission.px4_link is False
 
 
 def test_publishing_stops_when_offboard_ends(build_node):

@@ -51,6 +51,9 @@ class Logger:
     def info(self, text):
         self.lines.append(("info", text))
 
+    def error(self, text):
+        self.lines.append(("error", text))
+
     def warn(self, text):
         self.lines.append(("warn", text))
 
@@ -160,6 +163,58 @@ class ParameterDescriptor:
         self.dynamic_typing = dynamic_typing
 
 
+class FakeFuture:
+    """A request's answer, delivered when the test calls finish()."""
+
+    def __init__(self):
+        self.callbacks = []
+        self.answer = None
+
+    def add_done_callback(self, callback):
+        self.callbacks.append(callback)
+
+    def result(self):
+        return self.answer
+
+    def finish(self, answer):
+        self.answer = answer
+        for callback in self.callbacks:
+            callback(self)
+
+
+class ParameterStandIn:
+    """rclpy.parameter.Parameter: a name and a value."""
+
+    def __init__(self, name, value=None):
+        self.name = name
+        self.value = value
+
+
+class AsyncParameterClient:
+    """rclpy.parameter_client.AsyncParameterClient. Tests set services_ready and answer each request
+    in the order it was made; every request is recorded in requests."""
+    made = []                                     # every client made, newest last
+
+    def __init__(self, node, remote_node_name):
+        self.remote_node_name = remote_node_name
+        self.services_ready = False
+        self.requests = []                        # [(kind, payload, future)]
+        AsyncParameterClient.made.append(self)
+
+    def services_are_ready(self):
+        return self.services_ready
+
+    def set_parameters(self, parameters):
+        future = FakeFuture()
+        self.requests.append(("set", [(parameter.name, parameter.value) for parameter in parameters], future))
+        return future
+
+    def get_parameters(self, names):
+        future = FakeFuture()
+        self.requests.append(("get", list(names), future))
+        return future
+
+
 class QoSProfile:
     def __init__(self, **settings):
         self.settings = settings
@@ -180,7 +235,7 @@ def module(name, **contents):
     return made
 
 
-STAND_IN_MODULES = ("rclpy", "rclpy.node", "rclpy.qos", "geometry_msgs", "geometry_msgs.msg", "nav_msgs",
+STAND_IN_MODULES = ("rclpy", "rclpy.node", "rclpy.qos", "rclpy.parameter", "rclpy.parameter_client", "geometry_msgs", "geometry_msgs.msg", "nav_msgs",
                     "nav_msgs.msg", "std_msgs", "std_msgs.msg", "px4_msgs", "px4_msgs.msg", "rcl_interfaces",
                     "rcl_interfaces.msg")
 
@@ -194,6 +249,8 @@ def install():
     sys.modules["rclpy"] = module("rclpy", init=lambda args=None: None, spin=lambda node: None,
                                   ok=lambda: False, shutdown=lambda: None)
     sys.modules["rclpy.node"] = module("rclpy.node", Node=Node)
+    sys.modules["rclpy.parameter"] = module("rclpy.parameter", Parameter=ParameterStandIn)
+    sys.modules["rclpy.parameter_client"] = module("rclpy.parameter_client", AsyncParameterClient=AsyncParameterClient)
     sys.modules["rclpy.qos"] = module("rclpy.qos", QoSProfile=QoSProfile, QoSReliabilityPolicy=Policy,
                                       QoSDurabilityPolicy=Policy, QoSHistoryPolicy=Policy)
     sys.modules["geometry_msgs"] = module("geometry_msgs")

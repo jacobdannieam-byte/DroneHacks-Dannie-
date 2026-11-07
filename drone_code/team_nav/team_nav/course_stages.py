@@ -1,6 +1,6 @@
 """The course stages: what the drone does between takeoff and landing.
 
-How it fits: once the drone has climbed to cruise height, mission.py calls Course.step ten times a
+How it fits: once the drone has climbed to cruise height, mission.py calls Course.step twenty times a
 second. Course answers with a target position, a short reason for its choice, and whether the drone
 should now land. landing.py then does the landing. This file never talks to ROS and never reads a
 clock: every call carries the time, so the tests can run it on a laptop.
@@ -281,6 +281,11 @@ class Course:
         forward = max(-settings.sideways_carrot_lead_metres,
                       min(forward, settings.carrot_lead_metres, self.room_ahead_metres))
         left = limit(left, settings.sideways_carrot_lead_metres)
+        # PX4 flies to a position target as fast as 12 m/s, so the carrot's whole distance from the
+        # drone, not just its forward part, stays within the carrot lead.
+        distance = math.hypot(forward, left)
+        if distance > settings.carrot_lead_metres:
+            forward, left = forward * settings.carrot_lead_metres / distance, left * settings.carrot_lead_metres / distance
         self.setpoint[0], self.setpoint[1] = body_to_world(position, heading_radians, forward, left)
 
     def turn_toward(self, target_heading_radians, seconds_since_last_step):

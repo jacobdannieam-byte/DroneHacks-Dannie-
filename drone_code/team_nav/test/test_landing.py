@@ -1,5 +1,7 @@
 """landing.py on its own: each step of section 7 of docs/ARCHITECTURE.md, and what it does when the
 laser or the position reports misbehave."""
+import math
+
 import pytest
 
 from team_nav.landing import Landing
@@ -40,9 +42,9 @@ class SlowDrone:
             self.velocity = [0.0, 0.0, 0.0]
 
 
-def start_landing(drone, settings=None, sideways_goal_allowed=True):
+def start_landing(drone, settings=None, heading_radians=0.0):
     landing = Landing(settings or MissionSettings(), FLOOR_READING_METRES, 0.0)
-    landing.begin(0.0, (0.0, 0.0, 0.8), (0.0, 0.0, 0.8, 0.0), sideways_goal_allowed)
+    landing.begin(0.0, (0.0, 0.0, 0.8), (0.0, 0.0, 0.8, heading_radians))
     return landing
 
 
@@ -100,11 +102,15 @@ def test_sideways_corrections_steer_over_the_spot_and_stop_below_0_2_metres():
     assert low and all(entry[1].velocity[:2] == (0.0, 0.0) for entry in low)
 
 
-def test_without_a_sideways_goal_there_are_no_sideways_corrections():
-    drone = SlowDrone(position=(0.25, 0.0, 0.8))
-    landing = start_landing(drone, sideways_goal_allowed=False)
-    record = run(landing, drone, 15.0)
-    assert all(entry[1].velocity[:2] == (0.0, 0.0) for entry in record if entry[1].velocity is not None)
+def test_sideways_corrections_are_in_world_directions_whatever_the_heading():
+    first_corrections = []
+    for heading in (0.0, math.pi / 2, math.pi):                          # nose East, North, West
+        drone = SlowDrone(position=(0.25, 0.0, 0.8))                      # 25 cm East of the spot
+        record = run(start_landing(drone, heading_radians=heading), drone, 6.0)
+        first_corrections.append(next(entry[1].velocity for entry in record if entry[1].velocity is not None))
+    for east, north, _ in first_corrections:
+        assert east < 0.0 and north == pytest.approx(0.0)                 # always West, back over the spot
+    assert first_corrections[0] == first_corrections[1] == first_corrections[2]
 
 
 class LaserWithTwoBadReadings:
@@ -120,7 +126,7 @@ class LaserWithTwoBadReadings:
         return drone.laser_reading()
 
 
-def test_a_floor_reading_shorter_than_0_3_s_does_not_confirm_touchdown():
+def test_a_brief_floor_reading_while_still_descending_does_not_confirm_touchdown():
     drone, laser = SlowDrone(), LaserWithTwoBadReadings()
     record = run(start_landing(drone), drone, 15.0, laser=laser)
     assert laser.bad_readings_given == 2
@@ -139,23 +145,31 @@ def test_an_unexpected_laser_reading_holds_to_look_again_then_descends_gently():
     assert step_names_in_order(record)[-1] == "pushing_down" and drone.position[2] == 0.53
 
 
-def test_a_hovering_drone_with_a_stuck_laser_is_not_a_touchdown():
+def test_a_stuck_laser_never_confirms_touchdown_and_leaves_the_landing_to_px4():
+    drone = SlowDrone()
+    record = run(start_landing(drone), drone, 25.0, laser=lambda d: 0.35)
+    assert "pushing_down" not in step_names_in_order(record)
+    assert drone.position[2] == 0.0                                        # still descended to the floor
+    assert record[-1][1].reason == "descending gently; touchdown cannot be confirmed, PX4 will detect the landing"
+    assert record[-1][1].velocity[2] == -0.35                             # enough for PX4's own landing check
+
+
+def test_a_laser_stuck_at_the_floor_reading_is_not_a_touchdown_while_hovering():
     def slow_to_respond(now_seconds, landing, drone):
         drone.frozen = landing.step_name == "descending_gentle" and now_seconds - landing.step_start_seconds < 2.0
     drone = SlowDrone()
-    record = run(start_landing(drone), drone, 25.0, laser=lambda d: 0.35, every_step=slow_to_respond)
+    record = run(start_landing(drone), drone, 25.0, laser=lambda d: FLOOR_READING_METRES, every_step=slow_to_respond)
     gentle_start = first(record, "descending_gentle")[0]
     assert all(entry[2] != "pushing_down" for entry in record if entry[0] < gentle_start + 2.0)
-    pushed = first(record, "pushing_down")
-    assert pushed[3] == 0.0                                                # pushed only once on the floor
+    assert first(record, "pushing_down")[3] == 0.0                        # pushed only once really on the floor
 
 
-def test_a_silent_laser_descends_gently_and_uses_stopping_alone():
+def test_a_silent_laser_never_confirms_touchdown():
     drone = SlowDrone()
-    record = run(start_landing(drone), drone, 12.0, laser=lambda d: None)
-    assert step_names_in_order(record) == ["settling", "descending_gentle", "pushing_down"]
-    assert first(record, "descending_gentle")[1].reason.startswith("laser has no reading")
-    assert first(record, "pushing_down")[3] == 0.0
+    record = run(start_landing(drone), drone, 20.0, laser=lambda d: None)
+    assert step_names_in_order(record) == ["settling", "descending_gentle"]
+    assert first(record, "descending_gentle")[1].reason == "laser has no reading: descending gently, PX4 will detect the landing"
+    assert drone.position[2] == 0.0 and record[-1][1].velocity[2] == -0.35
 
 
 def test_the_laser_is_not_checked_again_after_touchdown():
@@ -175,12 +189,13 @@ def test_the_laser_is_not_checked_again_after_touchdown():
 
 
 # ---------------------------------------------------------------- when position reports stop
-def test_without_position_reports_the_laser_alone_confirms_touchdown():
+def test_without_position_reports_the_laser_alone_never_confirms_touchdown():
     drone = SlowDrone()
     record = run(start_landing(drone), drone, 20.0, position=lambda d: None)
-    assert step_names_in_order(record) == ["settling", "descending_medium", "descending_gentle", "pushing_down"]
+    assert step_names_in_order(record) == ["settling", "descending_medium", "descending_gentle"]
     assert first(record, "descending_medium")[0] == pytest.approx(3.0, abs=0.11)   # settling waited its 3 s
-    assert first(record, "pushing_down")[3] == 0.0
+    assert drone.position[2] == 0.0 and drone.laser_reading() == FLOOR_READING_METRES
+    assert record[-1][1].reason == "descending gently; touchdown cannot be confirmed, PX4 will detect the landing"
 
 
 # ---------------------------------------------------------------- when the motors do not switch off
