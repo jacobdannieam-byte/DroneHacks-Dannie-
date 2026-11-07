@@ -1,0 +1,26 @@
+Environment
+Windows AMD64, Intel64 Family 6 Model 183 Stepping 1, GenuineIntel
+Python 3.11.9, NumPy 2.3.5, pytest 9.0.3
+
+D0 baseline at e99e6172290231956be499aa47e99273af80a65f
+python -m pytest -q tests
+92 passed in 7.46s
+
+D1 source and model checkpoint commit 67c44723c47645c78dc3851c0e1a9180a4e6e19b
+python -m pytest -q tests
+101 passed in 7.93s
+Regenerated the D0 synthetic evaluation and compared its JSON content with the
+saved D0 evaluation artifact. Exact match.
+
+Semantic compatibility in a detached worktree
+Base b026465d1c57a056a423e51872164b7474abbf9a. Applied the D0 source and D1
+source and checkpoint commits by cherry-pick. Temporary HEAD db4ed1757f9cbbf3546b19f32fc30acef62f13b7.
+python -m pytest -q tests
+231 passed in 11.34s
+
+Training and evaluation with OPENBLAS_NUM_THREADS=1 and OMP_NUM_THREADS=1
+python -m examples.train_adaptive_dynamics_d1
+Selected epoch 4. Validation normalized residual MSE 0.085565.
+python -m examples.evaluate_adaptive_dynamics_d1
+Exit code 0. Evaluated 48 in-range holdout episodes, 24 shifted holdout episodes,
+one matched-nominal control and one equilibrium control. Source and tests run offline.

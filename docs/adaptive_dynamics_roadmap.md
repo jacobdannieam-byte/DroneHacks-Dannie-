@@ -1,6 +1,7 @@
 # Adaptive dynamics roadmap
 
-D0 is the implemented position-setpoint baseline. D1–D5 describe future work.
+D0 is the position-setpoint baseline. D1 adds a trained offline residual
+predictor. D2–D5 describe future work.
 The progression adds learned correction, adaptation, environment evaluation,
 observational integration, and then planning in separate stages.
 
@@ -19,21 +20,15 @@ flowchart LR
 
 ## D1 residual model
 
-Use the D0 `DroneState`, `PositionSetpoint`, and `dt` as the input contract.
-Construct features from current NED velocity, yaw and yaw rate, position and
-wrapped heading error, nominal tracking references, and the effective interval.
-Train a small 64×64 or 128×128 MLP to estimate a correction to translational
-and angular acceleration. Bound the correction and integrate through the same
-physical state update. Represent residuals in SI units in the prediction frame.
-Keep training and deployed inference separate and retain D0 as the baseline.
+The 64×64 MLP predicts translational and yaw acceleration corrections from the
+current state, command, step duration and nominal tracking references. Training
+uses randomized closed-loop dynamics and whole-episode validation. Inference
+uses frozen weights and the D0 integrator.
 
-Generate causal state/action pairs from randomized tracking gains, time
-constants, acceleration availability, disturbances and command delays. The
-synthetic one-step and open-loop metrics in D0 are evaluation starting points.
-Split by entire trajectories and dynamics settings, with held-out parameter
-combinations. Measure one-step and horizon-dependent errors, stability, model
-size, and host and target inference latency. Improvement on held-out rollouts
-and useful target-device cost are gates for increasing model complexity.
+D1 reduced two-second position rollout RMSE on both randomized holdout cohorts.
+The matched-nominal fixture favored D0. Eight one-second D1 rollouts exceeded
+the provisional 10 ms host budget. Aircraft data and Orin profiling remain
+needed to select a deployment model. [D1 implementation and evidence](adaptive_dynamics_d1.md)
 
 ## D2 adaptive context
 
