@@ -4,6 +4,9 @@ This list is the clearest picture of how the simulator fits together. Read it fr
 bottom. Parts marked REAL are the same software the drone runs. Parts marked PRETEND stand
 in for hardware or people, because those do not exist on a laptop.
 
+tracking_drift_metres_per_metre:=0.0 switches off the pretend camera tracking's drift (default
+0.01, an error of 1% of the distance flown), to separate drift from other errors.
+
 start_flight_interface:=false leaves out the organizers' flight interface. Use it when the flight
 code's own launch file starts that program, as drone_code/team_nav/launch/team_nav.launch.py does
 (simulator/run_team_nav.sh). The organizers' guide warns that two flight interfaces fight over the
@@ -35,6 +38,9 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "start_flight_interface", default_value="true",
             description="false when the flight code's launch file starts the flight interface itself"),
+        DeclareLaunchArgument(
+            "tracking_drift_metres_per_metre", default_value="0.01",
+            description="the pretend camera tracking's drift per metre flown; 0.0 switches it off"),
 
         # REAL: the flight control software. It simulates the drone's physics inside itself.
         ExecuteProcess(cmd=["bash", f"{REPOSITORY}/simulator/px4_changes/start_px4.sh"], output="screen"),
@@ -53,7 +59,8 @@ def generate_launch_description():
                     condition=IfCondition(LaunchConfiguration("start_flight_interface"))),
 
         # PRETEND: stands in for the camera tracking program, which needs real pictures.
-        run_program("course_simulator", "pretend_camera_tracking"),
+        run_program("course_simulator", "pretend_camera_tracking",
+                    {"drift_metres_per_metre_flown": LaunchConfiguration("tracking_drift_metres_per_metre")}),
 
         # PRETEND: stands in for the laser sensor under the drone.
         run_program("course_simulator", "pretend_bottom_laser"),

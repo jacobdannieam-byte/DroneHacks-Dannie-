@@ -79,6 +79,9 @@ class PretendCameraTracking(Node):
         super().__init__("pretend_camera_tracking")
         self.declare_parameter("start_heading_degrees", DEFAULT_START_HEADING_DEGREES)
         self.declare_parameter("drift_seed", 1)
+        # 0.0 switches drift off, to see how much of a flight's error is drift.
+        self.declare_parameter("drift_metres_per_metre_flown", DRIFT_METRES_PER_METRE_FLOWN)
+        self.drift_metres_per_metre_flown = float(self.get_parameter("drift_metres_per_metre_flown").value)
         # Set above zero to test what happens when tracking is lost. Zero means never.
         self.declare_parameter("lose_tracking_after_seconds", 0.0)
 
@@ -123,7 +126,7 @@ class PretendCameraTracking(Node):
         self.previous_true_position = position.copy()
 
     def build_report(self):
-        drift_metres = self.drift_direction * self.distance_flown_metres * DRIFT_METRES_PER_METRE_FLOWN
+        drift_metres = self.drift_direction * self.distance_flown_metres * self.drift_metres_per_metre_flown
         jitter_metres = self.random.normal(0.0, POSITION_JITTER_METRES, 3)
         reported_position = self.true_state.position_in_start_frame_metres + drift_metres + jitter_metres
 

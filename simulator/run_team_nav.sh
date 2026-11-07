@@ -4,6 +4,11 @@
 #
 #   simulator/run_team_nav.sh            # the course stages (mission:=stages)
 #   simulator/run_team_nav.sh route      # the route in drone_code/team_nav/missions/route_waypoints.json
+#   simulator/run_team_nav.sh route route_fly_through_degrees:=45
+#   SIMULATOR_ARGUMENTS="tracking_drift_metres_per_metre:=0.0" simulator/run_team_nav.sh route
+#
+# Any words after the mission are passed to our launch file as launch arguments (name:=value).
+# SIMULATOR_ARGUMENTS, if set, is passed to the simulator's own launch file. Neither changes a default.
 #
 # What it does, in order:
 #   1. Starts the whole simulator, except the organizers' flight interface. Our own launch file
@@ -28,6 +33,9 @@
 set -e
 
 mission_kind="${1:-stages}"
+shift || true
+team_nav_arguments="$*"
+simulator_arguments="${SIMULATOR_ARGUMENTS:-}"
 if [ "$mission_kind" != "stages" ] && [ "$mission_kind" != "route" ]; then
     echo "The mission must be 'stages' or 'route', not '$mission_kind'. For example: simulator/run_team_nav.sh route"
     exit 1
@@ -54,7 +62,7 @@ docker run --detach --name "$box_name" \
     bash -c "bash /repository/simulator/inside_the_box/build_our_packages.sh \
              && touch /tmp/our_packages_are_built \
              && source /repository/simulator/inside_the_box/load_ros_environment.sh \
-             && ros2 launch course_simulator whole_simulator.launch.py start_flight_interface:=false" > /dev/null
+             && ros2 launch course_simulator whole_simulator.launch.py start_flight_interface:=false $simulator_arguments" > /dev/null
 
 # Always save the records and stop the box when this script ends, even if the flight fails.
 save_the_records_and_stop() {
@@ -81,7 +89,8 @@ save_the_records_and_stop() {
 }
 trap save_the_records_and_stop EXIT
 
-echo "Simulator starting. Our $mission_kind mission starts once our packages are built..."
+echo "Simulator starting (extra simulator arguments: ${simulator_arguments:-none}). Our $mission_kind mission"
+echo "starts once our packages are built (extra launch arguments: ${team_nav_arguments:-none})..."
 
 # Our launch file runs in the background inside the box. Its output is our mission's log.
 # TEAM_NAV_STARTED_BY is what lets the mission accept vision_check:=false. PYTHONUNBUFFERED makes
@@ -92,7 +101,7 @@ docker exec --detach \
     "$box_name" bash -c "
         until [ -f /tmp/our_packages_are_built ]; do sleep 1; done
         source /repository/simulator/inside_the_box/load_ros_environment.sh
-        ros2 launch team_nav team_nav.launch.py target_system:=1 vision_check:=false mission:=$mission_kind \
+        ros2 launch team_nav team_nav.launch.py target_system:=1 vision_check:=false mission:=$mission_kind $team_nav_arguments \
             > /repository/simulator/generated_files/last_team_nav_log.txt 2>&1
     "
 

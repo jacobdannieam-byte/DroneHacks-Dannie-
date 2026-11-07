@@ -13,6 +13,7 @@ from team_nav.mission_settings import MissionSettings
 
 PACKAGE_FOLDER = Path(__file__).resolve().parents[1]
 LAUNCH_FILE = PACKAGE_FOLDER / "launch" / "team_nav.launch.py"
+ROUTE_LAUNCH_FILE = PACKAGE_FOLDER / "launch" / "team_nav_route.launch.py"
 # From the organizers' example launch file (competitor.launch.py, skybeta 0.3.2): the parameters
 # it gives flight_interface, and their defaults. We add only target_system (see below).
 EXAMPLE_FLIGHT_INTERFACE_DEFAULTS = {
@@ -29,14 +30,24 @@ WATCHDOG_THRESHOLDS = ["watchdog_odometry_timeout_seconds", "watchdog_jump_speed
                        "watchdog_motion_request_degrees", "watchdog_motion_request_metres_per_second"]
 
 
+def load(launch_file):
+    specification = importlib.util.spec_from_file_location(launch_file.stem.replace(".", "_"), launch_file)
+    launch_module = importlib.util.module_from_spec(specification)
+    specification.loader.exec_module(launch_module)
+    return launch_module.generate_launch_description()
+
+
 @pytest.fixture
 def launched():
     fake_launch.install()
-    specification = importlib.util.spec_from_file_location("team_nav_launch", LAUNCH_FILE)
-    launch_module = importlib.util.module_from_spec(specification)
-    specification.loader.exec_module(launch_module)
-    description = launch_module.generate_launch_description()
-    yield description
+    yield load(LAUNCH_FILE)
+    fake_launch.uninstall()
+
+
+@pytest.fixture
+def launched_route():
+    fake_launch.install()
+    yield load(ROUTE_LAUNCH_FILE)
     fake_launch.uninstall()
 
 
@@ -115,9 +126,25 @@ def test_the_vision_check_is_on_unless_the_simulator_script_switches_it_off(laun
     assert mission_parameters(launched)["vision_check"].name == "vision_check"
 
 
+def test_the_route_launch_file_loads_with_mission_route_and_is_otherwise_identical(launched, launched_route):
+    assert arguments(launched_route)["mission"] == "route"
+    route_arguments = dict(arguments(launched_route))
+    main_arguments = dict(arguments(launched))
+    route_arguments.pop("mission")
+    main_arguments.pop("mission")
+    assert route_arguments == main_arguments
+    for executable in ("flight_interface", "mission"):
+        route_node, main_node = node(launched_route, executable), node(launched, executable)
+        assert route_node.keys() == main_node.keys()
+        assert route_node["package"] == main_node["package"]
+        assert [{name: value.name for name, value in group.items()} for group in route_node["parameters"]] == \
+               [{name: value.name for name, value in group.items()} for group in main_node["parameters"]]
+
+
 def test_the_mission_program_the_launch_file_names_is_installed():
     setup_text = (PACKAGE_FOLDER / "setup.py").read_text()
     assert re.search(r'"mission = team_nav\.mission_node:main"', setup_text)
     assert '"launch/team_nav.launch.py"' in setup_text
+    assert '"launch/team_nav_route.launch.py"' in setup_text
     assert '"missions/route_waypoints.json"' in setup_text
     assert "install_scripts=$base/lib/team_nav" in (PACKAGE_FOLDER / "setup.cfg").read_text()

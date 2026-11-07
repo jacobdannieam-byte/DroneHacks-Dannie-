@@ -11,7 +11,7 @@ setup(
     data_files=[
         ("share/ament_index/resource_index/packages", [f"resource/{PACKAGE_NAME}"]),
         (f"share/{PACKAGE_NAME}", ["package.xml"]),
-        (f"share/{PACKAGE_NAME}/launch", ["launch/team_nav.launch.py"]),
+        (f"share/{PACKAGE_NAME}/launch", ["launch/team_nav.launch.py", "launch/team_nav_route.launch.py"]),
         (f"share/{PACKAGE_NAME}/missions", ["missions/route_waypoints.json"]),
     ],
     install_requires=["setuptools"],

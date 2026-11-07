@@ -39,6 +39,8 @@ file. You need to do this only once.
 ssh -t dronehacks@192.168.55.1 "sudo sed -i 's/^COMPETITOR_PKG=.*/COMPETITOR_PKG=team_nav/; s/^COMPETITOR_LAUNCH=.*/COMPETITOR_LAUNCH=team_nav.launch.py/' /etc/skybeta/drone.env"
 ```
 
+To fly the route mission instead of the course stages, use `COMPETITOR_LAUNCH=team_nav_route.launch.py` in that command. That file is identical to `team_nav.launch.py`, except that it starts the route mission by default.
+
 Step 3. Restart the drone's software so that the change takes effect. It comes back by itself
 about 10 seconds later. The organizers' guide also says to power-cycle the flight controller after
 stopping this software, until we have confirmed it runs their patched firmware.

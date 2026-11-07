@@ -100,11 +100,14 @@ def watchdog_parameters():
     return parameters
 
 
-def generate_launch_description():
-    declared = [
-        DeclareLaunchArgument(name, default_value=default, description=help_)
-        for name, default, help_ in ARGUMENTS
-    ]
+def generate_launch_description(mission_default='stages'):
+    """mission_default lets team_nav_route.launch.py reuse this file with mission:=route as the
+    default; nothing else differs between the two."""
+    declared = []
+    for name, default, help_ in ARGUMENTS:
+        if name == 'mission':
+            default = mission_default
+        declared.append(DeclareLaunchArgument(name, default_value=default, description=help_))
 
     flight_interface = Node(
         package='skybeta_flight_interface',

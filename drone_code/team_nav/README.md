@@ -15,6 +15,8 @@ The `mission` launch argument chooses what flies:
 - `mission:=route`: the waypoints in [`missions/route_waypoints.json`](missions/route_waypoints.json).
 - `mission:=none`: only the flight interface starts.
 
+On the drone, where launch arguments can't be given, [`launch/team_nav_route.launch.py`](launch/team_nav_route.launch.py) starts the route mission. It is the same launch file with `mission` defaulting to `route`; point `COMPETITOR_LAUNCH` at it.
+
 Other settings work the same way. For example, `cruise_height_metres:=0.6` changes the cruise height, and every watchdog threshold and route speed is a launch argument too.
 
 ## Reading order
