@@ -295,6 +295,62 @@ class WorldState:
                                          'clock_id': self.clock_id, 'timestamp': now,
                                          'reset_required': self._reset_required, 'entities': entities}, allow_nan=False))
 
+    def semantic_snapshot(self, now=None, *, max_entities=32, evidence_limit=2, preferred_entity_id=None):
+        """Bounded detached semantic read, without raw rays or copying full evidence history.
+
+        Unlike snapshot(now), timestamp is the owner's last update, and query_timestamp
+        is the requested evaluation time. This lets readers detect an obsolete owner.
+        Opening hypotheses are selected first; omitted relations are counted explicitly.
+        Existing snapshot/query behavior is unchanged. No world state is mutated.
+        """
+        if type(max_entities) is not int or not 1 <= max_entities <= self.config.max_entities:
+            raise ValueError('max_entities exceeds the configured entity budget')
+        if type(evidence_limit) is not int or not 1 <= evidence_limit <= self.config.max_evidence:
+            raise ValueError('evidence_limit exceeds the configured evidence budget')
+        with self._lock:
+            now = self._now if now is None else now
+            if now is not None and (not math.isfinite(now) or (self._now is not None and now < self._now)):
+                raise ValueError('invalid semantic query time')
+            active = [e for e in self._entities.values()
+                      if now is None or now - e.last_observed <= self.config.forget_s]
+            selected = sorted(active, key=lambda e: (e.entity_id != preferred_entity_id,
+                              e.semantic_type != 'opening', -e.last_observed, e.entity_id))[:max_entities]
+            present = {e.entity_id for e in selected}
+            summaries = []
+            for entity in selected:
+                age = 0. if now is None else max(0., now - entity.last_observed)
+                status = entity.status
+                if self._reset_required:
+                    status = 'uncertain'
+                elif age > self.config.stale_s and status != 'invalidated':
+                    status = 'stale'
+                relations = [dict(r) for r in entity.relations if r['target'] in present]
+                evidence = []
+                for item in entity.evidence[-evidence_limit:]:
+                    evidence.append({key: item[key] if key in ('observation_id', 'source', 'kind') else float(item[key])
+                                     for key in ('observation_id', 'source', 'stamp', 'pose_stamp',
+                                                 'position_sigma_m', 'angle_sigma_rad', 'kind')})
+                    evidence[-1]['support'] = {key: item['support'][key] for key in
+                                               ('rays', 'observed_fraction', 'behind_fraction', 'blocked_fraction')
+                                               if key in item['support']}
+                geometry = {key: [float(v) for v in value] if isinstance(value, list)
+                            else None if value is None else float(value)
+                            for key, value in entity.geometry.items()}
+                decay = math.exp(-age / self.config.stale_s)
+                summaries.append({'entity_id': entity.entity_id, 'semantic_type': entity.semantic_type,
+                                  'geometry': geometry, 'frame_id': entity.frame_id, 'epoch': entity.epoch,
+                                  'source_timestamp': float(entity.source_timestamp), 'last_observed': float(entity.last_observed),
+                                  'age_s': age, 'status': status, 'observations': entity.observations,
+                                  'contradictions': entity.contradictions,
+                                  'geometric_confidence': float(entity.geometric_confidence * decay),
+                                  'semantic_confidence': float(entity.semantic_confidence * decay),
+                                  'evidence': evidence, 'missing_evidence': list(entity.missing_evidence),
+                                  'relations': relations, 'omitted_relations': len(entity.relations) - len(relations),
+                                  'connected_regions': list(entity.connected_regions)})
+            return {'schema_version': 1, 'frame_id': self.frame_id, 'epoch': self.epoch, 'clock_id': self.clock_id,
+                    'timestamp': self._now, 'query_timestamp': now, 'reset_required': self._reset_required,
+                    'stale_after_s': self.config.stale_s, 'total_entities': len(active), 'entities': summaries}
+
     def to_json(self):
         """Diagnostic AND restart checkpoint, including bounded metric evidence and association state."""
         with self._lock:
