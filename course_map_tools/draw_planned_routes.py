@@ -130,7 +130,7 @@ def draw_one_case(course_map, mission, path):
         route_description = "No route. " + str(reason)
     else:
         draw_route(axes, course_map, route, mission.cruise_height_metres)
-        route_description = describe_route(route)
+        route_description = describe_route(route, course_map)
     draw_title(axes, plain_words(course_map.name), [plain_words(route_description), plain_words(describe_course(course_map))])
     set_up_axes(axes, course_map)
     figure.savefig(path, facecolor=BACKGROUND_COLOUR, bbox_inches="tight")
@@ -263,22 +263,22 @@ def draw_route(axes, course_map, route, cruise_height_metres):
                           linestyle=(0, (2, 2)), linewidth=1, zorder=7))
 
 
-def describe_route(route):
+def describe_route(route, course_map):
     lines_crossed = ", ".join(line_name for _, line_name, _ in route.checkpoints_cleared)
     return (
         f"{route.length_metres:.1f} m long. Least room {route.least_room_metres:.2f} m, next to the "
         f"{route.least_room_near} (dashed circle). Crosses: {lines_crossed}. Open circles are stops; "
-        f"the closest stop to a boulder is {_closest_stop_to_a_boulder_metres(route):.2f} m from its edge."
+        f"the closest stop to a boulder is {_closest_stop_to_a_boulder_metres(route, course_map):.2f} m from its edge."
     )
 
 
-def _closest_stop_to_a_boulder_metres(route):
-    """How close the nearest stop comes to the edge of a boulder in the route's map."""
+def _closest_stop_to_a_boulder_metres(route, course_map):
+    """How close the nearest stop comes to the edge of a boulder in the map."""
     closest_metres = np.inf
     for waypoint, is_stop in zip(route.waypoints_metres, find_stopping_spots(route.waypoints_metres)):
         if not is_stop:
             continue
-        for boulder in route.boulders_considered:
+        for boulder in course_map.low_obstacles:
             distance_metres = np.linalg.norm(waypoint[:2] - boulder.centre_metres) - boulder.radius_metres
             closest_metres = min(closest_metres, distance_metres)
     return closest_metres

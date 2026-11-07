@@ -7,7 +7,12 @@ simulator, the world (what is really there) and the drone's map (what the drone 
 separate files, so we can test this. Each world made here is our best scan map with the boulders
 changed. The drone still plans with the unchanged scan map, so it meets boulders it doesn't
 expect. Flying simulator/test_flights/route_test.py in each world shows whether the drone keeps
-moving over a boulder, and whether PX4's height estimate stays right.
+moving over a boulder, whether PX4's height estimate stays right, and, if it doesn't, whether
+the flight program notices and lands.
+
+The boulders are placed on the route the first competition run will fly, through the side gap
+into the landing area (missions/dronehacks_2026_side_gap_first.json), except the one under the
+window's line-up, which is placed on the window route.
 
 The worlds
 ----------
@@ -19,7 +24,8 @@ The worlds
       The drone pauses at every corner, so it stops briefly right above the boulder.
   boulder_under_the_window_line_up
       The boulder in front of the window moved under the point where the drone lines up with
-      the window. The drone pauses there, then climbs to the window's height.
+      the window. The drone pauses there, then climbs to the window's height. Fly this one with
+      the window mission; the printed command says how.
   drawing_boulders_gone
       The drawing's five boulders removed, leaving only the three low things our scan found.
       The drone keeps away from boulders that aren't there, which should change nothing.
@@ -44,7 +50,7 @@ from team_nav.route_planner import plan_route
 REPOSITORY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(REPOSITORY, "drone_code", "team_nav", "test"))
 import course_changes  # noqa: E402  (must come after the line above)
-from our_files import SCAN_MAP, load_our_map, load_rulebook_mission  # noqa: E402
+from our_files import SCAN_MAP, load_our_map, load_rulebook_mission, load_side_gap_first_mission  # noqa: E402
 
 WORLDS_FOLDER = os.path.join(REPOSITORY, "simulator", "generated_files", "boulder_surprise_worlds")
 
@@ -55,11 +61,13 @@ BOULDER_TOP_HEIGHT_METRES = 0.5334
 BOULDER_EAST_OF_THE_TUNNEL_EXIT = "Boulder 2"
 BOULDER_IN_FRONT_OF_THE_WINDOW = "Boulder 3"
 DRAWING_BOULDER_NAMES = ("Boulder 1", "Boulder 2", "Boulder 3", "Boulder 4", "Boulder 5")
+WINDOW_MISSION_FILE = "drone_code/team_nav/missions/dronehacks_2026.json"
 
 
 def main():
     drone_map = load_our_map(SCAN_MAP)
-    route = plan_route(drone_map, load_rulebook_mission())
+    route = plan_route(drone_map, load_side_gap_first_mission())
+    window_route = plan_route(drone_map, load_rulebook_mission())
     os.makedirs(WORLDS_FOLDER, exist_ok=True)
 
     worlds = {
@@ -71,15 +79,16 @@ def main():
             drone_map, BOULDER_EAST_OF_THE_TUNNEL_EXIT, first_corner_after_the_tunnel(route),
         ),
         "boulder_under_the_window_line_up": course_changes.with_low_obstacle_moved(
-            drone_map, BOULDER_IN_FRONT_OF_THE_WINDOW, window_line_up_point(route),
+            drone_map, BOULDER_IN_FRONT_OF_THE_WINDOW, window_line_up_point(window_route),
         ),
         "drawing_boulders_gone": without_the_drawings_boulders(drone_map),
     }
     for name, world in worlds.items():
         path = os.path.join(WORLDS_FOLDER, f"{name}.json")
         save_course_map(world, path)
+        mission_option = f" --mission {WINDOW_MISSION_FILE}" if name == "boulder_under_the_window_line_up" else ""
         print(f"Saved {name}. Fly it with:")
-        print(f"    simulator/run_test_flight.sh --world {os.path.relpath(path, REPOSITORY)} route_test.py")
+        print(f"    simulator/run_test_flight.sh --world {os.path.relpath(path, REPOSITORY)} route_test.py{mission_option}")
 
 
 def first_corner_after_the_tunnel(route):
