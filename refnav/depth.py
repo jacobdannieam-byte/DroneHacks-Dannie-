@@ -36,7 +36,7 @@ def level_rotation(q_wxyz):
 
 def decode_depth(encoding, height, width, step, data):
     """sensor_msgs/Image depth -> float32 metres (NaN = no return). 32FC1 is metres,
-    16UC1 is millimetres (0 = invalid); anything else raises ValueError."""
+    16UC1 is millimetres (0 and 65535 mark no return). Other encodings raise ValueError."""
     enc = encoding.lower()
     if enc == "32fc1":
         a = np.frombuffer(data, np.float32).reshape(height, step // 4)[:, :width].astype(np.float32)
@@ -44,8 +44,9 @@ def decode_depth(encoding, height, width, step, data):
         a[~np.isfinite(a) | (a <= 0.0)] = np.nan
         return a
     if enc in ("16uc1", "mono16"):
-        a = np.frombuffer(data, np.uint16).reshape(height, step // 2)[:, :width].astype(np.float32) * 1e-3
-        a[a <= 0.0] = np.nan
+        raw = np.frombuffer(data, np.uint16).reshape(height, step // 2)[:, :width]
+        a = raw.astype(np.float32) * 1e-3
+        a[(raw == 0) | (raw == 65535)] = np.nan
         return a
     raise ValueError(f"unsupported depth encoding {encoding!r} (need 32FC1 metres or 16UC1 millimetres)")
 
