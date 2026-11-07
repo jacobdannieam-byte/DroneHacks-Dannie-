@@ -6,16 +6,22 @@
 - [x] Test each distinct tip in an isolated archive and preserve simulator
   geometry and organizer test outcomes with runtime blockers.
 - [x] Record capabilities, branch ancestry, owners, path deltas and PR bases.
-- [x] Preserve source and benchmark blobs. Prepare the dedicated
-  documentation cleanup for draft review.
+- [x] Publish the documentation cleanup for draft review.
+- [x] Verify identical patches and retarget the three starter drafts
+  #1, #3 and #7 to `main`.
+- [x] Publish the decoder regression and fix in
+  [draft PR #17](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/pull/17).
 
 ## P0 — Establish the integration baseline
 
 - [ ] Review the audit with the repo maintainers and affected branch owners.
   Confirm the exact landing plan before changing the shared tree.
 - [ ] Run the landed/disarmed smoke on `integration/unified-sitl-readiness`
-  at `78ef913`; retain report and capture. Establish a separate approved
-  takeoff/hover/landing and moving timing baseline.
+  at `78ef913` and retain the report and capture.
+- [ ] Review the native camera encoding and missing-return values. If it
+  uses saturated 16-bit values, review and qualify PR #17 before the
+  approved moving trial. Record takeoff, hover, landing and moving timing
+  on the exact tested revision.
 - [ ] Keep an explicit source, config, PX4/ROS build and artifact manifest
   for each accepted runtime. Verify checkpoint and split hashes before
   any branch is considered superseded.
@@ -27,9 +33,9 @@
 
 - [ ] Review the semantic and dynamics stacks plus Phase 1 in the order
   in the [migration plan](MIGRATION_PLAN.md). Reuse their existing joins.
-- [ ] Ask Soham to review the 16-bit decoder fix, directional probes and
-  staged mission separately. Require native detector and timing evidence
-  before enabling `use_stages`.
+- [ ] Review Soham's directional probes and staged mission separately.
+  Require native detector and timing evidence before enabling
+  `use_stages`.
 - [ ] Confirm `dannie-classical`'s script mode changes with Dannie.
   Reproduce the `classical` Docker flight with Kenny's pinned runtime
   and record image/asset references, referee output and ULogs.

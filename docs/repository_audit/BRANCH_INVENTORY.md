@@ -20,7 +20,7 @@ also requires accepted behavior and a verified archive.
 | `baseline-original` | [`c3c5df3`](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/commit/c3c5df33bea400209e4bec95ba99a3acdb6d67f8) | `fa2eacb` · `fa2eacb` | 1 / 43 | Yes | 30 passed | ARCHIVE → history | Pristine starter, policies, package and lessons. Preserved as ancestor. |
 | `experimental` | [`a254248`](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/commit/a25424805ad79fbf122f4d84c9859ab3477b5c62) | `baseline-original` · `c3c5df3` | 1 / 8 | Yes | 30 passed | ARCHIVE → history | Local walkthrough and setup snapshot. Stale tracking ref and P1 fork point. |
 | `main` | [`feb55b6`](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/commit/feb55b6a2485fb9f1aedeada371e8ca2abf96cd6) | `experimental` · `a254248` | 1 / 1 | Yes | 30 passed | KEEP → main | Shared managed Jazzy/VIO reference mission. |
-| `Dannie-experimental` | [`feb55b6`](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/commit/feb55b6a2485fb9f1aedeada371e8ca2abf96cd6) | `main` · `feb55b6` | 0 / 0 | Yes | 30 passed | ARCHIVE → main | Same tip as main. Retain while #1, #3 and #7 depend on it. |
+| `Dannie-experimental` | [`feb55b6`](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/commit/feb55b6a2485fb9f1aedeada371e8ca2abf96cd6) | `main` · `feb55b6` | 0 / 0 | Yes | 30 passed | ARCHIVE → main | Same tip as main at the snapshot. Confirm owner and archive before retiring the ref. |
 | `classical` | [`1f60fb5`](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/commit/1f60fb55c6f9b7d9bb9240c6919b7a4634ac74ae) | `main` · `feb55b6` | 1 / 71 | No | 30 passed | KEEP → strategy/classical after acceptance | Independent Docker/Humble PX4 SIH harness, course OBJ, referee and landing demo. Full launch pending locally. |
 | `dannie-classical` | [`79d4da2`](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/commit/79d4da2f0339e998dcbb01874ab1c37ca9c22243) | `classical` · `1f60fb5` | 1 / 5 | No | 30 passed | REVIEW → classical or design archive | Argon proposal and four shell mode changes. No separate strategy implementation. |
 | `soham-depth` | [`7781aff`](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/commit/7781aff884bf9a0c47e03873dad543de3aa33d6a) | `main` · `feb55b6` | 1 / 3 | No | 57 passed | CONSOLIDATE → main after focused review | Four directional probes and legacy uint16 sentinel fix. Synthetic tests, no native wiring. |
@@ -51,11 +51,17 @@ planner lack a verified native navigation path on their current tips.
 
 ## Pull requests and checks
 
-All 15 were open drafts and GitHub reported them as mergeable. This is a Git
+At the inventory snapshot, all 15 were open drafts and GitHub reported
+them as mergeable. This is a Git
 status. Runtime acceptance and team review are separate. PR #1 targets
 `Dannie-experimental` with a source fork at `a254248`, one commit behind
-the current target. PRs #3 and #7 also target that ref. The published
-classical and Soham tips have no PR heads among these 15.
+the current target. PRs #3 and #7 also used that ref at the snapshot.
+The published classical and Soham tips had no PR heads among these 15.
+
+The cleanup retargeted drafts #1, #3 and #7 to `main` after comparing their
+patches against the new base. The table records the original snapshot.
+[PR #17](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/pull/17)
+is the focused decoder fix against `main`.
 
 | PR | Head | Base | Status |
 | --- | --- | --- | --- |

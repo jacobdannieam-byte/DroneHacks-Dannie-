@@ -1,10 +1,12 @@
 # Migration plan
 
-**Status: proposed.** The first review is the documentation-only
-`cleanup/repository-audit` draft against `integration/unified-sitl-readiness`
-at `78ef913`. The following integration steps require maintainer and
-affected owner review. Keep native test collection on the pinned readiness
-revision while reviewing the source changes.
+The cleanup proceeds in incremental PRs. The documentation stays in
+[draft PR #16](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/pull/16)
+against the SITL readiness branch. The first source change is the
+[depth decoder fix](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/pull/17).
+Use readiness at `78ef913` as the comparison baseline and the pinned
+checkout for the first disarmed capture. Source landing requires the
+relevant owner review and the evidence listed below.
 
 ## Recommended branch outcomes
 
@@ -24,44 +26,37 @@ each named branch and immutable commit reference.
 
 ## Integration sequence and PR boundaries
 
-1. **Audit and evidence.** Review this draft, then take a fresh ref and PR
-   snapshot. Keep `main@feb55b6` and readiness `78ef913` as pre-migration
-   baselines. Run the offline suites on both and run the strict idle smoke
-   on the authenticated managed companion. The Phase 1 smoke checks
-   landed/disarmed telemetry, ownership, clock, calibration, VIO and EV.
-   Capture the corresponding run artifacts and preserve failure evidence.
-2. **Review the existing shared stack in dependency order.** Review P1
-   `feature/semantic-world-model-p1` #1 → I0–I4
-   `feature/semantic-reasoning-i0-i1` #2 → Phase 2
-   `feature/unified-phase2-spatial` #8. In parallel, review D0
-   `feature/adaptive-dynamics-d0` #3 → D1
-   `feature/adaptive-dynamics-d1` #4 → D2
-   `feature/adaptive-dynamics-d2` #5 → A1
-   `feature/adaptive-dynamics-a1` #6 → A2
-   `feature/unified-phase3-adaptation` #9. Review Phase 1
-   `feature/unified-phase1-localization` #7 separately. Keep all original
-   owners, checkpoints, seeds and benchmark contracts.
-3. **Reuse the existing joins for shared landing.** Phase 4 #10 already
-   uses `integration/unified-phase4-base@d6c363c`, which merges the
-   Phase 2 and Phase 3 heads. Its descendants are Phase 5 #11,
-   Phase 6 #12, Phase 7 #13 and Phase 8 #14. Readiness #15 already
-   includes the Phase 1 join at `5ef0e98`. After content acceptance,
-   use a reviewed integration PR from a descendant of the accepted
-   readiness revision to `main` or land approved slices through
-   their original ancestry. Use regular merges where appropriate to
-   preserve the source commits. Pick one landing approach after reviews
-   and verify ancestry so no patch is replayed. Capture the exact merge
-   parents and check runs. This is approval to land accepted modules,
-   separate from any approval to activate the hybrid control path.
-4. **Propose the shared depth fix in its own PR.** Compare
-   `soham-depth@7781aff` and the Phase 2 decoder. Extract or merge the
-   reviewed 65535 handling with a regression at the legacy
-   `refnav.depth.decode_depth` entrypoint. Preserve the source commit and
-   attribution. Verify row stride, big/little endian, zero and 65535
-   no-return semantics, valid metric values and downstream coverage.
-   Review directional probes as a separate capability with
-   `test_depth_clearances.py` and calibrated native depth fixtures. Keep
-   the original forward corridor and the Phase 2 bounded 3D map.
+1. **Collect the disarmed baseline.** Run the strict idle smoke on the
+   authenticated managed companion at `78ef913`. It checks landed/disarmed
+   telemetry, ownership, clock, calibration, VIO and EV. Save the report,
+   capture and representative native depth samples with the source SHA.
+   Record the depth encoding and how the camera marks missing returns
+   before reviewing a moving trial.
+2. **Review the depth decoder before a moving trial that uses saturated
+   16-bit depth.** [PR #17](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/pull/17)
+   takes the `65535` fix from `soham-depth@7781aff` into the legacy
+   decoder. The regression covers both 16-bit encodings, padded rows,
+   valid depths and corridor coverage. The patched main baseline passed
+   32 tests. The same two-file patch on readiness passed 335. Review the
+   native sample alongside the patch. If the source uses the saturated
+   code for missing depth, qualify the decoder fix in the moving checkout
+   before arming. Review directional probes and any broader decoder
+   unification separately with calibrated native fixtures and byte-order
+   tests.
+3. **Review shared changes in dependency order.** P1 #1, D0 #3 and
+   Phase 1 diagnostics #7 now target `main` after verifying identical
+   patches. Review Phase 1 independently. Review P1 #1 → I0–I4 #2 →
+   Phase 2 #8. In parallel, review D0 #3 → D1 #4 → D2 #5 → A1 #6 →
+   A2 #9. Keep source commits, checkpoints, seeds and benchmark
+   contracts with their changes.
+4. **Land accepted slices incrementally.** Preserve the parent commits.
+   For each stacked child, verify the accepted parent is reachable from
+   `main` and inspect the resulting patch before retargeting. Use
+   `integration/unified-phase4-base@d6c363c` and readiness
+   `78ef913` to compare the integration results. Review Phase 4 #10
+   after Phase 2 and Phase 3, then review Phases 5–8 in order. Separate
+   approval for shared modules from the later review of any code that
+   hands planner output to the PX4 command owner.
 5. **Review the two classical lanes with their owners.** For the
    `classical` emulator, verify the documented build and landing command
    at `1f60fb5`, archive the image digest, OBJ, referee outputs and ULogs,
@@ -85,7 +80,7 @@ each named branch and immutable commit reference.
    commits, worktrees, external asset availability and all open PR bases.
    Mark approved archival refs and publish the preserved SHAs before a
    separate deletion decision. Review deprecated branch pointers with
-   their owners, especially `Dannie-experimental`, local
+   their owners, including `Dannie-experimental`, local
    `experimental` and `integration/unified-phase4-base`.
 
 ## Conflicts and validation
