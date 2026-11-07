@@ -46,14 +46,16 @@ branch integration in `main`.
 - **Binary asset:** `docs/course_map.png` is a binary asset and cannot be
   meaningfully reviewed through a line diff.
 
-## Validation
+## Final validation
 
-The branches were rechecked after the reported push:
+The branches were rechecked after the latest reported push:
 
 - `origin/soham-depth` is an ancestor of `origin/main`.
 - `origin/soham-mission` is an ancestor of `origin/main`.
 - `origin/soham-stages` is an ancestor of `origin/main`.
-- No new commits were present on those branches after the previous merge.
+- No new commits were present on those branches after the previous report.
+- The latest remote branch tips remain `7781aff` (`soham-depth`), `dd09b79`
+  (`soham-mission`), and `45f7e4c` (`soham-stages`).
 - `git diff --check` passed.
 - Python bytecode compilation passed for the merged Python trees.
 
