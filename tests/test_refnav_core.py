@@ -252,6 +252,19 @@ def test_decode_depth_encodings():
         D.decode_depth("rgb8", 1, 1, 3, b"\0\0\0")
 
 
+@pytest.mark.parametrize("encoding", ["16UC1", "mono16"])
+def test_uint16_no_return_does_not_count_as_corridor_coverage(encoding):
+    raw = np.array([[65535, 1500, 0, 2000]], dtype=np.uint16)
+    depth = D.decode_depth(encoding, 1, 3, 8, raw.tobytes())
+    frame = D.DepthFrame(depth, (FX, FX, 1.0, 0.0), R_BODY_CAM, T_BODY_CAM,
+                         D.level_rotation(q_yaw(0.0)), stride=1)
+
+    coverage, rays = frame.corridor_coverage(0.0, 0.6, 0.4, 1.9)
+    assert rays == 3
+    assert coverage == pytest.approx(1 / 3)
+    assert frame.points()[:, 0] == pytest.approx([1.66])
+
+
 def test_a_one_frame_false_match_does_not_stop_the_route():
     hits = []
 
