@@ -9,6 +9,7 @@ import platform
 import time
 
 from onboard.diagnostics.phase1_health import COMMAND_TOPICS, MAX_EVENTS, NS, Policy, SCHEMA, analyze
+from onboard.diagnostics.sitl_graph import inspect as inspect_command_graph
 from onboard.vio.frames import POSE_FRAME_FRD, POSE_FRAME_NED, VELOCITY_FRAME_NED
 from onboard.vio.validation import sample_problem
 
@@ -232,7 +233,11 @@ def capture_ros(seconds, base_frame, window_label, overrides):
                           for item in node.get_publishers_info_by_topic(topic))
 
         def graph():
-            data = {"command_publishers": {topic: publishers(topic) for topic in COMMAND_TOPICS},
+            endpoints = inspect_command_graph(node)["endpoints"]
+            data = {"command_publishers": {topic: [item["owner"] for item in endpoints[topic]]
+                                           for topic in COMMAND_TOPICS},
+                    "alternate_command_topics": sorted(topic for topic, items in endpoints.items()
+                                                       if topic not in COMMAND_TOPICS and items),
                     "ev_publishers": publishers(topics["ev"][0]),
                     "source_counts": {stream: len(publishers(topics[stream][0]))
                                       for stream in ("clock", "vio", "health")}}
@@ -290,9 +295,11 @@ def main(argv=None):
     replay.add_argument("--output", type=Path, help="new report file, otherwise print JSON")
     for command in (live, replay):
         command.add_argument("--min-rtf", type=float, default=Policy().min_rtf)
+        command.add_argument("--require-idle", action="store_true",
+                             help="require landed/disarmed reports and no PX4 command publishers throughout")
     args = parser.parse_args(argv)
     try:
-        policy = Policy(min_rtf=args.min_rtf)
+        policy = Policy(min_rtf=args.min_rtf, require_idle=args.require_idle)
         if args.command == "capture":
             if args.output.exists():
                 raise ValueError("capture output directory already exists")

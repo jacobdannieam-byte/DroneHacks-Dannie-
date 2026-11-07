@@ -4,7 +4,7 @@ from types import SimpleNamespace as Message
 
 import pytest
 
-from onboard.diagnostics.phase1_health import COMMAND_TOPICS, NS, SCHEMA, analyze
+from onboard.diagnostics.phase1_health import COMMAND_TOPICS, NS, SCHEMA, Policy, analyze
 from onboard.diagnostics.phase1_probe import main, payloads, px4_topic
 from onboard.vio.frames import POSE_FRAME_FRD, POSE_FRAME_NED, odometry_to_px4, quat_from_yaw, yaw_of
 from onboard.vio.validation import CaptureGate
@@ -43,7 +43,8 @@ def sample_capture(rtf=1.0):
         if i % 5 == 0:
             add("px4_status", wall, armed=False, nav_state=0)
             add("graph", wall, command_publishers={topic: [] for topic in COMMAND_TOPICS},
-                ev_publishers=["/px4_vision_bridge"], source_counts={"clock": 1, "vio": 1, "health": 1})
+                alternate_command_topics=[], ev_publishers=["/px4_vision_bridge"],
+                source_counts={"clock": 1, "vio": 1, "health": 1})
         if i % 10 == 0:
             add("px4_flags", wall, valid=True, ev_position_intended=True, yaw_aligned=True,
                 dead_reckoning=False, gnss_position_intended=False, fake_position=False)
@@ -67,6 +68,29 @@ def test_settled_metadata_passes_without_treating_px4_time_as_ros_time():
     assert report["processing"]["duration_ms"]["p95"] == 14.0
     assert report["px4"]["armed_states"] == [False]
     assert report["graph"]["command_nodes_seen"] == []
+
+
+def test_idle_window_refuses_any_armed_airborne_or_command_publisher_sample():
+    capture = sample_capture()
+    idle = Policy(require_idle=True)
+    assert analyze(capture, idle)["passed_smoke_check"]
+    next(row for row in capture["events"] if row["stream"] == "px4_status")["armed"] = True
+    next(row for row in capture["events"] if row["stream"] == "px4_landed")["landed"] = False
+    graph = next(row for row in capture["events"] if row["stream"] == "graph")
+    graph["command_publishers"][COMMAND_TOPICS[0]] = ["/mission"]
+    graph["alternate_command_topics"] = ["/fmu/in/trajectory_setpoint_v1"]
+    issues = analyze(capture, idle)["issues"]
+    assert {"px4_status:disarmed_not_confirmed", "px4_landed:landed_not_confirmed",
+            "graph:command_publisher_in_idle_window", "graph:alternate_command_publisher"} <= set(issues)
+
+
+def test_old_captures_remain_replayable_but_lack_idle_ownership_evidence():
+    capture = sample_capture()
+    for row in capture["events"]:
+        if row["stream"] == "graph":
+            row.pop("alternate_command_topics")
+    assert analyze(capture)["passed_smoke_check"]
+    assert analyze(capture, Policy(require_idle=True))["issues"] == ["graph:alternate_topic_evidence_missing"]
 
 
 def test_slow_clock_fails_even_when_all_inputs_are_continuous():
@@ -220,5 +244,5 @@ def test_replay_cli_produces_machine_readable_report(tmp_path, rtf, code):
     source = tmp_path / "capture.json"
     output = tmp_path / "report.json"
     source.write_text(json.dumps(sample_capture(rtf)), encoding="utf-8")
-    assert main(["replay", str(source), "--output", str(output)]) == code
+    assert main(["replay", str(source), "--require-idle", "--output", str(output)]) == code
     assert json.loads(output.read_text())["passed_smoke_check"] == (code == 0)

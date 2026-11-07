@@ -31,6 +31,7 @@ class Policy:
     min_stereo_fraction: float = 0.90
     min_visual_fraction: float = 0.90
     min_ev_match_fraction: float = 0.90
+    require_idle: bool = False
 
     def __post_init__(self):
         if not all(math.isfinite(v) and v > 0 for v in (
@@ -166,13 +167,17 @@ def _vision(grouped):
             "stamp_match_fraction": matched / len(ev) if ev else 0.0}
 
 
-def _owners(rows, issues):
+def _owners(rows, issues, require_idle):
     maximum = dict.fromkeys(COMMAND_TOPICS, 0)
     ev_counts = []
+    alternate_topics = set()
     seen = set()
     sources = {name: [] for name in ("clock", "vio", "health")}
     for row in rows:
         commands = row["command_publishers"]
+        if "alternate_command_topics" not in row and require_idle:
+            issues.add("graph:alternate_topic_evidence_missing")
+        alternate_topics.update(row.get("alternate_command_topics", ()))
         ev_counts.append(len(row["ev_publishers"]))
         for name, counts in sources.items():
             counts.append(row["source_counts"][name])
@@ -184,6 +189,10 @@ def _owners(rows, issues):
         seen.update(active)
         if len(active) > 1 or any(len(commands[topic]) > 1 for topic in COMMAND_TOPICS):
             issues.add("graph:multiple_command_owners")
+    if alternate_topics:
+        issues.add("graph:alternate_command_publisher")
+    if require_idle and seen:
+        issues.add("graph:command_publisher_in_idle_window")
     if ev_counts and (ev_counts[-1] != 1 or max(ev_counts) > 1):
         issues.add("graph:vision_owner_count")
     if len(seen) > 1:
@@ -192,6 +201,7 @@ def _owners(rows, issues):
         if counts and (counts[-1] != 1 or max(counts) > 1):
             issues.add(f"graph:{name}_publisher_count")
     return {"max_command_publishers": maximum, "command_nodes_seen": sorted(seen),
+            "alternate_command_topics_seen": sorted(alternate_topics),
             "ev_publisher_counts": ev_counts, "source_publisher_counts": sources}
 
 
@@ -290,7 +300,12 @@ def analyze(capture, policy=Policy()):
     vision = _vision(grouped)
     if vision["stamp_match_fraction"] < policy.min_ev_match_fraction:
         issues.add("ev:vio_sample_stamp_mismatch")
-    graph = _owners(grouped["graph"], issues)
+    graph = _owners(grouped["graph"], issues, policy.require_idle)
+    if policy.require_idle:
+        if not grouped["px4_status"] or any(row["armed"] is not False for row in grouped["px4_status"]):
+            issues.add("px4_status:disarmed_not_confirmed")
+        if not grouped["px4_landed"] or any(row["landed"] is not True for row in grouped["px4_landed"]):
+            issues.add("px4_landed:landed_not_confirmed")
     return {
         "schema": "dronehacks-phase1-report/1", "passed_smoke_check": not issues, "issues": sorted(issues),
         "duration_wall_s": end_ns / NS, "window_label": capture["window_label"], "host": capture.get("host"),

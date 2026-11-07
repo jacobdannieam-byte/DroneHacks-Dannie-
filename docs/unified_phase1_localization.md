@@ -76,7 +76,8 @@ Existing approved command owner -> PX4 Offboard and position/yaw setpoints
 ## Read-only runbook
 
 Use the reviewed native simulation companion. Leave the flight program
-stopped for the settled smoke window. After the clock advances and VIO settles,
+stopped for the settled smoke window. On the integration readiness branch, use the [strict idle smoke procedure](unified_sitl_readiness.md).
+After the clock advances and VIO settles,
 run these commands from the checkout while landed and disarmed.
 
 ```bash
@@ -152,5 +153,5 @@ The tests replay synthetic observations and injected failures. Live Phase 1
 requires a repeatable native graph and bag, verified calibration and clock
 mapping, PX4 fusion/reset evidence, and an approved maneuver with fresh
 telemetry and moving timing evidence under declared load. See the test record
-for what was executed here. Phases 2–4 are interface proposals only.
+for what was executed here. The interface proposals above describe the Phase 1 baseline.
 [Verification record](../artifacts/unified_phase1/test_results.txt)
