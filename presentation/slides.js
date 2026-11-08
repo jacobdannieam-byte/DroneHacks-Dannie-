@@ -44,9 +44,8 @@ window.slides = [
     notes:
       "Hydra gave us the metric-to-place hierarchy. Kimera reinforced joining geometry and semantic relations in a structured representation. CSIRO provided field experience with partial observation and recovery, under different sensing assumptions. ModalAI is our industry reference for separating visual-inertial odometry, obstacle processing and autopilot interaction. We combined these design lessons; we did not run their complete systems or inherit their performance claims.",
     builds: [
-      "Introduce Hydra and Kimera",
-      "Merge their representation lessons",
-      "Add deployment and interface constraints",
+      "Show the geometry and graph ideas from Hydra and Kimera converging into compact WorldState",
+      "Add deployment and interface lessons",
     ],
   },
   {
@@ -76,9 +75,8 @@ window.slides = [
     notes:
       "The first reasoning interface was deliberately bounded and inspectable. It consumes a compact context, references existing entity IDs, and emits a non-executable goal proposal. A missing measurement can lead to observe-more; blocking evidence can reject a candidate. The validator checks grounding and freshness. Later active-perception and learned rankers use the comparison architecture, but a proposal still does not directly become a motor command.",
     builds: [
-      "Compress the world into task-relevant context",
-      "Reveal observe-more proposal",
-      "Show validator before downstream planning",
+      "Use the same opening graph to explain context and observe_more",
+      "Reveal independent validation",
     ],
   },
   {
@@ -93,9 +91,8 @@ window.slides = [
     notes:
       "Starting at the sensors, we align observations with their capture-time pose, retain geometric belief and semantic memory, choose a goal, evaluate predictive candidates, and pass through one command owner. Four concepts stay separate: a permitted reference map, current-run geometric belief, fresh local collision evidence, and semantic topology. An old map can support localization or route hypotheses, but it does not become a fresh sensor observation. This is the target decomposition. Implementation and native qualification differ by component.",
     builds: [
-      "Reveal observation and world layers",
-      "Reveal reasoning and predictive planner",
-      "Reveal execution boundary and feedback loop",
+      "Follow retained evidence through goal selection and motion evaluation",
+      "Reveal the fresh-evidence veto and execution feedback",
     ],
   },
   {
@@ -127,9 +124,8 @@ window.slides = [
     notes:
       "The P2 fixture improved localization error, but the planner initially did not consume the correction and stopped on all forty fixture cases. Registration was also expensive on the measured Windows host. This motivated a bounded asynchronous worker and explicit map-consumer contracts. Later offline work connected diagnostic consumption, with map-based control still disabled in that lineage. The bottleneck was real, but resolving a diagnostic connection did not yet demonstrate better routes.",
     builds: [
-      "Show corrected pose",
-      "Highlight missing consumer connection",
-      "Replace with diagnostic connection and bounded worker",
+      "Expose the missing consumer connection",
+      "Reveal the later diagnostic connection and its remaining limitation",
     ],
   },
   {
@@ -143,9 +139,8 @@ window.slides = [
     notes:
       "In the C1 calibration attempt, translation began near the lower edge of the height band. Height fell below the band before the braking trigger, so LAND completed but the braking experiment failed. Separately, the later S0 course experiments stayed disarmed: origin conversion, a small clock skew, and readiness/scheduling problems prevented execution. These were not successful policy flights. The response is explicit altitude retention, synchronized frame binding and bounded owner-path work. The latest fetched scheduling fix remains in progress.",
     builds: [
-      "Show C1: translate → height gate → LAND; no brake event",
-      "Show S0: offline rollout → native readiness failures",
-      "Connect each failure to a concrete next change",
+      "Show the height-gate crossing and completed landing, before the brake trigger",
+      "Reveal the separate frame, clock and owner-contract findings",
     ],
   },
   {
@@ -160,9 +155,8 @@ window.slides = [
     notes:
       "Our evidence lives at different levels. WorldState and reasoning have offline tests and replay. Active perception has synthetic comparison evidence. Native disarmed observations and one C0 calibration completed; C1 recovered but failed its measurement objective. The latest recorded S0 attempts did not arm. The protected Classical stack has a separate successful Gazebo course run. That is valuable baseline evidence, but it belongs to that stack. The question is which behavior was demonstrated in which environment.",
     builds: [
-      "Reveal offline evidence",
-      "Reveal native observation/calibration evidence",
-      "Reveal integrated-navigation gap and separate Classical baseline",
+      "Add native calibration evidence beside offline components",
+      "Show the remaining mission-level claim",
     ],
   },
   {
@@ -177,9 +171,8 @@ window.slides = [
     notes:
       "Our next step is a reliable native segment: resolve timing, frame and altitude-retention contracts, then collect complete evidence. We will compare against the protected Classical baseline under matched course, map and initial-state assumptions. Memory, topology and semantic reasoning can then be added in controlled ablations. We will measure mission progress, false-feasible choices, observation cost and latency. Learned extensions remain optional until they improve these outcomes. The journey taught us that world semantics becomes useful when its evidence reaches a timely, verifiable decision.",
     builds: [
-      "Native segment",
-      "Matched comparisons and ablations",
-      "Generalization and optional learned extensions",
+      "Reveal matched comparisons and layer ablations",
+      "Close the chain from observations to justified actions",
     ],
   },
 ];

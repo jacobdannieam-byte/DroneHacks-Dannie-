@@ -25,6 +25,17 @@ async function verify() {
   await page.goto("http://127.0.0.1:4173");
   await page.waitForFunction(() => window.deckReady);
   assert.equal(await page.locator("section[data-main]").count(), 11);
+  for (const chapter of [3, 5, 6, 8, 9, 10, 11]) {
+    const stages = await page
+      .locator(`#chapter-${chapter} .fragment`)
+      .evaluateAll((items) => [
+        ...new Set(items.map((item) => item.dataset.fragmentIndex)),
+      ]);
+    assert.ok(
+      stages.length <= 2,
+      `Chapter ${chapter} should use at most two manual reveals.`,
+    );
+  }
   assert.equal(
     await page.evaluate(() =>
       window.slides.reduce((sum, slide) => sum + slide.time, 0),

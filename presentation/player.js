@@ -100,7 +100,7 @@
     section.dataset.main = "true";
     section.innerHTML = `<p class="eyebrow"><span class="chapter">${String(index + 1).padStart(2, "0")} / 11</span>${slide.kicker}</p>
       <h1>${titles[index]}</h1><p class="subtitle">${subtitles[index]}</p>
-      <div class="scene ${slide.visual === "memory" ? "memory-scene" : ""}" data-step="0">${index === 3 ? window.ContinuousScene.markup() : window.DeckVisuals[slide.visual]()}</div>
+      <div class="scene ${slide.visual === "memory" ? "memory-scene" : ""}" data-step="0">${index === 3 ? window.ContinuousScene.markup() : (window.StoryScenes[slide.visual] || window.DeckVisuals[slide.visual])()}</div>
       <p class="takeaway"><span class="cue">↳</span>${slide.takeaway}</p>
       <div class="citation"><span>${sourceLinks(slide.sources)}</span><span class="scope">${scopeLabels[index]}</span></div>
       <aside class="notes"><p><b>${slide.time} seconds · ${slide.kicker}</b></p><p>${slide.notes}</p><p>${explanation[index]}</p><p><b>Transition:</b> ${transitions[index]}</p><p><b>Click cues:</b> ${slide.builds.join(" → ")}</p><p>Sources: ${sourceLinks(slide.sources)}</p></aside>`;

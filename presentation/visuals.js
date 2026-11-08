@@ -34,7 +34,7 @@ window.DeckVisuals = (() => {
   function course(memory = false) {
     return frame(
       `<rect x="40" y="15" width="800" height="380" fill="url(#grid)"/>
-      <path d="M95 85H425V165M425 285V355H95M95 85V355M590 85H775V355H590V285M590 165V85" fill="none" stroke="#60717f" stroke-width="5" class="entry-draw"/>
+      <path d="M95 85H425V165M425 285V355H95M95 85V355M590 85H775V355H590V285M590 165V85" fill="none" stroke="#60717f" stroke-width="5"/>
       <g class="camera-fan"><path d="M240 230L580 100L580 350Z" fill="${colors.blue}" fill-opacity=".08" stroke="${colors.blue}" stroke-opacity=".3" stroke-width="1"/></g>${drone(240, 230)}
       ${text(145, 400, "current observation", "small")}${fragment(0, `<path d="M425 170V280" stroke="${colors.amber}" stroke-width="4" stroke-dasharray="7 6"/>${text(400, 145, "?", "math amber")}`)}
       ${fragment(1, `<path d="M585 220H760" stroke="${colors.amber}" stroke-width="2" stroke-dasharray="7 8"/>${text(640, 203, "unknown", "small amber")}`)}

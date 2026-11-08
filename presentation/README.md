@@ -29,6 +29,8 @@ Read `RESEARCH.md` first for evidence boundaries, then `slides.js` for the narra
 
 `continuous-scene.js` owns the central scene's deterministic clock and interpolation. Sample identities persist as their coordinates move from observations to fitted geometry to graph nodes. The animation pauses when leaving the slide, opening overview or hiding the tab; it never advances the talk automatically.
 
+`story-scenes.js` carries that same drone, aperture and evidence-graph vocabulary through the research, reasoning, architecture, pivots, status and closing slides. Those scenes use at most two speaker-controlled reveals. The architecture separates fresh collision evidence from persistent belief; the failure slide shows schematic states and event order rather than an invented telemetry curve. No additional autoplay was added.
+
 ```sh
 npm ci
 npm run build

@@ -6,6 +6,7 @@ Verified November 8, 2026 on Windows with Microsoft Edge and Playwright.
 - Browser checks pass: forward/backward fragments, memory-scene reset, closing boundary, Q&A selection and return, overview, reduced-motion toggle.
 - Final states of all 17 slides checked at 1920×1080 and 1366×768: no detected bounds violations or scene/takeaway overlap. Slide contact sheet visually reviewed.
 - No browser JavaScript errors or external playback requests in the automated run.
+- Seven surrounding story scenes share drone/aperture/graph glyphs and use at most two manual reveals. Architecture routes were visually checked to avoid crossing labels. The failure illustration retains the distinction between failed C1 measurement and completed recovery; no continuous measured trajectory is fabricated.
 - Presenter popup manually inspected through browser screenshots: current/next state, notes, elapsed timer and slide pacing are present.
 - Animated memory scene verified with motion enabled: camera rotation changes and returns to the initial state when seeking backward.
 - Continuous slide 4: 64 illustrative samples retain their elements while positions transform from geometry into graph nodes; seeking backward exactly reproduces prior positions. Decision visibility, keyboard stage stepping and pause-on-exit pass. The animation plays once and holds, with pause/replay/scrub and static reduced-motion stages.

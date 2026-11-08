@@ -241,10 +241,10 @@ body {
   }
 }
 .bar-length {
-  transform: scaleX(0);
+  transform: scaleX(1);
   transform-box: fill-box;
   transform-origin: left;
-  transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* Reveal comparisons at their true length; avoid decorative bar growth. */
 }
 .visible .bar-length {
   transform: scaleX(1);
