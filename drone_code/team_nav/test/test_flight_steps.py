@@ -8,6 +8,8 @@ starts, or a longer time after the drone reaches the floor without one. It is fa
 How to run these tests is in the package's README.
 """
 import pytest
+import numpy as np
+from types import SimpleNamespace
 
 from team_nav import flight_steps
 from team_nav.flight_steps import (
@@ -19,6 +21,33 @@ from team_nav.flight_steps import (
 # Made up for the pretend drone, roughly as in the simulator (section 7).
 SECONDS_FROM_PUSH_DOWN_TO_MOTORS_OFF = 3.0
 SECONDS_ON_THE_FLOOR_WITHOUT_PUSH_DOWN_TO_MOTORS_OFF = 7.0
+
+
+@pytest.mark.parametrize("camera_up_metres,px4_down_metres", [
+    (0.0, 0.0), (-0.002452939050272107, -0.15490590035915375),
+    (2.4, -0.3), (-1.2, 0.7),
+])
+def test_launch_height_uses_px4_origin_once(camera_up_metres, px4_down_metres):
+    """Different camera origins must not change the requested PX4 rise.
+
+    This exercises the real sender method without creating a ROS node. The
+    final sign conversion assumes the adapter's origin anchoring is disabled.
+    """
+    sent = []
+    launch_position = np.array([1.2, -0.4, camera_up_metres])
+    link = SimpleNamespace(
+        launch=SimpleNamespace(tracked_position_metres=launch_position,
+                               px4_z_metres=px4_down_metres),
+        targets=SimpleNamespace(send_position=lambda value: sent.append(value.copy())),
+    )
+    displacement = np.array([0.5, -0.2, 0.8])
+    for _ in range(2):
+        flight_steps.DroneLink.send_position_from_launch(link, displacement)
+    for target in sent:
+        assert target[:2] == pytest.approx([1.7, -0.6])
+        assert px4_down_metres - (-target[2]) == pytest.approx(0.8)
+    assert launch_position == pytest.approx([1.2, -0.4, camera_up_metres])
+    assert displacement == pytest.approx([0.5, -0.2, 0.8])
 
 
 class PretendLog:
