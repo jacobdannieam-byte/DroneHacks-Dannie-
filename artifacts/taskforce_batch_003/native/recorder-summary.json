@@ -1,0 +1,23 @@
+{
+  "trial_id": "calibration-c0-001",
+  "trial_kind": "hover_land",
+  "clock_mapping": {
+    "source_clock_id": "px4_sitl_lockstep",
+    "ros_clock_id": "ros_sim_time",
+    "offset_ns": 0,
+    "max_error_ns": 4000000,
+    "valid_from_ns": 0,
+    "valid_until_ns": 600000000000,
+    "evidence_id": "batch003-native-timing-plus-pinned-lockstep-source"
+  },
+  "profile_sha256": "509fd32722abc0701d79bfd66b5c9c76b59380360da2f46a6a3f423635cd66d9",
+  "contract_sha256": "723da769e5bf11bb45999bddd8a7016dbaa316b3f782f39ee1762b4738ca8610",
+  "recording_faults": [],
+  "pending_clock_samples": 0,
+  "recording_complete": false,
+  "shutdown_interrupted": true,
+  "samples": 3271,
+  "status_reports": 65,
+  "events": 0,
+  "scope": "disarmed rehearsal; no landing events expected"
+}

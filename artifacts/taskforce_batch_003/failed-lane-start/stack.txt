@@ -1,0 +1,113 @@
+[INFO] [launch]: All log files can be found below /evidence/ros/2026-11-08-09-07-39-739229-8faa24d0d641-569
+[INFO] [launch]: Default logging verbosity is set to INFO
+Preparing the course distance tables. This takes about a minute, once.
+[INFO] [bash-1]: process started with pid [577]
+[INFO] [MicroXRCEAgent-2]: process started with pid [579]
+[INFO] [python3-3]: process started with pid [582]
+[INFO] [python3-4]: process started with pid [584]
+[INFO] [pretend_camera_tracking-5]: process started with pid [586]
+[INFO] [pretend_bottom_laser-6]: process started with pid [588]
+[INFO] [referee-7]: process started with pid [590]
+[MicroXRCEAgent-2] [35m[1794128802.244661][m info     | [34mUDPv4AgentLinux.cpp[m | [37minit                    [m | [32mrunning...[m             | port: 8888
+[MicroXRCEAgent-2] [35m[1794128802.245045][m info     | [34mRoot.cpp          [m | [37mset_verbose_level       [m | [32mlogger setup[m           | verbose_level: 4
+[bash-1] Wrote the drone_16_like model in simulator/gazebo_trial/generated/models/drone_16_like
+[bash-1] Gazebo world: /repository/simulator/gazebo_trial/generated/worlds/straight_lane_v1_full_simulator.sdf
+[bash-1] Starting Gazebo...
+[referee-7] Traceback (most recent call last):
+[referee-7]   File "/repository/simulator/generated_files/ros_install/course_simulator/lib/course_simulator/referee", line 33, in <module>
+[referee-7]     sys.exit(load_entry_point('course-simulator', 'console_scripts', 'referee')())
+[referee-7]   File "/repository/simulator/generated_files/ros_build/course_simulator/course_simulator/referee.py", line 315, in main
+[referee-7]     rclpy.spin(Referee())
+[referee-7]   File "/repository/simulator/generated_files/ros_build/course_simulator/course_simulator/referee.py", line 120, in __init__
+[referee-7]     check_mission_fits_map(mission, self.world_map)
+[referee-7]   File "/repository/simulator/generated_files/ros_build/team_nav/team_nav/mission.py", line 85, in check_mission_fits_map
+[referee-7]     raise MissionError(
+[referee-7] team_nav.mission.MissionError: The mission's checkpoint 'First corridor' needs a line called 'end of first corridor', but the map 'Isolated SITL stopping calibration lane v1' has only these lines: .
+[python3-4] [INFO] [1794128802.594885586] [px4_odom_bridge]: PX4 odom bridge up: /gazebo_hybrid/simulated_estimator/odometry -> /fmu/in/vehicle_visual_odometry (velocity=on, pose_frame=NED[1], status=/gazebo_hybrid/simulated_estimator/status)
+[python3-4] [WARN] [1794128802.595763237] [px4_odom_bridge]: pose_frame=NED asserts the vision frame is north-referenced. cuVSLAM without IMU fusion has no heading reference; use FRD unless the odom frame has been measured to be yaw-aligned.
+[ERROR] [referee-7]: process has died [pid 590, exit code 1, cmd '/repository/simulator/generated_files/ros_install/course_simulator/lib/course_simulator/referee --ros-args --params-file /tmp/launch_params_rjbdimvz'].
+[INFO] [pretend_bottom_laser-6]: sending signal 'SIGINT' to process[pretend_bottom_laser-6]
+[INFO] [pretend_camera_tracking-5]: sending signal 'SIGINT' to process[pretend_camera_tracking-5]
+[INFO] [python3-4]: sending signal 'SIGINT' to process[python3-4]
+[INFO] [python3-3]: sending signal 'SIGINT' to process[python3-3]
+[INFO] [MicroXRCEAgent-2]: sending signal 'SIGINT' to process[MicroXRCEAgent-2]
+[INFO] [bash-1]: sending signal 'SIGINT' to process[bash-1]
+[pretend_bottom_laser-6] Traceback (most recent call last):
+[pretend_bottom_laser-6]   File "/repository/simulator/generated_files/ros_install/course_simulator/lib/course_simulator/pretend_bottom_laser", line 33, in <module>
+[pretend_bottom_laser-6]     sys.exit(load_entry_point('course-simulator', 'console_scripts', 'pretend_bottom_laser')())
+[pretend_bottom_laser-6]   File "/repository/simulator/generated_files/ros_build/course_simulator/course_simulator/pretend_bottom_laser.py", line 163, in main
+[pretend_bottom_laser-6]     rclpy.spin(PretendBottomLaser())
+[pretend_bottom_laser-6]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/__init__.py", line 229, in spin
+[pretend_camera_tracking-5] Traceback (most recent call last):
+[pretend_camera_tracking-5]   File "/repository/simulator/generated_files/ros_install/course_simulator/lib/course_simulator/pretend_camera_tracking", line 33, in <module>
+[pretend_camera_tracking-5]     sys.exit(load_entry_point('course-simulator', 'console_scripts', 'pretend_camera_tracking')())
+[pretend_camera_tracking-5]   File "/repository/simulator/generated_files/ros_build/course_simulator/course_simulator/pretend_camera_tracking.py", line 195, in main
+[pretend_camera_tracking-5]     rclpy.spin(PretendCameraTracking())
+[pretend_camera_tracking-5]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/__init__.py", line 229, in spin
+[python3-4] Traceback (most recent call last):
+[python3-4]   File "/usr/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+[python3-3] [INFO] [1794128802.739172002] [simulator_only_gazebo_camera_to_ros]: Passing Gazebo's /oak_d_s2/depth on to ROS as /simulator_only/oak/depth/image.
+[python3-3] Failed to publish log message to rosout: publisher's context is invalid, at ./src/rcl/publisher.c:389
+[python3-3] Traceback (most recent call last):
+[python3-3]   File "/usr/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+[pretend_bottom_laser-6]     executor.spin_once()
+[pretend_bottom_laser-6]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 812, in spin_once
+[pretend_bottom_laser-6]     self._spin_once_impl(timeout_sec)
+[pretend_bottom_laser-6]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 801, in _spin_once_impl
+[pretend_bottom_laser-6]     handler, entity, node = self.wait_for_ready_callbacks(timeout_sec=timeout_sec)
+[pretend_bottom_laser-6]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 784, in wait_for_ready_callbacks
+[pretend_bottom_laser-6]     return next(self._cb_iter)
+[pretend_bottom_laser-6]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 685, in _wait_for_ready_callbacks
+[pretend_bottom_laser-6]     raise ExternalShutdownException()
+[pretend_bottom_laser-6] rclpy.executors.ExternalShutdownException
+[python3-4]     return _run_code(code, main_globals, None,
+[python3-4]   File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+[python3-4]     exec(code, run_globals)
+[python3-4]   File "/repository/simulator/gazebo_trial/hybrid_ev_bridge.py", line 48, in <module>
+[python3-4]     main()
+[python3-4]   File "/repository/simulator/gazebo_trial/hybrid_ev_bridge.py", line 41, in main
+[python3-4]     rclpy.spin(node)
+[python3-4]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/__init__.py", line 229, in spin
+[python3-4]     executor.spin_once()
+[python3-4]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 812, in spin_once
+[python3-4]     self._spin_once_impl(timeout_sec)
+[python3-4]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 801, in _spin_once_impl
+[python3-4]     handler, entity, node = self.wait_for_ready_callbacks(timeout_sec=timeout_sec)
+[python3-4]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 784, in wait_for_ready_callbacks
+[python3-4]     return next(self._cb_iter)
+[python3-4]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 685, in _wait_for_ready_callbacks
+[python3-4]     raise ExternalShutdownException()
+[python3-4] rclpy.executors.ExternalShutdownException
+[pretend_camera_tracking-5]     executor.spin_once()
+[pretend_camera_tracking-5]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 812, in spin_once
+[pretend_camera_tracking-5]     self._spin_once_impl(timeout_sec)
+[pretend_camera_tracking-5]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 801, in _spin_once_impl
+[pretend_camera_tracking-5]     handler, entity, node = self.wait_for_ready_callbacks(timeout_sec=timeout_sec)
+[pretend_camera_tracking-5]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 784, in wait_for_ready_callbacks
+[pretend_camera_tracking-5]     return next(self._cb_iter)
+[pretend_camera_tracking-5]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 685, in _wait_for_ready_callbacks
+[pretend_camera_tracking-5]     raise ExternalShutdownException()
+[pretend_camera_tracking-5] rclpy.executors.ExternalShutdownException
+[python3-3]     return _run_code(code, main_globals, None,
+[python3-3]   File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+[python3-3]     exec(code, run_globals)
+[python3-3]   File "/repository/simulator/gazebo_trial/hybrid_sensor_bridge.py", line 168, in <module>
+[python3-3]     main()
+[python3-3]   File "/repository/simulator/gazebo_trial/hybrid_sensor_bridge.py", line 159, in main
+[python3-3]     node = HybridSensorBridge()
+[python3-3]   File "/repository/simulator/gazebo_trial/hybrid_sensor_bridge.py", line 45, in __init__
+[python3-3]     self.clock_pub = self.create_publisher(Clock, "/clock", qos_profile_sensor_data)
+[python3-3]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/node.py", line 1299, in create_publisher
+[python3-3]     publisher_object = _rclpy.Publisher(
+[python3-3] rclpy._rclpy_pybind11.RCLError: Failed to create publisher: rcl node's context is invalid, at ./src/rcl/node.c:428
+[ERROR] [python3-4]: process has died [pid 584, exit code 1, cmd 'python3 -m simulator.gazebo_trial.hybrid_ev_bridge'].
+[ERROR] [pretend_bottom_laser-6]: process has died [pid 588, exit code 1, cmd '/repository/simulator/generated_files/ros_install/course_simulator/lib/course_simulator/pretend_bottom_laser --ros-args --params-file /tmp/launch_params_kbjr11ce'].
+[ERROR] [pretend_camera_tracking-5]: process has died [pid 586, exit code 1, cmd '/repository/simulator/generated_files/ros_install/course_simulator/lib/course_simulator/pretend_camera_tracking --ros-args --params-file /tmp/launch_params_hefke21d -r /visual_slam/tracking/odometry:=/gazebo_hybrid/simulated_estimator/odometry -r /visual_slam/status:=/gazebo_hybrid/simulated_estimator/status'].
+[ERROR] [python3-3]: process has died [pid 582, exit code 1, cmd 'python3 -m simulator.gazebo_trial.hybrid_sensor_bridge --ros-args -p use_sim_time:=true'].
+[bash-1] Starting PX4 with drone 16's settings...
+[ERROR] [MicroXRCEAgent-2]: process[MicroXRCEAgent-2] failed to terminate '5' seconds after receiving 'SIGINT', escalating to 'SIGTERM'
+[ERROR] [bash-1]: process[bash-1] failed to terminate '5' seconds after receiving 'SIGINT', escalating to 'SIGTERM'
+[INFO] [MicroXRCEAgent-2]: sending signal 'SIGTERM' to process[MicroXRCEAgent-2]
+[INFO] [bash-1]: sending signal 'SIGTERM' to process[bash-1]
+[ERROR] [MicroXRCEAgent-2]: process has died [pid 579, exit code -15, cmd 'MicroXRCEAgent udp4 -p 8888'].
+[ERROR] [bash-1]: process has died [pid 577, exit code -15, cmd 'bash /repository/simulator/gazebo_trial/inside_the_box/start_px4_in_gazebo.sh'].

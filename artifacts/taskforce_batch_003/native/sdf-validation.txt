@@ -1,0 +1,1 @@
+[1;31mError [Utils.cc:176][0m Tried to use callback in sdf::findFile(), but the callback is empty.  Did you call sdf::setFindCallback()?Error Code 14: [/sdf/world[@name="dronehacks_course"]/include[0]/uri:/repository/artifacts/taskforce_batch_003/native-lane-review/straight_lane_v1.sdf:L117]: Msg: Unable to find uri[model://drone_16_with_oak_d_s2]

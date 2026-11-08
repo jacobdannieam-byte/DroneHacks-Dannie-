@@ -1,0 +1,55 @@
+{
+  "scope": "recorded disarmed bag timestamps; no live clock mapping approval",
+  "topics": {
+    "/clock": {
+      "count": 10156,
+      "receipt_minus_source_ns": {
+        "min": -4000000,
+        "max": 8000000,
+        "median": -4000000,
+        "negative_count": 7582
+      },
+      "source_gap_ns": {
+        "min": 4000000,
+        "max": 4000000,
+        "nonpositive_count": 0
+      },
+      "arming_states": [],
+      "invalid_state_count": 0
+    },
+    "/fmu/out/vehicle_local_position": {
+      "count": 4048,
+      "receipt_minus_source_ns": {
+        "min": -4000000,
+        "max": 8000000,
+        "median": 4000000,
+        "negative_count": 21
+      },
+      "source_gap_ns": {
+        "min": 8000000,
+        "max": 16000000,
+        "nonpositive_count": 0
+      },
+      "arming_states": [],
+      "invalid_state_count": 0
+    },
+    "/fmu/out/vehicle_status_v1": {
+      "count": 80,
+      "receipt_minus_source_ns": {
+        "min": -4000000,
+        "max": 0,
+        "median": 0,
+        "negative_count": 1
+      },
+      "source_gap_ns": {
+        "min": 504000000,
+        "max": 504000000,
+        "nonpositive_count": 0
+      },
+      "arming_states": [
+        1
+      ],
+      "invalid_state_count": 0
+    }
+  }
+}

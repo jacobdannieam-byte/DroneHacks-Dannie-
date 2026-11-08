@@ -1,0 +1,72 @@
+{
+  "status": "AWAITING_USER_APPROVAL_NO_FLIGHT",
+  "trial_id": "calibration-c0-001",
+  "flight_source_commit": "32dd89c21e95b45c497856b1c52f453947e7dac3",
+  "image_sha256": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1",
+  "ros_domain_id": 52,
+  "source_archive_matches_current_source": true,
+  "proposed_parameter_overrides_not_applied": {
+    "MPC_LAND_SPEED": 0.3
+  },
+  "pinned_files": {
+    "scenarios\\calibration\\c0_hover_land.json": {
+      "sha256": "509fd32722abc0701d79bfd66b5c9c76b59380360da2f46a6a3f423635cd66d9",
+      "bytes": 1767
+    },
+    "scenarios\\calibration\\c0_recorder.json": {
+      "sha256": "723da769e5bf11bb45999bddd8a7016dbaa316b3f782f39ee1762b4738ca8610",
+      "bytes": 775
+    },
+    "scenarios\\calibration\\straight_lane_v1.json": {
+      "sha256": "a5dd0fc8dee3226d3acafad7c53cfb1aa58bbef43f2e83f7837411b31d8266a7",
+      "bytes": 1001
+    },
+    "artifacts\\taskforce_batch_003\\native-lane-reviewed-v2\\geometry-review.json": {
+      "sha256": "6582616dd24cb11488196bfc59bcd4476c685508a8866b410b91d334728fdaf3",
+      "bytes": 3509
+    }
+  },
+  "raw_files": {
+    "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-native-003\\inputs\\candidate-32dd89c.tar": {
+      "sha256": "71724c6e0fef949d94344b7a9155e33afc098ff50a393c41cbfca5c362a9342e",
+      "bytes": 8376320
+    },
+    "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-native-003\\composition-check-final\\observations\\metadata.yaml": {
+      "sha256": "47388ce9dd65837a518658f6af97288e1a0243c37d7ca93291d1a2f8ba198ba0",
+      "bytes": 9505
+    },
+    "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-native-003\\composition-check-final\\observations\\observations_0.db3": {
+      "sha256": "b2a924ff424caa5c474fdda7f82d5465059f7fa5bc24e9464b483ab619718704",
+      "bytes": 295600128
+    },
+    "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-native-003\\composition-check-final\\calibration_recording.json": {
+      "sha256": "0d6995fdc1322bfde64324d52837ab560999d06996cb30cc680b18305ec918e8",
+      "bytes": 2434164
+    },
+    "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-native-003\\composition-check-final\\gazebo_generated\\worlds\\straight_lane_v1_full_simulator.sdf": {
+      "sha256": "d64be312bb5479c529acf2dd6ba559f50d4bf2dd224fbb31cd69be1b5f93dd07",
+      "bytes": 5906
+    },
+    "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-native-003\\composition-check-final\\gazebo_generated\\models\\drone_16_like\\model.sdf": {
+      "sha256": "f8cc362929337eb37e8649632ce3426d86a029a80932cee06a1a80f2d1e169f3",
+      "bytes": 18277
+    }
+  },
+  "validation": {
+    "tests_passed": 710,
+    "native_disarmed_check": true,
+    "raw_bag_coverage_s": 44.36,
+    "recorder_samples": 3271,
+    "recorder_status_reports": 65,
+    "recorder_faults": [],
+    "motion_publishers": 0,
+    "arming_attempted": false
+  },
+  "limitations": [
+    "C0 not yet flown",
+    "No stopping envelope measured",
+    "Singleton graph event binding is not per-message authentication; raw command correlation required",
+    "No native Gazebo contact measurement stream",
+    "Policy positive whole-body sensing clearance remains open"
+  ]
+}
