@@ -80,7 +80,8 @@ def test_post_geometry_publication_freshness_and_isolation(setup, monkeypatch):
     runtime._publication_inputs, runtime._publication_phase = inputs, 'go'
     target = (*inputs['state'].position_m, 0.)
     assert runtime.publication_reason(None, None, Output('go', target, stream=True), now, wall_ns=now) is None
-    assert runtime.publication_freshness_reason(now + 50_000_001, wall_ns=now) == 'experimental_publication_state_stale'
+    assert runtime.publication_freshness_reason(now + 75_000_000, wall_ns=now) is None
+    assert runtime.publication_freshness_reason(now + 100_000_001, wall_ns=now) == 'experimental_publication_state_stale'
     assert runtime.publication_freshness_reason(now, wall_ns=now + 50_000_001) == 'experimental_publication_wall_budget'
     monkeypatch.setattr('examples.s0_course_experiment.isolated', lambda: False)
     with pytest.raises(SystemExit, match='2'):

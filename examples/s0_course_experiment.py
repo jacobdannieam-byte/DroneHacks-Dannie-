@@ -293,7 +293,7 @@ class ExperimentalRuntime(HybridRuntime):
         if inputs is None:
             return 'experimental_publication_inputs_unavailable'
         state, metric, alignment = inputs['state'], inputs['snapshot'].metric, inputs['alignment']
-        if not 0 <= now_ns - state_capture_ns(state, alignment) <= 50_000_000:
+        if not 0 <= now_ns - state_capture_ns(state, alignment) <= EvaluationPolicy().state_age_ns:
             return 'experimental_publication_state_stale'
         return _input_reason(state, metric, alignment, now_ns, inputs['state_received_ns'],
                              inputs['estimator_reset_counter'], inputs['estimator_healthy'], self.course.goal)
