@@ -49,7 +49,8 @@ def _input_reason(state, metric, alignment, now_ns, state_received_ns,
 
 def assess(state, snapshot, *, now_ns, alignment, vehicle, objective,
            state_received_ns, estimator_reset_counter, estimator_healthy,
-           goal=None, budget_s=.025, monotonic=perf_counter, cancelled=None, timings=None):
+           goal=None, budget_s=.025, monotonic=perf_counter, cancelled=None, timings=None,
+           predictor=None, model_id=None, history=None):
     """Run D5 and independently review the receipt within its wall-clock budget.
 
     Health describes the normalized state sample. A caller must advance its
@@ -69,6 +70,7 @@ def assess(state, snapshot, *, now_ns, alignment, vehicle, objective,
     if reason is None:
         decision = measure(timings, "d5_planning", plan, state, snapshot, now_ns=now_ns,
                            alignment=alignment, vehicle=vehicle, objective=objective, goal=goal,
+                           predictor=predictor, model_id=model_id, history=history,
                            budget_s=budget_s, monotonic=monotonic, cancelled=cancelled, timings=timings)
     else:
         decision = Plan("safe_stop_requested", reason)

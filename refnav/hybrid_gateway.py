@@ -74,6 +74,9 @@ class HybridGateway:
         if reason != "eligible_for_offline_review":
             return GatewayDecision(reason, fallback)
         bounds, objective, goal = (inputs[key] for key in ("vehicle", "objective", "goal"))
+        if (goal is not None and goal.selection is not None
+                and not goal.selection.model_identity.startswith('G0:')):
+            return GatewayDecision('experimental_reasoner_is_shadow_only', fallback)
         if (not isinstance(bounds, VehicleBounds) or bounds != assessment.vehicle_bounds
                 or objective != assessment.objective or goal != assessment.goal
                 or receipt.state_received_ns != inputs["state_received_ns"]
@@ -96,7 +99,8 @@ class HybridGateway:
             return GatewayDecision("handoff_deadline_exceeded", fallback)
         if plan.evaluation.model_id != "d0":
             return GatewayDecision("unsupported_proposal_model", fallback)
-        candidate = candidate_for_id(state, objective, alignment, plan.ranked_ids[0])
+        candidate = candidate_for_id(state, objective, alignment, plan.ranked_ids[0],
+                                     goal=goal, snapshot=snapshot, now_ns=now_ns)
         if candidate is None or any(command != candidate.schedule[0] for command in candidate.schedule):
             return GatewayDecision("unsupported_position_schedule", fallback)
         checked = measure(self.timings, "gateway_d3_recheck", evaluate_candidates, state, (candidate,), snapshot,

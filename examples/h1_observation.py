@@ -17,6 +17,8 @@ from refnav.hybrid_integration import assess
 from refnav.integration_timing import measure
 from refnav.reasoning import DeterministicReasoner, WorldReference, build_context
 from refnav.reasoning.schema import MissionGoal
+from refnav.reasoning.selection import ReasonerConfig, create_reasoner
+from refnav.reasoning.inspection import make_inputs, Attempt, HISTORY_SECONDS
 from refnav.trajectory_evaluation import EvaluationPolicy, FrameAlignment, GoalBinding, MetricGoal, VehicleBounds
 from refnav.world_model.spatial_input import NS, PoseSample, stamp_ok, vector
 
@@ -86,8 +88,11 @@ class HybridBagProfile:
     local_reset_counters: tuple
     mission_goal: MissionGoal | None = None
     tracking_source: str = "visual"
+    reasoner: ReasonerConfig = ReasonerConfig()
 
     def __post_init__(self):
+        if not isinstance(self.reasoner, ReasonerConfig):
+            raise ValueError('Supply a validated reasoner configuration.')
         if self.tracking_source not in ("visual", "simulated_estimator"):
             raise ValueError("invalid tracking source")
         ref = self.spatial.reference
@@ -113,7 +118,7 @@ class HybridBagProfile:
                    MetricGoal(ref, data["objective_m"]), data["px4_topics"], data["ev_reset_counter"],
                    tuple(data["local_reset_counters"]),
                    MissionGoal.from_dict(data["mission_goal"]) if data.get("mission_goal") is not None else None,
-                   data.get("tracking_source", "visual"))
+                   data.get("tracking_source", "visual"), ReasonerConfig(**data.get('reasoner', {})))
 
 
 class HybridBagReplay(RecordedSpatialReplay):
@@ -128,6 +133,10 @@ class HybridBagReplay(RecordedSpatialReplay):
             self.rows = deque(maxlen=1)
         self._snapshot = self._goal = None
         self.hybrid = profile
+        self.reasoner = create_reasoner(profile.reasoner)
+        self._inspection_last = None
+        self._inspection_scope = None
+        self._inspection_attempts = ()
         self.planner_budget_s = planner_budget_s
         self.monotonic = monotonic
         self.topics = {**TOPICS, TF: "tf2_msgs/msg/TFMessage", TRACKING: "diagnostic_msgs/msg/DiagnosticArray",
@@ -303,12 +312,46 @@ class HybridBagReplay(RecordedSpatialReplay):
         if not self.continuous:
             row["hybrid"] = self.diagnostic() if row["accepted"] else {"reason": row["reason"]}
 
-    def select_goal(self, snapshot, mission_goal):
+    def select_goal(self, snapshot, mission_goal, *, stage_id='inspection'):
         ref = self.hybrid.alignment.map
-        context = build_context(snapshot.semantic, mission_goal,
+        context = measure(self.timings, 'reasoning_context', build_context, snapshot.semantic, mission_goal,
                                 now=snapshot.semantic["query_timestamp"],
                                 reference=WorldReference(ref.frame_id, ref.epoch, ref.clock_id))
-        return GoalBinding(context, DeterministicReasoner().propose(context))
+        if self._state is None:
+            return GoalBinding(context, self.reasoner.propose(context))
+        state, capture = self._state[:2]
+        alignment = replace(self.hybrid.alignment, capture_ns=capture)
+        previous = self._inspection_history(context, snapshot, mission_goal, stage_id)
+        auxiliary = measure(self.timings, 'inspection_inputs', make_inputs, context, snapshot, state, alignment, self.profile.calibration,
+                                attempts=self._inspection_attempts, previous_entity_id=previous, stage_id=stage_id)
+        proposal, selection = measure(self.timings, 'reasoner_inference', self.reasoner.select, context, auxiliary)
+        entity = next((e for e in context.entities if e.entity_id == selection.selected_entity_id), None)
+        if entity is not None:
+            self._inspection_last = (context.reference, mission_goal, snapshot.metric.observation_id,
+                                     entity.entity_id, entity.missing_evidence)
+        return GoalBinding(context, proposal, selection)
+
+    def _inspection_history(self, context, snapshot, mission_goal, stage_id):
+        prior = self._inspection_last
+        now = context.context_created_at
+        scope = (context.reference, mission_goal, stage_id)
+        if self._inspection_scope != scope:
+            self._inspection_scope = scope
+            self._inspection_attempts = ()
+            self._inspection_last = None
+            return None
+        self._inspection_attempts = tuple(a for a in self._inspection_attempts
+                                          if 0 <= now - a.stamp_seconds <= HISTORY_SECONDS)
+        if prior is None:
+            return None
+        if prior[2] != snapshot.metric.observation_id:
+            entity = next((e for e in context.entities if e.entity_id == prior[3]), None)
+            if entity is not None:
+                acquired = bool(set(prior[4]) - set(entity.missing_evidence))
+                attempt = Attempt(entity.entity_id, now, 'acquired' if acquired else 'failed')
+                self._inspection_attempts = (*self._inspection_attempts, attempt)[-32:]
+            self._inspection_last = None
+        return prior[3]
 
     @property
     def px4_sample_us(self):

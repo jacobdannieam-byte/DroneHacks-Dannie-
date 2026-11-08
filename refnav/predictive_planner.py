@@ -70,8 +70,18 @@ def _generate(state, objective, alignment):
                           state.position_m[2] + climb * scale), state.yaw_rad + yaw_step)
 
 
-def candidate_for_id(state, objective, alignment, candidate_id):
+def inspection_objective(state, objective, alignment, goal, snapshot, now_ns):
+    if isinstance(goal, GoalBinding) and goal.proposal.intent == 'observe_more':
+        from refnav.trajectory_evaluation import _resolve_goal
+        point, status, _ = _resolve_goal(snapshot, goal, now_ns, state, alignment)
+        if status is None and point is not None:
+            return MetricGoal(objective.reference, tuple(point))
+    return objective
+
+
+def candidate_for_id(state, objective, alignment, candidate_id, *, goal=None, snapshot=None, now_ns=None):
     """Recover the exact bounded D5 candidate from its original in-process inputs."""
+    objective = inspection_objective(state, objective, alignment, goal, snapshot, now_ns)
     return next((item for item in _generate(state, objective, alignment)
                  if item.candidate_id == candidate_id), None)
 
@@ -101,6 +111,7 @@ def plan(state, snapshot, *, now_ns, alignment, vehicle, objective, goal=None,
     reason = interrupted()
     if reason:
         return Plan("safe_stop_requested", reason, deadline_monotonic_s=deadline)
+    objective = inspection_objective(state, objective, alignment, goal, snapshot, now_ns)
     candidates = tuple(_generate(state, objective, alignment))
     evaluation = measure(timings, "d3_evaluation", evaluate_candidates, state, candidates, snapshot,
                          now_ns=now_ns, alignment=alignment, vehicle=vehicle,

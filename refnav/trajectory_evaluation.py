@@ -105,10 +105,14 @@ class Candidate:
 class GoalBinding:
     context: ReasoningContext
     proposal: GoalProposal
+    selection: object | None = None
 
     def __post_init__(self):
         if not isinstance(self.context, ReasoningContext) or not isinstance(self.proposal, GoalProposal):
             raise ValueError("goal requires a bounded reasoning context and proposal")
+        from refnav.reasoning.selection import Selection
+        if self.selection is not None and not isinstance(self.selection, Selection):
+            raise ValueError('Inspection selection must be an immutable bounded envelope.')
 
 
 @dataclass(frozen=True)
@@ -216,7 +220,7 @@ def _shared_reasons(state, metric, alignment, now_ns, policy):
     return tuple(reasons)
 
 
-def _resolve_goal(snapshot, goal, now_ns):
+def _resolve_goal(snapshot, goal, now_ns, state=None, alignment=None):
     if goal is None:
         return None, None, ()
     metric = snapshot.metric
@@ -243,6 +247,12 @@ def _resolve_goal(snapshot, goal, now_ns):
     target = next(entity for entity in context.entities if entity.entity_id == goal.proposal.target_entity_id)
     if target.status in ("stale", "uncertain") or now - target.last_observed > context.stale_after_s:
         return None, "unknown", ("semantic_target_stale",)
+    if goal.proposal.intent == 'observe_more':
+        from refnav.reasoning.bridge import resolve_inspection
+        if state is None or alignment is None:
+            return None, 'unknown', ('inspection_pose_required',)
+        point, reason = resolve_inspection(goal, snapshot, state, alignment, now_ns)
+        return (None, 'unknown', (reason,)) if reason else (np.asarray(point), None, ())
     return np.asarray(target.geometry.center), None, ()
 
 
@@ -333,7 +343,7 @@ def evaluate_candidates(state, candidates, snapshot, *, now_ns, alignment, vehic
     reasons = _shared_reasons(state, metric, alignment, now_ns, policy)
     status, goal_point = "unknown", None
     if not reasons:
-        goal_point, status, reasons = _resolve_goal(snapshot, goal, now_ns)
+        goal_point, status, reasons = _resolve_goal(snapshot, goal, now_ns, state, alignment)
     if reasons:
         diagnostics = tuple(CandidateDiagnostic(item.candidate_id, status, reasons, "unverified")
                             for item in candidates)

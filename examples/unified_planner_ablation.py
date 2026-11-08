@@ -94,6 +94,15 @@ def _history(state, truth):
 def cases():
     base, observed, alignment = fixture()
     semantic = _binding(observed)
+    # This lower-layer ablation holds the metric objective fixed. Use an explicit
+    # investigation hint, not an observation intent with a different viewpoint.
+    from refnav.reasoning.schema import make_proposal
+    from refnav.trajectory_evaluation import GoalBinding
+    target = semantic.proposal.target_entity_id
+    semantic = GoalBinding(semantic.context, make_proposal(
+        semantic.context, 'investigate_candidate', target,
+        reasons=('candidate_passage_exists', 'candidate_requires_investigation'),
+        sources=(target,), missing=semantic.proposal.missing_information))
     objective = MetricGoal(alignment.map, (4., .10, 1.3))
     nominal = DynamicsModel()
     state, history = _history(base, nominal)

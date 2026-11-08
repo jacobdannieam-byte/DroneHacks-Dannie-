@@ -32,6 +32,8 @@ class HybridRuntime:
         if course.stage.goal.reference != profile.spatial.reference:
             raise ValueError("course must use the reviewed H1 map reference")
         self.strategy, self.course, self.adapter = strategy, course, adapter
+        if strategy == 'hybrid_sitl' and profile.reasoner.variant != 'G0':
+            raise ValueError('Experimental goal reasoners are restricted to read-only shadow.')
         self.loop = ShadowLoop(replace(profile, mission_goal=None), rate_hz=plan_hz, budget_s=budget_s,
                                monotonic=monotonic, completion_clock=completion_clock,
                                measure_receipt_wall=True)
@@ -79,7 +81,8 @@ class HybridRuntime:
                 and now_ns - self._semantic_sample < self.semantic_period_ns):
             return None
         self._semantic_key, self._semantic_metric, self._semantic_sample = key, snapshot.metric, now_ns
-        self._binding = measure(self.timings, "semantic_goal", self.loop.replay.select_goal, snapshot, stage.semantic)
+        self._binding = measure(self.timings, "semantic_goal", self.loop.replay.select_goal, snapshot, stage.semantic,
+                                stage_id=stage.stage_id)
         return self._binding
 
     def _select(self, inputs, now_ns):
@@ -100,7 +103,7 @@ class HybridRuntime:
         self._objective = MetricGoal(goal.reference, local)
         self._motion_allowed = True
         return None, {**inputs, "objective": self._objective,
-                      "goal": binding if self.course.reason == "goal_grounded" else None}
+                      "goal": binding if self.course.reason in ("goal_grounded", 'inspection_goal') else None}
 
     def poll(self, now_ns, wall_ns):
         """Run the course in shadow, or once per due cycle during existing-owner navigation."""

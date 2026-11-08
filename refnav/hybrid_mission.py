@@ -147,6 +147,22 @@ class CourseMission:
             if now_ns - self._unavailable >= self.observation_ns:
                 self.abort(self.reason)
             return None
+        if binding is not None and binding.proposal.intent == 'observe_more':
+            # An inspection is never checkpoint arrival, even at the checkpoint.
+            from refnav.reasoning.bridge import resolve_inspection
+            from refnav.reasoning.validation import validate_proposal
+            context = binding.context
+            semantic_now = (now_ns - inputs['snapshot'].semantic_time_origin_ns) / NS
+            valid = validate_proposal(binding.proposal, context, now=semantic_now, reference=context.reference)
+            point, refusal = resolve_inspection(binding, inputs['snapshot'], inputs['state'],
+                                                inputs['alignment'], now_ns) if valid.valid else (None, 'invalid_proposal')
+            self._arrival_hits = 0
+            self._unavailable = now_ns if self._unavailable is None else self._unavailable
+            if now_ns - self._unavailable >= self.observation_ns:
+                self.abort('inspection_exhausted')
+                return None
+            self._set('OBSERVATION_REQUIRED', refusal or 'inspection_goal')
+            return None if point is None else MetricGoal(self.goal.reference, point)
         self._unavailable = None
         position = map_position(inputs["state"], inputs["alignment"])
         distance = math.dist(position, self.goal.position_m)
