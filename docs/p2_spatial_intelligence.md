@@ -35,7 +35,15 @@ optional runtime dependency and no ROS or GPU requirements.
 | Metric snapshots and trajectory checks | MetricSnapshot freezes classes and timestamps. D3 reuses conservative continuous segment boxes, sphere inflation and prefix counts. | Existing D3 tests, including unknown and out-of-volume rejection. Point and local surface queries can reuse the same evidence. |
 | Semantic model | WorldState already retains IDs, evidence, uncertainty, age, bounded_by relationships, geometry and restart JSON. The reasoner consumes a bounded projection. | Verified map anchors and persistent traversal connectivity need additional evidence. Width or adjacency alone cannot advance traversal status. |
 | Reference geometry | P2-A adds independent offline PLY preprocessing, immutable point arrays, reproducible artifact and bounded local crops. | Synthetic preprocessing passes. Course scan, scale, axes, coverage and defects await review. |
+| Map-relative localization | P2-B adds bounded local ICP, capture-matched diagnostic poses and fail-closed quality and epoch gates. | Seeded geometry, rendered depth and H1 replay pass. Native alignment and target timing remain open. |
+| Geometry queries | P2-C adds point occupancy, occupied proximity, vertical swept clearance and observed-free/unknown counts on MetricSnapshot. | Aging, inflation, thin obstacles and map boundaries are covered offline. |
+| Semantic topology | P2-C anchors current entity geometry and observed boundary links in a bounded map-epoch view. | The graph preserves unknown connectivity. Full aperture and verified region endpoints are still required. |
+| Shadow diagnostics | P2-D reads H1 capture evidence after H2 decisions and publishes a separate offline snapshot/report. | Four matched arms maintain the same H2 decisions. Target scheduling, native replay and ROS timing are open. |
 | Hybrid authority | H0 validates proposals, H2 runs shadow and H3 belongs to the existing PX4 owner. | Existing fallback and gateway regression. P2 has no command binding. |
+
+See [P2-B localization](p2_map_localization.md) and
+[P2-C/D spatial shadow](p2_spatial_shadow.md) for frame contracts,
+commands, test counts and benchmark evidence.
 
 ## P2-A reference artifact
 
