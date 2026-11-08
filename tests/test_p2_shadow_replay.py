@@ -63,3 +63,41 @@ def test_sidecar_uses_h1_tracking_loss_and_fences_without_another_depth(tmp_path
     assert not lost.topology.entities
     tick(replay, 400, .285, depth_factory=_fixture_depth)
     assert sidecar.snapshot(403 * MS).localization.reference_from_body is None
+
+
+def test_async_h1_registration_reaches_h2_without_changing_receipt(tmp_path):
+    from examples.hybrid_shadow_loop import ShadowLoop
+    from examples.hybrid_sitl import ReplayDriver
+    from examples.p2_shadow_replay import AsyncDiagnosticSidecar
+    from refnav.world_model.planner_map_input import ShadowMapConsumer
+    from refnav.hybrid_integration import assess
+    rig = profile()
+    loop = ShadowLoop(rig, retain_aligned_depth=True, monotonic=lambda: 0.)
+    replay = loop.replay
+    driver = ReplayDriver(loop, lambda _: None, auto_poll=False)
+    reference = _fixture_reference(tmp_path)
+    localizer = MapLocalizer(reference, rig.spatial.reference,
+        ReviewedAnchor(reference.version, 3, rig.spatial.reference, 100 * MS, IDENTITY, 'fixture'))
+    sidecar = AsyncDiagnosticSidecar(replay, localizer)
+    try:
+        setup(driver)
+        tick(driver, 100, 0., depth_factory=_fixture_depth)
+        sidecar.snapshot(103 * MS)
+        with sidecar.worker._condition:
+            assert sidecar.worker._condition.wait_for(lambda: sidecar.worker._result is not None, 5)
+        reason, inputs = replay.prepare(103 * MS)
+        assert inputs is not None, reason
+        consumer = ShadowMapConsumer(sidecar, map_version=reference.version,
+            reference_frame=reference.spec.frame_id, reference_epoch=3,
+            vio=rig.spatial.reference, max_age_ns=500 * MS, enabled=True)
+        baseline = assess(**inputs, monotonic=lambda: 0.)
+        result = loop.poll(103 * MS, 103 * MS, map_consumer=consumer).assessment
+        assert result.map_reasoning is not None
+        assert result.receipt.plan == baseline.receipt.plan
+        assert result.receipt.metric is baseline.receipt.metric
+        replay.feed('/clock', clock(110), 110 * MS)
+        replay.feed(TRACKING, tracking(110, result='invalid'), 112 * MS)
+        assert consumer(inputs['state'], inputs['alignment'], 112 * MS) is None
+        assert sidecar.closed
+    finally:
+        assert sidecar.worker.close(5)

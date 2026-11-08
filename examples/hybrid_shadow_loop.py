@@ -122,7 +122,7 @@ class ShadowLoop:
             return "shadow_clock_unbound"
         return None
 
-    def poll(self, now_ns, wall_ns, *, inputs_filter=None):
+    def poll(self, now_ns, wall_ns, *, inputs_filter=None, map_consumer=None):
         """Return the next diagnostic tick when due, including reason-only stops."""
         self.filtered = False
         if not stamp_ok(now_ns) or not stamp_ok(wall_ns):
@@ -151,6 +151,7 @@ class ShadowLoop:
             if inputs is None:
                 return ShadowTick(now_ns, reason)
         result = measure(self.timings, "h0_total", assess, **inputs, budget_s=self.budget_s,
+                         map_consumer=map_consumer,
                          monotonic=self.monotonic, timings=self.timings,
                          cancelled=lambda: self._closed or self._fault is not None)
         self.timings.record("state_capture_to_tick_ros", now_ns - state_capture_ns(inputs["state"], inputs["alignment"]))

@@ -130,3 +130,11 @@ def test_semantic_context_from_another_snapshot_cannot_select_a_trajectory(input
     assert decision.decision == "safe_stop_requested"
     assert not decision.ranked_ids
     assert all("semantic_context_changed" in row.reasons for row in decision.evaluation.candidates)
+
+
+def test_h2_map_consumer_is_not_called_for_invalid_estimator(inputs):
+    def forbidden(*args):
+        raise AssertionError('Invalid estimator state reached map reasoning.')
+    result = hybrid_integration.assess(**(inputs | {'estimator_healthy': False}), map_consumer=forbidden)
+    assert result.map_reasoning is None
+    assert result.receipt.plan.decision == 'safe_stop_requested'
