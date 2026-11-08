@@ -167,6 +167,18 @@ class ModelFlight(CalibrationTrial):
         self.pending_model = decision
         return self._issue(Intent(position_ned_m=command.position_m, yaw_rad=command.yaw_rad), ros_ns)
 
+    def discard_model_intent(self, intent, *, reason, ros_ns, elapsed_wall_ns):
+        """Cancel only an unpublished model command, preserving the decision trail."""
+        if (not getattr(self, '_diagnostic_motion_unbounded', False)
+                or self.pending_model is None or self._pending is None
+                or self._pending[0] is not intent or intent.position_ned_m is None):
+            return False
+        self.log.write(dict(kind='discarded', sequence=self.pending_model['sequence'],
+                            reason=reason, stamp_ns=ros_ns, elapsed_wall_ns=elapsed_wall_ns))
+        self.pending_model = None
+        self._pending = None
+        return True
+
     def published(self, intent, stamp_ns, px4_issue_us, *, wall_ns=None):
         event = super().published(intent, stamp_ns, px4_issue_us, wall_ns=wall_ns)
         if intent.position_ned_m is not None:

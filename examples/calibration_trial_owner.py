@@ -387,11 +387,24 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
             if intent is None:
                 continue
             if not admitted():
+                report['publication_failure'] = dict(reason='authority_or_recording_admission_lost')
                 driver.stop('publication_fence_closed')
                 break
             issued_ros_ns, issued_wall_ns = clocks()
-            if (not 0 <= issued_wall_ns - wall_ns < 50_000_000 or issued_ros_ns < now_ns
-                    or inputs.observe(issued_ros_ns, issued_wall_ns) != observation):
+            latest = inputs.observe(issued_ros_ns, issued_wall_ns)
+            elapsed = issued_wall_ns - wall_ns
+            reason = ('clock_rewind' if issued_ros_ns < now_ns or elapsed < 0 else
+                      'native_observation_lost' if latest is None else
+                      'observation_superseded' if latest != observation else
+                      'computation_deadline' if elapsed >= 50_000_000 else None)
+            if reason is not None:
+                if (reason in ('observation_superseded', 'computation_deadline')
+                        and hasattr(driver, 'discard_model_intent')
+                        and driver.discard_model_intent(intent, reason=reason,
+                            ros_ns=issued_ros_ns, elapsed_wall_ns=elapsed)):
+                    continue
+                report['publication_failure'] = dict(reason=reason, elapsed_wall_ns=elapsed,
+                    decision_ros_ns=now_ns, issued_ros_ns=issued_ros_ns)
                 driver.stop('publication_fence_closed')
                 break
             stamp = mapping.source_stamp_us(issued_ros_ns)
