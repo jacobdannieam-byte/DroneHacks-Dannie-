@@ -41,7 +41,8 @@ class DepthToMap:
         self.wall_alignment = WallAlignment(course_map)
         self.pictures_used = 0
         self.pictures_without_pose = 0
-        self.last_picture_monotonic_seconds = None    # When the last picture was put on the map.
+        # Initialized to monotonic start time so the first cycle does not falsely report 'inf' age.
+        self.last_picture_monotonic_seconds = time.monotonic()
         link.node.create_subscription(PointCloud2, OBSTACLE_POINTS_TOPIC, self.on_obstacle_points, POINTS_QUEUE_LENGTH)
 
     def on_obstacle_points(self, message):
