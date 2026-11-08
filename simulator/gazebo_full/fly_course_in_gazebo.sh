@@ -15,6 +15,9 @@
 #                            TEAM_NAV_RUN_MODE, as on the drone.
 #   --longest-run-seconds N  Stop course_run (as with Ctrl+C, so it lands) after N seconds.
 #                            Default 360.
+#   --camera-off             Stop the pretend camera pictures just before course_run starts, after
+#                            the camera checks, so the flight has no pictures and no depth (a test
+#                            of what the drone does without its camera).
 # Everything else, or everything after "--", goes to course_run unchanged. The drone's own map
 # is course_run's --map; without it, course_run uses its default map, whatever --world says.
 #
@@ -43,12 +46,14 @@ world_map="drone_code/team_nav/course_maps/organizers_drawing.json"
 run_mode=practice
 # Our own choice: about 6 minutes, longer than any whole-course run so far (under 4 minutes).
 longest_run_seconds=360
+camera_off=0
 course_run_arguments=()
 while [ $# -gt 0 ]; do
     case "$1" in
         --world) world_map="$2"; shift 2 ;;
         --run-mode) run_mode="$2"; shift 2 ;;
         --longest-run-seconds) longest_run_seconds="$2"; shift 2 ;;
+        --camera-off) camera_off=1; shift ;;
         --) shift; course_run_arguments+=("$@"); break ;;
         *) course_run_arguments+=("$1"); shift ;;
     esac
@@ -132,5 +137,6 @@ docker exec "$box_name" bash -c "
     export TEAM_NAV_RECORDS_FOLDER=$run_folder_in_box/course_run_records
     $settings_to_export
     export TEAM_NAV_PASSED_SETTINGS=\"$passed_settings\"
+    export GAZEBO_FULL_CAMERA_OFF=$camera_off
     bash /repository/simulator/gazebo_full/inside_the_box/check_cameras_then_fly.sh $longest_run_seconds $quoted_course_run_arguments
 " 2>&1 | tee "$run_folder/flight_program_output.txt"

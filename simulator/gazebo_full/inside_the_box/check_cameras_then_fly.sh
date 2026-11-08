@@ -62,6 +62,12 @@ for name in ${TEAM_NAV_PASSED_SETTINGS:-}; do
     fi
 done
 
+if [ "${GAZEBO_FULL_CAMERA_OFF:-0}" = 1 ]; then
+    # The bracket keeps pkill from matching this script's own command line.
+    echo "[gazebo_full] --camera-off: stopping the pretend camera pictures before the flight."
+    pkill -f "pretend_oak_stereo_camera[s].py"
+fi
+
 echo "[gazebo_full] Starting course_run, as on the drone: ros2 run team_nav course_run $* (settings: ${other_settings[*]:-none})"
 python3 /repository/simulator/test_flights/real_program_test.py \
     --longest-run-seconds "$longest_run_seconds" \
