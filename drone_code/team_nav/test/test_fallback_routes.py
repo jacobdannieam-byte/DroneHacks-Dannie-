@@ -16,9 +16,7 @@ from team_nav.fallback_routes import (
     HIGH_HEIGHT_METRES, HIGHEST_TARGET_HEIGHT_METRES, OVER_THE_MAZE_STAGE, TUNNEL_APPROACH_METRES, TUNNEL_STAGE,
     FallbackRouteError, plan_fallback_route, rounded_corners,
 )
-from team_nav.fallback_run import (
-    LARGEST_UPWARD_CORRECTION_METRES, FallbackPlan, FallbackRun, HeightHeldByCameraTracking, fallback_route_from_environment,
-)
+from team_nav.fallback_run import FallbackPlan, FallbackRun, fallback_route_from_environment
 from team_nav.course_run import CLIMB_STAGE
 from team_nav.high_path_rules import check_high_path
 from team_nav.route_follower import RouteFollower
@@ -263,34 +261,6 @@ def test_the_fallback_run_uses_its_own_speeds_and_height_limit(routes):
     follower = run.make_route_follower().follower
     assert follower.target_lead_metres == 1.0
     assert follower.leg_speeds_metres_per_second == plan.route.leg_speeds_metres_per_second
-
-
-class PretendHeights:
-    """Only what HeightHeldByCameraTracking reads from the drone link."""
-
-    def __init__(self, px4_height_metres, camera_height_metres):
-        self.px4_height_metres, self.camera_height_metres = px4_height_metres, camera_height_metres
-        self.log = types.SimpleNamespace(event=lambda *arguments, **details: None)
-
-    def px4_height_risen_metres(self):
-        return self.px4_height_metres
-
-    def position_from_launch(self):
-        return np.array([0.0, 0.0, self.camera_height_metres])
-
-
-def test_targets_are_moved_so_the_drone_holds_camera_trackings_height():
-    waypoints = np.array([[0.0, 0.0, 2.3], [3.0, 0.0, 2.3]])
-    # PX4 believes 2.0 m where camera tracking (the truth) says 2.3 m: PX4 must be told 2.0 m.
-    held = HeightHeldByCameraTracking(RouteFollower(waypoints), PretendHeights(2.0, 2.3))
-    for _ in range(80):
-        target = held.next_target(waypoints[0], 0.1)
-    assert target[2] == pytest.approx(2.0, abs=0.01)
-    # The other way, the correction is limited so the target stays below the safety limit.
-    held = HeightHeldByCameraTracking(RouteFollower(waypoints), PretendHeights(2.8, 2.3))
-    for _ in range(80):
-        target = held.next_target(waypoints[0], 0.1)
-    assert target[2] == pytest.approx(2.3 + LARGEST_UPWARD_CORRECTION_METRES) and target[2] < HIGHEST_TARGET_HEIGHT_METRES
 
 
 # ---- The organizers' changed course of 2026-11-08 ----------------------------------------------

@@ -234,10 +234,20 @@ Two fallback missions make sure of the landing points even with penalties. Both 
 every wall, which the rulebook penalises. `team_nav/team_nav/fallback_run.py` explains them, and
 `course_map_tools/draw_fallback_routes.py` draws them.
 
-- `fallback_pad`: climb to 2.3 m on the launch mark, fly over the barrier to above the pad, land.
-- `fallback_tunnel`: climb to 2.3 m, fly north up the first corridor and east near the north net
-  over the maze, stop 0.6 m before the tunnel, descend to the tunnel's centre height, fly through
-  at 0.5 m/s, climb back to 2.3 m, fly over the chicane to the pad, land.
+- **`fallback_pad` (RECOMMENDED for the scored run)**: climb to 2.3 m on the launch mark, fly over
+  the barrier to above the pad, land. It is short (about 40 s), crosses one wall, and lands on the
+  pad in every simulator flight.
+- `fallback_tunnel` (OPTIONAL, more points, more risk): climb to 2.3 m, fly north up the first
+  corridor and east near the north net over the maze, stop 0.6 m before the tunnel, descend to the
+  tunnel's centre height, fly through at 0.5 m/s, climb back to 2.3 m, fly over the chicane to the
+  pad, land. Fly it only after `fallback_pad` has worked on the real drone.
+
+Safety rules in both (`team_nav/team_nav/fallback_run.py`):
+- They refuse to start if camera tracking puts the drone more than 0.3 m from where the drone software
+  started. Put the drone on the launch mark BEFORE the software starts, or restart it there.
+- The height follows camera tracking within strict limits: never more than 0.15 m above the route.
+- If the run must stop while the position is healthy, the drone flies at its height to the pad (or
+  the nearest open floor) and lands. If the position is lost, it descends where it is.
 
 They use the `test_flights` launch file, so the competition launch file stays unchanged. Without
 `TEAM_NAV_RUN_MODE=practice`, `course_run` runs in competition mode.
@@ -262,7 +272,7 @@ TEAM_NAV_RUN_MODE=practice TEAM_NAV_MISSION=fallback_pad TEAM_NAV_STOP_AFTER_STA
 TEAM_NAV_RUN_MODE=practice TEAM_NAV_MISSION=fallback_pad ./drone.sh course_run
 ```
 
-3. The tunnel mission, first only as far as the stop before the tunnel (it lands there), then
+3. Optional: the tunnel mission, first only as far as the stop before the tunnel (it lands there), then
    through the tunnel (it lands just after it), then all of it:
 
 ```bash
@@ -277,12 +287,14 @@ TEAM_NAV_RUN_MODE=practice TEAM_NAV_MISSION=fallback_tunnel TEAM_NAV_STOP_AFTER_
 TEAM_NAV_RUN_MODE=practice TEAM_NAV_MISSION=fallback_tunnel ./drone.sh course_run
 ```
 
-4. In the competition, after `./drone.sh start test_flights`, type one of these. The organizer arms
-   the drone and moves the switch to Position when the referee says go.
+4. The scored run. After `./drone.sh start test_flights`, type this. The organizer arms the drone
+   and moves the switch to Position when the referee says go.
 
 ```bash
 TEAM_NAV_MISSION=fallback_pad ./drone.sh course_run
 ```
+
+   Optional, only after `fallback_pad` has worked on the real drone:
 
 ```bash
 TEAM_NAV_MISSION=fallback_tunnel ./drone.sh course_run

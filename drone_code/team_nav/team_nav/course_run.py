@@ -245,10 +245,15 @@ class CourseRun:
         self.link = link
         self.log = link.log
         self.stop_after_stage = run_mode.stop_after_stage.lower()
-        self.watch = SafetyWatch(link, self.make_run_safety(), plan.start_frame)
+        self.watch = self.make_safety_watch()
         self.stage_name = None
         self.stage_start_seconds = None
         self.flight_start_seconds = None
+
+    def make_safety_watch(self):
+        """The safety checks and what acts on them. fallback_run.py replaces this to also watch
+        whether the position stays healthy."""
+        return SafetyWatch(self.link, self.make_run_safety(), self.plan.start_frame)
 
     def make_run_safety(self):
         """The safety checks (run_safety.py). fallback_run.py replaces this to allow its height."""
@@ -281,8 +286,8 @@ class CourseRun:
 
     def fly(self):
         cruise_height_metres = self.plan.mission.cruise_height_metres
-        flight_steps.wait_until_ready_on_the_ground(self.link)
-        flight_steps.hold_above_launch_until_control_is_ours(self.link, cruise_height_metres)
+        if not self.wait_for_the_start(cruise_height_metres):
+            return
         self.flight_start_seconds = self.link.now_seconds()
 
         self.begin_stage(CLIMB_STAGE)
@@ -291,6 +296,13 @@ class CourseRun:
         if self.stop_after_stage != CLIMB_STAGE:
             self.follow_the_route()
         self.land_where_the_route_ends()
+
+    def wait_for_the_start(self, cruise_height_metres):
+        """Waits until the drone is ready and control is ours. Returns False if the run must not
+        start; course_run always starts, but fallback_run.py adds a check on the launch pose."""
+        flight_steps.wait_until_ready_on_the_ground(self.link)
+        flight_steps.hold_above_launch_until_control_is_ours(self.link, cruise_height_metres)
+        return True
 
     def follow_the_route(self):
         """Slides the target along the route, stage by stage, with the safety checks running."""

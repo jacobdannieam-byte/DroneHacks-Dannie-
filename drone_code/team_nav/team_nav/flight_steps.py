@@ -152,6 +152,11 @@ class RunMustStop(Exception):
         self.land_using_laser = land_using_laser
 
 
+class LaunchPoseRefused(Exception):
+    """The drone's pose on the launch mark is not acceptable, so the flight must not start. The
+    message says why, in full sentences."""
+
+
 class ControlIsNoLongerOurs(Exception):
     """PX4 has left Offboard mode or the motors are off, so our targets can do nothing."""
 
@@ -652,13 +657,18 @@ def remember_launch_mark(link):
     return link.launch
 
 
-def hold_above_launch_until_control_is_ours(link, height_metres):
+def hold_above_launch_until_control_is_ours(link, height_metres, launch_pose_problem=None):
     """Sends a target height_metres above the launch mark, every cycle, until the teammate has
     armed the drone and flipped the switch to Position, and flight_interface has handed control
     to us. Waits as long as it takes. Until then the target has no effect.
 
     While the drone is still disarmed on the ground, the launch readings are taken again every
-    cycle, so they are the freshest ones when the flight starts, even if the drone was moved."""
+    cycle, so they are the freshest ones when the flight starts, even if the drone was moved.
+
+    launch_pose_problem is optional (the fallback missions pass one): a function of the link that
+    returns a sentence when the launch pose is unacceptable, or None. It is asked every cycle while
+    the drone is disarmed; on a sentence this stops sending the target, so the hand-over can't
+    happen, and raises LaunchPoseRefused."""
     link.stage = "waiting for the start switch"
     remember_launch_mark(link)
     log_launch_readings(link)
@@ -668,6 +678,10 @@ def hold_above_launch_until_control_is_ours(link, height_metres):
     while not (link.control_is_ours() and link.is_armed()):
         if not link.is_armed() and link.is_landed() and not what_is_not_ready(link):
             remember_launch_mark(link)
+        if launch_pose_problem is not None and not link.is_armed():
+            problem = launch_pose_problem(link)
+            if problem is not None:
+                raise LaunchPoseRefused(problem)
         link.send_position_from_launch((0.0, 0.0, height_metres))
         link.record_drone_condition()
         if link.now_seconds() - last_reminder_seconds >= SECONDS_BETWEEN_REMINDERS:
