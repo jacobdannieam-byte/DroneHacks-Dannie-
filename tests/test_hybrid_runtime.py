@@ -278,6 +278,18 @@ def test_reviewed_sitl_config_parses_but_cli_cannot_arm(tmp_path, capsys):
     assert main(["--config", str(config)]) == 2
     assert "no Gazebo activation launcher" in capsys.readouterr().err
 
+    course['startup_scan_position_m'] = [.0, .1, 1.3]
+    course['stages'][0].update(kind='waypoint', scan_on_arrival=True)
+    (tmp_path / 'course.json').write_text(json.dumps(course), encoding='utf-8')
+    with pytest.raises(ValueError, match='shadow-only'):
+        configured(config)
+    launch['strategy'] = 'hybrid_shadow'
+    config.write_text(json.dumps(launch), encoding='utf-8')
+    mode, loaded = configured(config)
+    assert mode == 'hybrid_shadow' and loaded.course.scans_enabled
+    assert loaded.course.startup_scan.position_m == (.0, .1, 1.3)
+    assert loaded.course.stage.scan_on_arrival
+
 
 def test_profile_default_and_activation_checks_without_ros(tmp_path, capsys, monkeypatch):
     path = tmp_path / "classical.json"

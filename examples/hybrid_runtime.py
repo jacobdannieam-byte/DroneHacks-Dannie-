@@ -7,10 +7,15 @@ from time import perf_counter, perf_counter_ns
 
 from examples.hybrid_shadow_loop import CLOCK_STALL_NS, ShadowLoop
 from refnav.core import NAV_OFFBOARD, Output
+from refnav.dynamics import PositionSetpoint
+from refnav.dynamics.history import STEP_SECONDS
 from refnav.hybrid_execution import HeldExecutor
+from refnav.hybrid_gateway import target_sweep
 from refnav.hybrid_mission import CourseMission, map_position
 from refnav.integration_timing import measure
-from refnav.trajectory_evaluation import MetricGoal
+from refnav.predictive_planner import STEPS
+from refnav.trajectory_evaluation import CLEARANCE_PROBE_M, Candidate, MetricGoal, evaluate_candidates
+from refnav.waypoint_scan import WaypointScan
 from refnav.world_model.spatial_input import NS
 
 
@@ -29,6 +34,10 @@ class HybridRuntime:
             raise ValueError("invalid Hybrid strategy or update rates")
         if strategy == "hybrid_sitl" and (adapter is None or not adapter.can_attach_owner):
             raise ValueError("hybrid_sitl needs the reviewed isolated native adapter")
+        if course.scans_enabled and strategy == 'hybrid_sitl':
+            raise ValueError('Waypoint scans are shadow-only until native yaw execution is reviewed')
+        if course.scans_enabled and plan_hz < 5:
+            raise ValueError('Waypoint scans need a diagnostic planning rate of at least 5 Hz')
         if course.stage.goal.reference != profile.spatial.reference:
             raise ValueError("course must use the reviewed H1 map reference")
         self.strategy, self.course, self.adapter = strategy, course, adapter
@@ -38,7 +47,7 @@ class HybridRuntime:
             raise ValueError('Experimental goal reasoners are restricted to read-only shadow.')
         self.loop = ShadowLoop(replace(profile, mission_goal=None), rate_hz=plan_hz, budget_s=budget_s,
                                monotonic=monotonic, completion_clock=completion_clock,
-                               measure_receipt_wall=True)
+                               measure_receipt_wall=True, retain_aligned_depth=course.scans_enabled)
         self.executor = HeldExecutor(enabled=strategy == "hybrid_sitl", lease_s=lease_s,
                                      monotonic=monotonic, timings=self.loop.timings)
         self.semantic_period_ns = round(NS / semantic_hz)
@@ -74,14 +83,15 @@ class HybridRuntime:
             for name, data, ingestion_ns, ingestion_wall in rows:
                 self.loop.feed(name, data, ingestion_ns, ingestion_wall, receipt_wall_ns=receipt_wall_ns)
         except ValueError:
-            self.invalidate()
-            self.loop.close()
+            self.close()
             raise
 
     def close(self):
         if self.clock_fence: self.clock_fence.close()
         self.executor.invalidate()
         self.loop.close()
+        if self.course.scan_pending and self.course.land_reason is None:
+            self.course.abort('scan_observation_ended')
 
     def _semantic(self, inputs, now_ns):
         stage = self.course.stage
@@ -99,14 +109,52 @@ class HybridRuntime:
                                 stage_id=stage.stage_id)
         return self._binding
 
-    def _select(self, inputs, now_ns):
+    def _scan_clearance(self, inputs, now_ns, target):
+        state, snapshot, alignment = inputs['state'], inputs['snapshot'], inputs['alignment']
+        envelope, bounds = self.executor.stopping_envelope, inputs['vehicle']
+        if envelope is None:
+            return 'scan_stopping_envelope_unavailable'
+        if self.loop.replay.predictor_fallback is not None:
+            return 'scan_predictor_unavailable'
+        if math.hypot(*state.velocity_mps) > envelope.max_speed_mps:
+            return 'scan_stopping_speed_unverified'
+        radius = max(bounds.radius_m, envelope.body_radius_m) + envelope.stop_distance_m
+        if radius + CLEARANCE_PROBE_M > 2.:
+            return 'scan_stopping_volume_outside_bound'
+        bounds = replace(bounds, radius_m=radius)
+        clock = self.loop.monotonic
+        deadline = clock() + self.loop.budget_s
+
+        def interrupted():
+            return 'scan_clearance_deadline' if clock() >= deadline else None
+
+        command = PositionSetpoint(state.reference, state.timestamp_s, state.timestamp_s + STEPS * STEP_SECONDS,
+                                   target[:3], target[3])
+        candidate = Candidate('waypoint-scan-sector', (command,) * STEPS)
+        row = evaluate_candidates(state, (candidate,), snapshot, now_ns=now_ns, alignment=alignment,
+                                  vehicle=bounds, predictor=inputs.get('predictor'), model_id=inputs.get('model_id'),
+                                  interrupted=interrupted, timings=self.timings).candidates[0]
+        if row.status != 'feasible' or row.clearance_lower_bound_m is None:
+            return 'scan_clearance_refused:' + next(iter(row.reasons), 'unverified')
+        if row.clearance_lower_bound_m < CLEARANCE_PROBE_M:
+            return 'scan_clearance_refused:insufficient_clearance'
+        reason = target_sweep(state, target[:3], snapshot, alignment, bounds, now_ns)
+        return interrupted() or ('scan_clearance_refused:' + reason if reason else None)
+
+    def _select(self, inputs, now_ns, wall_ns):
         self._motion_allowed = False
         self._course_started = True
-        binding = self._semantic(inputs, now_ns)
-        if self.course.stage.semantic is not None and self._semantic_metric is not inputs["snapshot"].metric:
-            self.course.select(now_ns, None, None, "waiting_for_semantic_refresh")
+        binding = None if self.course.scan_pending else self._semantic(inputs, now_ns)
+        if (not self.course.scan_pending and self.course.stage.semantic is not None
+                and self._semantic_metric is not inputs["snapshot"].metric):
+            self.course.select(now_ns, None, None, "waiting_for_semantic_refresh", wall_ns=wall_ns)
             return self.course.reason, None
-        goal = self.course.select(now_ns, inputs, binding)
+        goal = self.course.select(now_ns, inputs, binding, wall_ns=wall_ns)
+        if isinstance(goal, WaypointScan):
+            goal.step(now_ns, wall_ns, inputs, self.loop.replay.aligned_depth,
+                      lambda target: self._scan_clearance(inputs, now_ns, target))
+            self.course.update_scan(goal, now_ns)
+            return goal.reason, None
         if goal is None:
             return self.course.reason, None
         state, alignment = inputs["state"], inputs["alignment"]
@@ -121,7 +169,7 @@ class HybridRuntime:
 
     def poll(self, now_ns, wall_ns):
         """Run the course in shadow, or once per due cycle during existing-owner navigation."""
-        row = self.loop.poll(now_ns, wall_ns, inputs_filter=self._select)
+        row = self.loop.poll(now_ns, wall_ns, inputs_filter=lambda inputs, tick: self._select(inputs, tick, wall_ns))
         if row is not None:
             if row.assessment is not None:
                 self.course.result(now_ns, row.reason)
@@ -129,7 +177,7 @@ class HybridRuntime:
             elif not self.loop.filtered:
                 self._motion_allowed = False
                 if self._course_started or self.fault is not None:
-                    self.course.select(now_ns, None, None, row.reason, fault=self.fault is not None)
+                    self.course.select(now_ns, None, None, row.reason, fault=self.fault is not None, wall_ns=wall_ns)
                 elif row.reason != "shadow_closed":
                     self.course.lifecycle("wait")
             details = row.report()
@@ -145,7 +193,7 @@ class HybridRuntime:
 
     def status(self):
         stage = self.course.stage
-        return {"strategy": self.strategy, "mission_state": self.course.state,
+        status = {"strategy": self.strategy, "mission_state": self.course.state,
                 "reasoning_strategy": (self.loop.replay.hybrid.strategy_config.identifier
                                        if self.loop.replay.hybrid.strategy_config else 'legacy_reasoner_config'),
                 "strategy_identity": (self.loop.replay.hybrid.strategy_config.identity
@@ -154,6 +202,9 @@ class HybridRuntime:
                 "mission_reason": self.course.reason, "stage_id": stage.stage_id, "stage_kind": stage.kind,
                 "goal_m": self.course.goal.position_m, "goal_slot": self.course.alternative,
                 "landing_request": self.course.land_reason}
+        if self.course.scan_report is not None:
+            status['waypoint_scan'] = self.course.scan_report
+        return status
 
     def issue(self, now_ns, *, px4_issue_us, setpoint):
         # Native owner calls after publication. A fake sink can label its own timestamps separately.
@@ -207,6 +258,8 @@ class HybridRuntime:
         """Pure mission integration. Admission and ready come from the existing ROS owner."""
         if self.strategy != "hybrid_sitl" or not mission.hybrid_navigation:
             raise ValueError("command path is not attached to Hybrid SITL")
+        if self.course.scans_enabled:
+            raise ValueError('Waypoint scans have no native command authority')
         now = now_ns / NS
         clock_reason = self.loop.observation_reason(now_ns, wall_ns)
         reason, inputs = ((clock_reason, None) if clock_reason else self.loop.replay.prepare(now_ns))

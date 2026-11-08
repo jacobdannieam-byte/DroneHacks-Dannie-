@@ -1,6 +1,12 @@
 # Curated policy test campaign after C0
 
 Status: configured test sequence, not authorization for moving policy flights.
+Current implementation direction is the explicit controlled-SITL map-assisted
+mode in [the clearance plan](HYBRID_CLEARANCE_BOOTSTRAP_PLAN.md), with optional
+initial/selected-waypoint scans. Sensor-only coverage remains a separate negative
+control; completing a scan does not establish full-body clearance. The original
+observed-only positive requirement below applies to observed-only qualification,
+not as a mandatory handoff for a separately reviewed map-assisted run.
 Setup source: `81ac530a029c7b39e3cef2e906b2eb7df8aedcf7`.
 C0 passed only the bounded takeoff/settle/native-LAND path. Its evidence cannot
 substitute for measured stopping, authority-loss recovery or spatial clearance.

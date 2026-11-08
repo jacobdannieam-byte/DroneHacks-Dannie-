@@ -8,7 +8,8 @@ from refnav.core import HYBRID_COMPLETE as COMPLETE
 from refnav.hybrid_gateway import target_sweep
 from refnav.reasoning.schema import MissionGoal, token
 from refnav.trajectory_evaluation import MetricGoal, state_capture_ns
-from refnav.world_model.spatial_input import NS
+from refnav.waypoint_scan import WaypointScan
+from refnav.world_model.spatial_input import NS, stamp_ok
 
 
 KINDS = frozenset(("waypoint", "corridor", "maze", "gate", "tunnel_approach",
@@ -31,6 +32,7 @@ class Stage:
     arrival_m: float = .20
     timeout_s: float = 30.
     landing_site_review: str | None = None
+    scan_on_arrival: bool = False
 
     def __post_init__(self):
         if (not token(self.stage_id) or self.kind not in KINDS or not isinstance(self.goal, MetricGoal)
@@ -41,6 +43,7 @@ class Stage:
                        for g in self.alternatives)
                 or len(set((self.goal, *self.alternatives))) != 1 + len(self.alternatives)
                 or (self.alternatives and self.semantic is not None)
+                or type(self.scan_on_arrival) is not bool or (self.scan_on_arrival and self.kind != 'waypoint')
                 or not .05 <= self.arrival_m <= .40 or not 1 <= self.timeout_s <= 120
                 or (self.landing_site_review is not None and not token(self.landing_site_review))):
             raise ValueError("invalid mission stage")
@@ -49,13 +52,15 @@ class Stage:
 class CourseMission:
     """Checkpoint and recovery policy. The existing core Mission owns takeoff and landing."""
 
-    def __init__(self, stages, *, failure_limit=4, no_progress_s=5., observation_s=2.):
+    def __init__(self, stages, *, failure_limit=4, no_progress_s=5., observation_s=2., startup_scan=None):
         self.stages = tuple(stages)
         if (not 1 <= len(self.stages) <= 32 or not all(isinstance(s, Stage) for s in self.stages)
                 or len({s.stage_id for s in self.stages}) != len(self.stages)
                 or len({s.goal.reference for s in self.stages}) != 1
                 or any(s.kind == "landing" for s in self.stages[:-1])
                 or self.stages[-1].kind != "landing"
+                or (startup_scan is not None and (not isinstance(startup_scan, MetricGoal)
+                    or startup_scan.reference != self.stages[0].goal.reference))
                 or type(failure_limit) is not int or not 1 <= failure_limit <= 10
                 or not 1 <= no_progress_s <= 30 or not .25 <= observation_s <= 10):
             raise ValueError("invalid bounded course")
@@ -68,6 +73,10 @@ class CourseMission:
         self._last_failure_observation = self._last_plan_observation = None
         self._arrival_hits = self._failures = 0
         self._best = math.inf
+        self.startup_scan = startup_scan
+        self._startup_scan_pending = startup_scan is not None
+        self._scan = None
+        self.scan_report = None
 
     @property
     def stage(self):
@@ -81,15 +90,29 @@ class CourseMission:
     def key(self):
         return self.index, self.alternative
 
+    @property
+    def scans_enabled(self):
+        return self.startup_scan is not None or any(stage.scan_on_arrival for stage in self.stages)
+
+    @property
+    def scan_pending(self):
+        return self.land_reason is None and (self._startup_scan_pending or self._scan is not None)
+
     def _set(self, state, reason):
         self.state, self.reason = state, reason
 
     def abort(self, reason):
+        if self._scan is not None:
+            self._scan.fail(reason)
+            self.scan_report = self._scan.report()
+            self._scan = None
         if self.land_reason is None:
             self.land_reason = reason
         self._set("MISSION_ABORT", self.land_reason)
 
     def lifecycle(self, phase, *, landed=False, disarmed=False, yielded=False):
+        if self.scan_pending and (yielded or phase in ('done', 'land')):
+            self.abort('scan_authority_lost' if yielded else 'scan_course_ended')
         if yielded:
             self._set("AUTHORITY_LOST", "owner_yielded")
         elif phase == "done":
@@ -102,7 +125,7 @@ class CourseMission:
                      "hover": "STABILIZE_OBSERVE"}[phase]
             self._set(label, "existing_mission_owner")
 
-    def select(self, now_ns, inputs, binding, reason=None, *, fault=False):
+    def select(self, now_ns, inputs, binding, reason=None, *, fault=False, wall_ns=None):
         """Return the reviewed checkpoint once its fresh observation gates permit planning."""
         if self.land_reason is not None:
             return None
@@ -111,9 +134,14 @@ class CourseMission:
         if fault:
             self.abort("reference_fenced:" + (reason or "unknown"))
             return None
-        if now_ns - self._stage_start >= self.stage.timeout_s * NS:
+        if not self._startup_scan_pending and now_ns - self._stage_start >= self.stage.timeout_s * NS:
             self.abort("goal_timeout")
             return None
+        if self._scan is not None:
+            if inputs is None:
+                self.abort('scan_observation_lost:' + (reason or 'unknown'))
+                return None
+            return self._scan
         if inputs is None:
             self._arrival_hits = 0
             self._set("ESTIMATOR_UNHEALTHY" if reason and any(
@@ -126,6 +154,8 @@ class CourseMission:
         if inputs["alignment"].map != self.goal.reference:
             self.abort("mission_reference_changed")
             return None
+        if self._startup_scan_pending:
+            return self._start_scan('startup', self.startup_scan, .20, now_ns, wall_ns)
 
         stage, metric = self.stage, inputs["snapshot"].metric
         observation = metric.observation_id
@@ -176,19 +206,9 @@ class CourseMission:
                 self._arrival_hits += 1
                 self._last_arrival = (observation, sample)
             if self._arrival_hits >= 2:
-                if self.alternative:
-                    # A reviewed detour is a subgoal. Return to the checkpoint,
-                    # keeping the failed detour unavailable for this stage.
-                    self.alternative = 0
-                    self._clear_progress(now_ns, keep_attempts=True)
-                    self._set("REPLAN", "detour_complete")
-                elif self.index + 1 == len(self.stages):
-                    self.land_reason = COMPLETE
-                    self._set("MISSION_COMPLETE", COMPLETE)
-                else:
-                    self.index += 1
-                    self._clear_progress(now_ns)
-                    self._set("SELECT_NEXT_GOAL", "checkpoint_confirmed")
+                if stage.scan_on_arrival and not self.alternative:
+                    return self._start_scan(stage.stage_id, self.goal, stage.arrival_m, now_ns, wall_ns)
+                self._advance_arrival(now_ns)
                 return None
             self._set("VERIFY_GOAL_COMPLETION", "awaiting_fresh_arrival_confirmation")
             return None
@@ -201,6 +221,43 @@ class CourseMission:
         self._last_plan_observation = observation
         self._set("PLAN_AND_NAVIGATE", "goal_grounded" if grounded else "reviewed_metric_goal")
         return self.goal
+
+    def _start_scan(self, scope, goal, arrival_m, now_ns, wall_ns):
+        if not stamp_ok(now_ns) or not stamp_ok(wall_ns):
+            self.abort('scan_clock_unavailable')
+            return None
+        self._scan = WaypointScan(scope, goal, arrival_m, now_ns, wall_ns)
+        return self._scan
+
+    def update_scan(self, scan, now_ns):
+        if scan is not self._scan:
+            raise ValueError('scan does not belong to the active course')
+        if scan.state == 'SCAN_REFUSED':
+            self.abort(scan.reason)
+            return
+        self.scan_report = scan.report()
+        self._set(scan.state, scan.reason)
+        if scan.state == 'SCAN_COMPLETE':
+            self._scan = None
+            if self._startup_scan_pending:
+                self._startup_scan_pending = False
+                self._clear_progress(now_ns)
+            else:
+                self._advance_arrival(now_ns)
+
+    def _advance_arrival(self, now_ns):
+        if self.alternative:
+            # A reviewed detour is a subgoal. Keep its attempt budget.
+            self.alternative = 0
+            self._clear_progress(now_ns, keep_attempts=True)
+            self._set("REPLAN", "detour_complete")
+        elif self.index + 1 == len(self.stages):
+            self.land_reason = COMPLETE
+            self._set("MISSION_COMPLETE", COMPLETE)
+        else:
+            self.index += 1
+            self._clear_progress(now_ns)
+            self._set("SELECT_NEXT_GOAL", "checkpoint_confirmed")
 
     def _clear_progress(self, now_ns, *, keep_attempts=False):
         self._progress = now_ns
