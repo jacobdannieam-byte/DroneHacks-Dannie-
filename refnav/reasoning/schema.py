@@ -19,6 +19,7 @@ REASONS = frozenset(('context_invalid', 'no_relevant_entities', 'candidate_passa
                      'height_unconfirmed', 'clearance_unconfirmed', 'reobserve_stale_belief',
                      'blocking_evidence', 'alternatives_available', 'candidate_requires_investigation',
                      'review_ranked_alternative', 'mission_target_known', 'region_connectivity_unknown'))
+V2_ABSTENTION_REASONS = REASONS | {'no_supported_inspection'}
 
 
 class ContractError(ValueError):
@@ -295,11 +296,14 @@ class GoalProposal(Codec):
     validation_status: str = 'unvalidated'
 
     def __post_init__(self):
-        require(type(self.schema_version) is int and self.schema_version == 1, 'unsupported_proposal_schema')
+        require(type(self.schema_version) is int and (self.schema_version == 1 or
+                (self.schema_version == 2 and self.intent == 'insufficient_information'
+                 and 'no_supported_inspection' in self.reason_codes)), 'unsupported_proposal_schema')
         require(self.intent in INTENTS, 'unsupported_intent')
         require(token(self.proposal_id) and token(self.context_reference), 'invalid_proposal_reference')
         require(self.target_entity_id is None or token(self.target_entity_id), 'invalid_target_id')
-        require(codes(self.reason_codes) and bool(self.reason_codes) and set(self.reason_codes) <= REASONS, 'unsupported_reason_code')
+        allowed_reasons = REASONS if self.schema_version == 1 else V2_ABSTENTION_REASONS
+        require(codes(self.reason_codes) and bool(self.reason_codes) and set(self.reason_codes) <= allowed_reasons, 'unsupported_reason_code')
         require(codes(self.missing_information), 'invalid_missing_information')
         require(isinstance(self.source_entity_ids, tuple) and len(self.source_entity_ids) <= MAX_ENTITIES
                 and len(set(self.source_entity_ids)) == len(self.source_entity_ids)
@@ -316,7 +320,8 @@ def proposal_digest(proposal):
 
 
 def make_proposal(context, intent, target=None, reasons=(), missing=(), sources=()):
-    proposal = GoalProposal(1, 'pending', intent, target, tuple(sorted(set(reasons))),
+    version = 2 if 'no_supported_inspection' in reasons else 1
+    proposal = GoalProposal(version, 'pending', intent, target, tuple(sorted(set(reasons))),
                             tuple(sorted(set(missing))), tuple(sorted(set(sources))),
                             context.context_reference, context.reference)
     return replace(proposal, proposal_id=proposal_digest(proposal))
