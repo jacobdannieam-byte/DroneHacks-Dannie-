@@ -71,3 +71,21 @@ laser/estimator evidence. Run the ROS unit suite in its supported environment.
 Only after team review should a separately authorized bounded climb and first
 horizontal segment be considered, with the existing abort and takeover checks.
 No map-based control is enabled by this work.
+
+## Additional offline qualification: available ROS environment
+
+The earlier missing-rclpy limitation is now resolved for focused tests using the
+existing Ubuntu Docker installation. No Gazebo or flight program was launched.
+The container had networking disabled and the checkout mounted read-only.
+Image: drone-simulator:latest,
+sha256:a94b59df2e4aa268a107a56d9087c4645f6819680e4c17ab4db74cbc81c66795.
+
+Exact PowerShell command from the parent workspace:
+
+```powershell
+wsl -d Ubuntu -- docker run --rm --network none --entrypoint /bin/bash --mount 'type=bind,source=/mnt/c/Users/Adity/OneDrive/Documents/ChatGPT/DroneHacks/classical-audit-source,target=/repository,readonly' --workdir /repository --env PYTHONPATH=/repository/drone_code/team_nav --env PYTHONDONTWRITEBYTECODE=1 drone-simulator:latest -c 'source /opt/ros/humble/setup.bash && python3 -m pytest drone_code/team_nav/test/test_flight_steps.py drone_code/team_nav/test/test_launch_target.py drone_code/team_nav/test/test_height_check.py drone_code/team_nav/test/test_run_safety.py -q -p no:cacheprovider'
+```
+
+Result: 63 passed in 2.52s against classical code 0fdaabc. This includes the
+DroneLink method tests with nonzero origins. It does not verify deployed adapter
+settings, publishers, sensor timing, flight dynamics or actual hardware.
