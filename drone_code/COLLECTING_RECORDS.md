@@ -122,9 +122,11 @@ A command-line way also exists (MAVProxy's `log list` and `log download` command
 
 ### Reading them
 
+- **PX4 Flight Review v2 (flight-review-rs)** ([GitHub](https://github.com/px4/flight-review-rs)): Converts `.ulg` files into per-topic Zstandard Parquet files and a `metadata.json` summary using `flight-review convert <file.ulg> --output <dir>`.
+- **format_telemetry.py** (`drone_code/format_telemetry.py`): Formats companion ROS 2 records (`topics/*.csv` or `.csv.gz`) into the exact same Flight Review v2 Parquet + `metadata.json` layout (`docs/TELEMETRY_FORMAT_FLIGHT_REVIEW_RS.md`).
 - **pyulog**, a Python package (`pip install pyulog`): `ulog_info file.ulg` lists what is inside, and `ulog2csv file.ulg` turns every message type into CSV files.
 - **PlotJuggler**, a desktop program, opens `.ulg` files directly for plotting.
-- **PX4 Flight Review** (logs.px4.io) makes a full report from a log in the browser. An upload is stored on their server, so choose the option that keeps it private, or use the two tools above instead.
+- **PX4 Flight Review** (logs.px4.io) makes a full report from a log in the browser. An upload is stored on their server, so choose the option that keeps it private, or use the tools above instead.
 
 PX4's messages in our CSV files carry PX4's own `timestamp` column (microseconds since PX4 started), as PX4's log does, which should let the two be lined up. We have not checked that the two clocks agree on drone 16; if they don't, line them up by a clear moment such as arming.
 
