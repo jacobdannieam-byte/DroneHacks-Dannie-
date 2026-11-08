@@ -40,6 +40,7 @@ kind of break is allowed and written in the records. Any other break refuses the
 
 What this file does not do: fly, or plan anything for the other missions.
 """
+import os
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -48,6 +49,10 @@ from team_nav.course_map import distance_to_shapes_metres, shapes_blocking_betwe
 from team_nav.drone_dimensions import DRONE_RADIUS_METRES
 from team_nav.fallback_routes import FallbackRouteError, rounded_corners, shortest_high_path
 from team_nav.high_path_rules import _distances_to_everything, check_high_path, open_floor_clearances
+
+
+class TunnelFirstRouteError(ValueError):
+    """The route can't be flown on this map; the message says why and what to do."""
 
 # The team's choices (2026-11-08).
 CLIMB_HEIGHT_METRES = 0.70
@@ -58,7 +63,36 @@ NET_DISTANCE_METRES = 0.9
 TURNING_CIRCLE_METRES = 0.6
 TUNNEL_SPEED_METRES_PER_SECOND = 0.25
 # The team's choices, corrected from the map files (see above).
-S_METRES = (2.17, 2.14)
+DEFAULT_S_NORTH_METRES = 2.14
+S_EAST_METRES = 2.17
+# The team may move S north for one run with this setting (drone.sh passes it), within these limits.
+# Why: the LOOK step (tunnel_look.py) needs both of the tunnel's inside edges in the picture. The
+# camera sees 78 degrees across (512 px at fx 317 in Gazebo; the same angle on drone 16), so the
+# 1.47 m opening fits only from about 1.0 m away. At north 2.14 the camera is 0.70 m from the phone
+# scan's tunnel mouth and 0.80 m from the drawing's, too close: both edges are cut off and the
+# look is always "unsure" (the drone then flies the map's line, as in Phase 1). At north 2.40 the
+# camera is 0.97 m and 1.07 m away, but S is then only 0.65 m from the north net.
+S_NORTH_SETTING = "TEAM_NAV_S_NORTH_METRES"
+LOWEST_S_NORTH_METRES = 2.0
+HIGHEST_S_NORTH_METRES = 2.45
+
+
+def s_north_from_environment():
+    text = os.environ.get(S_NORTH_SETTING, "").strip()
+    if not text:
+        return DEFAULT_S_NORTH_METRES
+    try:
+        north_metres = float(text)
+    except ValueError:
+        raise TunnelFirstRouteError(f"{S_NORTH_SETTING} is '{text}', not a number of metres. Leave it out for "
+                                    f"{DEFAULT_S_NORTH_METRES} m.")
+    if not LOWEST_S_NORTH_METRES <= north_metres <= HIGHEST_S_NORTH_METRES:
+        raise TunnelFirstRouteError(f"{S_NORTH_SETTING} is {north_metres} m, outside {LOWEST_S_NORTH_METRES} to "
+                                    f"{HIGHEST_S_NORTH_METRES} m.")
+    return north_metres
+
+
+S_METRES = (S_EAST_METRES, DEFAULT_S_NORTH_METRES)
 GO_LINE_EAST_METRES = 2.17
 GO_END_NORTH_METRES = -0.95
 # The team's choices for the descent at S: the target slides at the fast speed until it is this
@@ -86,8 +120,6 @@ DESCENT_STAGE = "descent"
 TUNNEL_STAGE = "tunnel"
 
 
-class TunnelFirstRouteError(ValueError):
-    """The route can't be flown on this map; the message says why and what to do."""
 
 
 @dataclass
@@ -120,7 +152,7 @@ def plan_tunnel_first_route(course_map):
     """Plans and checks the route on this map. Raises TunnelFirstRouteError if it can't be flown."""
     launch = np.asarray(course_map.launch_mark_centre_metres, dtype=float)
     high_climb_point = launch + np.array([0.0, FORWARD_METRES])
-    s_point = np.asarray(S_METRES, dtype=float)
+    s_point = np.array([S_EAST_METRES, s_north_from_environment()])
     go_end = np.array([GO_LINE_EAST_METRES, GO_END_NORTH_METRES])
     route = TunnelFirstRoute(course_map.name, launch, high_climb_point, [], s_point, go_end)
     # Every mission takes off from the launch mark, so something under the laser there is noted, not refused.

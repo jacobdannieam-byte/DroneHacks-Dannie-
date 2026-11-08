@@ -26,6 +26,8 @@ not write files. Encodings it does not know raise ValueError.
 import struct
 import zlib
 
+import numpy as np
+
 # Our own choice: zlib's fastest setting. The best setting makes files only a little smaller
 # and takes several times longer, and the processor matters more than the disk here.
 ZLIB_COMPRESSION_LEVEL = 1
@@ -114,3 +116,11 @@ def _png_block(kind, content):
     """One PNG block: its length, its four-letter kind, its content, and a checksum."""
     checksum = zlib.crc32(kind + content) & 0xFFFFFFFF
     return struct.pack(">I", len(content)) + kind + content + struct.pack(">I", checksum)
+
+
+def colour_array_to_png(red_green_blue):
+    """PNG file bytes for a height x width x 3 array of 0-255 red, green, blue values (tunnel_look.py's
+    band pictures). Colour type 2 is PNG's "truecolour"."""
+    pixels = np.ascontiguousarray(red_green_blue, dtype=np.uint8)
+    height, width = pixels.shape[:2]
+    return _png_file(width, height, 2, 8, pixels.tobytes(), width * 3)

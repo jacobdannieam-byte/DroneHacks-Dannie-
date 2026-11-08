@@ -160,3 +160,99 @@ def test_the_route_reaches_s_and_flies_the_go_line_with_room_on_our_maps(map_nam
     go_note = [note for note in route.notes if note.startswith("GO line")][0]
     clearance_metres = float(go_note.split("clearance ")[1].split(" m")[0])
     assert clearance_metres >= 0.20
+
+
+def test_the_height_holds_correction_counts_as_deliberate_in_the_camera_height_comparison(monkeypatch):
+    from team_nav.run_safety import DroneCondition
+    from team_nav.tunnel_first_run import TunnelFirstSafetyWatch
+    monkeypatch.setattr(SafetyWatch, "_gather_condition",
+                        lambda self: DroneCondition(now_seconds=0.0, control_is_ours=True, is_armed=True,
+                                                    camera_tracking_age_seconds=0.0, camera_tracking_says_lost=False,
+                                                    position_on_course_metres=None, tilt_degrees=0.0,
+                                                    rotation_degrees_per_second=0.0, px4_height_risen_metres=1.2,
+                                                    laser_height_risen_metres=None, raw_laser_available=False,
+                                                    px4_uses_laser_for_height=True, px4_says_laser_is_faulty=False))
+    watch = TunnelFirstSafetyWatch.__new__(TunnelFirstSafetyWatch)
+    watch.height_hold = None
+    assert watch._gather_condition().height_correction_metres == 0.0
+    watch.height_hold = types.SimpleNamespace(correction_metres=0.14)
+    assert watch._gather_condition().height_correction_metres == pytest.approx(0.14)
+
+
+# ---- Phase 2: the LOOK step's signs, through the real code ----------------------------------------
+
+def picture_with_opening(left_column, right_column, height=320, width=512):
+    """A rim (bright, with some texture) around a dark opening between two columns."""
+    random = np.random.default_rng(7)
+    picture = 180.0 + 20.0 * random.random((height, width))
+    picture[:, left_column:right_column] = 30.0 + 10.0 * random.random((height, right_column - left_column))
+    return picture
+
+
+def test_an_opening_in_the_left_part_of_the_picture_gives_a_left_offset_that_goes_east_with_the_nose_south():
+    from team_nav.tunnel_look import TUNNEL_INSIDE_WIDTH_METRES, body_left_on_course, find_opening_edges
+    fx, cx = 317.0, 256.0
+    look = find_opening_edges(picture_with_opening(60, 360), fx, cx)
+    assert look.found_both()
+    assert abs(look.left_column - 60) <= 2 and abs(look.right_column - 360) <= 2
+    assert look.left_offset_metres > 0.0
+    expected = -TUNNEL_INSIDE_WIDTH_METRES * ((60 + 360) / 2.0 - cx) / 300.0
+    assert look.left_offset_metres == pytest.approx(expected, abs=0.02)
+    assert look.distance_metres == pytest.approx(fx * TUNNEL_INSIDE_WIDTH_METRES / 300.0, rel=0.02)
+    # The nose faces south after the turn: the course heading the turn locks is -90 degrees.
+    start_frame = StartFrame(load_our_map(SCAN_MAP).launch_mark_centre_metres, 90.0)
+    nose_south = start_frame.course_heading_from_start_frame(math.radians(180.0))
+    correction = look.left_offset_metres * body_left_on_course(nose_south)
+    assert correction[0] > 0.0 and abs(correction[1]) < 1e-9
+
+
+def test_an_edge_cut_off_by_the_border_is_reported_on_its_side():
+    from team_nav.tunnel_look import find_opening_edges
+    look = find_opening_edges(picture_with_opening(0, 300), 317.0, 256.0)
+    assert not look.found_both() and look.clipped_left and not look.clipped_right
+
+
+def test_the_depth_method_agrees_with_a_tunnel_0_12_m_to_the_left():
+    from team_nav.tunnel_look import TUNNEL_INSIDE_WIDTH_METRES, depth_left_offset_metres
+    half = TUNNEL_INSIDE_WIDTH_METRES / 2.0
+    forward = np.linspace(1.1, 2.4, 60)
+    heights = np.linspace(-0.25, 0.25, 5)
+    left_wall = [(f, 0.12 + half, h) for f in forward for h in heights]
+    right_wall = [(f, 0.12 - half, h) for f in forward for h in heights]
+    far_off = [(f, 0.0, 1.0) for f in forward]                                  # Above the band: ignored.
+    offset, left, right = depth_left_offset_metres(np.array(left_wall + right_wall + far_off), 1.0)
+    assert offset == pytest.approx(0.12, abs=1e-6)
+
+
+def test_five_steady_frames_are_accepted_and_jitter_is_not():
+    from team_nav.tunnel_look import EdgeLook, judge_frames, _measure
+    def look(left, right):
+        found = EdgeLook(left_column=left, right_column=right)
+        _measure(found, 317.0, 256.0)
+        return found
+    steady = [look(100, 400 + number % 2) for number in range(5)]
+    assert judge_frames(steady, [0.1 * number for number in range(5)]).accepted
+    jittery = [look(100 + 4 * number, 400 + 4 * number) for number in range(5)]
+    assert not judge_frames(jittery, [0.1 * number for number in range(5)]).accepted
+
+
+def points_at_columns(columns_and_distances, fx=317.0, cx=256.0):
+    """Depth points (forward, left, up) from the camera, a few at each picture column's direction."""
+    points = []
+    for column, distance in columns_and_distances:
+        for up in (-0.1, 0.0, 0.1):
+            points.append((distance, -(column - cx) * distance / fx, up))
+    return np.array(points)
+
+
+def test_an_edge_pair_that_the_depth_points_put_at_another_distance_is_rejected():
+    # Gazebo, 2026-11-08: the far exit's left edge (2.35 m) and the tunnel's outside (4 m) taken as a
+    # 316 px pair, which the width puts 1.48 m away.
+    from team_nav.tunnel_look import EdgeLook, edges_match_depth, _measure
+    look = EdgeLook(left_column=117, right_column=433)
+    _measure(look, 317.0, 256.0)
+    wrong = points_at_columns([(117, 2.35), (433, 4.0)])
+    assert edges_match_depth(look, wrong, 317.0, 256.0)[0] is False
+    right = points_at_columns([(117, look.distance_metres), (433, look.distance_metres * 1.05)])
+    assert edges_match_depth(look, right, 317.0, 256.0)[0] is True
+    assert edges_match_depth(look, None, 317.0, 256.0)[0] is False

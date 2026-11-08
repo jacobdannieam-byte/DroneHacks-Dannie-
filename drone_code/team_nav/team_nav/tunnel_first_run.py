@@ -26,7 +26,9 @@ The flight, stage by stage (the team's design, 2026-11-08)
   turn       180 degrees to the left, slowly (heading_turn.py), holding position at S.
   descent    down to 0.90 m at S, the nose locked; then a 1 s hold, recording whether PX4 is
              using the bottom laser again.
-  tunnel     GO: south at 0.25 m/s along the GO line at 0.90 m, the nose locked, to past the exit.
+  look       the camera finds the tunnel's centre and the drone corrects sideways
+             (tunnel_first_look.py); if unsure, it flies the map's line (TEAM_NAV_TUNNEL_IF_UNSURE).
+  tunnel     GO: south at 0.25 m/s along the tunnel's axis at 0.90 m, the nose locked, to past the exit.
   Then the normal landing there (TEAM_NAV_AFTER_TUNNEL=land, the default), or with
   TEAM_NAV_AFTER_TUNNEL=pad a climb to 2.4 m and the fallback's way to the pad.
 Practice mode can stop after any stage with TEAM_NAV_STOP_AFTER_STAGE (for example "turn": land
@@ -66,6 +68,7 @@ from team_nav.mission import load_mission
 from team_nav.route_follower import RouteFollower
 from team_nav.run_safety import RunSafety
 from team_nav.start_frame import StartFrame
+from team_nav.tunnel_first_look import LookStep, if_unsure_from_environment
 from team_nav.tunnel_first_route import (CLIMB_HEIGHT_METRES, CLIMB_SPEED_METRES_PER_SECOND, CRUISE_HEIGHT_METRES,
                                          DESCENT_FAST_METRES_PER_SECOND, DESCENT_SLOW_METRES_PER_SECOND,
                                          DESCENT_SLOW_PART_METRES, DESCENT_STAGE, FORWARD_STAGE, HIGH_LEG_STAGE,
@@ -79,6 +82,7 @@ AFTER_TUNNEL_SETTING = "TEAM_NAV_AFTER_TUNNEL"
 AFTER_TUNNEL_LAND = "land"
 AFTER_TUNNEL_PAD = "pad"
 TO_THE_PAD_AFTER_TUNNEL_STAGE = "climb and to the pad"
+LOOK_STAGE = "look"
 
 # The team's choices (2026-11-08) for the start check.
 LARGEST_START_OFFSET_SIDEWAYS_METRES = 0.3
@@ -131,7 +135,7 @@ class TunnelFirstPlan:
         self.pad_leg_metres = None    # (east, north) points from the end of the GO line to the pad.
 
     def stage_names(self):
-        names = [CLIMB_STAGE, SETTLE_STAGE, FORWARD_STAGE, HIGH_LEG_STAGE, TURN_STAGE, DESCENT_STAGE, TUNNEL_STAGE]
+        names = [CLIMB_STAGE, SETTLE_STAGE, FORWARD_STAGE, HIGH_LEG_STAGE, TURN_STAGE, DESCENT_STAGE, LOOK_STAGE, TUNNEL_STAGE]
         if self.after_tunnel == AFTER_TUNNEL_PAD:
             names.append(TO_THE_PAD_AFTER_TUNNEL_STAGE)
         return names
@@ -148,6 +152,7 @@ def plan_tunnel_first(arguments, run_mode, log):
     for path in other_map_paths:
         other_possible_boulders += load_course_map(path).low_obstacles
     after_tunnel = after_tunnel_from_environment()
+    if_unsure_from_environment()      # Refuses a wrong TEAM_NAV_TUNNEL_IF_UNSURE before the start.
     log.event("mission", f"MISSION tunnel_first ({MISSION_SETTING}): high to S, turn, down, straight through the tunnel; "
                          f"after the tunnel: {after_tunnel}.", mission_name=TUNNEL_FIRST, after_tunnel=after_tunnel)
     announce_the_inputs(log, map_path, mission_path, other_map_paths, arguments.start_heading_degrees)
@@ -277,7 +282,10 @@ class TunnelFirstRun(FallbackRun):
             return
         self.flight_start_seconds = self.link.now_seconds()
         self.height_hold = HeightHeldByCameraTracking(None, self.link)
+        self.watch.height_hold = self.height_hold
         self.locked_heading_on_course = None
+        self.tunnel_camera = None
+        self.go_start_metres = np.asarray(self.plan.route.s_metres, dtype=float)
         self.watch.start_the_heading_guard(heading_split_degrees(self.link))
         route = self.plan.route
         launch, climb_point, s_point, end = route.launch_metres, route.high_climb_point_metres, route.s_metres, route.go_end_metres
@@ -292,8 +300,8 @@ class TunnelFirstRun(FallbackRun):
                                                  HIGH_SPEED_METRES_PER_SECOND, HIGH_TARGET_LEAD_METRES)),
             (TURN_STAGE, self.turn_left_180),
             (DESCENT_STAGE, self.descend_at_s),
-            (TUNNEL_STAGE, lambda: self.follow([_at(s_point, TUNNEL_HEIGHT_METRES), _at(end, TUNNEL_HEIGHT_METRES)],
-                                               TUNNEL_SPEED_METRES_PER_SECOND, LOW_TARGET_LEAD_METRES)),
+            (LOOK_STAGE, self.look),
+            (TUNNEL_STAGE, self.go_through_the_tunnel),
         ]
         if self.plan.after_tunnel == AFTER_TUNNEL_PAD:
             steps.append((TO_THE_PAD_AFTER_TUNNEL_STAGE, self.climb_and_fly_to_the_pad))
@@ -308,6 +316,34 @@ class TunnelFirstRun(FallbackRun):
             self.land_here("RUN FINISHED: landed above the pad after the tunnel.")
         else:
             self.land_here("RUN FINISHED: landed at the end of the tunnel line.")
+
+    def look(self):
+        """The LOOK step (tunnel_first_look.py): sets where GO starts."""
+        from team_nav.tunnel_look_camera import TunnelLookCamera   # Needs ROS, so only loaded to fly.
+        if self.tunnel_camera is None:
+            self.tunnel_camera = TunnelLookCamera(self.link.node)
+        self.go_start_metres = LookStep(self, self.tunnel_camera).run_look()
+
+    def go_through_the_tunnel(self):
+        """GO: from where the LOOK left the drone, along the tunnel's axis on the map, as far as the
+        planned GO line goes. Unchanged from Phase 1 when GO starts at S."""
+        route = self.plan.route
+        start = np.asarray(self.go_start_metres, dtype=float)
+        end = np.asarray(route.go_end_metres, dtype=float)
+        if np.linalg.norm(start - route.s_metres) > 1e-6:
+            tube = self.plan.course_map.tubes[0]
+            axis = (tube.exit_centre_metres - tube.entrance_centre_metres) / tube.length_metres()
+            end = start + axis * float(np.linalg.norm(route.go_end_metres - route.s_metres))
+        self.log.event("go", f"GO from ({start[0]:+.3f}, {start[1]:+.3f}) to ({end[0]:+.3f}, {end[1]:+.3f}).",
+                       go_start_metres=start.tolist(), go_end_metres=end.tolist())
+        self.follow([_at(start, TUNNEL_HEIGHT_METRES), _at(end, TUNNEL_HEIGHT_METRES)], TUNNEL_SPEED_METRES_PER_SECOND,
+                    LOW_TARGET_LEAD_METRES)
+
+    def tunnel_height_metres(self):
+        return TUNNEL_HEIGHT_METRES
+
+    def low_target_lead_metres(self):
+        return LOW_TARGET_LEAD_METRES
 
     def settle_above_the_launch_mark(self):
         """Holds the target above the launch mark until the drone has steadied there."""
@@ -376,9 +412,9 @@ class TunnelFirstRun(FallbackRun):
         flight_steps.fly_until(self.link, lambda: self.height_hold.has_finished(self.watch.drone_on_course()),
                                send_next_target, LONGEST_STAGE_SECONDS, f"the end of the stage '{self.stage_name}'", self.watch)
 
-    def height_hold_correction_target(self, target_on_course):
-        """The target with its height moved by the height hold's correction, updated for one turn step."""
-        self.height_hold.update(STEP_SECONDS)
+    def height_hold_correction_target(self, target_on_course, seconds_since_last_target=STEP_SECONDS):
+        """The target with its height moved by the height hold's correction, updated for one step."""
+        self.height_hold.update(seconds_since_last_target)
         corrected = list(target_on_course)
         corrected[2] += self.height_hold.correction_metres
         return corrected
@@ -507,10 +543,22 @@ class TurnInProgress:
 
 
 class TunnelFirstSafetyWatch(FallbackSafetyWatch):
-    """fallback_run's safety watch, plus the heading guard outside the turn."""
+    """fallback_run's safety watch, plus the heading guard outside the turn, and the height hold's
+    correction counted as deliberate in the camera height comparison.
+
+    Why that last part (Gazebo, 2026-11-08): in 2 of 5 runs PX4's height drifted 0.33 m above the
+    truth during GO through the tunnel, while it was using the laser again (its laser use is
+    "conditional", EKF2_RNG_CTRL 1, as on drone 16, so it can take a laser change for the ground
+    moving). The height hold had already moved the targets by its largest upward 0.14 m to keep the
+    true height, but run_safety compared PX4's raw height with camera tracking's and stopped the
+    run inside the tunnel. Kenny's live navigation already has run_safety subtract the correction it
+    asks for on purpose (run_safety._px4_height_less_correction); this does the same for ours. The
+    height hold's own limits (height_hold.py) are unchanged, so the drone's true height can still
+    be moved by camera tracking by at most 0.20 m down or 0.14 m up."""
 
     def __init__(self, link, run_safety, start_frame):
         super().__init__(link, run_safety, start_frame)
+        self.height_hold = None     # Set by TunnelFirstRun once the flight begins.
         self.heading_guard = None
         self.heading_guard_is_on = False
         self.last_guard_verdict = GUARD_OK
@@ -524,6 +572,12 @@ class TunnelFirstSafetyWatch(FallbackSafetyWatch):
         self.heading_guard_is_on = True
         self.link.log.event("heading_guard", f"Heading split at the start: {launch_split_degrees:+.2f} degrees (PX4's heading "
                                              f"minus camera tracking's). The guard watches for a change of more than 10.")
+
+    def _gather_condition(self):
+        condition = super()._gather_condition()
+        if self.height_hold is not None:
+            condition.height_correction_metres += self.height_hold.correction_metres
+        return condition
 
     def check(self):
         must_hold = super().check()

@@ -53,6 +53,9 @@ Read the files in `team_nav/` in this order:
 | `fallback_run.py` | Makes `course_run` fly a fallback route when `TEAM_NAV_MISSION` names one (`../TEST_SEQUENCE.md`, step 9F). |
 | `tunnel_first_route.py` | Plans and checks the `tunnel_first` route on the drone's map: S above open floor before the tunnel, the high leg there, the GO line through the tunnel. |
 | `heading_turn.py` | The slow 180 degree turn (0.5 degrees every 0.05 s, pausing if PX4 lags, never catching up) and the heading guard that compares PX4's heading with camera tracking's. |
+| `tunnel_look.py` | Finds the tunnel's opening in a picture (edges) and in stereo depth points, and judges whether five frames agree. |
+| `tunnel_look_camera.py` | Collects the left picture, its camera_info and depth_camera's points for the LOOK. |
+| `tunnel_first_look.py` | The LOOK step: look, slide if an edge is cut off, correct sideways, or fall back to the map's line. |
 | `tunnel_first_run.py` | Makes `course_run` fly `tunnel_first` when `TEAM_NAV_MISSION=tunnel_first` (`../TEST_SEQUENCE.md`, step 9T). |
 | `launch_pieces.py`, `launch/*.launch.py` | What starts on the drone: `watch_only`, `test_flights` or `course_run`. |
 | `drone.sh` | The one command typed on the drone's computer (`../TEST_SEQUENCE.md`). |

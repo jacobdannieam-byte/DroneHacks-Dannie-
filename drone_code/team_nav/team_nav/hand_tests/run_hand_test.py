@@ -17,7 +17,7 @@ import sys
 
 from team_nav.hand_tests import (
     directions, estimator_sources, interface_settings, laser_heights, laser_over_step, report_rates,
-    touch_tilt, tracking_still_drift, tunnel_carry,
+    touch_tilt, tracking_still_drift, tunnel_carry, tunnel_look,
 )
 from team_nav.hand_tests.hand_test_tools import Person, failed, report_verdict
 from team_nav.run_log import RunLog
@@ -39,6 +39,7 @@ HAND_TESTS = [
     ("touch_tilt", touch_tilt, "the touch detector is silent when still and fires when tilted past 25 degrees"),
     ("tunnel_carry", tunnel_carry, "camera tracking holds when carried through the tunnel and back"),
     ("laser_over_step", laser_over_step, "how wide the laser's beam is, from carrying it over a box edge"),
+    ("tunnel_look", tunnel_look, "prints where the camera sees the tunnel's centre, twice a second (Ctrl+C stops)"),
 ]
 
 
