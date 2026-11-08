@@ -74,9 +74,14 @@ fi
 printf '%s\n' "$revision" > "$out/revision.txt"
 printf 'mode=%s\ndomain=%s\nworld=%s\ncontainer=%s\n' "$mode" "$domain" "$world" "$name" > "$out/run.txt"
 echo "Container: $name; evidence: $out"
+# Stage only the approved revision. A live Windows bind mount can change
+# directory metadata during tar and must not supply untracked runtime code.
+git -C "$repo" archive --format=tar --output="$out/source.tar" "$revision" \
+    simulator drone_code examples refnav onboard scenarios
 docker run --rm --init --network none --cap-drop ALL --security-opt no-new-privileges \
     --name "$name" --env "ROS_DOMAIN_ID=$domain" --env ROS_LOCALHOST_ONLY=1 --env GZ_IP=127.0.0.1 \
-    --mount "type=bind,src=$repo,dst=/source,readonly" --mount "type=bind,src=$out,dst=/evidence" \
+    --mount "type=bind,src=$out/source.tar,dst=/source.tar,readonly" --mount "type=bind,src=$out,dst=/evidence" \
     "${mounts[@]}" drone-simulator-gazebo-hybrid \
-    bash /source/simulator/gazebo_trial/inside_the_box/run_hybrid.sh \
+    bash -c 'cd /repository && tar --no-same-owner -xmf /source.tar &&
+        exec bash simulator/gazebo_trial/inside_the_box/run_hybrid.sh "$@"' _ \
     "$mode" "$world" "$seconds" "$revision" "$profile_container" "$approval_container" 2>&1 | tee "$out/console.txt"
