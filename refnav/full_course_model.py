@@ -80,6 +80,60 @@ class FullCourseSelector(ModelSelector):
 class FullCourseFlight(ModelFlight):
     def __init__(self,plan,config,log,*,selector=None):
         super().__init__(plan,config,log,selector=selector or FullCourseSelector(config))
+        from refnav.section_policy import SectionPolicy
+        self.section_policy = SectionPolicy(self.selector.route.checkpoints_cleared)
+        self.section_wait = None
+        self.section_result = None
+        self.turn_wait = None
+        self.policy_hold = None
+
+    def hold_for_section(self,obs,ros_ns,reason,yaw_rate=None):
+        from refnav.calibration_trial import Intent, ZERO
+        self.policy_hold = dict(reason=reason,decision_ros_ns=ros_ns,position_ned_m=obs.position,
+                                velocity_ned_mps=obs.velocity,heading_rad=obs.heading_rad,
+                                yaw_rate_rad_s=yaw_rate,waypoint=self.waypoint)
+        return self._issue(Intent(ZERO,yaw_rate_rad_s=yaw_rate),ros_ns)
+
+    def admit_goal(self,obs,goal,ros_ns,wall_ns):
+        from refnav.calibration_trial import Intent, ZERO
+        heading = math.atan2(goal[1]-obs.position[1],goal[0]-obs.position[0])
+        error = math.atan2(math.sin(heading-obs.heading_rad),math.cos(heading-obs.heading_rad))
+        if math.dist(obs.position,goal)>.06 and abs(error)>.10:
+            self._progress = None
+            if self.turn_wait is None:
+                self.turn_wait = ros_ns,wall_ns
+            if max(ros_ns-self.turn_wait[0],wall_ns-self.turn_wait[1])>=15_000_000_000:
+                return self._land('section_turn_timeout',ros_ns,wall_ns)
+            capture = self.section_policy.observation
+            if capture is None or not 0<=ros_ns/1e9-capture.stamp<=.25 or self.section_policy.fault:
+                return self._land('section_turn_depth_unavailable',ros_ns,wall_ns)
+            # Map-assisted experiment only: the existing circular body reservation
+            # covers every yaw. This is not a claim of observed rear clearance.
+            yaw = None
+            if math.hypot(*obs.velocity)<=.05 and self.selector.margin([obs.position])>=0:
+                yaw = math.copysign(.25,error)
+            return self.hold_for_section(obs,ros_ns,'bounded_heading_alignment',yaw)
+        self.turn_wait = None
+        report = self.section_policy.assess(self.waypoint,np.array(obs.position),goal,ros_ns/1e9)
+        self.section_result = report
+        self.log.write(dict(kind='section_check',ros_ns=ros_ns,**report))
+        if report['allowed']:
+            self.section_wait = None
+            return None
+        self._progress = None
+        if self.section_wait is None:
+            self.section_wait = ros_ns,wall_ns
+        if max(ros_ns-self.section_wait[0],wall_ns-self.section_wait[1])>=3_000_000_000:
+            return self._land('section_depth_refused:'+report['reason'],ros_ns,wall_ns)
+        return self.hold_for_section(obs,ros_ns,report['reason'])
+
+    def published(self,intent,stamp_ns,px4_issue_us,*,wall_ns=None):
+        result = super().published(intent,stamp_ns,px4_issue_us,wall_ns=wall_ns)
+        if self.policy_hold is not None:
+            self.log.write(dict(kind='section_hold_published',**self.policy_hold,
+                                stamp_ns=stamp_ns,px4_issue_us=px4_issue_us))
+            self.policy_hold = None
+        return result
 
     def step(self,ros_ns,wall_ns,observation,*,admitted):
         if observation is not None and self.phase in ('climb','transit','brake'):

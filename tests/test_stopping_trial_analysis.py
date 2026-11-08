@@ -65,8 +65,9 @@ def native_recording(error=0):
             x=min(i/20,2.5)*.2, y=0., z=-1., vx=.2 if i<50 else 0., vy=0., vz=0.,
             xy_valid=True,z_valid=True,v_xy_valid=True,v_z_valid=True,
             **{k:0 for k in RESET_FIELDS}), ns+error, wall_ns=ns+error)
-    for ns, armed in ((1_000_000_000,2),(5_000_000_000,1)):
-        record.status(SimpleNamespace(timestamp=ns//1000,arming_state=armed),ns+error,wall_ns=ns+error)
+        if ns in (1_000_000_000,5_000_000_000):
+            armed = 2 if ns==1_000_000_000 else 1
+            record.status(SimpleNamespace(timestamp=ns//1000,arming_state=armed),ns+error,wall_ns=ns+error)
     for name,ns in (('brake_command',2_000_000_000),('land_command',4_000_000_000)):
         record.event(json.dumps(dict(event=name,stamp_ns=ns,px4_issue_us=ns//1000,
             trial_id='test',owner_id='/calibration_trial_owner',profile_sha256='a'*64)), ns,

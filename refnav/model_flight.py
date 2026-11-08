@@ -146,6 +146,10 @@ class ModelFlight(CalibrationTrial):
                 goal = goals[self.waypoint]
         else:
             self._settling = None
+        if hasattr(self, 'admit_goal'):
+            policy_intent = self.admit_goal(obs, goal, ros_ns, wall_ns)
+            if policy_intent is not None:
+                return policy_intent
         rate = 0.
         if self.prior_heading is not None:
             heading, stamp = self.prior_heading

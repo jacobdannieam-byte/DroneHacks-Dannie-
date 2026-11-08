@@ -14,7 +14,7 @@
   },
   "trial_id": "hybrid-pinn-full-course-001",
   "owner_id": "/calibration_trial_owner",
-  "profile_sha256": "b31bc1116ac9a4d091c99e12d53e14edaa1c953b3bb701e8e5d077e40ccc68e2",
+  "profile_sha256": "bb3d7a7dd4aa0265033460c088aabbb53947a7063ed466ff7514cff46e170612",
   "topics": {
     "vehicle_local_position": "/fmu/out/vehicle_local_position",
     "vehicle_status": "/fmu/out/vehicle_status_v1",

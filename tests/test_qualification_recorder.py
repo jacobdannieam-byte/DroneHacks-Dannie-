@@ -73,6 +73,25 @@ def mapped_record(*, error=0, until=20_000_000_000):
                           trial_id='trial-1', owner_id='/calibration_trial_owner', profile_sha256='a'*64)
 
 
+def test_node_clock_advancement_drains_without_second_clock_callback():
+    record = mapped_record(error=4_000_000)
+    for index in range(100):
+        stamp = 1_000_000+index*8_000
+        record.sample(message(timestamp_sample=stamp,timestamp=stamp),
+                      stamp*1000+2_000_000_000,wall_ns=1_000_000_000+index*8_000_000)
+    assert not record.faults
+    assert len(record.document['samples']) == 99
+    assert len(record.pending) == 1
+
+
+def test_genuine_clock_wait_still_expires_with_diagnostic_evidence():
+    record = mapped_record(error=4_000_000)
+    record.sample(message(timestamp=1_000_000),3_000_000_000,wall_ns=1_000_000_000)
+    record.clock(3_000_000_000,wall_ns=1_051_000_000)
+    assert record.faults == ['clock_wait_expired']
+    assert record.document['clock_wait_failures'][0]['pending'][0]['target_ns']==3_004_000_000
+
+
 def test_shutdown_finishes_pending_sample_without_rewriting_receipt():
     record = mapped_record(error=4_000_000)
     record.sample(message(timestamp=1_000_000), 2_996_000_000, wall_ns=1_000_000_000)

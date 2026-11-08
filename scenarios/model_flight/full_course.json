@@ -178,6 +178,8 @@
     "mission": "drone_code/team_nav/missions/dronehacks_2026_side_gap_first.json",
     "mission_sha256": "1953355230cb2ccc20b6cbb37061f4901c0174f7d719ed3daa119184bb997bbf",
     "other_boulder_map": "drone_code/team_nav/course_maps/organizers_drawing.json",
-    "other_boulder_map_sha256": "68f7bfc59c985d8399bcd365b1dbcec1a939b8f21c8a0122bb0dfab2895ea29c"
+    "other_boulder_map_sha256": "68f7bfc59c985d8399bcd365b1dbcec1a939b8f21c8a0122bb0dfab2895ea29c",
+    "depth_sections_enabled": true,
+    "depth_policy_version": 1
   }
 }

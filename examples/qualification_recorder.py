@@ -127,7 +127,12 @@ class TrialRecording:
                         and mapping.valid_from_ns <= receipt_ns <= mapping.valid_until_ns
                         and target <= mapping.valid_until_ns):
                     raise ValueError('source outside reviewed epoch')
-                self._expire_pending(receipt_ns, wall_ns)
+                # The node clock may have advanced through rclpy's TimeSource
+                # before any separate application /clock callback is scheduled.
+                # Release eligible queued data using that clock on every callback.
+                self.clock(receipt_ns, wall_ns=wall_ns)
+                if self.faults:
+                    return
                 if target > receipt_ns or any(item[0] == kind for item in self.pending):
                     if target - receipt_ns > 50_000_000 or len(self.pending) >= 32:
                         raise ValueError('clock wait exceeds bound')
@@ -140,6 +145,10 @@ class TrialRecording:
     def _expire_pending(self, now_ns, wall_ns):
         if any(wall_ns-item[3] > 50_000_000 or now_ns-item[2] > 50_000_000
                or wall_ns < item[3] for item in self.pending):
+            self.document.setdefault('clock_wait_failures', []).append(dict(
+                now_ns=now_ns, wall_ns=wall_ns,
+                pending=[dict(kind=k, receipt_ns=r, arrival_wall_ns=w, target_ns=t)
+                         for k, _, r, w, t in self.pending]))
             self.pending.clear()
             self.faults.append('clock_wait_expired')
 
@@ -375,8 +384,6 @@ def main():
     import rclpy
     from px4_msgs.msg import VehicleLocalPosition, VehicleStatus
     from std_msgs.msg import String
-    from rosgraph_msgs.msg import Clock
-    from rclpy.qos import qos_profile_sensor_data
     from rclpy.executors import ExternalShutdownException
     from rclpy.impl.implementation_singleton import rclpy_implementation
     from rclpy.utilities import try_shutdown
@@ -409,16 +416,15 @@ def main():
     event_subscription = node.create_subscription(String,topics['events'],owner_event,10)
     status_subscription = node.create_subscription(VehicleStatus,topics['vehicle_status'],
         lambda m: record.status(m,node.get_clock().now().nanoseconds),PX4_QOS)
-    node.create_subscription(Clock,'/clock',
-        lambda m: record.clock(min(m.clock.sec*10**9+m.clock.nanosec,
-                                  node.get_clock().now().nanoseconds)),qos_profile_sensor_data)
+    # rclpy TimeSource owns /clock. A second subscription can lag its updates
+    # and strand samples even though the authoritative node clock has advanced.
     try:
         deadline=monotonic()+args.seconds
         ready_written = False
         while rclpy.ok() and not stopping[0] and monotonic()<deadline:
             rclpy.spin_once(node,timeout_sec=.01)
             now_ns = node.get_clock().now().nanoseconds
-            record._expire_pending(now_ns, monotonic_ns())
+            record.clock(now_ns, wall_ns=monotonic_ns())
             if ready_written:
                 record.monitor(now_ns, monotonic_ns())
             if record.faults:

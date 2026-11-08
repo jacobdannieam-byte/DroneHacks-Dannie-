@@ -280,12 +280,21 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
         node.create_subscription(Bool, SIM_HEALTH, lambda m: inputs.health(m.data, *clocks()), 10)
         if getattr(driver, 'config', {}).get('full_course'):
             node.create_subscription(String, '/simulator_only/touches', lambda _: driver.request_land(), 10)
+        section_input = None
+        if hasattr(driver, 'section_policy'):
+            from examples.section_depth_input import attach
+            from examples.gazebo_sensor_contract import SIM_DEPTH, SIM_INFO
+            from px4_msgs.msg import VehicleAttitude
+            section_input = attach(node,driver.section_policy,mapping,topics['vehicle_local_position'],
+                                   px4_topic('vehicle_attitude',VehicleAttitude),SIM_DEPTH,SIM_INFO)
 
         publishers = None
 
         def observe(now_ns, wall_ns):
             nonlocal publishers
             observation = inputs.observe(now_ns, wall_ns)
+            if section_input is not None:
+                section_input.update(now_ns/NS)
             if observation is None:
                 return None
             endpoints = [node.get_publishers_info_by_topic(topic) for topic in (*topics.values(), SIM_HEALTH)]
@@ -315,9 +324,15 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
         now_ns, wall_ns = clocks()
         checked = (rclpy.ok() and first_ready is not None and now_ns - first_ready >= NS
                    and ready(observe(now_ns, wall_ns)) and not graph['issues'])
+        if section_input is not None:
+            capture = driver.section_policy.observation
+            checked = checked and capture is not None and driver.section_policy.fault is None and 0<=now_ns/NS-capture.stamp<=.25
         report.update(disarmed_check=bool(checked), graph=graph, ros_ns=now_ns, input_fault=inputs.fault,
                       observed_ned_m=None if obs is None else obs.position,
                       expected_origin_ned_m=plan.origin_ned_m, topics=topics)
+        if section_input is not None:
+            report['section_depth'] = dict(capture_available=driver.section_policy.observation is not None,
+                                          fault=driver.section_policy.fault,rejected=section_input.rejected)
         if not owner and checked and preview is not None:
             report['model_preview'] = preview(obs, now_ns)
         if not owner or not checked:
@@ -372,7 +387,8 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
                 mode = OffboardControlMode(timestamp=stamp, velocity=True)
                 target = TrajectorySetpoint(timestamp=stamp, position=[math.nan] * 3,
                                             velocity=list(intent.velocity_ned_mps), acceleration=[math.nan] * 3,
-                                            yaw=math.nan, yawspeed=math.nan)
+                                            yaw=math.nan if intent.yaw_rad is None else intent.yaw_rad,
+                                            yawspeed=math.nan if intent.yaw_rate_rad_s is None else intent.yaw_rate_rad_s)
                 ocm_pub.publish(mode)
                 sp_pub.publish(target)
             if intent.command is not None:

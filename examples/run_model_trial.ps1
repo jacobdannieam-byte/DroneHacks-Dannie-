@@ -4,7 +4,8 @@ param(
     [Parameter(Mandatory=$true)][string]$OutputDirectory,
     [string]$ApprovalFile,
     [switch]$DisarmedCheck,
-    [switch]$FullCourse
+    [switch]$FullCourse,
+    [ValidateRange(10,180)][int]$ObservationSeconds = 60
 )
 $ErrorActionPreference = 'Stop'
 $candidate = Get-Content -LiteralPath $CandidateFile -Raw | ConvertFrom-Json
@@ -44,7 +45,7 @@ docker run --rm --init --network none --cap-drop ALL --security-opt no-new-privi
     --mount "type=bind,src=$archive,dst=/source.tar,readonly" `
     --mount "type=bind,src=$($out.FullName),dst=/evidence" @mounts `
     $candidate.image bash -c 'cd /repository && tar --no-same-owner -xmf /source.tar && exec bash simulator/gazebo_trial/inside_the_box/run_hybrid.sh "$@"' _ `
-    $mode drone_code/team_nav/course_maps/phone_scan_2026-11-06.json 10 $candidate.revision `
+    $mode drone_code/team_nav/course_maps/phone_scan_2026-11-06.json $ObservationSeconds $candidate.revision `
     $profilePath $approvalArgument 2>&1 |
     Tee-Object -FilePath (Join-Path $out.FullName 'console.txt')
 $runResult = $LASTEXITCODE

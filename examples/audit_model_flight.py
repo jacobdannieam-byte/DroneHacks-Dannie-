@@ -12,6 +12,7 @@ from refnav.model_flight import ModelSelector
 
 def audit(rows, raw_commands, config):
     previous='0'*64; decisions={}; receipts={}; faults=[]; differences=0
+    section=None; holds={}
     if config.get('full_course'):
         from refnav.full_course_model import FullCourseSelector
         selector=FullCourseSelector(config,monotonic=lambda:0.)
@@ -22,8 +23,22 @@ def audit(rows, raw_commands, config):
         if row['previous_sha256']!=previous or sha256(raw.encode()).hexdigest()!=identity:
             faults.append('decision_log_hash_chain')
         previous=identity
+        if row['kind']=='section_check':section=row
+        if row['kind']=='section_hold_published':
+            rate=row['yaw_rate_rad_s']
+            if (not config.get('depth_sections_enabled') or row['px4_issue_us'] in holds
+                or not 0<=row['stamp_ns']-row['decision_ros_ns']<=50_000_000
+                or (rate is not None and (not math.isfinite(rate) or abs(rate)>.25
+                    or math.hypot(*row['velocity_ned_mps'])>.05
+                    or selector.margin([row['position_ned_m']])<0))):
+                faults.append('invalid_section_hold')
+            holds[row['px4_issue_us']]=row
         if row['kind']=='abort':faults.append('model_abort')
         if row['kind']=='decision':
+            if config.get('depth_sections_enabled') and (section is None or not section['allowed']
+                or section['waypoint']!=row['waypoint']
+                or not 0<=row['decision_ros_ns']/1e9-section['capture_s']<=.25):
+                faults.append('model_without_depth_section_admission')
             number=row['sequence']
             if number in decisions or number!=len(decisions)+1: faults.append('decision_sequence')
             if row['model_sha256']!=config['checkpoint_sha256'] or row['fallback'] or row['registration_enabled']:
@@ -57,11 +72,20 @@ def audit(rows, raw_commands, config):
             or any(math.isfinite(x) for x in command['velocity'])):faults.append('raw_command_mismatch')
     if receipts:
         first=min(r['px4_issue_us'] for r in receipts.values());last=max(r['px4_issue_us'] for r in receipts.values())
-        if any(first<=r['timestamp']<=last and not all(math.isfinite(x) for x in r['position']) for r in raw_commands):
+        if any(first<=r['timestamp']<=last and not all(math.isfinite(x) for x in r['position']) and r['timestamp'] not in holds for r in raw_commands):
             faults.append('nonmodel_command_during_model_authority')
+    for stamp,hold in holds.items():
+        matches=[r for r in raw_commands if r['timestamp']==stamp]
+        if len(matches)!=1:
+            faults.append('section_hold_raw_count');continue
+        command=matches[0];rate=hold['yaw_rate_rad_s'];actual=command.get('yawspeed',math.nan)
+        if (any(math.isfinite(x) for x in command['position']) or any(x!=0 for x in command['velocity'])
+            or math.isfinite(command['yaw']) or (math.isfinite(actual) if rate is None else not math.isclose(rate,actual,abs_tol=1e-6))):
+            faults.append('section_hold_raw_mismatch')
     if len(receipts)<10:faults.append('insufficient_model_commands')
     return dict(model_command_proof='PASS' if not faults else 'FAIL',faults=faults,
                 selected_commands=len(receipts),pinn_d0_different_selections=differences,
+                section_hold_commands=len(holds),
                 interpretation='Model selected and raw PX4 position commands match; not proof of superior flight performance')
 
 
@@ -77,7 +101,7 @@ def main():
     commands=[]
     for data, in connection.execute('select data from messages where topic_id=? order by timestamp,id',(topic,)):
         msg=deserialize_message(data,TrajectorySetpoint)
-        commands.append(dict(timestamp=msg.timestamp,position=list(msg.position),velocity=list(msg.velocity),yaw=msg.yaw))
+        commands.append(dict(timestamp=msg.timestamp,position=list(msg.position),velocity=list(msg.velocity),yaw=msg.yaw,yawspeed=msg.yawspeed))
     config=json.loads((root/'calibration_profile.json').read_text())['model_flight']
     rows=[json.loads(line) for line in (root/'model_owner.decisions.jsonl').read_text().splitlines()]
     report=audit(rows,commands,config)

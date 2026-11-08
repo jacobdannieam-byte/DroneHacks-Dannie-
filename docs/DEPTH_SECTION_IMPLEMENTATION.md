@@ -1,0 +1,19 @@
+# Depth section integration
+
+Registration remains disabled. The Classical baseline and existing failed runs are untouched.
+
+The full-course native owner now subscribes to calibrated depth, CameraInfo, static TF, PX4 local position and attitude. It binds depth to a capture-time pose within 30 ms, refuses stale captures and latches reference, calibration and reset changes. Disarmed admission requires an actual fresh depth capture through this adapter.
+
+`refnav/section_policy.py` binds goals to the Classical route's named checkpoints: first corridor, maze, tunnel, chicane, then landing. Before model translation it checks a forward swept-volume stencil against depth, retaining unknown pixels as unknown. Three distinct acceptable frames are required. Corridors require side-surface support; tunnels additionally require floor and roof support at two longitudinal intervals. Curved roofs are supported without assuming a plane. The existing participant-map body/height/speed checks remain in force.
+
+Full-course heading changes use stationary, bounded yaw-rate requests toward the next leg, with a 15-second timeout and the existing circular map/body reservation. This is map-assisted rotation, not certification of observed rear space. No automatic full-circle scan or wall registration is introduced. Missing traversal evidence causes a zero-velocity hold, then the existing LAND recovery after three seconds. Native lifecycle and section hold commands are explicitly separate from PINN position commands in the decision log and raw-command audit.
+
+The forward-volume check is deliberately conservative. It does not yet fuse multiple views, infer unseen space or prove hardware safety. A narrow camera field of view or sparse real depth can refuse a valid passage; such a refusal must be investigated with captured depth, rather than reducing the required coverage. The uncertainty inflation uses reported pose uncertainty plus a design reserve, not a measured hardware worst-case bound. This is a simulator integration candidate, not hardware clearance.
+
+The recorder now drains clock-fenced samples from the authoritative rclpy node clock after every spin and telemetry callback. The previous second `/clock` subscriber could lag the TimeSource subscription and strand samples. The 50 ms deferral, 100 ms age and clock-rewind checks remain unchanged. Genuine expiry now records the queued target and callback timestamps. Regression fixtures were corrected to feed timestamps chronologically; no timing checks were relaxed.
+
+`examples/prepare_real_pinn_data.py` reads exported gzip CSVs without modifying them. It checks publication/receipt clock agreement, joins on source times, forms 20–50 ms windows, rejects reset/invalid-state/ground/failsafe/non-Offboard intervals, distinguishes position from velocity control, and derives yaw rate from quaternion and body angular rates. It produces 17-feature/4-target arrays compatible with the existing residual trainer, with exclusion counts and code-group split provenance. It does not update weights.
+
+On the pinned Classical export, preparation 002 yielded only two candidate samples, both in a training group; no usable validation/test arrays. Most windows fail state validity or reset checks. These are candidate labels, not a qualified training set. More healthy, synchronized real recordings and calibration/noise review are required before retraining. Preparation 001 and its zero-sample result remain preserved.
+
+Evidence lives outside the repository in `physical-gazebo-evidence`: the Classical export/audit, both preparation runs, full-suite logs, and the separate native qualification folder. No prior evidence is overwritten. The full-course candidate must pass native depth/clock checks before a new exact-candidate moving approval can be used.

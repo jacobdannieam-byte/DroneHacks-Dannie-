@@ -93,6 +93,7 @@ class Intent:
     recovery_lease: bool = False
     position_ned_m: tuple | None = None
     yaw_rad: float | None = None
+    yaw_rate_rad_s: float | None = None
 
 
 class CalibrationTrial:
