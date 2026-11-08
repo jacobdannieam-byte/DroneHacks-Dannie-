@@ -23,10 +23,10 @@ ARRIVAL_TOLERANCE_METRES = 0.08
 
 # (option, landing spot east/north, least distance the whole drone must be past the line).
 EXPECTED_LANDINGS = [
-    ('corridor', (-2.520, 2.467), LANDING_DISTANCE_PAST_LINE_METRES),
+    ('corridor', (-2.518, 2.467), LANDING_DISTANCE_PAST_LINE_METRES),
     ('gate_a', (0.705, 2.472), LANDING_DISTANCE_PAST_LINE_METRES),
     ('tunnel', (2.300, -0.725), 0.25),
-    ('chicane', (-0.857, -1.150), LANDING_DISTANCE_PAST_LINE_METRES),
+    ('chicane', (-0.674, -1.254), LANDING_DISTANCE_PAST_LINE_METRES),
 ]
 
 
@@ -69,8 +69,8 @@ def test_tunnel_option_lands_a_quarter_metre_beyond_the_tunnel_exit():
 def test_spot_that_is_not_open_floor_carries_on_to_the_next_waypoint():
     course_map, route = real_course_map_and_route()
     # A short object touching the north edge of the chicane option's spot. The next waypoint,
-    # 0.4 m further south-west, is well clear of it.
-    course_map.low_obstacles.append(LowObstacle('test object', np.array([-0.857, -0.96]), 0.02, 0.10, 'test'))
+    # 0.5 m further west, is well clear of it.
+    course_map.low_obstacles.append(LowObstacle('test object', np.array([-0.674, -1.065]), 0.02, 0.10, 'test'))
     plan = plan_stop(course_map, route, 'chicane')
     assert plan.how == AT_NEXT_WAYPOINT
     assert plan.landing_spot_metres[:2] == pytest.approx([-1.2, -1.35])
@@ -78,7 +78,7 @@ def test_spot_that_is_not_open_floor_carries_on_to_the_next_waypoint():
 
 def test_refuses_when_neither_spot_is_open_floor():
     course_map, route = real_course_map_and_route()
-    course_map.low_obstacles.append(LowObstacle('test boulder', np.array([-1.03, -1.25]), 0.30, 0.10, 'test'))
+    course_map.low_obstacles.append(LowObstacle('test boulder', np.array([-0.94, -1.30]), 0.35, 0.10, 'test'))
     with pytest.raises(ValueError, match='nowhere safe to land'):
         plan_stop(course_map, route, 'chicane')
 

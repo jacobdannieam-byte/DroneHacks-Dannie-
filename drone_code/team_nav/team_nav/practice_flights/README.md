@@ -332,8 +332,17 @@ The default map is now built from `simulator/course_model/corrected_dronehacks.o
 longer overlaps a drone on the launch mark; tube cradles and maze dividers left out). full_course
 flies the team's fixed route in `full_course_fixed_route.py`, nose north at 0.75 m, 18 legs.
 
-Gazebo run `20261108_141542` (no heading error, no tracking drift, the only run of this version so
-far): all 4 checkpoints, landed on the pad, 0 touches, motors off 140.3 s after takeoff, largest PX4
-height error 7.5 cm. Closest true propeller gap 0.083 m, from the west net at (-2.717, 0.901),
-11.9 s after takeoff: just above the 0.08 m limit. The runs with a 2 degree launch heading error,
-10 cm of tracking drift and the tunnel stop have not been flown yet.
+Gazebo runs on this map (closest true propeller gap must stay at least 0.08 m,
+`simulator/gazebo_full/check_footprint_clearance.py`):
+
+| Run | Conditions | Result |
+|---|---|---|
+| `20261108_141542` | no error, before widening | 4 checkpoints, on the pad, 0 touches, 140.3 s, closest 0.083 m (west net) |
+| `20261108_142045` | 2 degree heading error, before widening | 0.025 m from C1's south end, 0.074 m from the west net: FAIL |
+| `20261108_142447` | 10 cm drift by the tunnel, before widening | 0.068 m from A1's south end: FAIL |
+| `20261108_143642` | 2 degree heading error, widened | 4 checkpoints, on the pad, 0 touches, closest 0.098 m: PASS. 169.1 s of wall time, but the simulation ran at 0.78 of real time (about 132 s of simulated time) |
+| `20261108_144052` | 10 cm drift by the tunnel, widened | 4 checkpoints, on the pad, 0 touches, 143.3 s, closest 0.090 m: PASS |
+| `20261108_144432` | tunnel stop, 10 cm drift, widened | 3 checkpoints, landed past the tunnel exit, 0 touches, 73.2 s, closest 0.093 m: PASS |
+
+The no-error run has not been repeated on the widened route. Both heading-error runs ran the
+simulation at 0.78 of real time while all others ran at about 0.98; we have not found why.

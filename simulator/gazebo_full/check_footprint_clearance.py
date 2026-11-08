@@ -24,7 +24,7 @@ import sys
 
 import numpy as np
 
-from team_nav.course_map import BlockingCircle, load_course_map
+from team_nav.course_map import BlockingCircle, BlockingStrip, load_course_map
 from team_nav.practice_flights.astar_geometry import RouteGeometry
 
 # The team's requirement of 2026-11-08.
@@ -76,13 +76,37 @@ def read_true_path(run_folder):
     return samples
 
 
+def geometry_at(world, height_metres):
+    """RouteGeometry's shapes at this height, with the tunnel's strips given flat ends.
+
+    The map's distance function rounds every strip's ends by half its width. That is right for
+    thin walls, but near the floor the tunnel's strip is its full 1.47 m width, and rounded ends
+    would put a 0.73 m bulge past its open exit, where the floor is clear. So each tunnel strip is
+    replaced by small strips across it, 2 cm apart, whose rounded ends stay within 1 cm of the
+    tunnel's real flat end."""
+    geometry = RouteGeometry(world, height_metres)
+    tunnel_names = {tube.name for tube in world.tubes}
+    shapes = []
+    for shape in geometry.shapes:
+        if not (isinstance(shape, BlockingStrip) and shape.name in tunnel_names):
+            shapes.append(shape)
+            continue
+        along = (shape.end_metres - shape.start_metres) / np.linalg.norm(shape.end_metres - shape.start_metres)
+        across = np.array([-along[1], along[0]])
+        for offset in np.arange(-shape.half_thickness_metres + 0.01, shape.half_thickness_metres, 0.02):
+            shapes.append(BlockingStrip(shape.name, shape.start_metres + across * offset + along * 0.01,
+                                        shape.end_metres + across * offset - along * 0.01, 0.01))
+    geometry.shapes = shapes
+    return geometry
+
+
 def clearance_of_each_sample(world, samples):
     clearances = np.empty(len(samples))
     geometries = {}
     for number, (_, east, north, height, heading) in enumerate(samples):
         height_step = round(height / HEIGHT_STEP_METRES) * HEIGHT_STEP_METRES
         if height_step not in geometries:
-            geometries[height_step] = RouteGeometry(world, height_step)
+            geometries[height_step] = geometry_at(world, height_step)
         clearances[number] = geometries[height_step].footprint_clearance(np.array([[east, north]]),
                                                                           math.radians(heading))[0]
     return clearances
@@ -90,7 +114,7 @@ def clearance_of_each_sample(world, samples):
 
 def name_of_nearest_thing(world, sample):
     _, east, north, height, heading = sample
-    geometry = RouteGeometry(world, round(height / HEIGHT_STEP_METRES) * HEIGHT_STEP_METRES)
+    geometry = geometry_at(world, round(height / HEIGHT_STEP_METRES) * HEIGHT_STEP_METRES)
     best_name, best_clearance = "nothing", math.inf
     for shape in list(geometry.shapes):
         geometry.shapes = [shape]
