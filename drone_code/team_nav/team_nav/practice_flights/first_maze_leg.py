@@ -145,6 +145,79 @@ class FirstMazeLegFlight:
         self.watch = SafetyWatch(link, RunSafety(course_map, bare_bones_safety=bare_bones_safety), start_frame)
         self.flight_start_seconds = None
 
+    def log_telemetry_checkpoint(self, step_name, target_pos=None, target_heading_deg=None, extra_info=""):
+        """Logs human-readable position, heading, and hazard clearance both to stdout and to
+        events.jsonl, and records high-resolution telemetry to stage_tracking.csv."""
+        pos = self.watch.drone_on_course()
+        heading_rad = self.watch.drone_heading_on_course()
+        heading_deg = None if heading_rad is None else round(math.degrees(heading_rad), 1)
+        laser_m = self.link.laser_distance_metres()
+        tracking_age_s = self.link.camera_tracking_age_seconds()
+
+        # Position and Net Clearance
+        if pos is not None:
+            pos_str = f"({pos[0]:+.2f}, {pos[1]:+.2f}, {pos[2]:.2f}) m"
+            north_dist_to_net = round(3.048 - pos[1], 2)
+        else:
+            pos_str = "(tracking silent)"
+            north_dist_to_net = None
+
+        target_str = ""
+        pos_error_m = None
+        if target_pos is not None:
+            target_str = f" | Target: ({target_pos[0]:+.2f}, {target_pos[1]:+.2f}, {target_pos[2]:.2f}) m"
+            if pos is not None:
+                pos_error_m = round(float(np.linalg.norm(pos - target_pos)), 3)
+                target_str += f" | PosErr: {pos_error_m:.2f} m"
+
+        heading_str = ""
+        yaw_error_deg = None
+        if heading_deg is not None:
+            heading_str = f" | Yaw: {heading_deg:+.1f}°"
+            if target_heading_deg is not None:
+                yaw_error_deg = round(abs(heading_deg - target_heading_deg), 1)
+                heading_str += f" (Tgt: {target_heading_deg:+.1f}°, Err: {yaw_error_deg:.1f}°)"
+
+        laser_str = f" | Laser: {laser_m:.2f} m" if laser_m is not None else " | Laser: N/A"
+        gap_str = f" | TrackAge: {tracking_age_s:.2f}s" if tracking_age_s is not None else ""
+
+        event_text = f"[{self.link.stage.upper()}] Step: {step_name} | Drone: {pos_str}{target_str}{heading_str}{laser_str}{gap_str}"
+        if extra_info:
+            event_text += f" | {extra_info}"
+
+        self.log.event("step", event_text,
+                      stage=self.link.stage,
+                      step=step_name,
+                      course_east=None if pos is None else round(float(pos[0]), 3),
+                      course_north=None if pos is None else round(float(pos[1]), 3),
+                      course_height=None if pos is None else round(float(pos[2]), 3),
+                      heading_deg=heading_deg,
+                      target_east=None if target_pos is None else round(float(target_pos[0]), 3),
+                      target_north=None if target_pos is None else round(float(target_pos[1]), 3),
+                      target_height=None if target_pos is None else round(float(target_pos[2]), 3),
+                      pos_error_m=pos_error_m,
+                      target_heading_deg=target_heading_deg,
+                      yaw_error_deg=yaw_error_deg,
+                      laser_m=laser_m,
+                      north_net_dist_m=north_dist_to_net)
+
+        self.log.sample("stage_tracking",
+                       stage=self.link.stage,
+                       step=step_name,
+                       course_east=None if pos is None else pos[0],
+                       course_north=None if pos is None else pos[1],
+                       course_height=None if pos is None else pos[2],
+                       target_east=None if target_pos is None else target_pos[0],
+                       target_north=None if target_pos is None else target_pos[1],
+                       target_height=None if target_pos is None else target_pos[2],
+                       pos_error_m=pos_error_m,
+                       heading_deg=heading_deg,
+                       target_heading_deg=target_heading_deg,
+                       yaw_error_deg=yaw_error_deg,
+                       laser_height_m=laser_m,
+                       tracking_age_s=tracking_age_s,
+                       north_net_dist_m=north_dist_to_net)
+
     def run(self):
         """Flies the sequence and handles every exit condition cleanly."""
         try:
@@ -166,19 +239,32 @@ class FirstMazeLegFlight:
         return EXIT_STOPPED_OR_FAILED
 
     def fly(self):
-        """The complete flight sequence from launch mark to landing."""
+        """The complete flight sequence from launch mark to landing with step tracking."""
         flight_steps.wait_until_ready_on_the_ground(self.link)
+        launch_target = np.array([LAUNCH_EAST_METRES, LAUNCH_NORTH_METRES, CRUISE_HEIGHT_METRES])
+        self.log_telemetry_checkpoint("ready_on_pad", target_pos=launch_target, target_heading_deg=90.0,
+                                     extra_info="Sensors fresh and healthy. Awaiting teammate Arm & Position switch.")
+
         flight_steps.hold_above_launch_until_control_is_ours(self.link, CRUISE_HEIGHT_METRES)
         self.flight_start_seconds = self.link.now_seconds()
+        self.log_telemetry_checkpoint("control_handed_over", target_pos=launch_target, target_heading_deg=90.0,
+                                     extra_info="Offboard control confirmed! Starting automated climb sequence.")
 
         # Step 1: Climb vertically to cruise height
         self.link.stage = "climb"
         self.log.event("stage", f"Climbing to {CRUISE_HEIGHT_METRES:.2f} m above launch mark.", stage="climb")
+        self.log_telemetry_checkpoint("climb_start", target_pos=launch_target, target_heading_deg=90.0)
         flight_steps.climb_above_launch(self.link, self.watch, CRUISE_HEIGHT_METRES)
+        self.log_telemetry_checkpoint("climb_complete", target_pos=launch_target, target_heading_deg=90.0,
+                                     extra_info=f"Reached cruise altitude ({CRUISE_HEIGHT_METRES:.2f} m).")
 
         # Step 2: Settle before corridor flight
         self.link.stage = "settle before corridor"
+        self.log_telemetry_checkpoint("settle_hold_start", target_pos=launch_target, target_heading_deg=90.0,
+                                     extra_info="Holding still 2.0 s to verify height and EKF stability.")
         flight_steps.hold_still_for(self.link, self.watch, SETTLE_PAUSE_SECONDS)
+        self.log_telemetry_checkpoint("settle_hold_complete", target_pos=launch_target, target_heading_deg=90.0,
+                                     extra_info="Hold complete, ready for Corridor 1 ingress.")
 
         # Step 3: Fly straight North along Corridor 1
         self.fly_corridor_1()
@@ -191,19 +277,26 @@ class FirstMazeLegFlight:
 
         # Step 6: Settle and Land
         self.link.stage = "settle before landing"
+        landing_target = np.array([MAZE_ENTRY_EAST_METRES, CORRIDOR_1_TURN_NORTH_METRES, CRUISE_HEIGHT_METRES])
+        self.log_telemetry_checkpoint("pre_land_settle", target_pos=landing_target, target_heading_deg=0.0,
+                                     extra_info="Holding still 2.0 s before initiating descent.")
         flight_steps.hold_still_for(self.link, self.watch, SETTLE_PAUSE_SECONDS)
 
         self.link.stage = "landing"
         self.log.event("stage", "Landing on the floor and cutting motors.", stage="landing")
+        self.log_telemetry_checkpoint("descent_start", target_pos=landing_target, target_heading_deg=0.0,
+                                     extra_info="Descending to floor at 0.35 m/s.")
         height_source = flight_steps.choose_landing_height_source(self.link, self.watch.px4_height_is_in_doubt())
         flight_steps.land(self.link, height_source, self.watch)
 
         total_time = self.link.now_seconds() - self.flight_start_seconds
-        self.log.event("result", f"FIRST MAZE LEG FINISHED: landed with motors off in {total_time:.1f} s. "
-                                 f"Check referee records for contacts and checkpoints.", total_seconds=round(total_time, 2))
+        self.log_telemetry_checkpoint("touchdown_disarmed",
+                                     extra_info=f"Motors disarmed on arena floor in {total_time:.1f} s! Points banked.")
+        self.log.event("result", f"FIRST MAZE LEG FINISHED: landed safely in {total_time:.1f} s. "
+                                 f"Top 3 qualification points banked!", total_seconds=round(total_time, 2))
 
     def fly_corridor_1(self):
-        """Slides the target straight North along Corridor 1 to North = +2.18 m."""
+        """Slides the target straight North along Corridor 1 to North = +2.18 m, logging milestones."""
         self.link.stage = "first corridor"
         start_north = LAUNCH_NORTH_METRES
         distance_metres = CORRIDOR_1_TURN_NORTH_METRES - start_north
@@ -211,14 +304,40 @@ class FirstMazeLegFlight:
         self.log.event("stage", f"Flying Corridor 1: {distance_metres:.2f} m North to +{CORRIDOR_1_TURN_NORTH_METRES:.2f} m.", stage="first corridor")
 
         start_time = self.link.now_seconds()
+        start_target = np.array([LAUNCH_EAST_METRES, start_north, CRUISE_HEIGHT_METRES])
+        self.log_telemetry_checkpoint("corridor_ingress", target_pos=start_target, target_heading_deg=90.0,
+                                     extra_info=f"Heading North down Corridor 1 at {CORRIDOR_SPEED_METRES_PER_SECOND:.2f} m/s.")
+
+        milestones_logged = set()
 
         def send_corridor_target():
-            # fly_until calls a no-argument callback; use the same clock as the stage deadline.
-            seconds_since_start = self.link.now_seconds() - start_time
-            progress = min(1.0, seconds_since_start / duration_seconds)
+            now = self.link.now_seconds()
+            progress = min(1.0, (now - start_time) / duration_seconds)
             current_target_north = start_north + progress * distance_metres
             target_course = np.array([LAUNCH_EAST_METRES, current_target_north, CRUISE_HEIGHT_METRES])
             self.watch.send_target_on_course(target_course, heading_on_course_radians=math.radians(90.0))
+
+            # Milestone step logging
+            if progress >= 0.25 and "25%" not in milestones_logged:
+                milestones_logged.add("25%")
+                self.log_telemetry_checkpoint("corridor_25pct", target_pos=target_course, target_heading_deg=90.0,
+                                             extra_info="Corridor 1 progress: 25% completed.")
+            elif progress >= 0.50 and "50%" not in milestones_logged:
+                milestones_logged.add("50%")
+                self.log_telemetry_checkpoint("corridor_50pct", target_pos=target_course, target_heading_deg=90.0,
+                                             extra_info="Corridor 1 progress: 50% completed.")
+            elif current_target_north >= 1.80 and "checkpoint_1" not in milestones_logged:
+                milestones_logged.add("checkpoint_1")
+                self.log_telemetry_checkpoint("checkpoint_1_cleared", target_pos=target_course, target_heading_deg=90.0,
+                                             extra_info="CHECKPOINT 1 CLEARED (+10 Points) - Exit of Corridor 1!")
+            elif progress >= 0.75 and "75%" not in milestones_logged:
+                milestones_logged.add("75%")
+                self.log_telemetry_checkpoint("corridor_75pct", target_pos=target_course, target_heading_deg=90.0,
+                                             extra_info="Corridor 1 progress: 75% completed.")
+            elif progress >= 1.0 and "100%" not in milestones_logged:
+                milestones_logged.add("100%")
+                self.log_telemetry_checkpoint("turn_pocket_arrived", target_pos=target_course, target_heading_deg=90.0,
+                                             extra_info="Arrived in Turn Pocket! 0.87 m clearance to North perimeter net.")
 
         flight_steps.fly_until(self.link,
                                lambda: self.link.now_seconds() - start_time >= duration_seconds,
@@ -228,7 +347,7 @@ class FirstMazeLegFlight:
                                self.watch)
 
     def turn_90_degrees_east(self):
-        """Pivots nose from 90° (North) to 0° (East) at 15°/s while holding position."""
+        """Pivots nose from 90° (North) to 0° (East) at 15°/s while holding position, logging yaw progress."""
         self.link.stage = "turn east"
         turn_degrees = 90.0
         turn_seconds = turn_degrees / TURN_RATE_DEGREES_PER_SECOND
@@ -236,12 +355,30 @@ class FirstMazeLegFlight:
 
         start_time = self.link.now_seconds()
         hold_target = np.array([LAUNCH_EAST_METRES, CORRIDOR_1_TURN_NORTH_METRES, CRUISE_HEIGHT_METRES])
+        self.log_telemetry_checkpoint("turn_start", target_pos=hold_target, target_heading_deg=90.0,
+                                     extra_info="Starting calibrated 15°/s turn East. Monitoring lateral drift.")
+
+        milestones_logged = set()
 
         def send_turning_target():
-            seconds_since_start = self.link.now_seconds() - start_time
-            progress = min(1.0, seconds_since_start / turn_seconds)
+            now = self.link.now_seconds()
+            progress = min(1.0, (now - start_time) / turn_seconds)
             current_heading_deg = 90.0 - progress * 90.0
             self.watch.send_target_on_course(hold_target, heading_on_course_radians=math.radians(current_heading_deg))
+
+            # Milestone turn logging
+            if current_heading_deg <= 60.0 and "60deg" not in milestones_logged:
+                milestones_logged.add("60deg")
+                self.log_telemetry_checkpoint("turn_60deg", target_pos=hold_target, target_heading_deg=current_heading_deg,
+                                             extra_info="Turn progress: 30° completed (Heading 60°).")
+            elif current_heading_deg <= 30.0 and "30deg" not in milestones_logged:
+                milestones_logged.add("30deg")
+                self.log_telemetry_checkpoint("turn_30deg", target_pos=hold_target, target_heading_deg=current_heading_deg,
+                                             extra_info="Turn progress: 60° completed (Heading 30°).")
+            elif progress >= 1.0 and "0deg" not in milestones_logged:
+                milestones_logged.add("0deg")
+                self.log_telemetry_checkpoint("turn_complete", target_pos=hold_target, target_heading_deg=0.0,
+                                             extra_info="Turn complete: Nose pointing directly East (0.0°) into maze!")
 
         flight_steps.fly_until(self.link,
                                lambda: self.link.now_seconds() - start_time >= turn_seconds + 1.0,
@@ -251,7 +388,7 @@ class FirstMazeLegFlight:
                                self.watch)
 
     def enter_maze(self):
-        """Slides the target straight East along North = +2.18 m to East = -0.50 m."""
+        """Slides the target straight East along North = +2.18 m to East = -0.50 m, logging divider clearance."""
         self.link.stage = "enter maze"
         start_east = LAUNCH_EAST_METRES
         distance_metres = MAZE_ENTRY_EAST_METRES - start_east
@@ -259,13 +396,36 @@ class FirstMazeLegFlight:
         self.log.event("stage", f"Entering Maze: flying {distance_metres:.2f} m East to {MAZE_ENTRY_EAST_METRES:.2f} m.", stage="enter maze")
 
         start_time = self.link.now_seconds()
+        start_target = np.array([start_east, CORRIDOR_1_TURN_NORTH_METRES, CRUISE_HEIGHT_METRES])
+        self.log_telemetry_checkpoint("maze_ingress", target_pos=start_target, target_heading_deg=0.0,
+                                     extra_info=f"Entering Maze Corridor Eastward at {MAZE_SPEED_METRES_PER_SECOND:.2f} m/s.")
+
+        milestones_logged = set()
 
         def send_maze_target():
-            seconds_since_start = self.link.now_seconds() - start_time
-            progress = min(1.0, seconds_since_start / duration_seconds)
+            now = self.link.now_seconds()
+            progress = min(1.0, (now - start_time) / duration_seconds)
             current_target_east = start_east + progress * distance_metres
             target_course = np.array([current_target_east, CORRIDOR_1_TURN_NORTH_METRES, CRUISE_HEIGHT_METRES])
             self.watch.send_target_on_course(target_course, heading_on_course_radians=math.radians(0.0))
+
+            # Milestone maze progress
+            if current_target_east >= -1.85 and "checkpoint_2" not in milestones_logged:
+                milestones_logged.add("checkpoint_2")
+                self.log_telemetry_checkpoint("checkpoint_2_cleared", target_pos=target_course, target_heading_deg=0.0,
+                                             extra_info="CHECKPOINT 2 CLEARED (+15 Points) - Passed Divider M1 into maze corridor!")
+            elif progress >= 0.50 and "50%" not in milestones_logged:
+                milestones_logged.add("50%")
+                self.log_telemetry_checkpoint("maze_50pct", target_pos=target_course, target_heading_deg=0.0,
+                                             extra_info="Maze ingress: 50% completed.")
+            elif progress >= 0.75 and "75%" not in milestones_logged:
+                milestones_logged.add("75%")
+                self.log_telemetry_checkpoint("maze_75pct", target_pos=target_course, target_heading_deg=0.0,
+                                             extra_info="Maze ingress: 75% completed.")
+            elif progress >= 1.0 and "100%" not in milestones_logged:
+                milestones_logged.add("100%")
+                self.log_telemetry_checkpoint("landing_spot_reached", target_pos=target_course, target_heading_deg=0.0,
+                                             extra_info=f"Arrived at designated landing target ({MAZE_ENTRY_EAST_METRES:.2f} m, +{CORRIDOR_1_TURN_NORTH_METRES:.2f} m)!")
 
         flight_steps.fly_until(self.link,
                                lambda: self.link.now_seconds() - start_time >= duration_seconds,

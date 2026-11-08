@@ -13,7 +13,7 @@ from team_nav import course_run
 from team_nav.course_map import load_course_map
 from team_nav.drone_dimensions import REQUIRED_ROOM_METRES
 from team_nav.mission import load_mission
-from team_nav.practice_flights import mock_gap_and_window, out_and_back, run_practice_flight
+from team_nav.practice_flights import first_maze_leg, mock_gap_and_window, out_and_back, run_practice_flight
 from team_nav.route_planner import plan_route
 from team_nav.run_mode import read_run_mode
 from team_nav.start_frame import StartFrame
@@ -144,3 +144,20 @@ def test_the_mock_course_stages_can_be_stopped_after(mock_route):
     assert plan.stage_names() == ["climb", "mock gap", "mock window"]
     stopping = read_run_mode({"TEAM_NAV_RUN_MODE": "practice", "TEAM_NAV_STOP_AFTER_STAGE": "mock gap"})
     course_run.check_stop_after_stage(stopping, plan.stage_names())
+
+
+# ---- The first_maze_leg flight ------------------------------------------------------------------
+
+def test_first_maze_leg_refuses_stop_after_stage():
+    stopping = read_run_mode({"TEAM_NAV_RUN_MODE": "practice", "TEAM_NAV_STOP_AFTER_STAGE": "first corridor"})
+    arguments = first_maze_leg.parse_arguments([])
+    problems = first_maze_leg.problems_with_the_settings(arguments, stopping)
+    assert len(problems) == 1
+    assert "single fixed leg" in problems[0]
+
+
+def test_first_maze_leg_parse_arguments():
+    args = first_maze_leg.parse_arguments(["--bare-bones-safety", "--ignore-raw-laser"])
+    assert args.bare_bones_safety is True
+    assert args.ignore_raw_laser is True
+
