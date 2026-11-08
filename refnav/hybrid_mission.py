@@ -198,9 +198,7 @@ class CourseMission:
         distance = math.dist(position, self.goal.position_m)
         # Require new state and map evidence at two successive arrivals.
         sample = state_capture_ns(inputs["state"], inputs["alignment"])
-        inside = distance + inputs["vehicle"].state_position_error_m + inputs["alignment"].position_error_m <= stage.arrival_m
-        if inside and target_sweep(inputs["state"], inputs["state"].position_m, inputs["snapshot"],
-                                   inputs["alignment"], inputs["vehicle"], now_ns) is None:
+        if self._arrival_supported(distance, inputs, now_ns):
             prior = self._last_arrival
             if prior is None or (observation != prior[0] and sample > prior[1]):
                 self._arrival_hits += 1
@@ -228,6 +226,11 @@ class CourseMission:
             return None
         self._scan = WaypointScan(scope, goal, arrival_m, now_ns, wall_ns)
         return self._scan
+
+    def _arrival_supported(self, distance, inputs, now_ns):
+        state, bounds, alignment = inputs['state'], inputs['vehicle'], inputs['alignment']
+        return (distance + bounds.state_position_error_m + alignment.position_error_m <= self.stage.arrival_m
+                and target_sweep(state, state.position_m, inputs['snapshot'], alignment, bounds, now_ns) is None)
 
     def update_scan(self, scan, now_ns):
         if scan is not self._scan:

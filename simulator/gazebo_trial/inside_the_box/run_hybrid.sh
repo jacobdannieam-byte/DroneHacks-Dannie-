@@ -2,6 +2,13 @@
 set -eo pipefail
 mode=$1; world=$2; seconds=$3; revision=$4; profile=$5; approval=$6
 cd /repository
+if [[ "$mode" == experiment_environment ]]; then
+    python3 - <<'PY'
+from examples.gazebo_container import isolated
+if not isolated():
+    raise SystemExit('Experimental environment requires isolated network-disabled SITL')
+PY
+fi
 if [[ "$mode" == calibration_check || "$mode" == calibration_trial ]]; then
     [[ "$world" == scenarios/calibration/straight_lane_v1.json ]] || exit 2
     : "${CALIBRATION_IMAGE_SHA256:?Pinned image identity required}"
@@ -252,6 +259,16 @@ case "$mode" in
     observe)
         sleep "$seconds"
         kill -0 "$stack_pid" && kill -0 "$bag_pid"
+        ;;
+    experiment_environment)
+        # Environment/recorder only: the separate experimental entry owns commands.
+        # This process budget is cleanup, not a calibration altitude/speed bound.
+        experiment_deadline=$((SECONDS + seconds))
+        while [ ! -f /evidence/experiment_finished.json ]; do
+            kill -0 "$stack_pid" && kill -0 "$bag_pid" || exit 1
+            [ "$SECONDS" -lt "$experiment_deadline" ] || exit 1
+            sleep 1
+        done
         ;;
     hybrid_shadow)
         python3 -m examples.gazebo_container verify-shadow --profile "$profile"

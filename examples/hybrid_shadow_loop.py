@@ -74,6 +74,8 @@ class ShadowTick:
 class ShadowLoop:
     """Single-consumer observation loop. Missed ticks are skipped, never queued."""
 
+    assessor = staticmethod(assess)
+
     def __init__(self, profile, *, rate_hz=5, budget_s=.025, monotonic=perf_counter,
                  completion_clock=perf_counter_ns, timings=None, measure_receipt_wall=False,
                  retain_aligned_depth=False):
@@ -164,7 +166,7 @@ class ShadowLoop:
             reason, inputs = inputs_filter(inputs, now_ns)
             if inputs is None:
                 return ShadowTick(now_ns, reason)
-        result = measure(self.timings, "h0_total", assess, **inputs, budget_s=self.budget_s,
+        result = measure(self.timings, "h0_total", self.assessor, **inputs, budget_s=self.budget_s,
                          map_consumer=map_consumer,
                          monotonic=self.monotonic, timings=self.timings,
                          cancelled=lambda: self._closed or self._fault is not None)

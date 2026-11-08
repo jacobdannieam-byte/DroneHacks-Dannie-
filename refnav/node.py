@@ -72,14 +72,7 @@ class RefNav(Node):
             if (hybrid_runtime.strategy != "hybrid_sitl" or hybrid_runtime.adapter is None
                     or not isinstance(hybrid_approval, IsolationApproval)):
                 raise ValueError("native owner needs a reviewed Hybrid SITL composition")
-            if hybrid_runtime.executor.stopping_envelope is None:
-                raise ValueError('native owner requires a reviewed measured stopping envelope')
-            self._owner_timing.validate_stopping_budget(hybrid_runtime.executor.stopping_envelope)
-            if hybrid_runtime.launch_guard is None:
-                raise ValueError('native Hybrid owner requires bound simulator launch geometry')
-            if hybrid_runtime.map_certificate is not None and (hybrid_runtime.map_clearance is None
-                                                              or hybrid_runtime.recovery_guard is None):
-                raise ValueError('map-assisted owner requires live clearance and qualified recovery')
+            self._validate_native_qualification(hybrid_runtime)
         route, doc = load_route(self) if hybrid_runtime is None else ([], {})
         prm = C.Params(route=route)
         for k, v in vars(C.Params()).items():
@@ -165,6 +158,15 @@ class RefNav(Node):
         self.create_timer(0.5, self._publish_status)
         self.get_logger().info(f"route {len(route)} legs; depth {self.depth_topic}; health {self.health_topic}; "
                                f"sim time {self.get_parameter('use_sim_time').value}")
+
+    def _validate_native_qualification(self, runtime):
+        if runtime.executor.stopping_envelope is None:
+            raise ValueError('native owner requires a reviewed measured stopping envelope')
+        self._owner_timing.validate_stopping_budget(runtime.executor.stopping_envelope)
+        if runtime.launch_guard is None:
+            raise ValueError('native Hybrid owner requires bound simulator launch geometry')
+        if runtime.map_certificate is not None and (runtime.map_clearance is None or runtime.recovery_guard is None):
+            raise ValueError('map-assisted owner requires live clearance and qualified recovery')
 
     # ------------------------------------------------------------------ inputs
     def _now(self):
