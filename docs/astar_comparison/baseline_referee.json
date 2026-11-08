@@ -1,0 +1,32 @@
+{
+  "flight_record": "flight_20261108_202416.csv",
+  "world_map_file": "/repository/drone_code/team_nav/course_maps/sketch_2026-11-08.json",
+  "course_model_file": "/repository/simulator/generated_files/worlds/sketch_2026-11-08_9c299ff51a/course.obj",
+  "checkpoint_seconds": {
+    "First corridor": 18.3,
+    "Maze": 137.67,
+    "Tunnel": 187.47,
+    "Chicane": 357.17
+  },
+  "checkpoint_lines_used": {
+    "First corridor": "end of first corridor",
+    "Maze": "Gate A",
+    "Tunnel": "tunnel exit",
+    "Chicane": "Gate B"
+  },
+  "motors_off_seconds": 416.73,
+  "landed_on_pad": true,
+  "touches": 0,
+  "penalty_seconds": 0.0,
+  "went_above_walls": false,
+  "left_the_course": false,
+  "px4_clock_speed_compared_with_real_time": 0.665,
+  "times_above_boulders": [],
+  "stayed_above_a_boulder_too_long": false,
+  "largest_height_estimate_error_metres": 0.073,
+  "largest_height_estimate_error_at_seconds": 173.4,
+  "largest_height_estimate_error_during_takeoff_climb_metres": 0.028,
+  "largest_height_estimate_error_during_takeoff_climb_at_seconds": 3.2,
+  "largest_height_estimate_error_on_the_floor_after_touchdown_metres": 0.021,
+  "height_estimate_went_wrong": false
+}

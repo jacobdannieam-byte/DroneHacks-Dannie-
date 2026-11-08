@@ -1,5 +1,48 @@
 # Practice flights
 
+## A* intermediate waypoints (`hardcoded` branch)
+
+`astar_five_waypoints` keeps the five main course goals and computes its intermediate
+points from the participant map before arming. Read `missions/astar_five_goals.json`,
+then `astar_route.py`, `astar_geometry.py`, and `astar_five_waypoints.py`.
+
+Every flight waypoint is at **0.75 m** above launch; the final landing descends to **0 m**.
+Each run saves `astar_plan.json` and `waypoints_with_heights.csv`, including every generated
+point's east, north and height. Extra points are added where the route or turn needs them.
+
+The first stop is north = **2.451 m**, about 5 cm earlier than the previous 2.50 m stop,
+while still clearing the first checkpoint with the full airframe. It turns at that stop and
+departs forward. There is no reverse segment. Tight turns use a 5 degree/second heading-target
+slew; other turns keep 15 degrees/second. The clearance check uses the convex hull of the
+measured motor positions expanded by the estimated propeller radius, with the same 5 cm
+body clearance, rather than treating the empty corners of a rectangle as aircraft.
+
+A* searches positions and preserves heading in tight spaces. In open space all headings
+fit, so those states are merged. Path shortcuts must preserve turn, body and bottom-laser
+clearance. The final chicane is also checked against the previous branch's declared drift
+cases: 25 cm northward and 3 cm east/west. These are specific tested error cases, not a
+guarantee against arbitrary localization errors.
+
+This version plans from the supplied map. Live depth still pauses for obstacles or stale
+data; it does not yet rebuild the route from an unreported obstacle. The moved-obstacle
+comparison explicitly updates both the participant map and Gazebo world.
+
+```bash
+# Original obstacle positions:
+bash simulator/gazebo_full/fly_course_in_gazebo.sh \
+  --world drone_code/team_nav/course_maps/sketch_2026-11-08.json \
+  --run-mode practice --longest-run-seconds 900 -- practice_flight astar_five_waypoints \
+  --map sketch_2026-11-08.json
+
+# Same five goals; north-west boulder moved 0.45 m south:
+bash simulator/gazebo_full/fly_course_in_gazebo.sh \
+  --world drone_code/team_nav/course_maps/astar_moved_obstacle.json \
+  --run-mode practice --longest-run-seconds 900 -- practice_flight astar_five_waypoints \
+  --map astar_moved_obstacle.json
+```
+
+## Previous five-waypoint controller
+
 `five_waypoints` is the heading-aware version on `codex/attemptone-five-waypoints`.
 Read `missions/five_waypoints.json` for its five main targets: First corridor, Maze exit,
 Tunnel exit, Chicane exit, and Landing pad. Intermediate points avoid walls; connecting

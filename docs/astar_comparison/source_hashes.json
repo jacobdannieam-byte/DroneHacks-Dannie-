@@ -1,0 +1,18 @@
+{
+  "drone_code/team_nav/team_nav/practice_flights/astar_five_waypoints.py": "bcb1fe2385bce549ac6f2cccd1d15d2dada2616e9e83c39752c1adb73c49f14d",
+  "drone_code/team_nav/team_nav/practice_flights/astar_geometry.py": "253308fe3efb2e79bc8c54898b7e89978dd43fcaa2dee29f000ecdf328f7ccf3",
+  "drone_code/team_nav/team_nav/practice_flights/astar_route.py": "bef0d256189c48bffb2fd13a2f227e1b7ff6d0bb2c0262914c1fe379d71d673a",
+  "drone_code/team_nav/team_nav/practice_flights/first_maze_leg.py": "cd6e026065085fb3f6ef8ff94d0fe5380a0b52e1a8cbc211a93e884eea889e5a",
+  "drone_code/team_nav/team_nav/practice_flights/five_waypoints.py": "8143e68323c7710999ade710d5b2746575f87637bc82f15a5dc7520e5870c7fe",
+  "drone_code/team_nav/team_nav/practice_flights/five_waypoint_plan.py": "ef8e63aea83c067f3204e3916a1eca16938caa8d53b4a327b25c29c31b272229",
+  "drone_code/team_nav/team_nav/practice_flights/forward_depth.py": "c844287cad46bfa15688fa4eba3d55926ce5de5a09e23939657070c98a611ecf",
+  "drone_code/team_nav/team_nav/practice_flights/full_course.py": "dea99a562da7bd47f1a7cc97ca3ed1eff67846a3888093795f226a3fd2a22311",
+  "drone_code/team_nav/team_nav/practice_flights/full_course_route.py": "d0142162757264778b67272536abcb85ba553551e738796af55047e05ba17238",
+  "drone_code/team_nav/team_nav/practice_flights/mock_gap_and_window.py": "939f3263efe61191aff2f7ff3c5f61d95fbdbd81fc4fdfb7abdb0b5bf428da1b",
+  "drone_code/team_nav/team_nav/practice_flights/out_and_back.py": "67c2a5adf41ca9747b5e3fd722f5b5ded93818c32365026cd6a854ec3cc1e07b",
+  "drone_code/team_nav/team_nav/practice_flights/response_measurements.py": "7f7350809d6e137e473e5cd004614033e3aa460b42400f9007330530647f01a8",
+  "drone_code/team_nav/team_nav/practice_flights/run_practice_flight.py": "9ce1380a8f1f5079503b1d535577f9febc35204ed282b1018e4ebe9adf897fdd",
+  "drone_code/team_nav/team_nav/practice_flights/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "drone_code/team_nav/missions/astar_five_goals.json": "6cf3c1f54ffaa0481a0e10695589f4b3dd133b8f23114e3867617228227c396e",
+  "drone_code/team_nav/course_maps/astar_moved_obstacle.json": "4163a8afee5b36c3af02df3f2cd56343fae17eda92b23dbeca63c97cf22273de"
+}
