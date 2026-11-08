@@ -228,6 +228,73 @@ After the competition, change the line back to `False` on the Mac. Then do step 
 If the drone software restarts, the drone starts `watch_only`. Then type
 `./drone.sh start course_run` again.
 
+## Step 9F. The fallback missions, high over the walls (fly test)
+
+Two fallback missions make sure of the landing points even with penalties. Both fly at 2.3 m, above
+every wall, which the rulebook penalises. `team_nav/team_nav/fallback_run.py` explains them, and
+`course_map_tools/draw_fallback_routes.py` draws them.
+
+- `fallback_pad`: climb to 2.3 m on the launch mark, fly over the barrier to above the pad, land.
+- `fallback_tunnel`: climb to 2.3 m, fly north up the first corridor and east near the north net
+  over the maze, stop 0.6 m before the tunnel, descend to the tunnel's centre height, fly through
+  at 0.5 m/s, climb back to 2.3 m, fly over the chicane to the pad, land.
+
+They use the `test_flights` launch file, so the competition launch file stays unchanged. Without
+`TEAM_NAV_RUN_MODE=practice`, `course_run` runs in competition mode.
+
+Do these in order. Each one starts with:
+
+```bash
+./drone.sh start test_flights
+```
+
+1. The climb to 2.3 m and back down, on the launch mark. It proves that the bottom laser still
+   measures at 2.3 m. If the program stops with "PX4 reports that it has stopped using the bottom
+   laser", do not fly the fallback missions.
+
+```bash
+TEAM_NAV_RUN_MODE=practice TEAM_NAV_MISSION=fallback_pad TEAM_NAV_STOP_AFTER_STAGE="high climb" ./drone.sh course_run
+```
+
+2. The pad mission:
+
+```bash
+TEAM_NAV_RUN_MODE=practice TEAM_NAV_MISSION=fallback_pad ./drone.sh course_run
+```
+
+3. The tunnel mission, first only as far as the stop before the tunnel (it lands there), then
+   through the tunnel (it lands just after it), then all of it:
+
+```bash
+TEAM_NAV_RUN_MODE=practice TEAM_NAV_MISSION=fallback_tunnel TEAM_NAV_STOP_AFTER_STAGE="over the maze" ./drone.sh course_run
+```
+
+```bash
+TEAM_NAV_RUN_MODE=practice TEAM_NAV_MISSION=fallback_tunnel TEAM_NAV_STOP_AFTER_STAGE=tunnel ./drone.sh course_run
+```
+
+```bash
+TEAM_NAV_RUN_MODE=practice TEAM_NAV_MISSION=fallback_tunnel ./drone.sh course_run
+```
+
+4. In the competition, after `./drone.sh start test_flights`, type one of these. The organizer arms
+   the drone and moves the switch to Position when the referee says go.
+
+```bash
+TEAM_NAV_MISSION=fallback_pad ./drone.sh course_run
+```
+
+```bash
+TEAM_NAV_MISSION=fallback_tunnel ./drone.sh course_run
+```
+
+The result is correct if the drone lands on the pad and the program ends with 0. The program
+refuses to start (exit 2) if the route on the map would break one of the laser rules.
+
+On the organizers' changed course (2026-11-08), add `--map organizers_new_start_2026-11-08.json` at the
+end of any `course_run` command above. As the map stands, every program refuses to start there: the
+new diagonal wall is 0.08 m from the launch mark's centre, and the drone needs 0.35 m.
+
 ## Step 10. Make the drone safe after each flight (fly test)
 
 ```bash

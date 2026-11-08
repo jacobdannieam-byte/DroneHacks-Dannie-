@@ -120,13 +120,22 @@ class SafetyDecision:
 
 class RunSafety:
 
-    def __init__(self, course_map, other_possible_boulders=()):
+    def __init__(self, course_map, other_possible_boulders=(), highest_target_height_metres=None,
+                 stop_when_px4_stops_using_the_laser=True):
         """course_map is the drone's map. other_possible_boulders are boulders from other maps of
-        the same course, which the bottom laser may see (height_check.py explains why)."""
+        the same course, which the bottom laser may see (height_check.py explains why).
+        highest_target_height_metres is optional: without it, targets must keep the drone below the
+        wall tops, as the rulebook says. Only the fallback routes (fallback_routes.py), which fly
+        over the walls on purpose and accept the penalty, pass a higher limit.
+        stop_when_px4_stops_using_the_laser is True except for the fallback routes: up there PX4
+        stops using the laser at every wall crossing, as expected, and flies on its air pressure
+        height, so stopping the run then would land the drone in the middle of the course. Camera
+        tracking's height comparison and the faulty-laser report still stop the run."""
         self.course_map = course_map
+        self.highest_target_height_metres = highest_target_height_metres
         self.touch_detector = TouchDetector()
         self.height_check = HeightCheck(course_map, other_possible_boulders)
-        self.laser_use_check = LaserUseCheck()
+        self.laser_use_check = LaserUseCheck(stop_when_px4_stops_using_the_laser)
         self.camera_height_check = CameraHeightCheck()
         # When the current hold began, or None if the drone isn't holding.
         self.hold_began_at_seconds = None
@@ -222,6 +231,9 @@ class RunSafety:
                 f"The target ({target[0]:+.2f} m east, {target[1]:+.2f} m north) would put part of the drone outside "
                 f"the course's safety net. The route or the start heading must be wrong, so the run stops."
             )
+        if self.highest_target_height_metres is not None:
+            self._refuse_if_above(target, self.highest_target_height_metres)
+            return
         # From the rulebook: the drone must stay below the wall tops.
         highest_height_metres = self.course_map.wall_top_height_metres - DRONE_HALF_HEIGHT_METRES
         if not 0.0 <= target[2] <= highest_height_metres:
@@ -229,6 +241,15 @@ class RunSafety:
                 f"The target height {target[2]:.2f} m is outside the allowed 0 to {highest_height_metres:.2f} m "
                 f"(the drone's top must stay below the {self.course_map.wall_top_height_metres:.2f} m wall tops). "
                 f"The route must be wrong, so the run stops."
+            )
+
+
+    @staticmethod
+    def _refuse_if_above(target, highest_height_metres):
+        if not 0.0 <= target[2] <= highest_height_metres:
+            raise TargetRefused(
+                f"The target height {target[2]:.2f} m is outside the allowed 0 to {highest_height_metres:.2f} m for "
+                f"this route. The route must be wrong, so the run stops."
             )
 
 
@@ -243,7 +264,8 @@ class LaserUseCheck:
     don't yet know whether the real drone uses the laser in flight; stopping every run for it
     would stop the very practice flights that would tell us. A faulty-laser report always counts."""
 
-    def __init__(self):
+    def __init__(self, stop_when_px4_stops_using_the_laser=True):
+        self.stop_when_px4_stops_using_the_laser = stop_when_px4_stops_using_the_laser
         self.laser_was_used_while_airborne = False
         self.problem_began_at_seconds = None
 
@@ -271,7 +293,7 @@ class LaserUseCheck:
         if condition.px4_says_laser_is_faulty:
             return "PX4 reports that the bottom laser is faulty"
         stopped_using = condition.px4_uses_laser_for_height is False and self.laser_was_used_while_airborne
-        if stopped_using:
+        if stopped_using and self.stop_when_px4_stops_using_the_laser:
             return "PX4 reports that it has stopped using the bottom laser for height"
         return None
 

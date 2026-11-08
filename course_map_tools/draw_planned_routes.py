@@ -9,7 +9,8 @@ This runs on a laptop, inside the simulator's Linux box, which has the drawing l
 
 It takes about ten seconds and saves one picture per case in simulator/generated_files/route_pictures/
 (Git ignores that folder). The first picture is the route the team chose for the first competition
-run, through the side gap into the landing area. The others try the window first: our three map
+run, through the side gap into the landing area; the second, the same mission on the organizers' changed
+course of 2026-11-08 (which has no route from the launch mark: a new wall is 0.08 m from it). The others try the window first: our three map
 files, and a few changed courses. The changes are the same ones the route planner's tests make
 (drone_code/team_nav/test/course_changes.py), so the pictures show what the tests check.
 
@@ -49,7 +50,7 @@ REPOSITORY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(REPOSITORY, "drone_code", "team_nav", "test"))
 import course_changes  # noqa: E402  (must come after the line above)
 from our_files import (  # noqa: E402
-    DRAWING_MAP, SCAN_MAP, SCAN_MAP_TRUSTING_EVERY_WALL, load_our_map, load_rulebook_mission, load_side_gap_first_mission,
+    CHANGED_COURSE_MAP, DRAWING_MAP, SCAN_MAP, SCAN_MAP_TRUSTING_EVERY_WALL, load_our_map, load_rulebook_mission, load_side_gap_first_mission,
 )
 from route_checks import least_room_along_route, points_along_route  # noqa: E402
 
@@ -94,6 +95,9 @@ def main():
     first_run_path = os.path.join(PICTURES_FOLDER, "0_phone_scan_first_run_through_the_side_gap.png")
     draw_one_case(load_our_map(SCAN_MAP), load_side_gap_first_mission(), first_run_path)
     print(f"Saved {first_run_path}")
+    changed_course_path = os.path.join(PICTURES_FOLDER, "0_changed_course_2026-11-08_side_gap.png")
+    draw_one_case(load_our_map(CHANGED_COURSE_MAP), load_side_gap_first_mission(), changed_course_path)
+    print(f"Saved {changed_course_path}")
 
     mission = load_rulebook_mission()
     for file_name, course_map in cases_to_draw(mission):

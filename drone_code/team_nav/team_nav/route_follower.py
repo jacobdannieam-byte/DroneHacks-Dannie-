@@ -65,9 +65,16 @@ CORNER_HEIGHT_TOLERANCE_METRES = 0.10
 
 class RouteFollower:
 
-    def __init__(self, waypoints_metres):
-        """waypoints_metres: the planned route, one (east, north, height) row per waypoint."""
+    def __init__(self, waypoints_metres, leg_speeds_metres_per_second=None, target_lead_metres=TARGET_LEAD_METRES):
+        """waypoints_metres: the planned route, one (east, north, height) row per waypoint.
+        leg_speeds_metres_per_second: optional, the speed at which the target slides along the leg
+        into each waypoint (the first entry is unused). Without it, every leg uses
+        CRUISE_SPEED_METRES_PER_SECOND. target_lead_metres: how far the target may get ahead of the
+        drone. The course run uses both defaults; the fallback routes (fallback_routes.py) fly
+        faster high above the walls and pass their own."""
         self.waypoints_metres = np.asarray(waypoints_metres, dtype=float)
+        self.leg_speeds_metres_per_second = leg_speeds_metres_per_second
+        self.target_lead_metres = target_lead_metres
         self.target_metres = self.waypoints_metres[0].copy()
         # The waypoint the target is sliding towards.
         self.next_waypoint_number = 1
@@ -83,10 +90,10 @@ class RouteFollower:
         self._move_past_waypoint_if_allowed(drone_position_metres)
         if self.next_waypoint_number >= len(self.waypoints_metres):
             return self.target_metres.copy()
-        if self._sideways_distance_to_target_metres(drone_position_metres) >= TARGET_LEAD_METRES:
+        if self._sideways_distance_to_target_metres(drone_position_metres) >= self.target_lead_metres:
             return self.target_metres.copy()
 
-        distance_to_slide_metres = CRUISE_SPEED_METRES_PER_SECOND * seconds_since_last_target
+        distance_to_slide_metres = self._speed_of_this_leg() * seconds_since_last_target
         next_waypoint = self.waypoints_metres[self.next_waypoint_number]
         distance_to_waypoint_metres = float(np.linalg.norm(next_waypoint - self.target_metres))
         if distance_to_slide_metres >= distance_to_waypoint_metres:
@@ -96,6 +103,11 @@ class RouteFollower:
             direction = (next_waypoint - self.target_metres) / distance_to_waypoint_metres
             self.target_metres = self.target_metres + direction * distance_to_slide_metres
         return self.target_metres.copy()
+
+    def _speed_of_this_leg(self):
+        if self.leg_speeds_metres_per_second is None:
+            return CRUISE_SPEED_METRES_PER_SECOND
+        return self.leg_speeds_metres_per_second[self.next_waypoint_number]
 
     def _move_past_waypoint_if_allowed(self, drone_position_metres):
         if self.next_waypoint_number >= len(self.waypoints_metres):

@@ -131,6 +131,15 @@ def test_without_a_raw_reading_px4_stopping_using_the_laser_lands_the_drone():
     assert "stopped using the bottom laser" in decision.reason
 
 
+def test_the_fallback_routes_carry_on_when_px4_stops_using_the_laser_but_not_when_it_is_faulty():
+    safety = RunSafety(SCAN, stop_when_px4_stops_using_the_laser=False)
+    safety.check(no_raw_laser(0.0, uses_laser=True))
+    for tenth in range(30):
+        assert safety.check(no_raw_laser(0.1 + tenth / 10.0, uses_laser=False)).action == CARRY_ON
+    safety.check(no_raw_laser(4.0, uses_laser=False, faulty=True))
+    assert safety.check(no_raw_laser(4.0 + LASER_UNUSED_LONGEST_SECONDS + 0.1, uses_laser=False, faulty=True)).action == LAND_HERE
+
+
 def test_without_a_raw_reading_the_floor_and_a_px4_that_never_used_the_laser_dont_stop_the_run():
     safety = RunSafety(SCAN)
     # Close to the floor PX4 may use the air pressure sensor. Then it never uses the laser at all.

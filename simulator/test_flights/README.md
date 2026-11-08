@@ -10,6 +10,8 @@ Read them in this order:
 | `landing_test.py` | Climbs to 0.8 m, flies 1 m forward, and lands. Its results are in section 7 of [`../../docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md). |
 | `route_test.py` | Plans a route from the drone's map, flies the whole course and lands on the pad. |
 | `real_program_test.py` | Runs one of our real drone programs, unchanged, and plays the teammate who arms the drone and flips the switch. |
+| `make_fallback_test_worlds.py` | Makes our phone scan with the maze walls changed (one removed, one moved, one removed and one slanted), for the fallback missions' flights. |
+| `fallback_flight_report.py` | After a fallback flight: speed, true height, PX4's height and the laser at each wall crossing, touches, and whether it landed on the pad. |
 | `make_world_for_the_referee.py` | Copies a practice map, such as the mock gap and window, and adds the rulebook's checkpoint lines as tiny pretend lines in a corner, so the referee can load it. Simulator only; the drone's program still gets the real map. |
 | `rise_and_land_test.py` | Runs the rise-and-land program from `drone_code/smoke_flights/` (rise 0.5 m, hold 5 s, land), written by another session. It passed once on 2026-11-07 at about 12:57, with PX4's height within 10 cm (largest error 0.098 m). |
 
@@ -69,6 +71,24 @@ The mock gap and window, in a world made for the referee first:
 ```bash
 python3 simulator/test_flights/make_world_for_the_referee.py drone_code/team_nav/course_maps/practice_mock_gap_and_window.json
 simulator/run_test_flight.sh --world simulator/generated_files/practice_worlds/practice_mock_gap_and_window.json real_program_test.py --env TEAM_NAV_RUN_MODE=practice -- /repository/simulator/generated_files/ros_install/team_nav/lib/team_nav/practice_flight mock_gap_and_window --ignore-raw-laser
+```
+
+## The fallback missions
+
+`course_run` flies a fallback route high over the walls when `TEAM_NAV_MISSION` names one
+(`drone_code/team_nav/team_nav/fallback_run.py`). Fly them as the real drone works, without the raw
+laser reading (`--ignore-raw-laser`). The referee notes "went above the wall tops" each time, as it
+should: these routes take that penalty on purpose.
+
+```bash
+simulator/run_test_flight.sh --world drone_code/team_nav/course_maps/phone_scan_2026-11-06.json real_program_test.py --env TEAM_NAV_MISSION=fallback_tunnel -- /repository/simulator/generated_files/ros_install/team_nav/lib/team_nav/course_run --ignore-raw-laser
+python3 simulator/test_flights/fallback_flight_report.py --world drone_code/team_nav/course_maps/phone_scan_2026-11-06.json
+```
+
+For a changed maze, make the worlds first and give one as `--world` (the drone keeps the scan as its map):
+
+```bash
+docker run --rm --volume "$PWD:/repository" --workdir /repository --env PYTHONPATH=/repository/drone_code/team_nav drone-simulator python3 simulator/test_flights/make_fallback_test_worlds.py
 ```
 
 ## What makes a flight fail

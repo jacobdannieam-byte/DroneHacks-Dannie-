@@ -17,6 +17,9 @@ DRAWING_MAP = "organizers_drawing"
 SCAN_MAP = "phone_scan_2026-11-06"
 SCAN_MAP_TRUSTING_EVERY_WALL = "phone_scan_2026-11-06_trusting_every_wall"
 ALL_OUR_MAPS = (DRAWING_MAP, SCAN_MAP, SCAN_MAP_TRUSTING_EVERY_WALL)
+# The organizers' changed course of 2026-11-08 (course_map_tools/make_map_from_new_organizers_model.py).
+# Not in ALL_OUR_MAPS: no route can start from its launch mark, which a new wall almost touches.
+CHANGED_COURSE_MAP = "organizers_new_start_2026-11-08"
 
 
 def load_our_map(map_name):

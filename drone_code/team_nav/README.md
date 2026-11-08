@@ -45,6 +45,9 @@ Read the files in `team_nav/` in this order:
 | `target_sender.py` | Sends position and speed targets to the organizers' flight_interface; nothing else. |
 | `flight_steps.py` | The connection to the drone and the steps every flight uses: wait until ready, wait for the start switch, climb, hold, land. |
 | `course_run.py` | The competition program: plans the route and flies the whole course. |
+| `high_path_rules.py` | Checks a path flown at 2.3 m, over the walls, against the bottom laser's rules: walls crossed square-on and at speed, no turning or stopping over a wall, a boulder or the tunnel. |
+| `fallback_routes.py` | Plans the two fallback routes high over the walls (`fallback_pad`, `fallback_tunnel`) from the map. |
+| `fallback_run.py` | Makes `course_run` fly a fallback route when `TEAM_NAV_MISSION` names one (`../TEST_SEQUENCE.md`, step 9F). |
 | `launch_pieces.py`, `launch/*.launch.py` | What starts on the drone: `watch_only`, `test_flights` or `course_run`. |
 | `drone.sh` | The one command typed on the drone's computer (`../TEST_SEQUENCE.md`). |
 
@@ -55,6 +58,7 @@ Read the files in `team_nav/` in this order:
 | `course_maps/organizers_drawing.json` | Made from the organizers' 3D model. |
 | `course_maps/phone_scan_2026-11-06.json` | Made from our phone scan of the real course. This is our best map. One wall we doubt (A1) is copied from the drawing instead. It has the scan's three low things and the drawing's five boulders, because boulders are easy to move. |
 | `course_maps/phone_scan_2026-11-06_trusting_every_wall.json` | The scan with every wall taken from the scan. The tests use it as a changed course. |
+| `course_maps/organizers_new_start_2026-11-08.json` | The organizers' changed course of 2026-11-08: the three maze walls replaced by three new walls in the start area, measured from their new 3D model by `course_map_tools/make_map_from_new_organizers_model.py`; everything else from the drawing, checked against the new model. **The new diagonal wall is 0.08 m from the launch mark's centre, so no route can start from the mark** (the drone needs 0.35 m). The checkpoint lines "end of first corridor" and "Gate A" are kept from the drawing, which placed them from the old maze walls. |
 | `course_maps/practice_mock_gap_and_window.json` | The practice course we build in the net: a gap, then a window over a 0.4 m box, then a pad. Its sizes are a proposal until measured. Its mission is `missions/practice_mock_gap_and_window.json`; `practice_flights/README.md` describes it. |
 
 The programs that make these maps are in [`../../course_map_tools/`](../../course_map_tools/README.md). Every shape in a map has a `source` note saying where its numbers came from.
@@ -82,7 +86,7 @@ To see the routes, run `course_map_tools/draw_planned_routes.py` (see its folder
 
 ## The tests
 
-The tests in `test/` plan routes on our three maps and on changed copies of the drawing and the scan: the window too small, something behind the window, Gate B closed as well, the tunnel blocked, the first corridor closed or narrowed, a pole in the way, boulders added, moved or removed, a maze wall moved or removed, and replanning from partway through the course. Each test either checks that the route is safe or checks that the planner explains clearly why there is no route. `test/test_route_follower.py` flies a pretend drone along a route to check the follower's rules, including that it holds the window's height while any part of it is over the window's lower wall. `test/test_stopping_spots.py` checks how stops are moved away from boulders, on made-up routes and on our maps. `test/test_touch_detector.py` and `test/test_height_check.py` check the two safety checks with made-up readings.
+The tests in `test/` plan routes on our three maps and on changed copies of the drawing and the scan: the window too small, something behind the window, Gate B closed as well, the tunnel blocked, the first corridor closed or narrowed, a pole in the way, boulders added, moved or removed, a maze wall moved or removed, and replanning from partway through the course. Each test either checks that the route is safe or checks that the planner explains clearly why there is no route. `test/test_route_follower.py` flies a pretend drone along a route to check the follower's rules, including that it holds the window's height while any part of it is over the window's lower wall. `test/test_stopping_spots.py` checks how stops are moved away from boulders, on made-up routes and on our maps. `test/test_fallback_routes.py` checks the two fallback routes on our maps and on changed mazes, the laser rules on made-up paths, and the height correction. `test/test_touch_detector.py` and `test/test_height_check.py` check the two safety checks with made-up readings.
 
 A route's safety is checked by `test/route_checks.py`, which measures the route again from the map rather than trusting the planner's own numbers. It also checks that every leg near a boulder is listed, so the flight program knows to keep moving there. `test/course_changes.py` makes the changed courses.
 

@@ -66,6 +66,12 @@ If flight_interface dies too (for example when the whole launch file is stopped)
 Offboard stream and does whatever its failsafe settings say (COM_OBL_RC_ACT). We have not tested
 any of this on the real drone.
 
+The fallback missions
+--------------------
+If TEAM_NAV_MISSION is fallback_pad or fallback_tunnel, this program flies that high route over
+the walls instead of the course route (fallback_run.py explains them). Without it, nothing changes.
+The competition launch file never sets it.
+
 Exit codes: 0 the run finished with the motors off (or a practice run finished as asked);
 1 the run stopped early or failed; 2 it refused to start (bad settings or no route); 130 Ctrl+C.
 
@@ -239,10 +245,19 @@ class CourseRun:
         self.link = link
         self.log = link.log
         self.stop_after_stage = run_mode.stop_after_stage.lower()
-        self.watch = SafetyWatch(link, RunSafety(plan.course_map, plan.other_possible_boulders), plan.start_frame)
+        self.watch = SafetyWatch(link, self.make_run_safety(), plan.start_frame)
         self.stage_name = None
         self.stage_start_seconds = None
         self.flight_start_seconds = None
+
+    def make_run_safety(self):
+        """The safety checks (run_safety.py). fallback_run.py replaces this to allow its height."""
+        return RunSafety(self.plan.course_map, self.plan.other_possible_boulders)
+
+    def make_route_follower(self):
+        """The route follower for the route, cut short after the stage to stop after, if any.
+        fallback_run.py replaces this to give the follower its own speeds."""
+        return RouteFollower(self.plan.waypoints_to_fly(self.stop_after_stage))
 
     def run(self):
         """Flies, and handles every way the flight can end. Returns the exit code."""
@@ -279,7 +294,7 @@ class CourseRun:
 
     def follow_the_route(self):
         """Slides the target along the route, stage by stage, with the safety checks running."""
-        follower = RouteFollower(self.plan.waypoints_to_fly(self.stop_after_stage))
+        follower = self.make_route_follower()
         stages_still_to_finish = list(self.plan.route_stages)
         self.begin_stage(stages_still_to_finish[0][0])
         time_of_last_target = [self.link.now_seconds()]
@@ -399,8 +414,15 @@ def split_file_names(words):
 
 def plan_then_fly(arguments, run_mode, log):
     """Returns the exit code."""
+    # Imported here because fallback_run.py builds on this file.
+    from team_nav import fallback_run
     try:
-        plan = plan_the_course(arguments, run_mode, log)
+        fallback_route_name = fallback_run.fallback_route_from_environment()
+        if fallback_route_name is None:
+            plan, run_class = plan_the_course(arguments, run_mode, log), CourseRun
+        else:
+            plan = fallback_run.plan_the_fallback(arguments, run_mode, log, fallback_route_name)
+            run_class = fallback_run.FallbackRun
     except (OSError, CourseMapError, MissionError, RoutePlanningError, ValueError) as problem:
         log.event("refused", f"REFUSING TO START, before anything was sent to the drone. {problem}")
         return EXIT_REFUSED_TO_START
@@ -416,7 +438,7 @@ def plan_then_fly(arguments, run_mode, log):
     node = Node(PROGRAM_NAME)
     try:
         link = flight_steps.DroneLink(node, log, ignore_raw_laser=arguments.ignore_raw_laser)
-        return CourseRun(plan, run_mode, link).run()
+        return run_class(plan, run_mode, link).run()
     except Exception:
         log.event("error", f"ERROR before the flight could begin:\n{traceback.format_exc()}")
         return EXIT_STOPPED_OR_FAILED

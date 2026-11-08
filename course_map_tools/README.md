@@ -14,7 +14,9 @@ This folder makes those map files, and draws the routes planned on them.
    - `phone_scan_points.py`, which reads the scan and turns it to line up with the course's axes;
    - `measure_phone_scan.py`, which measures each wall, the tunnel, the window and the low objects in the scan.
 4. **`draw_planned_routes.py`** plans a route on each map, and on a few changed courses, and saves a picture of each.
-5. **`make_boulder_surprise_worlds.py`** makes simulator worlds where the boulders aren't where our scan map says, so we can fly the drone into boulders it doesn't expect.
+5. **`make_map_from_new_organizers_model.py`** makes the map of the organizers' changed course (2026-11-08) from their new model, which is one unnamed mesh in millimetres: it slices the model at flight height to measure the three new walls, keeps everything else from the drawing after checking it against the model, and warns about walls too close to the launch mark.
+6. **`draw_fallback_routes.py`** draws the two fallback routes high over the walls (`fallback_pad`, `fallback_tunnel`), on our maps and over the changed maze worlds the simulator flies them in.
+7. **`make_boulder_surprise_worlds.py`** makes simulator worlds where the boulders aren't where our scan map says, so we can fly the drone into boulders it doesn't expect.
 
 ## How to run them
 
@@ -32,10 +34,23 @@ Make the maps from our phone scan. Copy the scan into `simulator/generated_files
 docker run --rm --volume "$PWD:/repository" --workdir /repository --env PYTHONPATH=/repository/drone_code/team_nav drone-simulator python3 course_map_tools/make_map_from_phone_scan.py simulator/generated_files/dronehacks-course-scan-2026-11-06.ply
 ```
 
+Make the map of the changed course. Copy the new model into `simulator/generated_files/` first.
+
+```bash
+docker run --rm --volume "$PWD:/repository" --workdir /repository --env PYTHONPATH=/repository/drone_code/team_nav drone-simulator python3 course_map_tools/make_map_from_new_organizers_model.py simulator/generated_files/new_dronehacks_course.obj
+```
+
 Draw the planned routes. The pictures go to `simulator/generated_files/route_pictures/`.
 
 ```bash
 docker run --rm --volume "$PWD:/repository" --workdir /repository --env PYTHONPATH=/repository/drone_code/team_nav drone-simulator python3 course_map_tools/draw_planned_routes.py
+```
+
+Draw the fallback routes. The pictures go to `simulator/generated_files/fallback_route_pictures/`.
+Run `simulator/test_flights/make_fallback_test_worlds.py` first (see its folder's README).
+
+```bash
+docker run --rm --volume "$PWD:/repository" --workdir /repository --env PYTHONPATH=/repository/drone_code/team_nav drone-simulator python3 course_map_tools/draw_fallback_routes.py
 ```
 
 Make the boulder surprise worlds. They go to `simulator/generated_files/boulder_surprise_worlds/`, and the program prints the command that flies each one.
