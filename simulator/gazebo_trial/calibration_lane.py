@@ -153,7 +153,8 @@ def review(generated_drone, map_path=MAP):
         raise ValueError('calibration lane must remain separate and obstacle free')
     if tuple(course.launch_mark_centre_metres) != (0., -2.):
         raise ValueError('unexpected launch mark')
-    text = world_sdf(course, drone_sdf(DRONE_16_WITH_CAMERA_MODEL, 0., 0.), (0., 2., -.04))
+    launch_x, launch_y = course.launch_mark_centre_metres
+    text = world_sdf(course, drone_sdf(DRONE_16_WITH_CAMERA_MODEL, 0., 0.), (-launch_x, -launch_y, -.04))
     geometry = validate_world(text)
     model_path = Path(generated_drone)
     rows = collision_radius(ET.parse(model_path).getroot().find('model'))

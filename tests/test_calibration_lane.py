@@ -25,6 +25,19 @@ def test_separate_lane_has_exact_generated_navigation_reserves():
     assert 'not a physical survey' in course.description
 
 
+def test_review_world_bytes_match_actual_generator_including_signed_zero(tmp_path, monkeypatch):
+    from simulator.gazebo_trial.calibration_lane import review
+    import make_gazebo_world
+    monkeypatch.setattr(make_gazebo_world, 'FOLDER_FOR_WORLDS', str(tmp_path/'worlds'))
+    model=tmp_path/'model.sdf'
+    model.write_text('<sdf><model><link><collision><geometry><box><size>.2 .2 .08</size>'
+                     '</box></geometry></collision></link></model></sdf>')
+    reviewed, _ = review(model)
+    from pathlib import Path
+    actual=Path(make_gazebo_world.make_world_file(str(MAP),for_full_simulator=True)).read_text()
+    assert reviewed == actual
+
+
 @pytest.mark.parametrize('mutation', ['floor', 'roof', 'extra_obstacle', 'short_wall', 'launch', 'dynamic'])
 def test_changed_generated_geometry_requires_review(mutation):
     root = ET.fromstring(lane())

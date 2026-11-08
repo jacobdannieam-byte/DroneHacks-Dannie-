@@ -170,7 +170,7 @@ ps -eo pid,comm,%cpu,rss > /evidence/resources_start.txt
 case "$mode" in
     calibration_check|calibration_trial)
         contract=scenarios/calibration/c0_recorder.json
-        geometry=artifacts/taskforce_batch_003/native-lane-review/geometry-review.json
+        geometry=artifacts/taskforce_batch_003/native-lane-reviewed-v2/geometry-review.json
         contract_sha="$(sha256sum "$contract" | cut -d' ' -f1)"
         cp "$profile" /evidence/calibration_profile.json
         cp "$contract" /evidence/recorder_contract.json

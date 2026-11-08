@@ -13,14 +13,14 @@
       -1.25
     ],
     "maximum_offset_m": [
-      4.0,
+      0.5,
       0.5,
       0.02
     ],
     "origin_tolerance_m": 0.1,
     "height_m": 1.0,
     "hover_tolerance_m": 0.2,
-    "north_brake_m": 1.5,
+    "north_brake_m": 0.25,
     "transit_speed_mps": 0.2,
     "climb_speed_mps": 0.2,
     "actual_speed_limit_mps": 0.5,
@@ -38,8 +38,8 @@
     "valid_until_ns": 600000000000,
     "evidence_id": "batch003-native-timing-plus-pinned-lockstep-source"
   },
-  "geometry_evidence_sha256": "f1ff5f51cfb7bd85d9a252d9b135d43f22a4a51cdea9c091b5138e8c437cf799",
-  "geometry_evidence_file": "artifacts/taskforce_batch_003/native-lane-review/geometry-review.json",
+  "geometry_evidence_sha256": "6582616dd24cb11488196bfc59bcd4476c685508a8866b410b91d334728fdaf3",
+  "geometry_evidence_file": "artifacts/taskforce_batch_003/native-lane-reviewed-v2/geometry-review.json",
   "parameter_overrides": {
     "MPC_LAND_SPEED": 0.3
   },

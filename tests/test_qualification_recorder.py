@@ -236,3 +236,48 @@ def test_hover_land_completeness_does_not_fabricate_braking_measurement():
     assert 'brake_command_s' not in record.document
     record.document['trial_kind'] = 'stopping'
     assert not record.result()['recording_complete']
+
+
+def ready_record():
+    record = mapped_record()
+    record.sample(message(timestamp=1_000_000),3_000_000_000,wall_ns=1_000_000_000)
+    record.status(SimpleNamespace(timestamp=1_000_000,arming_state=1),3_000_000_000,wall_ns=1_000_000_000)
+    assert record.readiness(3_000_000_000,pid=42) is not None
+    record.monitor(3_000_000_000,1_000_000_000)
+    return record
+
+
+def test_after_ready_position_silence_fails_without_new_callback():
+    record = ready_record()
+    record.monitor(3_100_000_000,1_100_000_000)
+    assert not record.faults
+    record.monitor(3_100_000_001,1_100_000_001)
+    assert record.faults == ['recorder_position_silent']
+
+
+def test_after_ready_status_silence_fails_despite_advancing_position():
+    record = ready_record()
+    for step in range(1, 16):
+        source = 1_000_000 + step*50_000
+        now = source*1000 + record.mapping.offset_ns
+        wall = 1_000_000_000 + step*50_000_000
+        record.sample(message(timestamp_sample=source,timestamp=source),now,wall_ns=wall)
+        record.monitor(now,wall)
+    assert not record.faults
+    record.monitor(3_750_000_001,1_750_000_001)
+    assert record.faults == ['recorder_status_silent']
+
+
+@pytest.mark.parametrize('resumed', [False, True])
+def test_after_ready_wall_clock_stall_fails_even_if_ros_resumes(resumed):
+    record = ready_record()
+    record.monitor(3_000_000_001 if resumed else 3_000_000_000,1_300_000_000)
+    assert record.faults == ['recorder_clock_stalled']
+
+
+def test_after_ready_wall_receipt_limit_is_not_renewed_by_clock():
+    record = ready_record()
+    # Advancing ROS by a nanosecond per callback does not refresh receipt wall age.
+    for step in range(1, 32):
+        record.monitor(3_000_000_000+step,1_000_000_000+step*100_000_000)
+    assert record.faults == ['recorder_position_silent']

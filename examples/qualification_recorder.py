@@ -16,6 +16,11 @@ from time import monotonic, monotonic_ns
 from examples.h1_observation import ClockMapping
 from onboard.diagnostics.phase1_probe import RESET_FIELDS
 
+POSITION_SILENCE_NS = 100_000_000  # Same capture-gap limit as stopping analysis.
+STATUS_SILENCE_NS = 750_000_000  # Reviewed simulated-estimator authority cadence.
+RECEIPT_WALL_SILENCE_NS = 3_000_000_000  # Maximum calibration owner receipt allowance.
+CLOCK_STALL_NS = 300_000_000  # Same steady-clock stall limit as the native owner.
+
 
 def event_publisher_identity(node, topic, owner_id):
     """Inspect Humble's singleton graph endpoint; this is not message authentication.
@@ -63,6 +68,7 @@ class TrialRecording:
         self.last_clock_ns = None
         self.reset_counters = None
         self.event_publisher_gid = None
+        self.monitor_clock = None
 
     def _stamp(self, message, kind):
         value = getattr(message, 'timestamp_sample' if kind == 'sample' else 'timestamp', None)
@@ -246,6 +252,31 @@ class TrialRecording:
                     contract_sha256=self.document.get('contract_sha256'),
                     **{key:self.document[key] for key in ('trial_id','owner_id','profile_sha256','trial_kind')})
 
+    def monitor(self, now_ns, wall_ns):
+        """After readiness, silence is a fault even when no invalid callback arrives."""
+        if self.faults:
+            return
+        if type(now_ns) is not int or type(wall_ns) is not int or self.mapping is None:
+            self.faults.append('invalid_monitor_clock'); return
+        previous = self.monitor_clock
+        if previous is not None:
+            prior_ros, progress_wall = previous
+            if now_ns < prior_ros or wall_ns < progress_wall:
+                self.faults.append('recorder_clock_rewind'); return
+            if wall_ns - progress_wall >= CLOCK_STALL_NS:
+                self.faults.append('recorder_clock_stalled'); return
+        if previous is None or now_ns != previous[0]:
+            self.monitor_clock = (now_ns, wall_ns)
+        for name, rows, maximum in (
+                ('position', self.document['samples'], POSITION_SILENCE_NS),
+                ('status', self.document['status_reports'], STATUS_SILENCE_NS)):
+            if not rows:
+                self.faults.append('recorder_' + name + '_missing'); return
+            row = rows[-1]
+            if (not 0 <= now_ns-row['mapped_stamp_ns']+self.mapping.max_error_ns <= maximum
+                    or not 0 <= wall_ns-row['receipt_wall_ns'] <= RECEIPT_WALL_SILENCE_NS):
+                self.faults.append('recorder_' + name + '_silent'); return
+
 
 def write_ready(path, report):
     """Publish a complete handshake without overwriting another run's artifact."""
@@ -302,6 +333,9 @@ def main():
     from std_msgs.msg import String
     from rosgraph_msgs.msg import Clock
     from rclpy.qos import qos_profile_sensor_data
+    from rclpy.executors import ExternalShutdownException
+    from rclpy.impl.implementation_singleton import rclpy_implementation
+    from rclpy.utilities import try_shutdown
     from refnav.node import PX4_QOS
     rclpy.init(args=['--ros-args','-p','use_sim_time:=true'])
     node=rclpy.create_node('qualification_recorder')
@@ -327,6 +361,8 @@ def main():
             rclpy.spin_once(node,timeout_sec=.01)
             now_ns = node.get_clock().now().nanoseconds
             record._expire_pending(now_ns, monotonic_ns())
+            if ready_written:
+                record.monitor(now_ns, monotonic_ns())
             if record.faults:
                 break
             if not ready_written:
@@ -334,9 +370,20 @@ def main():
                 if ready is not None:
                     write_ready(args.ready_output, ready)
                     ready_written = True
+                    record.monitor(now_ns, monotonic_ns())
+    except (KeyboardInterrupt, ExternalShutdownException):
+        record.document['shutdown_interrupted'] = True
+    except rclpy_implementation.RCLError:
+        if rclpy.ok():
+            record.faults.append('recorder_runtime_error')
+            raise
+        record.document['shutdown_interrupted'] = True
     finally:
         with args.output.open('x') as stream: json.dump(record.result(),stream,indent=2,allow_nan=False)
-        node.destroy_node(); rclpy.shutdown()
+        try:
+            node.destroy_node()
+        finally:
+            try_shutdown()
     return 0 if record.result()['recording_complete'] else 2
 
 if __name__=='__main__': raise SystemExit(main())
