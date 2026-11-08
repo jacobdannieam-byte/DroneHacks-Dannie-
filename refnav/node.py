@@ -216,7 +216,15 @@ class RefNav(Node):
                                      getattr(m, "timestamp_sample", None))
 
     def _on_att(self, m):
-        self.v.q = tuple(float(c) for c in m.q)
+        if self._hybrid_runtime is None:
+            self.v.q = tuple(float(c) for c in m.q)
+            return
+        from refnav.launch_telemetry import accept_attitude
+        previous_reset = self.v.attitude_reset_counter
+        reason = accept_attitude(self.v, m, self._hybrid_runtime.loop.replay.hybrid.clock,
+                                 self.get_clock().now().nanoseconds)
+        if reason or (previous_reset is not None and previous_reset != self.v.attitude_reset_counter):
+            self._invalidate_hybrid()
 
     def _on_status(self, m):
         self.v.armed = m.arming_state == 2
@@ -228,6 +236,8 @@ class RefNav(Node):
         self.v.landed = bool(m.landed)
         if self._hybrid_runtime is not None:
             self._note_hybrid_report("landed", self.v.landed, getattr(m, "timestamp", None))
+            report = self._hybrid_reports.get('landed')
+            self.v.landed_capture_ns = report[0] if report is not None else None
 
     def _on_health(self, m):
         self.mission.on_health(self._now(), m.data)
@@ -400,7 +410,7 @@ class RefNav(Node):
                     or self._hybrid_runtime.expire_owner_target(publication_ns, wall_ns)):
                 return
             try:
-                reason = self._hybrid_runtime.publication_reason(self.mission, self.v, out, publication_ns)
+                reason = self._hybrid_runtime.publication_reason(self.mission, self.v, out, publication_ns, wall_ns=wall_ns)
             except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, ArithmeticError, OSError) as error:
                 reason = 'publication_check_failed:' + type(error).__name__
             publication_ns = self.get_clock().now().nanoseconds
@@ -409,7 +419,8 @@ class RefNav(Node):
                     or self._hybrid_runtime.expire_owner_target(publication_ns, wall_ns)):
                 return
             try:
-                reason = reason or self._hybrid_runtime.publication_freshness_reason(publication_ns)
+                reason = reason or self._hybrid_runtime.publication_freshness_reason(publication_ns,
+                    wall_ns=wall_ns, vehicle=self.v)
             except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, ArithmeticError) as error:
                 reason = 'publication_freshness_failed:' + type(error).__name__
             if reason is not None:

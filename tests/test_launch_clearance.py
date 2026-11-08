@@ -1,6 +1,17 @@
 import numpy as np
-from dataclasses import replace
+from dataclasses import asdict, replace
+from itertools import product
+import json
+import math
+from types import SimpleNamespace as S
+
+import pytest
+
+from onboard.adapters.geometry import R_ENU_NED
+from refnav.core import Output, Vehicle
+from refnav.launch_clearance import BoundLaunchGuard, ContactTransition
 from refnav.launch_clearance import SimulatorLaunchReference,directional_error
+from refnav.world_model.spatial_input import NS
 
 def reference():
     return SimulatorLaunchReference('a'*64,'sim_local',0,0.,2.,(-2.,-2.),(2.,2.),(.3,.3,.1),.1,.005)
@@ -96,3 +107,218 @@ def test_binder_requires_explicit_deployment_and_encloses_all_attitudes(tmp_path
     assert np.allclose(guard.reference.body_half_extent_m,[np.linalg.norm((.3,.1,.04))]*3)
     alignment.map_from_enu_yaw_rad=.1
     with pytest.raises(ValueError,match='world/map frame'): bind(runtime,settings,tmp_path)
+    alignment.map_from_enu_yaw_rad=0.
+    transition_file = tmp_path / 'transition.json'
+    document = dict(scope='reviewed_model_conditioned_isolated_sitl_contact',
+                    world_sha256=settings['world_sha256'], resolved_vehicle_sha256=settings['resolved_vehicle_sha256'],
+                    support_collisions=['body/c'], bounds=asdict(synthetic_contact()))
+    transition_file.write_text(json.dumps(document), encoding='utf-8')
+    digest = sha256(transition_file.read_bytes()).hexdigest()
+    settings['contact_transition'] = dict(file=transition_file.name, sha256=digest)
+    with pytest.raises(ValueError, match='reviewed contact-transition identity'):
+        bind(runtime, settings, tmp_path)
+    settings['deployment_authorization']['contact_transition_sha256'] = digest
+    guard = bind(runtime, settings, tmp_path)
+    assert guard.transition.contract == synthetic_contact()
+    assert np.count_nonzero(guard.transition.support) == 4 and guard.source_valid()
+    transition_file.write_text('changed', encoding='utf-8')
+    assert not guard.source_valid()
+
+
+def synthetic_contact():
+    return ContactTransition('synthetic geometry and reachable bounds only', (0., 0.), .6, .01, .04, .02, .08,
+                             .004, .003, .003, .025, .15, .5, .2, .6, .1,
+                             80_000_000, 100_000_000, 1_050_000_000, 4 * NS, 8 * NS)
+
+
+class LiftTrace:
+    """Measured-state replay of an idealized isolated pad, with no motion output."""
+
+    def __init__(self, **options):
+        self.valid = True
+        ref = replace(reference(), floor_z_m=-.04, body_half_extent_m=(.31,) * 3,
+                      contact_height_m=.04, contact_tolerance_m=0.)
+        vertices = [np.array((.1, .1, .04)) * corner for corner in product((-1., 1.), repeat=3)]
+        vertices += [np.array((.25, .1, .01)) * corner + (.02, 0., .03)
+                     for corner in product((-1., 1.), repeat=3)]
+        support = [point[2] == -.04 for point in vertices]
+        self.alignment = S(map=S(frame_id='sim_local', epoch=0), ned='ned', map_from_enu_yaw_rad=0.,
+                           ned_origin_in_map_m=(0., 0., 0.), provenance='fixture', position_error_m=0.,
+                           angle_error_rad=0., time_origin_ns=0)
+        self.guard = BoundLaunchGuard(ref, lambda: self.valid, (.01, .01, .03), R_ENU_NED, (0., 0., 0.),
+                                     alignment=self.alignment, collision_vertices=vertices, support_vertices=support,
+                                     contact_transition=replace(synthetic_contact(), **options))
+        self.mission = S(home=(0., 0., 0., 0.), sp=(0., 0., 0., 0.), p=S(height_m=.8, climb_rate_mps=.2), phase='wait')
+        self.now = self.wall = NS
+
+    def step(self, height=0., *, command=None, phase='climb', landed=False, armed=True, advance=50_000_000,
+             wall_advance=None, reset=0, q=(1., 0., 0., 0.), north=0., speed=.1, attitude_age=0, commit=True):
+        self.now += advance
+        self.wall += advance if wall_advance is None else wall_advance
+        self.mission.phase = phase
+        down = -height
+        state = S(timestamp_s=self.now / NS, position_m=(north, 0., down), velocity_mps=(0., 0., -speed))
+        inputs = dict(state=state, alignment=self.alignment, estimator_reset_counter=0, now_ns=self.now,
+                      vehicle=S(tracking_error_m=0., state_position_error_m=.01))
+        vehicle = Vehicle(pos=state.position_m, q=q, landed=landed, armed=armed,
+                          attitude_capture_ns=self.now-attitude_age, attitude_received_ns=self.now,
+                          attitude_reset_counter=reset, landed_capture_ns=self.now)
+        setpoint = (0., 0., -command if command is not None else down, 0.)
+        self.mission.sp = setpoint
+        kwargs = dict(now_ns=self.now, wall_ns=self.wall)
+        result = self.guard.check_owner(self.mission, vehicle, inputs, **kwargs)
+        if not commit or result is not None:
+            return result
+        out = Output(phase, setpoint, stream=True)
+        result = self.guard.check_output(self.mission, vehicle, inputs, out, phase=phase, **kwargs)
+        return result or self.guard.freshness_reason(vehicle, inputs, **kwargs)
+
+    def anchor(self):
+        while self.guard.transition.rest is None or self.now - self.guard.transition.rest[2] < 50_000_000:
+            assert self.step(phase='wait', armed=False, landed=True, speed=0.) == 'launch_transition_contact_dwell'
+        assert self.step(phase='wait', armed=False, landed=True, speed=0.) is None
+
+    def climb(self):
+        for centimetres in range(2, 41):
+            assert self.step((centimetres - 1) / 100, command=centimetres / 100) is None
+
+
+def test_contact_transition_admits_pad_contact_after_landed_false_then_hands_off():
+    trace = LiftTrace()
+    for expected in ('launch_transition_contact_dwell', 'launch_transition_contact_dwell', None):
+        assert trace.step(phase='wait', armed=False, landed=True, speed=0., commit=False) == expected
+    assert trace.guard.transition.anchor is None  # precheck cannot consume the anchor
+    trace.anchor()
+    clocks = trace.guard.transition.clocks
+    assert trace.step(phase='arm', armed=True, landed=True, speed=0.) is None
+    # C0 showed this ordering: the detector released before the center rose.
+    assert trace.step(0., command=.01, landed=False, speed=0.) is None
+    trace.climb()
+    assert trace.guard.transition.handed_off and trace.guard.transition.clocks == clocks
+    assert trace.step(.40, phase='hover') is None
+    assert trace.step(.02, command=.40, landed=True) == 'launch_floor_clearance_after_handoff'
+    assert trace.step(.50, command=.40) == 'launch_floor_clearance_after_handoff'
+
+
+@pytest.mark.parametrize(('changes', 'reason'), (
+    ({'attitude_age': 80_000_001}, 'launch_transition_telemetry_unverified'),
+    ({'wall_advance': 250_000_001}, 'launch_transition_control_gap'),
+    ({'reset': 1}, 'launch_transition_reset'),
+    ({'north': .11}, 'launch_transition_drift_or_height'),
+    ({'q': (math.cos(.10), math.sin(.10), 0., 0.)}, 'launch_transition_attitude'),
+    ({'command': .081}, 'launch_transition_command_rate'),
+    ({'speed': .51}, 'launch_transition_state_or_speed'),
+    ({'speed': -.01}, 'launch_transition_descending_state'),
+))
+def test_contact_transition_violations_latch(changes, reason):
+    trace = LiftTrace()
+    trace.anchor()
+    assert trace.step(**changes) == reason
+    assert trace.step(.4) == reason
+
+
+def test_contact_transition_never_accepts_nonsupport_floor_intersection():
+    trace = LiftTrace(max_tilt_rad=.20, attitude_error_rad=.10, max_angular_rate_rad_s=.05)
+    # This uncertainty cannot prove the low in-flight protrusion clear even on the pad.
+    assert trace.step(phase='wait', armed=False, landed=True, speed=0.) == 'launch_transition_nonsupport_floor_intersection'
+
+
+def test_contact_transition_clocks_and_source_cannot_be_reacquired():
+    trace = LiftTrace(max_ros_ns=120_000_000, max_wall_ns=250_000_000)
+    trace.anchor()
+    assert trace.step(phase='arm', landed=True) is None
+    assert trace.step(phase='arm', landed=True) is None
+    assert trace.step(phase='arm', landed=True) == 'launch_transition_clock_or_deadline'
+    for failure in ('source', 'owner'):
+        trace = LiftTrace()
+        trace.anchor()
+        if failure == 'source':
+            trace.valid = False
+            reason = 'launch_source_changed'
+        else:
+            trace.mission = S(**vars(trace.mission))
+            reason = 'launch_transition_owner_changed'
+        assert trace.step() == reason
+        trace.valid = True
+        assert trace.step(.4) == reason
+
+
+def test_contact_transition_handoff_preserves_reset_and_state_freshness():
+    trace = LiftTrace()
+    trace.anchor()
+    assert trace.step(command=.01, speed=0.) is None
+    trace.climb()
+    assert trace.guard.transition.handed_off
+    assert trace.step(.5, reset=1, phase='hover') == 'launch_transition_reset'
+
+
+def test_contact_transition_limits_support_command_lead():
+    trace = LiftTrace()
+    trace.anchor()
+    for centimetres in range(1, 9):
+        assert trace.step(0., command=centimetres / 100, speed=0.) is None
+    assert trace.step(0., command=.09, speed=0.) == 'launch_transition_support_clearance'
+
+
+def test_contact_dwell_cannot_cross_attitude_reset():
+    trace = LiftTrace()
+    for reset in (0, 0, 1, 1):
+        assert trace.step(phase='wait', armed=False, landed=True, speed=0., reset=reset) == (
+            'launch_transition_contact_dwell')
+    assert trace.step(phase='wait', armed=False, landed=True, speed=0., reset=1) is None
+
+
+def test_hybrid_owner_wait_to_arm_anchors_new_home_and_checks_actual_climb_output(monkeypatch):
+    from examples.hybrid_mission_smoke import runtime_fixture
+    from refnav.core import Mission, NAV_OFFBOARD, Params
+
+    trace = LiftTrace()
+    runtime = runtime_fixture()
+    runtime.launch_guard = trace.guard
+    mission = Mission(Params(height_m=.8, climb_rate_mps=.2, stream_lead_s=.10, health_quiet_s=0., hover_s=.5),
+                      hybrid_navigation=True)
+    prepared = {}
+    monkeypatch.setattr(runtime.loop, 'observation_reason', lambda *_: None)
+    monkeypatch.setattr(runtime.loop.replay, 'prepare', lambda _: (None, prepared))
+    now = NS
+
+    def tick(height=0., *, armed=False, landed=True):
+        nonlocal now
+        now += 50_000_000
+        capture = now - 1_000_000
+        position = (0., 0., -height)
+        prepared.update(state=S(timestamp_s=capture / NS, position_m=position,
+                                velocity_mps=(0., 0., -.2 if height else 0.)),
+                        alignment=trace.alignment, estimator_reset_counter=0, now_ns=now,
+                        vehicle=S(tracking_error_m=0., state_position_error_m=.01))
+        vehicle = Vehicle(pos=position, heading=0., pos_ok=True, q=(1., 0., 0., 0.), armed=armed, landed=landed,
+                          nav_state=NAV_OFFBOARD if armed else 0, attitude_capture_ns=capture,
+                          attitude_received_ns=now, attitude_reset_counter=0, landed_capture_ns=capture)
+        mission.on_health(now / NS, True)
+        mission.depth_t = mission.depth_ready_since = now / NS
+        output = runtime.owner_step(mission, vehicle, now_ns=now, wall_ns=now, generation=1,
+                                    admission=True, owner_ready=True)
+        assert runtime.publication_reason(mission, vehicle, output, now, wall_ns=now) is None
+        if output.stream:
+            assert runtime.publication_freshness_reason(now, wall_ns=now, vehicle=vehicle) is None
+        return output
+
+    assert mission.home is None
+    for _ in range(2):
+        wait = tick()
+        assert wait.phase == 'wait' and not wait.stream and not wait.commands
+        assert trace.guard.transition.anchor is None and mission.home is None
+    arm = tick()
+    assert arm.phase == 'arm' and arm.stream and not arm.commands
+    assert trace.guard.transition.home[0] == mission.home == (0., 0., 0., 0.)
+    assert trace.guard.transition.clocks == (now, now)
+    commands = [command for _ in range(3) for command in tick().commands]
+    assert commands == ['offboard', 'arm']
+    assert tick(armed=True).phase == 'climb'
+    first = tick(armed=True, landed=False)
+    assert first.phase == 'climb' and first.stream and first.setpoint[2] == pytest.approx(-.01)
+    for centimetres in range(1, 36):
+        out = tick(centimetres / 100, armed=True, landed=False)
+        assert out.phase == 'climb' and out.stream and not out.commands
+        assert out.setpoint[2] == pytest.approx(-(centimetres + 1) / 100)
+    assert trace.guard.transition.handed_off

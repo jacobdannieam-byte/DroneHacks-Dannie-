@@ -87,6 +87,10 @@ class Vehicle:
     armed: bool | None = None
     nav_state: int | None = None
     landed: bool | None = None
+    attitude_capture_ns: int | None = None
+    attitude_received_ns: int | None = None
+    attitude_reset_counter: int | None = None
+    landed_capture_ns: int | None = None
 
 
 @dataclass

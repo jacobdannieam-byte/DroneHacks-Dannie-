@@ -121,14 +121,15 @@ class HybridRuntime:
         reason = self.map_clearance.reason(inputs['alignment'], now_ns)
         return (reason, None) if reason else (None, self.map_clearance.attach(inputs))
 
-    def publication_reason(self, mission, vehicle, output, now_ns):
+    def publication_reason(self, mission, vehicle, output, now_ns, *, wall_ns=None):
         """Final deployment fence immediately before native output publication."""
         if not output.commands and not (output.stream and output.setpoint is not None):
             return None
         inputs = self._publication_inputs
         phase = self._publication_phase
         if phase in ('wait', 'arm', 'climb', 'hover') and self.launch_guard is not None:
-            reason = self.launch_guard.check_output(mission, vehicle, inputs, output, phase=phase)
+            reason = self.launch_guard.check_output(mission, vehicle, inputs, output, phase=phase,
+                now_ns=now_ns, wall_ns=perf_counter_ns() if wall_ns is None else wall_ns)
             if reason:
                 return reason
         if self.map_certificate is None:
@@ -153,8 +154,14 @@ class HybridRuntime:
                 inputs['alignment'], inputs['vehicle'], now_ns, stopping_envelope=self.executor.stopping_envelope)
         return None
 
-    def publication_freshness_reason(self, now_ns):
+    def publication_freshness_reason(self, now_ns, *, wall_ns=None, vehicle=None):
         """Cheap freshness fence after potentially slow source/geometry checks."""
+        if (self._publication_phase in ('wait', 'arm', 'climb', 'hover')
+                and self.launch_guard is not None and vehicle is not None):
+            reason = self.launch_guard.freshness_reason(vehicle, self._publication_inputs,
+                now_ns=now_ns, wall_ns=perf_counter_ns() if wall_ns is None else wall_ns)
+            if reason:
+                return reason
         if self.map_certificate is None:
             return None
         from refnav.trajectory_evaluation import state_capture_ns
@@ -355,7 +362,7 @@ class HybridRuntime:
         self._publication_inputs, self._publication_phase = inputs, mission.phase
         sensors_ready = admission and owner_ready and inputs is not None
         if self.launch_guard is not None and mission.phase in ('wait','arm','climb','hover'):
-            launch_reason = self.launch_guard.check_owner(mission, vehicle, inputs)
+            launch_reason = self.launch_guard.check_owner(mission, vehicle, inputs, now_ns=now_ns, wall_ns=wall_ns)
             if launch_reason is not None:
                 reason = launch_reason
                 sensors_ready = False
