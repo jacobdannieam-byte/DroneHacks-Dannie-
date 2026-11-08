@@ -1,0 +1,11 @@
+{
+  "frames": 471,
+  "decoded_frames": 471,
+  "fps": 10,
+  "duration_s": 47.1,
+  "first_ros_s": 20.04,
+  "last_ros_s": 67.088,
+  "source_depth_frames": 583,
+  "label": "Derived recorded-depth and telemetry replay; not original GUI capture",
+  "no_new_flight": true
+}

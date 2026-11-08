@@ -1,3 +1,5 @@
+> Historical preflight packet. The approved retry has since passed; see [C1 run success](C1_RUN_SUCCESS.md). Statements below about awaiting approval describe the original packet.
+
 # C1 altitude-maintenance retry: approval packet
 
 2026-11-08. **Ready for approval of one C1 retry; no moving retry has run.** Registration remains off. This packet does not authorize R1 or a waypoint-policy flight.

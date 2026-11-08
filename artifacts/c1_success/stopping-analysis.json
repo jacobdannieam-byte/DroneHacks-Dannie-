@@ -1,0 +1,11 @@
+{
+  "result": "PASS",
+  "initial_speed_mps": 0.2026113689026524,
+  "peak_speed_mps": 0.327697604929512,
+  "reaction_s": 0.8720000000000021,
+  "braking_distance_m": 0.12407911842928558,
+  "landing_duration_s": 9.4,
+  "provenance_scope": "reviewed_calibration",
+  "review_status": "unreviewed",
+  "interpretation": "conservative command-to-settle time and maximum excursion; review margins separately"
+}

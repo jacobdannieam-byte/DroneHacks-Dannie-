@@ -1,0 +1,117 @@
+{
+  "scope": "Derived delivery; original run manifests remain authoritative",
+  "files": {
+    "C1-failed-attempt-evidence.zip": {
+      "sha256": "340ef7259f7e3408111f8e424d453e603078134eb7e7095899215f97e4228bfb",
+      "bytes": 65291252
+    },
+    "C1-recorded-depth-telemetry-replay.mp4": {
+      "sha256": "e76dc38352cfdf0f338910d335ed481f5497de3c737751db5ed0ea3512754027",
+      "bytes": 849691
+    },
+    "C1-success-and-correction-evidence.zip": {
+      "sha256": "d405a8a957428977b302cf445c52509bac8776b027a1866a7dfbe879ad568f40",
+      "bytes": 102306194
+    },
+    "Classical-baseline-reference.zip": {
+      "sha256": "994be1981def3e95867de371aaf1b199c2c538f817d215b31c4613389d8a122b",
+      "bytes": 2124523
+    },
+    "classical-changes-since-baseline.txt": {
+      "sha256": "28a3da04e171f8d54a0041123e0a10bf7af5a318c3ada6c7d3038a678f0f5ef8",
+      "bytes": 538999
+    },
+    "classical-current-revision.txt": {
+      "sha256": "df571fb8b5bbd368870f47d0504d176fed43fafe8aa5840670e5a1780231e510",
+      "bytes": 311
+    },
+    "classical-current-source/clearance_grid.py": {
+      "sha256": "0e362c6e70212473f192b4776f39976b4b3190ea55d74c2cbf2347eb4fb8e2f7",
+      "bytes": 6055
+    },
+    "classical-current-source/course_run.py": {
+      "sha256": "2784d5c73b79fc8de6d1606ff9b61ee37a0f00b04e8907269850c2182ef2ab49",
+      "bytes": 27443
+    },
+    "classical-current-source/drone_dimensions.py": {
+      "sha256": "9701ff7dcf1450fc8fe3fe31d85cab826af47a60bae6fe5a2be20af3ce92ba34",
+      "bytes": 2016
+    },
+    "classical-current-source/live_flight.py": {
+      "sha256": "d0ad98b4574564dc1b3209dec184b8e6685cc397cc08fada41a91241a5478b77",
+      "bytes": 12328
+    },
+    "classical-current-source/live_map.py": {
+      "sha256": "58bcae723020eb11fefea68b74bc700bc1b4be8db982d1b0ac8b2dcdc0a39349",
+      "bytes": 12286
+    },
+    "classical-current-source/live_navigation.py": {
+      "sha256": "12fdb5fc7746a143bc862299a6bc7e0a138e2c7b02185fe3e8128cb1c8790e64",
+      "bytes": 17293
+    },
+    "classical-current-source/live_planner.py": {
+      "sha256": "428caa70f9f04d5d7cb75ca7ec9d6e222fc3cb69c9b9a85cd14cded4362b0686",
+      "bytes": 9314
+    },
+    "classical-current-source/route_follower.py": {
+      "sha256": "c07449c2550a32217a00c33f32a6e226285702066b99f09edba631c67e8ab23a",
+      "bytes": 7122
+    },
+    "classical-current-source/route_planner.py": {
+      "sha256": "7f65406b7b53167e7d08302b85ded131147abf1f83b7b3c574e28e7dff4c4b96",
+      "bytes": 32050
+    },
+    "classical-current-source/run_safety.py": {
+      "sha256": "dca8d296f128bf5e89062e275a59603d0b5df1e72e3b53324d48bc2bc90ed46d",
+      "bytes": 20270
+    },
+    "depth_frames.npz": {
+      "sha256": "0f3006da7b9dfdff4d9f0a22dbf086cae482dc6462e60bf2507b12841caf1a59",
+      "bytes": 16445698
+    },
+    "depth_provenance.json": {
+      "sha256": "d17bbfdc7ffcf968802029db19d82da33bb6c329ba392a8154dbb6044b1ddcae",
+      "bytes": 162
+    },
+    "export_comparison.py": {
+      "sha256": "9cd23f19c4357fc10d9cc4ab0d3ddb43d39fe993c5db5a7bd61bb47c37d5a920",
+      "bytes": 973
+    },
+    "extract_depth.py": {
+      "sha256": "2c1aced87d44c2b3bbd4e0a62838e7d38e3aba37eddac8413aeb73431d8994ec",
+      "bytes": 1251
+    },
+    "gazebo-c1-result.png": {
+      "sha256": "61871b842655d9a2634980f5e79111dd34697a168141e5919231af585bcd8d45",
+      "bytes": 177431
+    },
+    "integration-current-revision.txt": {
+      "sha256": "4bfa8dde7d7b74cde3b8fa788d24cff3e44197b4b468e620802c4bc657c671a5",
+      "bytes": 350
+    },
+    "package-verification.json": {
+      "sha256": "60a1917c2a3b6cf00d3a201cf7a27a8edd543f597d4562357e12550af7eaf7a3",
+      "bytes": 920
+    },
+    "package_evidence.py": {
+      "sha256": "4a8901b0a4a96d7036d3ba040205bfacf94ca4ab293afec8452187db1e8f0575",
+      "bytes": 2413
+    },
+    "render_replay.py": {
+      "sha256": "03372db3eddb239d9ce25d3032c4377d6978dea9b4d92cd63ecf3fd9ff9fffa4",
+      "bytes": 4223
+    },
+    "replay-poster.png": {
+      "sha256": "afade3d1e011277544382600e0f46af595bf31a362e3a639bb82f2a4b0d2b677",
+      "bytes": 204020
+    },
+    "stack-and-evidence-report.html": {
+      "sha256": "a29c04faf665b92017160bc786039e6ac6aed8ba7316ebd54820599acc9611ab",
+      "bytes": 15589
+    },
+    "video-validation.json": {
+      "sha256": "9aa406113a81e3831218efa8bf101671a5a17bbeca2d0c91504157bd887c26e0",
+      "bytes": 276
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "raw_command_correlation": "PASS",
+  "trial_id": "calibration-c1-020-002",
+  "review_status": "unreviewed",
+  "events_matched": 2,
+  "raw_bag_sha256": "3559730d68899093688932fba7c03aa3fa1da3569445b98eb5c5c14972bd7ec4",
+  "recording_sha256": "57e75916e1e48d633af657c010e5ed4ce7eed2cdf003861795d411a5b92b4150"
+}

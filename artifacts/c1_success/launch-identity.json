@@ -1,0 +1,8 @@
+{
+  "container": "drone-simple-c1-3d8ce9fd",
+  "image": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1",
+  "registration_enabled": false,
+  "revision": "38a9a36195c5bdc8c3531e0d31908fb89e92a69f",
+  "approval_sha256": "5bbae265283e4e0218121b3bbb09dce9c7f8055b77716c9dd7bf84e82893c0a1",
+  "source_sha256": "4c500d3561bf74fcd06153b134c858457c04af2c839ad732f08f48b8ab764aef"
+}

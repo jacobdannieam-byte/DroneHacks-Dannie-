@@ -1,0 +1,10 @@
+{
+  "encoding": "32FC1",
+  "width": 512,
+  "height": 320,
+  "step": 2048,
+  "frames": 583,
+  "first_stamp": 9.4,
+  "last_stamp": 67.6,
+  "spatial_downsample": 2
+}

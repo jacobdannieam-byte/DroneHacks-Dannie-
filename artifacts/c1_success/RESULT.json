@@ -1,0 +1,27 @@
+{
+  "result": "PASS",
+  "trial_id": "calibration-c1-020-002",
+  "revision": "38a9a36195c5bdc8c3531e0d31908fb89e92a69f",
+  "attempts": 1,
+  "registration_enabled": false,
+  "actual_gazebo_moving_trial": true,
+  "recorder_samples": 4702,
+  "brake_initial_speed_mps": 0.2026113689026524,
+  "braking_excursion_m": 0.12407911842928558,
+  "command_to_sustained_settle_s": 0.8720000000000021,
+  "land_to_disarm_s_with_clock_allowance": 9.4,
+  "peak_estimated_speed_mps": 0.327697604929512,
+  "peak_simulator_truth_speed_mps": 0.3320687062790561,
+  "raw_command_correlation": "PASS",
+  "baseline_hashes_unchanged": {
+    "CLASSICAL_COURSE_RESULTS.md": "ae6d03448899308cea91eb5890ac0c24db1e8b0b19d0c29722ed442484544bb2",
+    "classical-course-summary.json": "0b198082eb7862a81a9b6cd97010665349c7551b4887e7956d80e5441f323590",
+    "trial_approval.json": "1e779f358b584e0a77639bd0aceeda3b5f7545c0c2310c77b4eb11e19f17266b",
+    "run.txt": "91c0ea222cdfe15a3e63b9d5007e807abe28858780682ebab89b2e80ddc09a2d",
+    "revision.txt": "2c86a95c23f118025d08b9867e45e6c89014693a7b5977a59a6dd183e1bc3284",
+    "versions.txt": "a34a4d93b7608e6fdcc7e7397e685a1625e9445efbc3d9284c3b98dd0f0d9d41",
+    "observations/metadata.yaml": "6752ae2d40ab2af5f78df61f7ef2d7b90ddeca7013156b25dfffa4bbef046a80",
+    "source.tar": "9f0c79717cceaf29db4fd617ab254a3b6b3bc60ab2bdd8d911819bb6c08a546d"
+  },
+  "scope": "One 0.20 m/s C1 braking trial; does not qualify 0.50 m/s stopping, R1, policy flight or hardware."
+}

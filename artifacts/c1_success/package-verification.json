@@ -1,0 +1,33 @@
+{
+  "simple-waypoint-c1-moving-002": {
+    "manifest_files": 53,
+    "mismatches": []
+  },
+  "simple-waypoint-c1-moving-001": {
+    "manifest_files": 51,
+    "mismatches": []
+  },
+  "c1-altitude-retry-001": {
+    "manifest_files": 58,
+    "mismatches": []
+  },
+  "C1-success-and-correction-evidence.zip": {
+    "files": 1791,
+    "bytes": 102306194,
+    "crc_check": "PASS",
+    "sha256": "d405a8a957428977b302cf445c52509bac8776b027a1866a7dfbe879ad568f40"
+  },
+  "C1-failed-attempt-evidence.zip": {
+    "files": 52,
+    "bytes": 65291252,
+    "crc_check": "PASS",
+    "sha256": "340ef7259f7e3408111f8e424d453e603078134eb7e7095899215f97e4228bfb"
+  },
+  "Classical-baseline-reference.zip": {
+    "files": 9,
+    "bytes": 2124523,
+    "crc_check": "PASS",
+    "sha256": "994be1981def3e95867de371aaf1b199c2c538f817d215b31c4613389d8a122b"
+  },
+  "protected_classical_hashes": "8/8 unchanged"
+}
