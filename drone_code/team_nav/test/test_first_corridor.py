@@ -7,20 +7,21 @@ import numpy as np
 import pytest
 
 from our_files import load_our_map, load_side_gap_first_mission
-from team_nav.drone_dimensions import DRONE_HALF_HEIGHT_METRES
+from team_nav.drone_dimensions import DRONE_HALF_HEIGHT_METRES, DRONE_RADIUS_METRES
 from team_nav.live_map import HIGHEST_SCORE, LOWEST_SCORE, LiveMap
 from team_nav.live_navigation import (
     CORRIDOR_BLOCKED,
     CORRIDOR_CONFIRMING_EXIT,
     CORRIDOR_EXIT_CONFIRM_SECONDS,
     CORRIDOR_LEAD_METRES,
+    CREEP_ROOM_NEEDED_METRES,
     FLYING,
     HOLDING,
     LONGEST_SECONDS_WITHOUT_A_PATH,
     LiveNavigator,
     NoWayForward,
 )
-from team_nav.live_planner import goals_from_mission
+from team_nav.live_planner import goals_from_mission, metres_past_line
 
 
 @pytest.fixture
@@ -44,7 +45,10 @@ def test_corridor_holds_without_depth_evidence(corridor):
 
 
 def test_corridor_holds_if_it_needs_a_sharp_turn_too_close_to_the_net(corridor):
-    navigator, _, drone_metres = corridor
+    navigator, live_map, drone_metres = corridor
+    # The launch mark has about 0.53 m of room on the map, enough for a turn from rest (0.50 m).
+    # Something seen 0.45 m to the east leaves too little.
+    live_map.scores[live_map.square_of(drone_metres[:2] + [0.45, 0.0])] = HIGHEST_SCORE
     step = navigator.next_step(drone_metres, 0.0, 0.0)
     assert step.activity == HOLDING
     assert step.heading_radians == 0.0
@@ -80,15 +84,22 @@ def test_a_persistent_block_ends_the_run(corridor):
         navigator.next_step(drone_metres, heading, LONGEST_SECONDS_WITHOUT_A_PATH + 0.1)
 
 
-def test_depth_seeing_through_mapped_wall_does_not_open_q1(corridor):
+def test_past_the_line_depth_can_show_the_wall_ahead_is_further_than_the_sketch(corridor):
+    # Once the drone's centre is past the line, the live map judges the wall ahead. Here depth
+    # has seen the space past the sketch's top wall as empty, so the drone keeps going until its
+    # whole body is past the line, with no warning.
     navigator, live_map, drone_metres = corridor
     navigator.stop_after_stage = ""
     goal = navigator.current_goal
     live_map.scores.fill(LOWEST_SCORE)
-    before_wall_metres = np.array([goal.point_metres[0], 2.40, drone_metres[2]])
-    step = navigator.next_step(before_wall_metres, goal.straight_heading_radians, 0.0)
-    assert step.activity == CORRIDOR_BLOCKED
-    np.testing.assert_allclose(step.target_metres, before_wall_metres)
+    live_map.scores[live_map.always_blocked] = HIGHEST_SCORE
+    past_line_metres = np.array([goal.point_metres[0], 2.25, drone_metres[2]])
+    step = navigator.next_step(past_line_metres, goal.straight_heading_radians, 0.0)
+    assert step.activity == FLYING
+    assert step.target_metres[1] > past_line_metres[1]
+    assert not step.stages_finished
+
+
 
 
 def test_corridor_practice_reaches_the_mapped_line_and_ends(corridor):
@@ -109,7 +120,9 @@ def test_corridor_practice_reaches_the_mapped_line_and_ends(corridor):
 
 
 def test_course_requires_the_whole_drone_past_the_line(corridor):
-    navigator, _, drone_metres = corridor
+    navigator, live_map, drone_metres = corridor
+    # Depth has seen the corridor empty, as it has in flight by the time the drone reaches the line.
+    live_map.scores[~live_map.blocked()] = LOWEST_SCORE
     goal = navigator.current_goal
     heading = goal.straight_heading_radians
     assert math.degrees(heading) == pytest.approx(90.0, abs=3.0)
@@ -133,6 +146,31 @@ def test_course_requires_the_whole_drone_past_the_line(corridor):
     assert step.finished
     assert step.stages_finished == ["first corridor"]
     assert step.heading_radians == heading
+    assert step.warning == ""
+
+
+def test_competition_finishes_the_first_corridor_on_the_sketch_map(corridor):
+    # On the sketch the top wall's face is only 0.58 m past the line, less than the drone's 0.60 m
+    # width. The drone creeps as deep as it may (a CREEP_GAP_TO_WALL_METRES gap between its body
+    # and the wall), counts the checkpoint with a warning, and never comes closer.
+    navigator, live_map, drone_metres = corridor
+    navigator.stop_after_stage = ""
+    goal = navigator.current_goal
+    heading = goal.straight_heading_radians
+    live_map.scores[~live_map.blocked()] = LOWEST_SCORE
+    room_metres = live_map.room_metres(keep_mapped_walls=True)
+    warnings = []
+    for cycle in range(200):
+        step = navigator.next_step(drone_metres, heading, cycle * 0.1)
+        warnings.append(step.warning)
+        assert room_metres[live_map.square_of(step.target_metres)] >= CREEP_ROOM_NEEDED_METRES
+        drone_metres = step.target_metres
+        if step.stages_finished:
+            break
+    assert step.stages_finished == ["first corridor"]
+    assert step.stages_begun == ["maze"]
+    assert 0.0 < metres_past_line(goal, drone_metres) < DRONE_RADIUS_METRES
+    assert sum("REFEREE MAY NOT COUNT" in warning for warning in warnings) == 1
 
 
 def test_full_course_practice_looks_for_q2_at_the_drawn_line(corridor):

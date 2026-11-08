@@ -97,11 +97,13 @@ def test_big_messages_are_never_recorded_as_rows():
     assert competition_plan.how == DO_NOT_RECORD
 
 
-def test_practice_mode_saves_pictures_from_drone_16s_two_cameras_only():
-    for camera_topic in ("/oak/left/image_raw", "/oak/right/image_raw"):
-        assert plan_for_topic(camera_topic, "sensor_msgs/msg/Image", PRACTICE_MODE, picture_topics({})).how == SAVE_PICTURES
-    other_picture_topic = plan_for_topic("/oak/rgb/image_raw", "sensor_msgs/msg/Image", PRACTICE_MODE, picture_topics({}))
-    assert other_picture_topic.how == DO_NOT_RECORD
+def test_practice_mode_saves_no_camera_pictures_unless_asked():
+    # Since 2026-11-08 the recorder reads no camera pictures by default: an extra picture reader
+    # slowed camera tracking (recorded_topics.DRONE_16_CAMERA_TOPICS explains this).
+    for camera_topic in ("/oak/left/image_raw", "/oak/right/image_raw", "/oak/rgb/image_raw"):
+        assert plan_for_topic(camera_topic, "sensor_msgs/msg/Image", PRACTICE_MODE, picture_topics({})).how == DO_NOT_RECORD
+    asked_for = picture_topics({"TEAM_NAV_PICTURE_TOPICS": "/oak/left/image_raw"})
+    assert plan_for_topic("/oak/left/image_raw", "sensor_msgs/msg/Image", PRACTICE_MODE, asked_for).how == SAVE_PICTURES
 
 
 def test_the_picture_topics_can_be_replaced_by_a_setting():

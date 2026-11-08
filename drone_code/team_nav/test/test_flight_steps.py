@@ -1,5 +1,6 @@
-"""Tests flight_steps.py with a pretend drone: the touchdown rules, the landing sequence, and
-holding still when the safety checks say so. No ROS messages are sent.
+"""Tests flight_steps.py with a pretend drone: the touchdown rules, the landing sequence,
+holding still when the safety checks say so, the climb with its drift check, and that every
+target carries a heading. No ROS messages are sent.
 
 The pretend drone is a point that moves up and down at the commanded speed, one tenth of a second
 per cycle, and stops at the floor. PX4 "switches its motors off" a set time after the push-down
@@ -14,10 +15,13 @@ import pytest
 
 from team_nav import flight_steps
 from team_nav.flight_steps import (
+    CLIMB_METRES_PER_SECOND, DRIFT_CHECK_HEIGHT_METRES, DRIFT_CHECK_PAUSE_SECONDS, LAUNCH_HEADING_RADIANS,
     GENTLE_DESCENT_BEFORE_A_STALL_COUNTS_SECONDS, GENTLE_DESCENT_METRES_PER_SECOND, LASER_RAW_READING,
     MEDIUM_DESCENT_METRES_PER_SECOND, NO_HEIGHT_READING, PUSH_DOWN_METRES_PER_SECOND, PX4_DISTANCE_TO_GROUND,
-    STALLED_DESCENT_SECONDS, ControlIsNoLongerOurs, RunMustStop, TouchdownDetector, choose_landing_height_source,
+    STALLED_DESCENT_SECONDS, ControlIsNoLongerOurs, RunMustStop, SafetyWatch, TouchdownDetector,
+    choose_landing_height_source,
 )
+from team_nav.target_sender import POSITION, SentTarget
 
 # Made up for the pretend drone, roughly as in the simulator (section 7).
 SECONDS_FROM_PUSH_DOWN_TO_MOTORS_OFF = 3.0
@@ -265,19 +269,23 @@ def test_the_checks_run_through_the_descent_and_stop_at_touchdown():
 # ---- Holding still, and giving up --------------------------------------------------------------
 
 class WatchThatHoldsTwice:
-    def __init__(self):
+    def __init__(self, link):
+        self.link = link
         self.checks = 0
 
     def check(self):
         self.checks += 1
         return self.checks <= 2
 
+    def send_hold_target(self):
+        self.link.targets.resend_last()
+
 
 def test_fly_until_resends_the_last_target_while_the_watch_says_hold():
     link = PretendLink(height_metres=0.8)
     sent_onward = []
     flight_steps.fly_until(link, lambda: len(sent_onward) >= 3, lambda: sent_onward.append(link.seconds), 10.0,
-                           "three onward targets", WatchThatHoldsTwice())
+                           "three onward targets", WatchThatHoldsTwice(link))
 
     assert [kind for kind, _ in link.targets.sent] == ["resend", "resend"]
     assert len(sent_onward) == 3
@@ -291,14 +299,31 @@ def test_fly_until_stops_the_run_when_it_takes_too_long():
 
 # ---- The launch frame turned by camera tracking's launch heading -------------------------------------
 
-def _link_launched_at(tracked_position_metres, tracked_heading_degrees):
+def _link_launched_at(tracked_position_metres, tracked_heading_degrees, px4_heading_degrees=None):
     """A DroneLink with only what the launch frame needs: no ROS node."""
     link = flight_steps.DroneLink.__new__(flight_steps.DroneLink)
     link.launch = flight_steps.LaunchReadings(
         tracked_position_metres=np.array(tracked_position_metres, dtype=float), px4_z_metres=0.0,
         px4_distance_to_ground_metres=0.1, raw_laser_metres=None,
+        px4_heading_radians=None if px4_heading_degrees is None else math.radians(px4_heading_degrees),
         tracked_heading_radians=math.radians(tracked_heading_degrees))
+    link.targets = RecordedPositionTargets()
+    link.height_correction_metres = 0.0
+    link.last_heading_from_launch_radians = LAUNCH_HEADING_RADIANS
     return link
+
+
+class RecordedPositionTargets:
+    """Stands in for TargetSender: keeps what would have been sent."""
+
+    def __init__(self):
+        self.last_target = None
+
+    def send_position(self, forward_left_up_metres, heading_radians=None):
+        self.last_target = SentTarget(POSITION, tuple(forward_left_up_metres), 0.0, heading_radians)
+
+    def resend_last(self):
+        self.send_position(self.last_target.forward_left_up, self.last_target.heading_radians)
 
 
 def test_moving_where_the_nose_pointed_at_launch_is_forward_even_when_tracking_was_turned():
@@ -312,3 +337,133 @@ def test_moving_where_the_nose_pointed_at_launch_is_forward_even_when_tracking_w
 def test_a_target_ahead_in_the_launch_frame_is_sent_where_the_nose_pointed():
     link = _link_launched_at([0.0, 0.0, 0.0], 90.0)
     np.testing.assert_allclose(link.tracking_from_launch_frame([1.0, 0.0, 0.3]), [0.0, 1.0, 0.3], atol=1e-9)
+
+
+# ---- Every target carries a heading ---------------------------------------------------------------
+
+def test_a_target_given_without_a_heading_keeps_the_last_heading():
+    link = _link_launched_at([0.0, 0.0, 0.0], 30.0)
+    link.send_position_from_launch((0.0, 0.0, 0.5))
+    assert math.degrees(link.targets.last_target.heading_radians) == pytest.approx(30.0)   # The launch heading.
+    link.send_position_from_launch((0.0, 0.0, 0.5), math.radians(45.0))
+    link.send_position_from_launch((0.1, 0.0, 0.5))
+    assert math.degrees(link.targets.last_target.heading_radians) == pytest.approx(75.0)
+
+
+class PretendPx4Heading:
+    def __init__(self, degrees):
+        self.degrees = degrees
+
+    def px4_heading_radians(self):
+        return math.radians(self.degrees)
+
+
+def test_a_hold_for_a_heading_gap_keeps_the_position_and_points_the_nose_where_px4_thinks_it_points():
+    link = _link_launched_at([0.0, 0.0, 0.0], 30.0, px4_heading_degrees=10.0)
+    link.send_position_from_launch((1.0, 0.0, 0.8), 0.0)
+    held_position = link.targets.last_target.forward_left_up
+    # PX4's heading has turned 20 degrees clockwise, that is 20 degrees toward the right.
+    link.reports = PretendPx4Heading(30.0)
+    watch = SafetyWatch(link, None, None)
+    watch.hold_with_px4_heading = True
+    watch.send_hold_target()
+
+    assert link.targets.last_target.forward_left_up == held_position
+    assert math.degrees(link.targets.last_target.heading_radians) == pytest.approx(30.0 - 20.0)
+
+
+def test_the_camera_report_age_counts_from_the_picture_time():
+    link = flight_steps.DroneLink.__new__(flight_steps.DroneLink)
+    link.now_seconds = lambda: 10.2
+    link.tracked_position_arrival_seconds = 10.0
+    link.tracked_position_age_on_arrival_seconds = 0.3
+    assert link.camera_tracking_age_seconds() == pytest.approx(0.2)
+    assert link.camera_report_age_seconds() == pytest.approx(0.5)
+
+
+# ---- The climb ------------------------------------------------------------------------------------
+
+# Made up for the pretend drone: PX4 follows a height target with about this time constant
+# (measured position t63 about 1.4 s; height is a little faster).
+PRETEND_HEIGHT_TIME_CONSTANT_SECONDS = 1.0
+
+
+class ClimbingPretendLink:
+    """Just enough of DroneLink for the climb. The drone's height follows the height target with
+    a lag, and it slides sideways as it rises, reaching slide_metres at the drift check height."""
+
+    def __init__(self, slide_metres=0.0):
+        self.log = PretendLog()
+        self.targets = self
+        self.seconds = 0.0
+        self.height_metres = 0.0
+        self.slide_metres = slide_metres
+        self.sent = []          # (seconds, (forward, left, up), heading)
+
+    def now_seconds(self):
+        return self.seconds
+
+    def position_from_launch(self):
+        sideways_metres = self.slide_metres * min(1.0, self.height_metres / DRIFT_CHECK_HEIGHT_METRES)
+        return np.array([-sideways_metres, 0.0, self.height_metres])
+
+    def send_position_from_launch(self, forward_left_up_metres, heading_radians=None):
+        self.sent.append((self.seconds, tuple(forward_left_up_metres), heading_radians))
+
+    def resend_last(self):
+        _, position, heading = self.sent[-1]
+        self.sent.append((self.seconds, position, heading))
+
+    def resend_last_position_with_planned_heading(self):
+        self.resend_last()
+
+    def record_drone_condition(self):
+        pass
+
+    def wait_one_cycle(self):
+        target_height_metres = self.sent[-1][1][2]
+        fraction = flight_steps.CYCLE_SECONDS / PRETEND_HEIGHT_TIME_CONSTANT_SECONDS
+        self.height_metres += (target_height_metres - self.height_metres) * fraction
+        self.seconds += flight_steps.CYCLE_SECONDS
+
+
+def target_heights(link):
+    return [position[2] for _, position, _ in link.sent]
+
+
+def test_the_climb_ramps_slowly_and_holds_the_launch_heading():
+    link = ClimbingPretendLink()
+    flight_steps.climb_above_launch(link, None, 0.8)
+
+    heights = target_heights(link)
+    largest_step_metres = max(later - earlier for earlier, later in zip(heights, heights[1:]))
+    assert largest_step_metres <= CLIMB_METRES_PER_SECOND * flight_steps.CYCLE_SECONDS + 1e-9
+    assert heights[-1] == pytest.approx(0.8)
+    assert all(heading == LAUNCH_HEADING_RADIANS for _, _, heading in link.sent)
+
+
+def test_the_climb_pauses_at_the_drift_check_height():
+    link = ClimbingPretendLink()
+    flight_steps.climb_above_launch(link, None, 0.8)
+
+    seconds_at_check_height = [seconds for seconds, position, _ in link.sent
+                               if position[2] == pytest.approx(DRIFT_CHECK_HEIGHT_METRES)]
+    assert seconds_at_check_height[-1] - seconds_at_check_height[0] >= DRIFT_CHECK_PAUSE_SECONDS
+    assert any("Takeoff drift" in text for _, text in link.log.events)
+
+
+def test_a_takeoff_slide_like_1051_waits_low_down_then_carries_on():
+    link = ClimbingPretendLink(slide_metres=0.42)
+    flight_steps.climb_above_launch(link, None, 0.8)
+
+    seconds_at_check_height = [seconds for seconds, position, _ in link.sent
+                               if position[2] == pytest.approx(DRIFT_CHECK_HEIGHT_METRES)]
+    waited_seconds = seconds_at_check_height[-1] - seconds_at_check_height[0]
+    assert waited_seconds >= DRIFT_CHECK_PAUSE_SECONDS + flight_steps.LONGEST_DRIFT_RECOVERY_SECONDS - 0.2
+    assert target_heights(link)[-1] == pytest.approx(0.8)
+
+
+def test_a_small_takeoff_drift_carries_on_to_cruise_height():
+    link = ClimbingPretendLink(slide_metres=0.20)
+    flight_steps.climb_above_launch(link, None, 0.8)
+    assert target_heights(link)[-1] == pytest.approx(0.8)

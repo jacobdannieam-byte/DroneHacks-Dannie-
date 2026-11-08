@@ -33,7 +33,8 @@ Targets never stop
 ------------------
 Every step sends a target every cycle, because flight_interface only hands control to a program
 that is already sending targets, and a speed target expires after 1 second. The only time nothing
-is sent is while waiting to be ready on the ground, before we know where the drone is.
+is sent is while waiting to be ready on the ground, before we know where the drone is. Every
+position target also carries a heading (send_position_from_launch says why).
 
 When a report is missing
 ------------------------
@@ -55,7 +56,7 @@ import numpy as np
 import rclpy
 
 from team_nav.run_safety import CARRY_ON, CONTROL_LOST, HOLD, LAND_HERE, DroneCondition, TargetRefused
-from team_nav.target_sender import POSE_TARGET_TOPIC, SPEED_TARGET_TOPIC, TargetSender
+from team_nav.target_sender import POSE_TARGET_TOPIC, POSITION, SPEED_TARGET_TOPIC, TargetSender
 
 # ---- Rhythm ---------------------------------------------------------------------------------------
 
@@ -120,6 +121,29 @@ PX4_POSITION_LONGEST_AGE_SECONDS = 0.5
 HEIGHT_TOLERANCE_METRES = 0.10
 SECONDS_TO_SETTLE = 2.0
 LONGEST_CLIMB_SECONDS = 20.0
+
+# Our own choice, from drone 16's flights on 2026-11-08: in faster climbs (0.4 to 0.5 m/s) camera
+# tracking's height trailed PX4's by 0.5 to 1 s, and the gap stopped the 12:15 and 12:16 runs.
+# The height target rises no faster than this.
+CLIMB_METRES_PER_SECOND = 0.30
+# Our own choice: the ramp never steps further than one cycle's worth, even after a pause, a hold
+# or a slow cycle, so the target can't jump up. A slow cycle only makes the climb slower.
+LONGEST_RAMP_STEP_SECONDS = CYCLE_SECONDS
+# Measured on drone 16 on 2026-11-08: every takeoff drifted 0.11 to 0.72 m sideways, mostly in
+# the first 0.5 m of the climb, and at 10:51 a 0.42 m slide in the climb ended in a crash. So the
+# climb pauses low down and checks the drift before going higher.
+DRIFT_CHECK_HEIGHT_METRES = 0.30
+DRIFT_CHECK_PAUSE_SECONDS = 1.5          # Our own choice; PX4 settles a position in about 1.4 s.
+# Our own choice: more drift than this at the pause is a real slide (hover wanders only 1 to
+# 3 cm). The drone then waits, low down, for PX4 to pull it back over the launch mark, because
+# the target stays there. It does not land: a landing here would score nothing.
+LARGEST_TAKEOFF_DRIFT_METRES = 0.30
+# Our own choice: about two of PX4's position settling times (1.4 s each, measured). After this
+# the climb carries on from wherever the drone is; live navigation plans from there.
+LONGEST_DRIFT_RECOVERY_SECONDS = 3.0
+# The launch frame's "forward" is where the nose pointed on the launch mark, so heading 0 in the
+# launch frame is the launch heading. The climb holds it.
+LAUNCH_HEADING_RADIANS = 0.0
 
 # ---- Landing (docs/ARCHITECTURE.md, section 7) ---------------------------------------------------
 
@@ -205,7 +229,10 @@ class DroneLink:
         # Decided once the drone is ready on the ground (announce_which_checks_can_run).
         self.raw_laser_available = False
         self.stage = "starting"              # Written next to every sample, to find stages later.
-        self.next_cycle_seconds = time.monotonic()
+        # The heading of the last position target, in the launch frame. A target given without a
+        # heading keeps this one (send_position_from_launch says why).
+        self.last_heading_from_launch_radians = LAUNCH_HEADING_RADIANS
+        self.next_cycle_seconds = self.now_seconds()
         self._listen_to_camera_tracking()
         self.log.event("topics", "Topics in use: " + ", ".join(self.topic_names()), topics=self.topic_names())
 
@@ -216,6 +243,8 @@ class DroneLink:
         self.tracked_position_metres = None
         self.tracked_rotation = None              # Quaternion (x, y, z, w): how the drone is turned.
         self.tracked_position_arrival_seconds = None
+        # How old the latest report was when it arrived, from its pictures' time (the ROS clock).
+        self.tracked_position_age_on_arrival_seconds = None
         # (time the camera pictures were taken, position, rotation) of the recent reports.
         self.tracking_history = deque(maxlen=TRACKING_HISTORY_LENGTH)
         self.camera_tracking_state = None
@@ -234,8 +263,12 @@ class DroneLink:
         rotation = message.pose.pose.orientation
         self.tracked_position_metres = np.array([position.x, position.y, position.z], dtype=float)
         self.tracked_rotation = np.array([rotation.x, rotation.y, rotation.z, rotation.w], dtype=float)
-        self.tracked_position_arrival_seconds = time.monotonic()
+        self.tracked_position_arrival_seconds = self.now_seconds()
         stamp_seconds = message.header.stamp.sec + message.header.stamp.nanosec * 1e-9
+        # The picture time is on the ROS clock, so the age on arrival is measured on it too.
+        # After that, now_seconds() counts on, so a test bench can replace the clock.
+        ros_clock_seconds = self.node.get_clock().now().nanoseconds * 1e-9
+        self.tracked_position_age_on_arrival_seconds = ros_clock_seconds - stamp_seconds
         self.tracking_history.append((stamp_seconds, self.tracked_position_metres, self.tracked_rotation))
 
     def _on_tracking_status(self, message):
@@ -248,17 +281,19 @@ class DroneLink:
     # ---- Rhythm ---------------------------------------------------------------------------------
 
     def now_seconds(self):
+        """The one clock that every decision in the flight steps uses. A test bench that runs
+        faster than real time replaces this method (and wait_one_cycle)."""
         return time.monotonic()
 
     def wait_one_cycle(self):
         """Handles every report that arrives until the next tenth of a second."""
         self.next_cycle_seconds += CYCLE_SECONDS
-        if self.next_cycle_seconds < time.monotonic():
+        if self.next_cycle_seconds < self.now_seconds():
             # We fell behind, for example while planning. Start a fresh rhythm rather than rushing.
-            self.next_cycle_seconds = time.monotonic() + CYCLE_SECONDS
+            self.next_cycle_seconds = self.now_seconds() + CYCLE_SECONDS
         rclpy.spin_once(self.node, timeout_sec=0.0)
         while True:
-            seconds_left = self.next_cycle_seconds - time.monotonic()
+            seconds_left = self.next_cycle_seconds - self.now_seconds()
             if seconds_left <= 0.0:
                 return
             rclpy.spin_once(self.node, timeout_sec=seconds_left)
@@ -287,9 +322,19 @@ class DroneLink:
         return best
 
     def camera_tracking_age_seconds(self):
+        """Seconds since camera tracking's latest report ARRIVED. Reports arrive steadily even when
+        their pictures are old, so the safety checks use camera_report_age_seconds instead."""
         if self.tracked_position_arrival_seconds is None:
             return float("inf")
-        return time.monotonic() - self.tracked_position_arrival_seconds
+        return self.now_seconds() - self.tracked_position_arrival_seconds
+
+    def camera_report_age_seconds(self):
+        """How old camera tracking's latest position is, counted from when its camera pictures
+        were taken: its age on arrival plus the time since. Measured on drone 16 on 2026-11-08:
+        60 ms normally, up to 0.43 s in bad periods, while reports kept arriving 30 times a second."""
+        if self.tracked_position_arrival_seconds is None:
+            return float("inf")
+        return self.tracked_position_age_on_arrival_seconds + self.camera_tracking_age_seconds()
 
     def camera_tracking_says_lost(self):
         return self.camera_tracking_state == CAMERA_TRACKING_LOST_STATE
@@ -340,16 +385,39 @@ class DroneLink:
         tracking said up 0.00 m and PX4 said z = -0.15 m. A target of 0.80 m up then stopped the
         drone 0.65 m above the floor, and the climb timed out. So we give the height as PX4 will
         read it: PX4's launch height plus the height we want. Forward and left need no
-        correction, because PX4 takes them from camera tracking (they agreed within 2 cm)."""
+        correction, because PX4 takes them from camera tracking (they agreed within 2 cm).
+
+        heading_radians is where the nose should point, in the launch frame. If it is None, the
+        last target's heading is sent again: every target carries a heading. Old flights sent "no
+        heading" (NaN), which leaves PX4 free to keep whatever heading it has, and the heading
+        wandered 12 to 13 degrees per flight."""
+        if heading_radians is None:
+            heading_radians = self.last_heading_from_launch_radians
+        self.last_heading_from_launch_radians = heading_radians
         offset_in_tracking = self.tracking_from_launch_frame(np.asarray(forward_left_up_metres, dtype=float))
         target = self.launch.tracked_position_metres + offset_in_tracking
         px4_launch_height_up_metres = -self.launch.px4_z_metres
         target[2] = px4_launch_height_up_metres + float(forward_left_up_metres[2]) + self.height_correction_metres
         # PX4 takes its heading from camera tracking, so a heading in the launch frame is turned
         # into camera tracking's frame in the same way as the position.
-        if heading_radians is not None:
-            heading_radians = _wrapped_radians(heading_radians + self.launch_heading_in_tracking_radians())
-        self.targets.send_position(target, heading_radians)
+        self.targets.send_position(target, self.tracking_heading_from_launch_frame(heading_radians))
+
+    def tracking_heading_from_launch_frame(self, heading_from_launch_radians):
+        return _wrapped_radians(heading_from_launch_radians + self.launch_heading_in_tracking_radians())
+
+    def resend_last_position_with_planned_heading(self):
+        """Repeats the last position target with the last planned heading. After a heading-gap
+        hold, the last target sent carries PX4's own heading, which must not be kept."""
+        self.resend_last_position_with_heading(self.last_heading_from_launch_radians)
+
+    def resend_last_position_with_heading(self, heading_from_launch_radians):
+        """Sends the last position target again, but with this heading (launch frame). Used to
+        hold still while PX4's heading is in doubt. Repeats a speed target unchanged."""
+        last = self.targets.last_target
+        if last is None or last.kind != POSITION:
+            self.targets.resend_last()
+            return
+        self.targets.send_position(last.forward_left_up, self.tracking_heading_from_launch_frame(heading_from_launch_radians))
 
     # ---- Heights -------------------------------------------------------------------------------
 
@@ -397,6 +465,16 @@ class DroneLink:
         tracked_turned = tracked_heading - self.launch.tracked_heading_radians
         gap = px4_turned + tracked_turned
         return math.degrees(math.atan2(math.sin(gap), math.cos(gap)))
+
+    def px4_heading_from_launch_radians(self):
+        """How far PX4 thinks the nose has turned since the launch mark, toward the left, or None.
+        PX4 measures its heading clockwise, so its turn is negated (px4_heading_gap_degrees)."""
+        if self.launch is None or self.launch.px4_heading_radians is None:
+            return None
+        px4_heading = self.reports.px4_heading_radians()
+        if px4_heading is None:
+            return None
+        return _wrapped_radians(-(px4_heading - self.launch.px4_heading_radians))
 
     def px4_uses_camera_position(self):
         """PX4's flag cs_ev_pos, or None if PX4's estimator flags are missing or stale."""
@@ -502,7 +580,8 @@ def _status_columns(reports):
 
 
 def _report_age_columns(link):
-    columns = {"camera_tracking_age_seconds": _rounded_age(link.camera_tracking_age_seconds())}
+    columns = {"camera_tracking_age_seconds": _rounded_age(link.camera_tracking_age_seconds()),
+               "camera_report_age_seconds": _rounded_age(link.camera_report_age_seconds())}
     for report_name in ["state", "px4_position", "px4_status", "px4_odometry", "px4_attitude", "motion_sensors", "laser",
                         "estimator_flags", "battery"]:
         columns[f"{report_name}_age_seconds"] = _rounded_age(link.reports.seconds_since(report_name))
@@ -528,6 +607,7 @@ class SafetyWatch:
         self.run_safety = run_safety
         self.start_frame = start_frame
         self.is_holding = False
+        self.hold_with_px4_heading = False      # From the latest decision (run_safety.py).
         self.height_problem_seen = False
         # The decision of check_during_landing's last cycle, so each new one is written down once.
         self.last_landing_action = CARRY_ON
@@ -544,17 +624,27 @@ class SafetyWatch:
 
     def send_target_on_course(self, target_on_course_metres, check_distance_from_drone=True,
                               heading_on_course_radians=None):
-        """Checks the target is inside the course, then sends it. A refused target stops the run.
-        heading_on_course_radians, if given, turns the nose that way (from east toward north)."""
+        """Checks the target, then sends it. A target too far from the drone is pulled closer
+        (run_safety.py); a refused target stops the run. heading_on_course_radians, if given,
+        turns the nose that way (from east toward north); if not, the last heading is kept."""
         drone = self.drone_on_course() if check_distance_from_drone else None
         try:
-            self.run_safety.check_target(target_on_course_metres, drone)
+            target = self.run_safety.check_target(target_on_course_metres, drone, self.link.now_seconds())
         except TargetRefused as refusal:
             raise RunMustStop(str(refusal)) from refusal
         heading = None
         if heading_on_course_radians is not None:
             heading = self.start_frame.start_frame_heading_from_course(heading_on_course_radians)
-        self.link.send_position_from_launch(self.start_frame.start_frame_from_course(target_on_course_metres), heading)
+        self.link.send_position_from_launch(self.start_frame.start_frame_from_course(target), heading)
+
+    def send_hold_target(self):
+        """Holds still: the last target again. While PX4's heading is in doubt, the nose is asked
+        to point where PX4 thinks it points now, so PX4 starts no turn."""
+        px4_heading = self.link.px4_heading_from_launch_radians()
+        if self.hold_with_px4_heading and px4_heading is not None:
+            self.link.resend_last_position_with_heading(px4_heading)
+            return
+        self.link.resend_last_position_with_planned_heading()
 
     def check(self):
         """Runs the checks. Returns True if the drone must hold still this cycle. Raises
@@ -570,6 +660,7 @@ class SafetyWatch:
         if decision.warning:
             self.link.log.event("warning", decision.warning)
         self._announce_hold_changes(decision)
+        self.hold_with_px4_heading = decision.hold_with_px4_heading
         return decision.action == HOLD
 
     def check_during_landing(self):
@@ -609,7 +700,7 @@ class SafetyWatch:
             now_seconds=link.now_seconds(),
             control_is_ours=link.control_is_ours(),
             is_armed=link.is_armed(),
-            camera_tracking_age_seconds=link.camera_tracking_age_seconds(),
+            camera_report_age_seconds=link.camera_report_age_seconds(),
             camera_tracking_says_lost=link.camera_tracking_says_lost(),
             position_on_course_metres=self.drone_on_course(),
             tilt_degrees=link.tilt_degrees(),
@@ -622,6 +713,7 @@ class SafetyWatch:
             height_correction_metres=link.height_correction_metres,
             px4_uses_camera_position=link.px4_uses_camera_position(),
             px4_heading_gap_degrees=link.px4_heading_gap_degrees(),
+            px4_upward_speed_metres_per_second=_upward_speed(link),
         )
 
     def _record(self, condition, decision):
@@ -640,7 +732,7 @@ class SafetyWatch:
             px4_uses_laser_for_height=condition.px4_uses_laser_for_height,
             px4_says_laser_is_faulty=condition.px4_says_laser_is_faulty,
             tilt_degrees=condition.tilt_degrees, rotation_degrees_per_second=condition.rotation_degrees_per_second,
-            camera_tracking_age_seconds=_rounded_age(condition.camera_tracking_age_seconds),
+            camera_report_age_seconds=_rounded_age(condition.camera_report_age_seconds),
             decision=decision.action, reason=decision.reason,
         )
 
@@ -649,8 +741,13 @@ class SafetyWatch:
         if holding_now and not self.is_holding:
             self.link.log.event("hold", decision.reason)
         if self.is_holding and not holding_now:
-            self.link.log.event("hold", "Camera tracking is reporting normally again. Carrying on.")
+            self.link.log.event("hold", "The reason to hold has passed. Carrying on.")
         self.is_holding = holding_now
+
+
+def _upward_speed(link):
+    downward = link.downward_speed_metres_per_second()
+    return None if downward is None else -downward
 
 
 # =================================================================================================
@@ -680,14 +777,15 @@ def fly_until(link, is_finished, send_target, longest_seconds, what_we_are_waiti
     drone's condition, and wait for the next cycle, until is_finished() is true.
 
     If the safety checks say hold, the last target is sent again instead of send_target, so the
-    drone stays where it was told to be. Raises RunMustStop if it takes longer than longest_seconds."""
+    drone stays where it was told to be (SafetyWatch.send_hold_target). Raises RunMustStop if it
+    takes longer than longest_seconds."""
     start_seconds = link.now_seconds()
     while not is_finished():
         if link.now_seconds() - start_seconds > longest_seconds:
             raise RunMustStop(f"Waited {longest_seconds:.0f} seconds for {what_we_are_waiting_for}, and it did not happen.")
         must_hold = watch.check() if watch is not None else False
         if must_hold:
-            link.targets.resend_last()
+            watch.send_hold_target()
         else:
             send_target()
         link.record_drone_condition()
@@ -730,6 +828,11 @@ def what_is_not_ready(link):
     problems = []
     if link.camera_tracking_age_seconds() > READY_REPORT_LONGEST_AGE_SECONDS or link.camera_tracking_says_lost():
         problems.append("Camera tracking is not reporting a position. Check that cuVSLAM is running and can see detail.")
+    elif link.camera_report_age_seconds() > READY_REPORT_LONGEST_AGE_SECONDS:
+        problems.append(f"Camera tracking's reports arrive, but their pictures are "
+                        f"{link.camera_report_age_seconds():.1f} s old by their time stamps. In flight that would hold "
+                        f"the drone still. Check that cuVSLAM is running normally and that this program and the camera "
+                        f"use the same clock.")
     state = reports.state()
     if not state["px4_link"]:
         problems.append("flight_interface says it is not hearing from PX4.")
@@ -820,22 +923,26 @@ def remember_launch_mark(link):
 
 
 def hold_above_launch_until_control_is_ours(link, height_metres):
-    """Sends a target height_metres above the launch mark, every cycle, until the teammate has
+    """Sends a target on the launch mark, at its height, every cycle, until the teammate has
     armed the drone and flipped the switch to Position, and flight_interface has handed control
     to us. Waits as long as it takes. Until then the target has no effect.
+
+    The target is the launch mark's height, not height_metres (the height the climb will go to),
+    because the climb ramps up slowly from the floor. A target at full height would make PX4 start
+    a fast climb in the moment between the hand-over and our first ramp target.
 
     While the drone is still disarmed on the ground, the launch readings are taken again every
     cycle, so they are the freshest ones when the flight starts, even if the drone was moved."""
     link.stage = "waiting for the start switch"
     remember_launch_mark(link)
     log_launch_readings(link)
-    link.log.event("stage", f"Sending a target {height_metres:.2f} m above the launch mark. Waiting for a teammate to "
-                            f"arm the drone and flip the switch to Position.")
+    link.log.event("stage", f"Sending a target on the launch mark (the climb will then ramp up to {height_metres:.2f} m). "
+                            f"Waiting for a teammate to arm the drone and flip the switch to Position.")
     last_reminder_seconds = link.now_seconds()
     while not (link.control_is_ours() and link.is_armed()):
         if not link.is_armed() and link.is_landed() and not what_is_not_ready(link):
             remember_launch_mark(link)
-        link.send_position_from_launch((0.0, 0.0, height_metres))
+        link.send_position_from_launch((0.0, 0.0, 0.0), LAUNCH_HEADING_RADIANS)
         link.record_drone_condition()
         if link.now_seconds() - last_reminder_seconds >= SECONDS_BETWEEN_REMINDERS:
             link.log.event("waiting", "Still waiting for the start switch. " + _arming_summary(link))
@@ -867,23 +974,87 @@ def _arming_summary(link):
 
 
 def climb_above_launch(link, watch, height_metres):
-    """Climbs straight up to height_metres above the launch mark, then settles there."""
-    def has_reached_height():
-        from_launch = link.position_from_launch()
-        return from_launch is not None and abs(from_launch[2] - height_metres) < HEIGHT_TOLERANCE_METRES
-
-    def send_target():
-        link.send_position_from_launch((0.0, 0.0, height_metres))
-
-    fly_until(link, has_reached_height, send_target, LONGEST_CLIMB_SECONDS, "the climb", watch)
+    """Climbs straight up to height_metres above the launch mark, with the nose at the launch
+    heading: a slow ramp to DRIFT_CHECK_HEIGHT_METRES, a pause there to check the takeoff drift
+    (waiting there for PX4 to pull the drone back if it slid), the rest of the ramp, and a settle
+    at the top."""
+    ramp = HeightRamp(link.now_seconds())
+    climb_to(link, watch, ramp, DRIFT_CHECK_HEIGHT_METRES)
+    hold_still_for(link, watch, DRIFT_CHECK_PAUSE_SECONDS)
+    wait_for_takeoff_drift_to_come_back(link, watch)
+    climb_to(link, watch, ramp, height_metres)
     link.log.event("climb", f"Reached {link.position_from_launch()[2]:.2f} m above the launch mark.")
     hold_still_for(link, watch, SECONDS_TO_SETTLE)
+
+
+class HeightRamp:
+    """A height target that rises at CLIMB_METRES_PER_SECOND, from the launch mark's height."""
+
+    def __init__(self, now_seconds):
+        self.height_metres = 0.0
+        self.last_step_seconds = now_seconds
+
+    def step_toward(self, top_height_metres, now_seconds):
+        """Moves the target up by one cycle's worth, no higher than top_height_metres."""
+        seconds = min(now_seconds - self.last_step_seconds, LONGEST_RAMP_STEP_SECONDS)
+        self.last_step_seconds = now_seconds
+        self.height_metres = min(top_height_metres, self.height_metres + CLIMB_METRES_PER_SECOND * seconds)
+        return self.height_metres
+
+
+def climb_to(link, watch, ramp, height_metres):
+    """Ramps the height target up to height_metres, then waits until the drone is there."""
+    def has_reached_height():
+        if ramp.height_metres < height_metres:
+            return False
+        from_launch = link.position_from_launch()
+        # One-sided on purpose: flight_interface raises any target lower than 0.3 m above camera
+        # tracking's start height (organizers' envelope.py). When PX4's launch height reads low,
+        # our low climb targets are raised, and the drone is already higher than the step.
+        return from_launch is not None and from_launch[2] > height_metres - HEIGHT_TOLERANCE_METRES
+
+    def send_target():
+        target_height_metres = ramp.step_toward(height_metres, link.now_seconds())
+        link.send_position_from_launch((0.0, 0.0, target_height_metres), LAUNCH_HEADING_RADIANS)
+
+    fly_until(link, has_reached_height, send_target, LONGEST_CLIMB_SECONDS, "the climb", watch)
+
+
+def wait_for_takeoff_drift_to_come_back(link, watch):
+    """If the drone has slid more than LARGEST_TAKEOFF_DRIFT_METRES sideways from the launch mark,
+    holds the target on the mark for up to LONGEST_DRIFT_RECOVERY_SECONDS so PX4 pulls it back.
+    Then the climb carries on either way. Camera tracking did not jump in normal flight, so its
+    reading of the drift is trusted here."""
+    drift_metres = _takeoff_drift_metres(link)
+    link.log.event("climb", f"Takeoff drift at {DRIFT_CHECK_HEIGHT_METRES:.2f} m: {drift_metres:.2f} m sideways.",
+                   takeoff_drift_metres=round(drift_metres, 3))
+    if drift_metres <= LARGEST_TAKEOFF_DRIFT_METRES:
+        return
+    end_seconds = link.now_seconds() + LONGEST_DRIFT_RECOVERY_SECONDS
+
+    def is_back_or_out_of_time():
+        is_back = _takeoff_drift_metres(link) <= LARGEST_TAKEOFF_DRIFT_METRES
+        return is_back or link.now_seconds() >= end_seconds
+
+    fly_until(link, is_back_or_out_of_time, link.resend_last_position_with_planned_heading,
+              LONGEST_DRIFT_RECOVERY_SECONDS + 1.0,
+              "the takeoff drift to come back", watch)
+    link.log.event("climb", f"After waiting, the drone is {_takeoff_drift_metres(link):.2f} m from the launch mark. "
+                            f"Carrying on from here.")
+
+
+def _takeoff_drift_metres(link):
+    from_launch = link.position_from_launch()
+    if from_launch is None:
+        return 0.0
+    return float(np.hypot(from_launch[0], from_launch[1]))
 
 
 def hold_still_for(link, watch, seconds):
     """Repeats the last target for this long, with the safety checks running."""
     end_seconds = link.now_seconds() + seconds
-    fly_until(link, lambda: link.now_seconds() >= end_seconds, link.targets.resend_last, seconds + 1.0,
+    fly_until(link, lambda: link.now_seconds() >= end_seconds, link.resend_last_position_with_planned_heading,
+              seconds + 1.0,
               "a timed hold", watch)
 
 

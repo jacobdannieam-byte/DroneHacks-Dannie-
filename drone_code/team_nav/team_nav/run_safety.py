@@ -23,14 +23,20 @@ camera tracking.
 2. A touch. touch_detector.py flags a sudden tilt or spin. The team decided on 2026-11-07 that
    any touch the drone can notice stops the run, so the drone lands where it is.
 3. Camera tracking is late or says it is lost. Camera tracking is the program that works out
-   the drone's position from its cameras; it is the drone's only sideways position. If its last
-   report is older than CAMERA_TRACKING_LONGEST_SILENCE_SECONDS, or it reports that it has lost
-   track, the drone holds still (it keeps its last target and the route does not move on).
-   If that lasts longer than LONGEST_HOLD_SECONDS, the run stops and the drone lands.
+   the drone's position from its cameras; it is the drone's only sideways position. A report's
+   age is measured from the moment its camera pictures were taken, not from when it arrived,
+   because on drone 16 reports arrive on time but carry old pictures. If the latest report is
+   older than CAMERA_REPORT_OLDEST_AGE_SECONDS, or camera tracking reports that it has lost
+   track, the drone holds still at once (it keeps its last target and the route does not move
+   on). It carries on after the reports have been usable again (not older than that limit) for
+   FRESH_REPORTS_BEFORE_RESUMING_SECONDS. The run stops and
+   the drone lands only if the reports stay too old (or lost) for CAMERA_PROBLEM_LONGEST_SECONDS
+   without a break.
 4. PX4's height has gone wrong. PX4 is the flight controller's software, and drone 16's PX4
    uses the bottom laser as its main height source. Camera tracking's height is always compared
    with PX4's (height_check.py's CameraHeightCheck, with a loose 30 cm limit, because camera
-   height drifts), while camera tracking is reporting normally. On top of that, one of two
+   height drifts, and widened while the drone climbs or descends, because camera tracking's
+   height arrives late), while camera tracking is reporting normally. On top of that, one of two
    forms of a closer check runs:
      - With the laser's raw reading (/fmu/out/distance_sensor, which the simulator has),
        height_check.py compares PX4's height with it over clear floor. If they disagree, PX4 has
@@ -51,22 +57,33 @@ camera tracking.
    the laser again before the end of that flight.
 
 5. PX4 no longer trusts camera tracking. PX4 works out the drone's position and heading itself,
-   from camera tracking's reports. On drone 16 those reports often arrive 200 to 400 ms late
-   instead of the expected 60 ms (measured 2026-11-08). PX4 then stops using them, for position
-   or for heading. Without the camera, PX4 falls back to the compass for heading. Indoors the
-   compass is disturbed and points 135 to 180 degrees away from the camera's heading. PX4's whole
-   idea of "forward" then swings round, and it pushes the drone the wrong way: the 06:15 flight
-   slid 0.9 m and hit a wall. CameraTrustCheck below watches for this. If PX4's heading and camera
-   tracking's heading disagree by more than HEADING_GAP_LIMIT_DEGREES for
-   HEADING_GAP_LONGEST_SECONDS, or PX4 has not used camera tracking's position for
-   CAMERA_POSITION_UNUSED_LONGEST_SECONDS, the drone lands where it is. Holding still would not
-   help: the hold point itself is in the wrong place. The landing sends PX4 only a downward speed
-   with no sideways part, which stays right even when PX4's idea of direction is wrong. This rule
+   from camera tracking's reports. When a report is too late, PX4 stops using it for a moment,
+   for position or for heading. Before 2026-11-08 PX4 then fell back to the compass for heading,
+   which indoors points 135 to 180 degrees away, and pushed the drone the wrong way (the 06:15
+   flight slid 0.9 m and hit a wall). The compass is now off (EKF2_MAG_TYPE 5, changed on
+   2026-11-08), but PX4 can still drop camera tracking for a moment. CameraTrustCheck watches
+   for this. These are cheap to wait out, so the reaction comes in two steps:
+     - At once, on one reading: if PX4's heading and camera tracking's heading disagree by more
+       than HEADING_GAP_LIMIT_DEGREES, or PX4 says it is not using camera tracking's position,
+       the drone holds still. For a heading gap the target's heading is PX4's own current
+       heading, so PX4 starts no turn.
+     - Only if it lasts: a heading gap for HEADING_GAP_LONGEST_SECONDS, or the position unused
+       for CAMERA_POSITION_UNUSED_LONGEST_SECONDS, lands the drone where it is. The landing
+       sends PX4 only a downward speed, which stays right even when PX4's idea of direction is
+       wrong.
+   Why not land at once: in the 10:20 turn test on 2026-11-08 the old 0.3 s heading rule landed
+   the drone 0.4 s into a heading episode that PX4 ended by itself about 1 s later. This rule
    runs from the moment our program has control, even on the floor (CameraTrustCheck says why).
 
-Separately, check_target asks whether a target is inside the course, before it is sent. A target
-outside the course (beyond the safety net, or above the wall tops) is refused, which stops the
-run: something has gone badly wrong with the route or the frames, and flying on would be worse.
+Separately, check_target looks at each target before it is sent. A target outside the course
+(beyond the safety net, or above the wall tops) is refused, which stops the run: something has
+gone badly wrong with the route or the frames, and flying on would be worse. A target farther
+than FARTHEST_TARGET_FROM_DRONE_METRES from the drone is pulled in to that distance and sent;
+the run stops only if targets stay that far for FAR_TARGET_LONGEST_SECONDS.
+
+The rule of thumb behind these choices: cheap actions (hold still, keep the last target, start
+no turn) may happen on one reading. Expensive ones (land, end the run) need the problem to last
+(persistence.py). True emergencies (a touch, control lost) stay immediate.
 
 What it does not do: send anything, land, or read any reports. flight_steps.py does those.
 """
@@ -77,24 +94,36 @@ import numpy as np
 from team_nav.drone_dimensions import DRONE_HALF_HEIGHT_METRES, DRONE_RADIUS_METRES
 from team_nav.height_check import (CAMERA_HEIGHT_GAP_LIMIT_METRES, CAMERA_HEIGHT_GAP_LIMIT_WITHOUT_LASER_METRES,
                                    CameraHeightCheck, HeightCheck)
+from team_nav.persistence import ConditionHeldFor
 from team_nav.touch_detector import TouchDetector
 
-# Measured on drone 16 on 2026-11-08 (the out-and-back flight's recorder, 24330 reports).
-# Camera tracking reports about 30 times a second on average, but the reports arrive in bursts:
-# 782 gaps were longer than 0.15 s, 1 in 100 gaps was longer than 0.29 s, and the longest was
-# 0.35 s. With the old limit of 0.2 s the drone held still dozens of times in each flight for
-# no real problem. 0.5 s is above every gap that we saw, and our checks run every 0.1 s, so a
-# real silence is still found within 0.6 s.
-CAMERA_TRACKING_LONGEST_SILENCE_SECONDS = 0.5
+# Measured on drone 16 on 2026-11-08: a camera report's age (now minus its picture time) was
+# 60 ms in the middle and 75 ms for 95 in 100 reports in clean periods; in bad periods, which
+# last 1.3 to 4.6 minutes, reports were up to 0.43 s old. From PX4's settings on drone 16
+# (EKF2_DELAY_MAX 350 ms, plus the time PX4 needs to pass the report on): PX4 may stop using a
+# report that is more than about 0.45 s old. So up to that age the position is still usable.
+CAMERA_REPORT_OLDEST_AGE_SECONDS = 0.45
+# The same limit under its old name, because course_run.py imports it.
+CAMERA_TRACKING_LONGEST_SILENCE_SECONDS = CAMERA_REPORT_OLDEST_AGE_SECONDS
 
-# Our own choice. A short gap in camera tracking is worth waiting out. After this long the drone
-# has been flying on PX4's guess alone for too long, and landing is safer than waiting.
-LONGEST_HOLD_SECONDS = 5.0
+# Our own choice. About 15 reports in a row of usable age; long enough for PX4 to be using the
+# camera again. A stricter "fresh" age (0.15 s) was tried first, but replaying drone 16's bad
+# periods (most reports 0.15 to 0.43 s old) gave holds of 25 to 66 s.
+FRESH_REPORTS_BEFORE_RESUMING_SECONDS = 0.5
+# Our own choice. Late reports in bad periods were at most 0.43 s old, so a hold normally ends
+# within a second. Three seconds of reports that are all too old means camera tracking has
+# really stopped, and landing is safer than waiting.
+CAMERA_PROBLEM_LONGEST_SECONDS = 3.0
 
 # Our own choice. The route follower keeps its target at most 0.65 m ahead of the drone
 # (route_follower.py). A target much further away means the frames or the route have gone wrong,
-# and PX4 would fly there fast (about 0.77 m/s per metre of distance, section 9).
+# and PX4 would fly there fast (about 0.77 m/s per metre of distance, section 9). Such a target is
+# pulled in to this distance instead.
 FARTHEST_TARGET_FROM_DRONE_METRES = 1.2
+# Our own choice: three cycles at 10 per second. One far target can come from a single camera
+# tracking jump (10:44 on 2026-11-08: about 1.0 m in one 0.1 s report); targets that stay far
+# mean the drone really is off course.
+FAR_TARGET_LONGEST_SECONDS = 0.3
 
 # Our own choice. Close to the floor PX4 may legitimately use the air pressure sensor instead of
 # the laser: on 2026-11-07 drone 16, sitting on the floor, was not using the laser for height.
@@ -111,15 +140,16 @@ LASER_UNUSED_LONGEST_SECONDS = 1.0
 # above the first and well below the second.
 HEADING_GAP_LIMIT_DEGREES = 20.0
 
-# Our own choice. A gap this short can be a single late report; the swing to the compass lasts
-# much longer. At 30 degrees a second of turning (live_flight.py turns at 15), even a late report
-# moves the gap by only 9 degrees in 0.3 s.
-HEADING_GAP_LONGEST_SECONDS = 0.3
+# Our own choice. Measured on drone 16 on 2026-11-08: PX4 went back to camera tracking's heading
+# 0.6 to 1.1 s after dropping it. The drone holds still meanwhile, so waiting costs little. A gap
+# that lasts 3 s is not one of those moments, and the hold point itself may then be wrong.
+HEADING_GAP_LONGEST_SECONDS = 3.0
 
-# Our own choice. Without camera tracking's position, PX4 guesses from its motion sensors alone,
-# and on 2026-11-08 the drone slid 0.3 to 0.5 m within 2 s of that. PX4 reports its estimator
-# flags about twice a second, so this is two reports in a row.
-CAMERA_POSITION_UNUSED_LONGEST_SECONDS = 1.0
+# Our own choice. Measured on drone 16 on 2026-11-08: PX4 stopped using camera tracking's position
+# for 0.13 to 0.46 s at a time, and without it the drone slid 0.3 to 0.5 m within 2 s. PX4 reports
+# its estimator flags only once or twice a second, so one stale "not used" report could look like
+# a whole second. 2 s is at least two reports, and the drone holds still meanwhile.
+CAMERA_POSITION_UNUSED_LONGEST_SECONDS = 2.0
 
 # The two laser problems that LaserUseCheck reports.
 LASER_FAULTY = "PX4 reports that the bottom laser is faulty"
@@ -143,7 +173,8 @@ class DroneCondition:
     now_seconds: float
     control_is_ours: bool
     is_armed: bool
-    camera_tracking_age_seconds: float
+    # How old camera tracking's latest report is, counted from when its camera pictures were taken.
+    camera_report_age_seconds: float
     camera_tracking_says_lost: bool
     position_on_course_metres: object        # (east, north, height), or None.
     tilt_degrees: object
@@ -160,6 +191,9 @@ class DroneCondition:
     # How far PX4's heading has turned away from camera tracking's since the launch mark, in
     # degrees, or None if either is missing. 0 while PX4 follows the camera's heading.
     px4_heading_gap_degrees: object = None
+    # PX4's vertical speed, upward positive, or None. Camera tracking's height lags PX4's while the
+    # drone climbs or descends, so the height comparison allows for it (height_check.py).
+    px4_upward_speed_metres_per_second: object = None
 
 
 @dataclass
@@ -168,6 +202,9 @@ class SafetyDecision:
     reason: str = ""                         # A full sentence, empty for CARRY_ON.
     land_using_laser: bool = False           # True if PX4's height can't be trusted for the landing.
     warning: str = ""                        # A sentence for the records, given once. The flight goes on.
+    # For a HOLD: True if the held target should point the nose where PX4 thinks it points now,
+    # so that PX4 starts no turn while its heading and camera tracking's disagree.
+    hold_with_px4_heading: bool = False
 
 
 class RunSafety:
@@ -181,8 +218,10 @@ class RunSafety:
         self.laser_use_check = LaserUseCheck()
         self.camera_height_check = CameraHeightCheck()
         self.camera_trust_check = CameraTrustCheck()
-        # When the current hold began, or None if the drone isn't holding.
-        self.hold_began_at_seconds = None
+        self.camera_problem_lasted = ConditionHeldFor(CAMERA_PROBLEM_LONGEST_SECONDS)
+        self.camera_reports_fresh_for_long_enough = ConditionHeldFor(FRESH_REPORTS_BEFORE_RESUMING_SECONDS)
+        self.holding_for_camera_tracking = False
+        self.target_far_from_drone = ConditionHeldFor(FAR_TARGET_LONGEST_SECONDS)
 
     def check(self, condition):
         """Returns the SafetyDecision for this moment. Call it once per control cycle."""
@@ -205,23 +244,30 @@ class RunSafety:
             return SafetyDecision(LAND_HERE, height_problem, land_using_laser=True)
         warning = self.laser_use_check.take_new_warning()
 
-        tracking_problem = _camera_tracking_problem(condition)
-        if tracking_problem is not None:
-            decision = self._hold_or_give_up(condition.now_seconds, tracking_problem)
-            decision.warning = warning
-            return decision
-        self.hold_began_at_seconds = None
-        return SafetyDecision(CARRY_ON, warning=warning)
+        camera_problem = _camera_tracking_problem(condition)
+        if self.camera_problem_lasted.update(camera_problem is not None, condition.now_seconds):
+            return SafetyDecision(LAND_HERE, f"{camera_problem} This has lasted {CAMERA_PROBLEM_LONGEST_SECONDS:.0f} "
+                                             f"seconds without a break, so the drone lands where it is.",
+                                  land_using_laser=True)
+        decision = self._hold_or_carry_on(condition, camera_problem, warning)
+        if decision.action == HOLD:
+            # No onward target is checked during a hold, so a far target before the hold and one
+            # after it are not "in a row".
+            self.target_far_from_drone.reset()
+        return decision
 
-    def check_target(self, target_on_course_metres, drone_on_course_metres=None):
-        """Raises TargetRefused if the target is outside the course or too far from the drone.
-        Positions are (east, north, height) on the course map."""
+    def check_target(self, target_on_course_metres, drone_on_course_metres, now_seconds):
+        """Returns the target to send, as (east, north, height) on the course map. A target too far
+        from the drone is pulled in to FARTHEST_TARGET_FROM_DRONE_METRES. Raises TargetRefused if
+        the target is outside the course, or if targets have been too far for
+        FAR_TARGET_LONGEST_SECONDS. drone_on_course_metres may be None (no distance check)."""
         target = np.asarray(target_on_course_metres, dtype=float)
         if not np.all(np.isfinite(target)):
             raise TargetRefused(f"The target {target} is not a real number. This is a bug in the flight program.")
-        self._refuse_if_outside_the_course(target)
         if drone_on_course_metres is not None:
-            _refuse_if_far_from_the_drone(target, np.asarray(drone_on_course_metres, dtype=float))
+            target = self._pulled_in_if_far(target, np.asarray(drone_on_course_metres, dtype=float), now_seconds)
+        self._refuse_if_outside_the_course(target)
+        return target
 
     # ---- The individual rules -------------------------------------------------------------------
 
@@ -230,18 +276,53 @@ class RunSafety:
             return None
         return self.touch_detector.check(condition.now_seconds, condition.tilt_degrees, condition.rotation_degrees_per_second)
 
-    def _hold_or_give_up(self, now_seconds, tracking_problem):
-        if self.hold_began_at_seconds is None:
-            self.hold_began_at_seconds = now_seconds
-        seconds_holding = now_seconds - self.hold_began_at_seconds
-        if seconds_holding <= LONGEST_HOLD_SECONDS:
-            return SafetyDecision(HOLD, tracking_problem)
-        return SafetyDecision(
-            LAND_HERE,
-            f"{tracking_problem} The drone has held still for {seconds_holding:.1f} seconds waiting for it, longer "
-            f"than the {LONGEST_HOLD_SECONDS:.0f} seconds we allow, so it lands where it is.",
-            land_using_laser=True,
-        )
+    def _hold_or_carry_on(self, condition, camera_problem, warning):
+        """The cheap reactions, on one reading: hold still while anything makes the drone's
+        position or heading doubtful."""
+        # Asked first, because it must see every cycle to time the fresh reports.
+        camera_hold_reason = self._camera_hold_reason(condition, camera_problem)
+        if _heading_gap_is_too_big(condition):
+            return SafetyDecision(HOLD, _heading_gap_hold_reason(condition), warning=warning, hold_with_px4_heading=True)
+        if condition.px4_uses_camera_position is False:
+            return SafetyDecision(HOLD, "PX4 says it is not using camera tracking's position at the moment, so it is "
+                                        "guessing the drone's position. Holding still.", warning=warning)
+        if camera_hold_reason is not None:
+            return SafetyDecision(HOLD, camera_hold_reason, warning=warning)
+        return SafetyDecision(CARRY_ON, warning=warning)
+
+    def _camera_hold_reason(self, condition, camera_problem):
+        """A hold starts on one late or lost report, and ends only after
+        FRESH_REPORTS_BEFORE_RESUMING_SECONDS of usable reports. Returns None when not holding."""
+        report_is_usable = camera_problem is None
+        usable_for_long_enough = self.camera_reports_fresh_for_long_enough.update(report_is_usable, condition.now_seconds)
+        if camera_problem is not None:
+            self.holding_for_camera_tracking = True
+            return camera_problem + " Holding still."
+        if self.holding_for_camera_tracking and not usable_for_long_enough:
+            return (f"Camera tracking's latest report is {condition.camera_report_age_seconds:.2f} s old. Holding still "
+                    f"until its reports have been younger than {CAMERA_REPORT_OLDEST_AGE_SECONDS:.2f} s for "
+                    f"{FRESH_REPORTS_BEFORE_RESUMING_SECONDS:.1f} s.")
+        self.holding_for_camera_tracking = False
+        return None
+
+    def _pulled_in_if_far(self, target, drone, now_seconds):
+        """The target, or, if it is too far from the drone sideways, the point on the way to it at
+        FARTHEST_TARGET_FROM_DRONE_METRES. The height is kept."""
+        sideways_offset = target[:2] - drone[:2]
+        sideways_distance_metres = float(np.linalg.norm(sideways_offset))
+        is_far = sideways_distance_metres > FARTHEST_TARGET_FROM_DRONE_METRES
+        if self.target_far_from_drone.update(is_far, now_seconds):
+            raise TargetRefused(
+                f"The targets have been more than {FARTHEST_TARGET_FROM_DRONE_METRES:.1f} m from the drone for "
+                f"{FAR_TARGET_LONGEST_SECONDS:.1f} s (now {sideways_distance_metres:.2f} m), so PX4 would fly there "
+                f"too fast. The drone has probably been pushed off course or camera tracking has jumped, so the run "
+                f"stops."
+            )
+        if not is_far:
+            return target
+        pulled_in = target.copy()
+        pulled_in[:2] = drone[:2] + sideways_offset * (FARTHEST_TARGET_FROM_DRONE_METRES / sideways_distance_metres)
+        return pulled_in
 
     def _check_height(self, condition):
         # Both comparisons run every cycle, so each keeps its own timer up to date.
@@ -268,13 +349,14 @@ class RunSafety:
         tracking_is_normal = _camera_tracking_problem(condition) is None
         have_both = condition.position_on_course_metres is not None and condition.px4_height_risen_metres is not None
         if not (tracking_is_normal and have_both):
-            self.camera_height_check.gap_began_at_seconds = None
+            self.camera_height_check.reset()
             return None
         limit_metres = CAMERA_HEIGHT_GAP_LIMIT_METRES
         if self.laser_use_check.laser_has_stopped:
             limit_metres = CAMERA_HEIGHT_GAP_LIMIT_WITHOUT_LASER_METRES
         return self.camera_height_check.check(condition.now_seconds, _px4_height_less_correction(condition),
-                                              condition.position_on_course_metres[2], limit_metres)
+                                              condition.position_on_course_metres[2], limit_metres,
+                                              condition.px4_upward_speed_metres_per_second)
 
     def _refuse_if_outside_the_course(self, target):
         # The whole drone, not just its centre, must stay inside the safety net.
@@ -371,8 +453,8 @@ class LaserUseCheck:
 
 
 class CameraTrustCheck:
-    """Rule 5: notices when PX4 stops trusting camera tracking. Each problem must last its own
-    time limit to count.
+    """Rule 5: notices when PX4 has stopped trusting camera tracking for long enough to land.
+    (RunSafety holds the drone still on the first reading; this class only decides the landing.)
 
     It runs from the moment our program has control, even with the drone still on the floor: in
     the 05:42 and 06:15 flights of 2026-11-08 the swing to the compass (about 165 degrees) came
@@ -380,51 +462,37 @@ class CameraTrustCheck:
     landing that starts on the floor only waits for the motors to stop, which is safe."""
 
     def __init__(self):
-        self.heading_gap_began_at_seconds = None
-        self.position_unused_began_at_seconds = None
+        self.heading_gap_lasted = ConditionHeldFor(HEADING_GAP_LONGEST_SECONDS)
+        self.position_unused_lasted = ConditionHeldFor(CAMERA_POSITION_UNUSED_LONGEST_SECONDS)
 
     def check(self, condition):
         """Returns None while all is well, or a sentence saying why the run must stop."""
-        heading_problem = self._check_heading(condition)
-        if heading_problem is not None:
-            return heading_problem
-        return self._check_position_use(condition)
-
-    def _check_heading(self, condition):
-        gap = condition.px4_heading_gap_degrees
-        if gap is None or abs(gap) <= HEADING_GAP_LIMIT_DEGREES:
-            self.heading_gap_began_at_seconds = None
-            return None
-        if self.heading_gap_began_at_seconds is None:
-            self.heading_gap_began_at_seconds = condition.now_seconds
-        if condition.now_seconds - self.heading_gap_began_at_seconds < HEADING_GAP_LONGEST_SECONDS:
-            return None
-        return (f"PX4's heading differs from camera tracking's by {abs(gap):.0f} degrees, more than the "
-                f"{HEADING_GAP_LIMIT_DEGREES:.0f} we allow. PX4 has probably switched to the compass, which is "
-                f"disturbed indoors, so it will push the drone the wrong way. The drone lands where it is.")
-
-    def _check_position_use(self, condition):
-        if condition.px4_uses_camera_position is not False:
-            self.position_unused_began_at_seconds = None
-            return None
-        if self.position_unused_began_at_seconds is None:
-            self.position_unused_began_at_seconds = condition.now_seconds
-        seconds_unused = condition.now_seconds - self.position_unused_began_at_seconds
-        if seconds_unused < CAMERA_POSITION_UNUSED_LONGEST_SECONDS:
-            return None
-        return (f"PX4 has not used camera tracking's position for {seconds_unused:.1f} s, so it is guessing the "
-                f"drone's position from its motion sensors alone, and the drone drifts. Camera tracking's reports "
-                f"are probably arriving too late for PX4. The drone lands where it is.")
+        now = condition.now_seconds
+        heading_gap_has_lasted = self.heading_gap_lasted.update(_heading_gap_is_too_big(condition), now)
+        position_unused_has_lasted = self.position_unused_lasted.update(condition.px4_uses_camera_position is False, now)
+        if heading_gap_has_lasted:
+            return (f"PX4's heading has differed from camera tracking's by more than {HEADING_GAP_LIMIT_DEGREES:.0f} "
+                    f"degrees for {HEADING_GAP_LONGEST_SECONDS:.0f} seconds (now "
+                    f"{abs(condition.px4_heading_gap_degrees):.0f}). PX4 may be using the compass, which is disturbed "
+                    f"indoors, or no longer knows which way the drone points, so it may push the drone the wrong "
+                    f"way. The drone lands where it is.")
+        if position_unused_has_lasted:
+            return (f"PX4 has not used camera tracking's position for {CAMERA_POSITION_UNUSED_LONGEST_SECONDS:.0f} "
+                    f"seconds, so it is guessing the drone's position from its motion sensors alone, and the drone "
+                    f"drifts. Camera tracking's reports are probably arriving too late for PX4. The drone lands "
+                    f"where it is.")
+        return None
 
 
-def _refuse_if_far_from_the_drone(target, drone):
-    sideways_distance_metres = float(np.linalg.norm(target[:2] - drone[:2]))
-    if sideways_distance_metres > FARTHEST_TARGET_FROM_DRONE_METRES:
-        raise TargetRefused(
-            f"The next target is {sideways_distance_metres:.2f} m from the drone, more than the "
-            f"{FARTHEST_TARGET_FROM_DRONE_METRES:.1f} m we allow, so PX4 would fly there too fast. The drone has "
-            f"probably been pushed off course or camera tracking has jumped, so the run stops."
-        )
+def _heading_gap_is_too_big(condition):
+    gap = condition.px4_heading_gap_degrees
+    return gap is not None and abs(gap) > HEADING_GAP_LIMIT_DEGREES
+
+
+def _heading_gap_hold_reason(condition):
+    return (f"PX4's heading differs from camera tracking's by {abs(condition.px4_heading_gap_degrees):.0f} degrees, "
+            f"more than the {HEADING_GAP_LIMIT_DEGREES:.0f} we allow. PX4 has probably stopped using camera "
+            f"tracking's heading for a moment. Holding still, with the nose where PX4 thinks it points.")
 
 
 def _why_control_is_lost(condition):
@@ -435,9 +503,10 @@ def _why_control_is_lost(condition):
 
 
 def _camera_tracking_problem(condition):
+    """A sentence if camera tracking's latest report is too old to use or says it is lost, else None."""
     if condition.camera_tracking_says_lost:
-        return "Camera tracking reports that it has lost track, so the drone's position is unknown. Holding still."
-    if condition.camera_tracking_age_seconds > CAMERA_TRACKING_LONGEST_SILENCE_SECONDS:
-        return (f"Camera tracking's last position report is {condition.camera_tracking_age_seconds:.2f} s old, more than "
-                f"the {CAMERA_TRACKING_LONGEST_SILENCE_SECONDS:.1f} s we allow. Holding still.")
+        return "Camera tracking reports that it has lost track, so the drone's position is unknown."
+    if condition.camera_report_age_seconds > CAMERA_REPORT_OLDEST_AGE_SECONDS:
+        return (f"Camera tracking's latest position report is {condition.camera_report_age_seconds:.2f} s old (from "
+                f"its pictures' time), more than the {CAMERA_REPORT_OLDEST_AGE_SECONDS:.2f} s we allow.")
     return None

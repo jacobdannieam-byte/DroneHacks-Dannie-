@@ -11,7 +11,9 @@ its length, made more expensive in three cases:
   - Close to something blocked. Below ROOM_NEEDED_METRES of room a square is forbidden; between
     that and COMFORTABLE_ROOM_METRES the cost rises, so the path keeps to the middle of gaps.
   - Near a boulder. They cost BOULDER_COST_FACTOR times more, so the path goes round boulders
-    when there is room: a boulder under the bottom laser can make PX4 lose its height.
+    when there is room: a boulder under the bottom laser can make PX4 lose its height. The
+    search first keeps the centre BOULDER_KEEP_AWAY_METRES from boulders drawn on the map, and
+    drops that rule only if no path exists with it.
   - Through squares the camera has not seen yet. They cost UNSEEN_COST_FACTOR times more, so the
     drone prefers space it knows is empty, but can still plan into the unknown when it must.
     The drone always faces where it flies, so it sees an unknown square before it reaches it.
@@ -31,6 +33,7 @@ import numpy as np
 
 from team_nav.clearance_grid import GRID_SQUARE_METRES
 from team_nav.drone_dimensions import DRONE_RADIUS_METRES, REQUIRED_ROOM_METRES
+from team_nav.live_map import BOULDER_KEEP_AWAY_METRES
 
 # From drone_dimensions.py: the drone's radius (0.30 m, propeller tips) plus a 5 cm margin.
 ROOM_NEEDED_METRES = REQUIRED_ROOM_METRES
@@ -120,11 +123,18 @@ def corridor_exit_reached(goal, drone_point_metres, progress_past_line_metres=DR
     if width_metres < 2.0 * DRONE_RADIUS_METRES:
         return False
     across = line / width_metres
-    forward = _toward_exit(across, goal.point_metres - goal.line_start_metres)
     offset_metres = drone_point_metres[:2] - goal.line_start_metres
     across_metres = offset_metres @ across
-    return (offset_metres @ forward >= progress_past_line_metres
+    return (metres_past_line(goal, drone_point_metres) >= progress_past_line_metres
             and DRONE_RADIUS_METRES <= across_metres <= width_metres - DRONE_RADIUS_METRES)
+
+
+def metres_past_line(goal, point_metres):
+    """How far the point is past the goal's checkpoint line, toward the goal point (negative
+    before the line)."""
+    line = goal.line_end_metres - goal.line_start_metres
+    forward = _toward_exit(line / np.linalg.norm(line), goal.point_metres - goal.line_start_metres)
+    return float((np.asarray(point_metres[:2]) - goal.line_start_metres) @ forward)
 
 
 def _toward_exit(along_line, offset_to_exit):
@@ -139,12 +149,33 @@ def find_path(live_map, start_metres, goal_metres, room=None):
     if room is None:
         room = live_map.room_metres()
     allowed = room >= ROOM_NEEDED_METRES
+    # First try a path whose centre stays BOULDER_KEEP_AWAY_METRES from every boulder drawn on
+    # the map. A boulder can't hurt the drone, but in the 3D rendered sim (runs 20261108_221301
+    # and _221426) a centre that passed 0-2 cm outside a boulder's edge let the bottom laser
+    # touch its top, and PX4's height was then about 0.3 m wrong for several seconds.
+    # If the map is a little wrong, that rule can close a narrow passage (noise bench: 16 of 40
+    # runs stopped in the maze), so then plan again with boulders as a cost only.
+    near_a_map_boulder = live_map.map_boulder_distance_metres < BOULDER_KEEP_AWAY_METRES
+    path = _find_path_on(live_map, allowed & ~near_a_map_boulder, room, start_metres, goal_metres)
+    if path is not None:
+        return path
+    return _find_path_on(live_map, allowed, room, start_metres, goal_metres)
+
+
+def _find_path_on(live_map, allowed, room, start_metres, goal_metres):
+    """find_path, with the squares the drone's centre may use already chosen."""
+    allowed = allowed.copy()
     start = live_map.square_of(start_metres)
     if start is None:
         return None
-    # The drone may already be in a tight spot (for example right after a new wall was seen).
-    # Let it start there, so it can find its way out.
+    # The drone may already be in a tight spot (for example right after a new wall was seen, or
+    # after drifting near a boulder). Let it start there, so it can find its way out.
     allowed[start] = True
+    # The goal itself stays allowed if it has room from walls, even near a boulder: the goal
+    # comes from the mission, so the drone must still be able to aim for it.
+    goal_square = live_map.square_of(goal_metres)
+    if goal_square is not None and room[goal_square] >= ROOM_NEEDED_METRES:
+        allowed[goal_square] = True
     goal = _nearest_allowed_square(live_map, allowed, goal_metres)
     if goal is None:
         return None

@@ -290,7 +290,9 @@ def _as_column_word(text):
 def _read_text(path, keep_nul=False):
     try:
         with open(path, "rb") as file:
-            content = file.read().decode("utf-8", errors="replace")
+            # On drone 16 one temperature file (thermal_zone2) gives no data at all: read()
+            # returns None instead of bytes. We treat that as an empty file.
+            content = (file.read() or b"").decode("utf-8", errors="replace")
     except OSError:
         return ""
     return content if keep_nul else content.strip()

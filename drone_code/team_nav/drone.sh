@@ -8,6 +8,8 @@
 #     ./drone.sh hand_test all_table_checks     run one of our programs, with its arguments
 #     ./drone.sh fly turn                        one command for a test flight: checks, sets up, flies
 #                                               (tests: climb, turn, corridor, maze, course, waypoints)
+#     ./drone.sh compete                        THE COMPETITION RUN: starts the course program at once,
+#                                               with no checks, so the organizer can arm right away
 #
 # drone_code/TEST_SEQUENCE.md gives the commands for each test, in order.
 #
@@ -291,6 +293,28 @@ fly_test() {
 }
 
 
+# ---- compete: the scored run ---------------------------------------------------------------------
+
+# At the competition the team has no time for checks: the organizer arms as soon as our program
+# is loaded. So this does only what is needed to fly, in a few seconds: competition mode, the
+# test_flights launch (its hand-over is on) if it is not already running, exactly one
+# flight_interface, then course_run with live navigation. All checks are done beforehand.
+compete() {
+    TEAM_NAV_RUN_MODE="competition"
+    TEAM_NAV_STOP_AFTER_STAGE=""
+    export TEAM_NAV_RUN_MODE TEAM_NAV_STOP_AFTER_STAGE
+    check_drone_software_is_up
+    make_sure_test_flights_runs
+    [ "$(in_container "pgrep -fc '$FLIGHT_INTERFACE_PROCESS'")" = "1" ] ||
+        fail "more than one flight_interface runs (or none), but exactly one must send commands to PX4. Restart the drone's software: docker restart $CONTAINER"
+    echo
+    echo "COMPETITION RUN. When the program says it is waiting for the start switch, the organizer"
+    echo "may arm the drone and flip the mode switch to Position."
+    echo "Ctrl+C requests a landing while the program still has control."
+    run_our_program course_run --navigation live
+}
+
+
 # ---- Choosing what to do -------------------------------------------------------------------------
 
 if [ "$(hostname)" != "skybeta-16" ]; then
@@ -305,9 +329,11 @@ case "${1:-}" in
         start_launch_file "${2:-}" ;;
     fly)
         fly_test "${@:2}" ;;
+    compete)
+        compete ;;
     hand_test|practice_flight|course_run|flight_recorder|preflight_check)
         run_our_program "$@" ;;
     *)
-        sed -n '2,10p' "$0"
+        sed -n '2,12p' "$0"
         exit 1 ;;
 esac

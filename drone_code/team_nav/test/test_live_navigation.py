@@ -14,7 +14,8 @@ from team_nav import stereo_depth
 from team_nav.drone_dimensions import DRONE_HALF_HEIGHT_METRES
 from team_nav.flight_steps import heading_from_rotation, rotation_matrix
 from team_nav.live_map import LiveMap
-from team_nav.live_navigation import FLYING, HOLDING, TURNING, LiveNavigator, NoWayForward
+from team_nav.live_map import FADE_SCORE_PER_SECOND, HIT_SCORE
+from team_nav.live_navigation import FLYING, HOLDING, STOPPING_TO_TURN, TURNING, LiveNavigator, NoWayForward
 from team_nav.live_planner import Goal, find_path, goals_from_mission
 from team_nav.start_frame import StartFrame
 
@@ -58,16 +59,94 @@ def test_points_ahead_of_camera_put_the_picture_centre_straight_ahead():
 
 # ---- The live map ---------------------------------------------------------------------------------
 
-def test_a_wall_seen_twice_becomes_blocked_and_the_space_before_it_free():
+def test_a_wall_seen_in_three_pictures_becomes_blocked_and_the_space_before_it_free():
     live_map = scan_live_map()
     camera = open_point(live_map)
     camera_3d = np.array([camera[0], camera[1], FLYING_HEIGHT_METRES])
     wall = np.array([[camera[0] + 0.6, camera[1] + offset, FLYING_HEIGHT_METRES] for offset in np.linspace(-0.2, 0.2, 9)])
     for _picture in range(2):
         live_map.add_points(camera_3d, wall)
+    # Two pictures are not enough: on 2026-11-08 two pictures of wrong points closed the corridor.
+    assert not live_map.blocked()[live_map.square_of(wall[4])]
+    live_map.add_points(camera_3d, wall)
     assert live_map.blocked()[live_map.square_of(wall[4])]
-    # Two views through the space before the wall: its score has gone down, toward "free".
+    # Three views through the space before the wall: its score has gone down, toward "free".
     assert live_map.scores[live_map.square_of(camera + np.array([0.3, 0.0]))] < 0
+
+
+def test_points_nearer_than_the_trusted_distance_are_ignored():
+    live_map = scan_live_map()
+    camera = open_point(live_map)
+    camera_3d = np.array([camera[0], camera[1], FLYING_HEIGHT_METRES])
+    # Where the stereo camera's wrong matches piled up on 2026-11-08: about 0.38 m ahead.
+    near_specks = np.array([[camera[0] + 0.38, camera[1], FLYING_HEIGHT_METRES]])
+    for _picture in range(10):
+        live_map.add_points(camera_3d, near_specks)
+    assert not live_map.blocked()[live_map.square_of(near_specks[0])]
+
+
+def test_seeing_the_floor_nearby_marks_the_space_before_it_free():
+    # Open space with no wall behind it: the camera only sees the floor. Walls reach the floor,
+    # so the squares on the way to a floor point are empty.
+    live_map = scan_live_map()
+    camera = open_point(live_map)
+    camera_3d = np.array([camera[0], camera[1], FLYING_HEIGHT_METRES])
+    floor_point = np.array([[camera[0] + 1.2, camera[1], 0.0]])
+    on_the_way = (camera[0] + 0.7, camera[1])
+    assert not live_map.seen_free()[live_map.square_of(on_the_way)]
+    live_map.add_points(camera_3d, floor_point)
+    assert live_map.seen_free()[live_map.square_of(on_the_way)]
+    assert not live_map.blocked()[live_map.square_of(floor_point[0])]
+
+
+def test_a_false_cluster_fades_away_but_a_wall_in_view_stays_blocked():
+    live_map = scan_live_map()
+    camera = open_point(live_map)
+    camera_3d = np.array([camera[0], camera[1], FLYING_HEIGHT_METRES])
+    cluster = np.array([[camera[0] + 0.8, camera[1], FLYING_HEIGHT_METRES]])
+    wall = np.array([[camera[0] - 0.8, camera[1], FLYING_HEIGHT_METRES]])
+    for _picture in range(3):
+        live_map.add_points(camera_3d, cluster)
+        live_map.add_points(camera_3d, wall)
+    assert live_map.blocked()[live_map.square_of(cluster[0])]
+    # 2.5 s at 10 cycles a second. The wall is seen in every picture (8 a second); the cluster never again.
+    for cycle in range(25):
+        live_map.fade(0.1)
+        if cycle % 5 != 4:
+            live_map.add_points(camera_3d, wall)
+    assert not live_map.blocked()[live_map.square_of(cluster[0])]
+    assert live_map.blocked()[live_map.square_of(wall[0])]
+
+
+def test_scores_fade_back_to_the_maps_first_guess():
+    live_map = scan_live_map()
+    map_wall = tuple(np.argwhere(live_map.blocked() & ~live_map.always_blocked)[0])
+    open_square = live_map.square_of(open_point(live_map))
+    starting_wall_score = float(live_map.scores[map_wall])
+    live_map.scores[map_wall] = -2.0
+    live_map.scores[open_square] = -2.0
+    seconds = (starting_wall_score + 2.0) / FADE_SCORE_PER_SECOND
+    for _cycle in range(int(seconds * 10) + 1):
+        live_map.fade(0.1)
+    assert live_map.scores[map_wall] == pytest.approx(starting_wall_score)
+    assert live_map.scores[open_square] == pytest.approx(0.0)
+    assert live_map.blocked()[map_wall]
+
+
+def test_low_obstacles_fade_and_far_ones_are_ignored():
+    live_map = scan_live_map()
+    camera = open_point(live_map)
+    camera_3d = np.array([camera[0], camera[1], FLYING_HEIGHT_METRES])
+    near_boulder_top = np.array([[camera[0] + 1.0, camera[1], 0.4]])
+    far_boulder_top = np.array([[camera[0] + 2.5, camera[1], 0.4]])
+    for _picture in range(3):
+        live_map.add_points(camera_3d, near_boulder_top)
+        live_map.add_points(camera_3d, far_boulder_top)
+    assert live_map.low_obstacle_scores[live_map.square_of(near_boulder_top[0])] == pytest.approx(3 * HIT_SCORE)
+    assert live_map.low_obstacle_scores[live_map.square_of(far_boulder_top[0])] == 0.0
+    for _cycle in range(30):
+        live_map.fade(0.1)
+    assert live_map.low_obstacle_scores[live_map.square_of(near_boulder_top[0])] < 3 * HIT_SCORE - 0.25
 
 
 def test_floor_points_are_not_walls():
@@ -127,7 +206,11 @@ def test_the_navigator_turns_first_when_the_path_is_behind_it():
     live_map = scan_live_map()
     start = open_point(live_map)
     navigator = navigator_with_one_goal(live_map, start + np.array([-1.0, 0.0]))
+    # First it holds still until two plans agree and its speed is known to be low; then it turns.
     step = navigator.next_step([start[0], start[1], FLYING_HEIGHT_METRES], 0.0, 0.0)
+    assert step.activity == STOPPING_TO_TURN
+    assert step.heading_radians == 0.0
+    step = navigator.next_step([start[0], start[1], FLYING_HEIGHT_METRES], 0.0, 0.6)
     assert step.activity == TURNING
     assert abs(abs(step.heading_radians) - math.pi) < 0.3
     assert np.linalg.norm(step.target_metres[:2] - start) < 0.01

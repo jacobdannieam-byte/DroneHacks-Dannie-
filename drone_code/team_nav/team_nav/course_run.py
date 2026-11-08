@@ -34,9 +34,14 @@ The stages, in order
       climb, first corridor, maze, tunnel, chicane
   With map_route, a stage ends when the route's target moves past the point where the drone's
   whole body has crossed that checkpoint's line. With live, it ends when the drone crosses the
-  line or comes within 25 cm of the goal point beyond it (live_planner.has_reached). In practice mode, TEAM_NAV_STOP_AFTER_STAGE=<name> lands the
-  drone where that stage ends instead of flying on. Otherwise the flying is identical in both
-  modes. Competition mode refuses TEAM_NAV_STOP_AFTER_STAGE (run_mode.py).
+  line or comes within 25 cm of the goal point beyond it (live_planner.has_reached); the first
+  corridor needs its whole body past the line, or, where the map leaves no room for that, its
+  centre past the line and no way to go deeper (live_navigation.py). In practice mode,
+  TEAM_NAV_STOP_AFTER_STAGE=<name> lands the drone where that stage ends instead of flying on.
+  A full-course practice run with live navigation differs from competition in a few details
+  (LiveNavigator's full_course_practice: it keeps the map's walls even where the camera sees
+  through them, and counts the first corridor with the drone's centre past the line).
+  Competition mode refuses TEAM_NAV_STOP_AFTER_STAGE (run_mode.py).
 
 What stops the run (run_safety.py)
 ----------------------------------
@@ -51,9 +56,13 @@ What stops the run (run_safety.py)
     stopping to use the laser is a warning, and the flight goes on. Land where it is, finding the floor with the laser's raw reading if
     we have it, else with PX4's distance to the ground if PX4 still reports one, else by
     descending gently until PX4 says it has landed (flight_steps.choose_landing_height_source).
-  - Camera tracking silent for 0.5 s or reporting it is lost: hold still; after 5 s, land.
+  - Camera tracking's position over 0.45 s old (by its picture time) or reported lost, or PX4's
+    heading 20 degrees away from camera tracking's: hold still at once; land only if it lasts 3 s.
+  - A target more than 1.2 m from the drone: pulled in to 1.2 m; land only if it keeps happening.
   - A target outside the course: refused, and the drone lands where it is.
   - Control no longer ours (disarmed, or PX4 left Offboard): stop sending targets and finish.
+  - Live navigation only (live_flight.py): 165 s after the hand-over, or 25 s without getting
+    0.3 m nearer the current goal, land where it is. Checkpoints already cleared still count.
   - Any error in this program, or Ctrl+C: if control is ours and the motors are on, land where
     the drone is (choosing how to find the floor the same way), then finish.
     A second Ctrl+C abandons that landing.
@@ -126,9 +135,14 @@ LIVE_NAVIGATION = "live"
 MAP_ROUTE_NAVIGATION = "map_route"
 WAYPOINT_NAVIGATION = "waypoints"
 
-# Rule 7.9 gives the run three minutes. Start the timer at handover, before liftoff, and
-# reserve time for descent and PX4 disarming. The referee keeps the official clock.
+# From the rulebook (rule 7.9): the run has three minutes. We start our timer at the hand-over,
+# before liftoff, which is a little earlier than the referee's clock, so we are on the safe side.
+# The referee keeps the official clock.
 SCORED_RUN_LIMIT_SECONDS = 180.0
+# Our own choices: the time kept back at the end for the landing. Live navigation stops at
+# 180 - 15 = 165 s and lands where it is, so the checkpoints already cleared still count.
+# A landing from cruise height takes a few seconds (flight_steps.land).
+LIVE_LANDING_RESERVE_SECONDS = 15.0
 WAYPOINT_LANDING_RESERVE_SECONDS = 25.0
 
 # Our own choice. An 18 m route at 0.5 m/s takes under a minute, plus about 2.5 seconds at each of
@@ -322,8 +336,10 @@ class CourseRun:
         if self.stop_after_stage == CLIMB_STAGE:
             pass
         elif self.navigation == LIVE_NAVIGATION:
+            latest_navigation_end = self.flight_start_seconds + SCORED_RUN_LIMIT_SECONDS - LIVE_LANDING_RESERVE_SECONDS
             LiveFlight(self.link, self.watch, self.plan.course_map, self.plan.mission, TO_THE_PAD_STAGE,
-                       self.stop_after_stage, self, full_course_practice=self.full_course_practice).fly()
+                       self.stop_after_stage, self, latest_navigation_end_seconds=latest_navigation_end,
+                       full_course_practice=self.full_course_practice).fly()
         elif self.navigation == WAYPOINT_NAVIGATION:
             latest_navigation_end = self.flight_start_seconds + SCORED_RUN_LIMIT_SECONDS - WAYPOINT_LANDING_RESERVE_SECONDS
             LiveFlight(self.link, self.watch, self.plan.course_map, self.plan.mission, TO_THE_PAD_STAGE,

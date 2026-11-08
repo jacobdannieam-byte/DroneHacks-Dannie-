@@ -18,8 +18,6 @@ This file listens to them inside the flight program. For each message it:
 
 What it does not do: decide anything about where to fly (live_navigation.py does that).
 """
-import time
-
 import numpy as np
 
 from team_nav.depth_camera import CAMERA_FORWARD_OF_CENTRE_METRES, OBSTACLE_POINTS_TOPIC, points_from_message
@@ -42,7 +40,9 @@ class DepthToMap:
         self.align_to_walls = align_to_walls
         self.pictures_used = 0
         self.pictures_without_pose = 0
-        self.last_picture_monotonic_seconds = None    # When the last picture was put on the map.
+        # When the last picture was put on the map, on the link's clock (link.now_seconds), so a test
+        # bench that runs faster than real time can replace the clock.
+        self.last_picture_seconds = None
         link.node.create_subscription(PointCloud2, OBSTACLE_POINTS_TOPIC, self.on_obstacle_points, POINTS_QUEUE_LENGTH)
 
     def on_obstacle_points(self, message):
@@ -63,7 +63,7 @@ class DepthToMap:
             self.correct_drift(camera_on_course, points_on_course)
         self.live_map.add_points(camera_on_course, points_on_course)
         self.pictures_used += 1
-        self.last_picture_monotonic_seconds = time.monotonic()
+        self.last_picture_seconds = self.link.now_seconds()
 
     def correct_drift(self, camera_on_course, points_on_course):
         """Lines up the points at flying height with the trusted walls, and stores the new
@@ -79,9 +79,9 @@ class DepthToMap:
         camera_on_course[:2] += change
 
     def seconds_since_last_picture(self):
-        if self.last_picture_monotonic_seconds is None:
+        if self.last_picture_seconds is None:
             return float("inf")
-        return time.monotonic() - self.last_picture_monotonic_seconds
+        return self.link.now_seconds() - self.last_picture_seconds
 
     def course_from_odom(self, points_odom):
         """N x 3 points in camera tracking's frame -> N x 3 (east, north, height) on the course.

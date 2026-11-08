@@ -14,9 +14,10 @@ from team_nav.course_map import load_course_map
 from team_nav.drone_dimensions import DRONE_HALF_HEIGHT_METRES, REQUIRED_ROOM_METRES
 from team_nav.live_map import LiveMap
 from team_nav.live_navigation import (
-    CORRIDOR_STEERING_LIMIT_DEGREES, HOLDING, TURN_FIRST_DEGREES, TURN_ROOM_METRES, LiveNavigator, NavigationStep,
+    CORRIDOR_STEERING_LIMIT_DEGREES, HOLDING, STOPPING_MARGIN_METRES, TURN_FIRST_DEGREES, TURN_ROOM_METRES,
+    LiveNavigator, NavigationStep,
 )
-from team_nav.live_planner import Goal, corridor_exit_reached
+from team_nav.live_planner import ROOM_NEEDED_METRES, Goal, corridor_exit_reached
 from team_nav.mission import load_mission
 from team_nav.route_planner import RoutePlanningError, plan_route
 
@@ -126,11 +127,13 @@ class WaypointNavigator(LiveNavigator):
     def _turn_room_metres(self):
         return self.live_map.room_metres(keep_mapped_walls=True)
 
-    def _safe_lead_metres(self, drone_metres, direction, distance_to_aim_metres, room_metres=None):
+    def _safe_lead_metres(self, drone_metres, direction, distance_to_aim_metres, room_metres=None,
+                          stopping_margin_metres=STOPPING_MARGIN_METRES, room_needed_metres=ROOM_NEEDED_METRES):
         if room_metres is None:
             room_metres = self._turn_room_metres()
             room_metres[self.live_map.near_a_boulder()] = 0.0
-        return super()._safe_lead_metres(drone_metres, direction, distance_to_aim_metres, room_metres)
+        return super()._safe_lead_metres(drone_metres, direction, distance_to_aim_metres, room_metres,
+                                         stopping_margin_metres, room_needed_metres)
 
 
 def main():

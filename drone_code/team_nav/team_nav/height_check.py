@@ -37,6 +37,13 @@ tracking's, anywhere on the course, and reports a problem when they disagree by 
 CAMERA_HEIGHT_GAP_LIMIT_METRES for CAMERA_HEIGHT_GAP_LONGEST_SECONDS. Camera tracking's height
 drifts, so this limit is much looser than the laser's; it catches big failures, not small ones.
 
+Camera tracking's height also arrives late: in climbs on drone 16 it trailed PX4's height by
+0.5 to 1 s (measured 2026-11-08). So while the drone moves up or down faster than
+LAG_ALLOWANCE_FROM_METRES_PER_SECOND, the limit is widened by the distance the drone covers in
+CAMERA_HEIGHT_LAG_SECONDS. We widen the limit rather than compare with an older PX4 height,
+because the lag is not fixed (0.5 to 1 s): widening by the longest lag covers the whole range,
+and it needs no stored history.
+
 What it does not do: fix the height, or land. The flight program does that.
 """
 import math
@@ -44,6 +51,7 @@ import math
 import numpy as np
 
 from team_nav.course_map import BlockingCircle, distance_to_shapes_metres, shapes_blocking_between_heights
+from team_nav.persistence import ConditionHeldFor
 
 # Our own choice, from six simulator flights on 2026-11-07. Over clear floor, while PX4 was
 # still using the laser, PX4's height and the laser's were within 9 cm of each other almost all
@@ -76,6 +84,13 @@ CAMERA_HEIGHT_GAP_LIMIT_METRES = 0.30
 CAMERA_HEIGHT_GAP_LIMIT_WITHOUT_LASER_METRES = 0.15
 # Our own choice, the same as the laser comparison's.
 CAMERA_HEIGHT_GAP_LONGEST_SECONDS = 1.0
+# Measured on drone 16 on 2026-11-08: in climbs at 0.4 to 0.53 m/s, camera tracking's height
+# trailed PX4's by 0.5 to 1 s. In the 12:15 and 12:16 runs that lag alone made a 0.36 to 0.45 m
+# gap, which stopped both runs. We allow the longest lag we saw.
+CAMERA_HEIGHT_LAG_SECONDS = 1.0
+# Our own choice. Below this vertical speed the lag makes less than 0.1 m of gap, which the
+# normal limit already covers, so hover noise does not loosen the check.
+LAG_ALLOWANCE_FROM_METRES_PER_SECOND = 0.10
 
 
 class HeightCheck:
@@ -122,19 +137,16 @@ class CameraHeightCheck:
     Works anywhere on the course, because camera tracking doesn't look at the floor."""
 
     def __init__(self):
-        # When the two heights first disagreed by too much, or None if they agree.
-        self.gap_began_at_seconds = None
+        self.gap_too_big = ConditionHeldFor(CAMERA_HEIGHT_GAP_LONGEST_SECONDS)
 
-    def check(self, now_seconds, px4_height_metres, camera_height_metres, limit_metres=CAMERA_HEIGHT_GAP_LIMIT_METRES):
+    def check(self, now_seconds, px4_height_metres, camera_height_metres, limit_metres=CAMERA_HEIGHT_GAP_LIMIT_METRES,
+              upward_speed_metres_per_second=None):
         """Returns None while all is well, or a sentence saying why the run must stop. limit_metres
-        is the largest allowed difference between the two heights."""
+        is the largest allowed difference between the two heights while the drone is level.
+        upward_speed_metres_per_second is PX4's, or None if unknown (then no lag is allowed)."""
+        limit_metres = limit_metres + camera_lag_allowance_metres(upward_speed_metres_per_second)
         gap_metres = px4_height_metres - camera_height_metres
-        if abs(gap_metres) <= limit_metres:
-            self.gap_began_at_seconds = None
-            return None
-        if self.gap_began_at_seconds is None:
-            self.gap_began_at_seconds = now_seconds
-        if now_seconds - self.gap_began_at_seconds < CAMERA_HEIGHT_GAP_LONGEST_SECONDS:
+        if not self.gap_too_big.update(abs(gap_metres) > limit_metres, now_seconds):
             return None
         return (
             f"PX4 thinks the drone has risen {px4_height_metres:.2f} m since the launch mark, but camera tracking says "
@@ -142,6 +154,19 @@ class CameraHeightCheck:
             f"for {CAMERA_HEIGHT_GAP_LONGEST_SECONDS:.0f} second. PX4's height has probably gone wrong, for example "
             f"after the bottom laser crossed a boulder (docs/ARCHITECTURE.md, section 7), so it can't be trusted."
         )
+
+    def reset(self):
+        self.gap_too_big.reset()
+
+
+def camera_lag_allowance_metres(upward_speed_metres_per_second):
+    """How far camera tracking's late height may trail PX4's at this vertical speed."""
+    if upward_speed_metres_per_second is None:
+        return 0.0
+    speed = abs(upward_speed_metres_per_second)
+    if speed <= LAG_ALLOWANCE_FROM_METRES_PER_SECOND:
+        return 0.0
+    return speed * CAMERA_HEIGHT_LAG_SECONDS
 
 
 def laser_height_above_launch_metres(laser_reading_metres, laser_reading_on_launch_mark_metres, tilt_degrees):

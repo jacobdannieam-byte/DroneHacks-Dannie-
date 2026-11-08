@@ -37,8 +37,8 @@ SETTINGS_TO_CHANGE = {
     "EKF2_MAG_TYPE": 5,
     # From PX4's source code (EstimatorInterface::setExtVisionData): PX4 subtracts this delay from
     # each report's own time stamp. The organizers' bridge already stamps each report with the
-    # time its picture was taken, so the old 60 ms was counted twice, and PX4 threw away reports
-    # 60 ms sooner than it needed to.
+    # time its picture was taken, so the old 70 ms (read on drone 16) was counted twice, and PX4 threw away reports
+    # 70 ms sooner than it needed to.
     "EKF2_EV_DELAY": 0.0,
     # From PX4's source code (RingBuffer::pop_first_older_than): PX4 uses a camera report only if
     # it is at most about EKF2_DELAY_MAX + 100 ms late. With the old 200 that was about 235 ms
@@ -105,8 +105,15 @@ def read_setting(link, name):
 
 def change_setting(link, name, value):
     """Sets the value and returns what PX4 reports back afterwards."""
-    kind = mavutil.mavlink.MAV_PARAM_TYPE_INT32 if isinstance(value, int) else mavutil.mavlink.MAV_PARAM_TYPE_REAL32
-    link.param_set_send(name, value, parm_type=kind)
+    if isinstance(value, int):
+        # PX4 reads a whole-number setting from the raw bytes of MAVLink's float field. Sending
+        # the plain number 5.0 made PX4 read a huge whole number and refuse it (seen on drone 16
+        # on 2026-11-08: EKF2_MAG_TYPE stayed 0). So we pack the whole number's bytes ourselves.
+        import struct
+        packed_value = struct.unpack("<f", struct.pack("<i", value))[0]
+        link.param_set_send(name, packed_value, parm_type=mavutil.mavlink.MAV_PARAM_TYPE_INT32)
+    else:
+        link.param_set_send(name, value, parm_type=mavutil.mavlink.MAV_PARAM_TYPE_REAL32)
     _wait_for_value(link, name)
     return read_setting(link, name)
 

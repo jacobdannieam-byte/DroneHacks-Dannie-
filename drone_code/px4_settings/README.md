@@ -12,9 +12,9 @@ Then restart the flight controller. Write the old values printed by the tool in 
 
 | Setting | Old value | New value | Why |
 |---|---|---|---|
-| `EKF2_MAG_TYPE` | 0 (automatic) | 5 (never use the compass) | Indoors the compass points 135 to 180° off. PX4 switched to it whenever camera reports came late, and its heading swung round. |
-| `EKF2_EV_DELAY` | 60 ms | 0 ms | The camera report's time stamp is already the picture time; PX4 counted the delay twice. |
-| `EKF2_DELAY_MAX` | 200 ms (as read on the drone: fill in) | 350 ms | PX4 now uses camera reports up to about 445 ms late. They reached 412 ms in bursts. |
+| `EKF2_MAG_TYPE` | 0 (automatic, read on drone 16, 2026-11-08) | 5 (never use the compass) | Indoors the compass points 135 to 180° off. PX4 switched to it whenever camera reports came late, and its heading swung round. |
+| `EKF2_EV_DELAY` | 70 ms (read on drone 16, 2026-11-08) | 0 ms | The camera report's time stamp is already the picture time; PX4 counted the delay twice. |
+| `EKF2_DELAY_MAX` | 200 ms (read on drone 16, 2026-11-08) | 350 ms | PX4 now uses camera reports up to about 445 ms late. They reached 412 ms in bursts. |
 
 To undo: put the old values into `SETTINGS_TO_CHANGE` and run the tool with `--change` again.
 

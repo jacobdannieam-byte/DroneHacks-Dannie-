@@ -1,15 +1,21 @@
 """Tests run_safety.py: the checks that decide, every cycle, whether the run carries on, holds
 still, lands, or has been taken away from our program. They use made-up readings on our scan map.
 
+The main idea tested: one bad reading may make the drone hold still, but never land it. Only a
+problem that lasts lands it, except a touch or lost control.
+
 How to run these tests is in the package's README.
 """
 import numpy as np
 import pytest
 
 from our_files import SCAN_MAP, load_our_map
+from team_nav.height_check import CAMERA_HEIGHT_GAP_LONGEST_SECONDS
 from team_nav.run_safety import (
-    CAMERA_POSITION_UNUSED_LONGEST_SECONDS, CARRY_ON, CONTROL_LOST, HEADING_GAP_LONGEST_SECONDS, HOLD, LAND_HERE,
-    LASER_UNUSED_LONGEST_SECONDS, LONGEST_HOLD_SECONDS, DroneCondition, RunSafety, TargetRefused,
+    CAMERA_POSITION_UNUSED_LONGEST_SECONDS, CAMERA_PROBLEM_LONGEST_SECONDS, CARRY_ON, CONTROL_LOST,
+    FAR_TARGET_LONGEST_SECONDS, FARTHEST_TARGET_FROM_DRONE_METRES, FRESH_REPORTS_BEFORE_RESUMING_SECONDS,
+    HEADING_GAP_LONGEST_SECONDS, HOLD, LAND_HERE, LASER_UNUSED_LONGEST_SECONDS, DroneCondition, RunSafety,
+    TargetRefused,
 )
 
 SCAN = load_our_map(SCAN_MAP)
@@ -21,7 +27,7 @@ def normal_condition(now_seconds=0.0, **changes):
     """A drone hovering normally above the launch mark, with any values changed."""
     values = dict(
         now_seconds=now_seconds, control_is_ours=True, is_armed=True,
-        camera_tracking_age_seconds=0.03, camera_tracking_says_lost=False,
+        camera_report_age_seconds=0.06, camera_tracking_says_lost=False,
         position_on_course_metres=ABOVE_LAUNCH_MARK, tilt_degrees=2.0, rotation_degrees_per_second=10.0,
         px4_height_risen_metres=0.80, laser_height_risen_metres=0.78,
     )
@@ -56,23 +62,46 @@ def test_a_sudden_tilt_lands_the_drone_using_px4s_height():
     assert "hit something" in decision.reason
 
 
-def test_silent_camera_tracking_holds_then_lands_using_the_laser():
+def test_one_late_camera_report_holds_at_once_but_never_lands():
     safety = RunSafety(SCAN)
-    first = safety.check(normal_condition(0.0, camera_tracking_age_seconds=0.6))
-    still_holding = safety.check(normal_condition(LONGEST_HOLD_SECONDS - 0.1, camera_tracking_age_seconds=5.0))
-    gave_up = safety.check(normal_condition(LONGEST_HOLD_SECONDS + 0.1, camera_tracking_age_seconds=5.1))
-
+    first = safety.check(normal_condition(0.0, camera_report_age_seconds=0.6))
     assert first.action == HOLD and "0.60 s old" in first.reason
-    assert still_holding.action == HOLD
+    # The reports are fresh again: the hold lasts until they have been fresh for a while.
+    assert safety.check(normal_condition(0.1)).action == HOLD
+    assert safety.check(normal_condition(0.1 + FRESH_REPORTS_BEFORE_RESUMING_SECONDS)).action == CARRY_ON
+
+
+def test_late_but_usable_reports_from_a_bad_period_end_the_hold_without_landing():
+    # Measured in bad periods on 2026-11-08: most reports 0.15 to 0.43 s old. Under the 0.45 s
+    # limit they are usable, so one too-old report gives only a short hold.
+    safety = RunSafety(SCAN)
+    assert safety.check(normal_condition(0.0, camera_report_age_seconds=0.5)).action == HOLD
+    actions = []
+    for tenth in range(1, 30):
+        age_seconds = 0.30 if tenth % 3 == 0 else 0.20
+        actions.append(safety.check(normal_condition(tenth / 10.0, camera_report_age_seconds=age_seconds)).action)
+    assert actions[0] == HOLD
+    assert actions[-1] == CARRY_ON
+    assert LAND_HERE not in actions
+
+
+def test_camera_tracking_stale_for_three_seconds_lands_using_the_laser():
+    safety = RunSafety(SCAN)
+    first = safety.check(normal_condition(0.0, camera_report_age_seconds=0.6))
+    still_holding = safety.check(normal_condition(CAMERA_PROBLEM_LONGEST_SECONDS - 0.1, camera_report_age_seconds=3.5))
+    gave_up = safety.check(normal_condition(CAMERA_PROBLEM_LONGEST_SECONDS, camera_report_age_seconds=3.6))
+
+    assert first.action == HOLD and still_holding.action == HOLD
     assert gave_up.action == LAND_HERE and gave_up.land_using_laser
 
 
-def test_a_hold_ends_when_tracking_returns_and_a_new_hold_starts_its_own_clock():
+def test_a_fresh_report_between_late_ones_restarts_the_landing_clock():
     safety = RunSafety(SCAN)
     safety.check(normal_condition(0.0, camera_tracking_says_lost=True))
-    assert safety.check(normal_condition(3.0)).action == CARRY_ON
-    assert safety.check(normal_condition(4.0, camera_tracking_says_lost=True)).action == HOLD
-    assert safety.check(normal_condition(4.0 + LONGEST_HOLD_SECONDS - 0.5, camera_tracking_says_lost=True)).action == HOLD
+    safety.check(normal_condition(2.0, camera_report_age_seconds=0.06))
+    assert safety.check(normal_condition(2.1, camera_tracking_says_lost=True)).action == HOLD
+    assert safety.check(normal_condition(2.1 + CAMERA_PROBLEM_LONGEST_SECONDS - 0.1,
+                                         camera_tracking_says_lost=True)).action == HOLD
 
 
 def test_px4s_height_disagreeing_with_the_laser_over_clear_floor_lands_using_the_laser():
@@ -87,8 +116,8 @@ def test_px4s_height_disagreeing_with_the_laser_over_clear_floor_lands_using_the
 
 def test_the_height_check_keeps_running_while_the_drone_holds_for_camera_tracking():
     safety = RunSafety(SCAN)
-    first = safety.check(normal_condition(0.0, camera_tracking_age_seconds=0.6, px4_height_risen_metres=1.05))
-    decision = safety.check(normal_condition(1.1, camera_tracking_age_seconds=1.6, px4_height_risen_metres=1.05))
+    first = safety.check(normal_condition(0.0, camera_report_age_seconds=0.6, px4_height_risen_metres=1.05))
+    decision = safety.check(normal_condition(1.1, camera_report_age_seconds=1.6, px4_height_risen_metres=1.05))
 
     assert first.action == HOLD
     assert decision.action == LAND_HERE and decision.land_using_laser
@@ -183,12 +212,13 @@ def test_camera_trackings_height_is_not_compared_while_camera_tracking_is_late()
     safety = RunSafety(SCAN)
     for tenth in range(20):
         decision = safety.check(no_raw_laser(tenth / 10.0, uses_laser=True, px4_height_risen_metres=0.30,
-                                             camera_tracking_age_seconds=0.6))
+                                             camera_report_age_seconds=0.6))
         assert decision.action == HOLD
 
 
-def test_a_target_inside_the_course_and_near_the_drone_is_accepted():
-    RunSafety(SCAN).check_target(ABOVE_LAUNCH_MARK + [0.0, 0.5, 0.0], ABOVE_LAUNCH_MARK)
+def test_a_target_inside_the_course_and_near_the_drone_is_sent_unchanged():
+    target = ABOVE_LAUNCH_MARK + [0.0, 0.5, 0.0]
+    np.testing.assert_allclose(RunSafety(SCAN).check_target(target, ABOVE_LAUNCH_MARK, 0.0), target)
 
 
 @pytest.mark.parametrize("target, words", [
@@ -200,21 +230,57 @@ def test_a_target_inside_the_course_and_near_the_drone_is_accepted():
 ])
 def test_a_target_outside_the_course_is_refused(target, words):
     with pytest.raises(TargetRefused, match=words):
-        RunSafety(SCAN).check_target(target)
+        RunSafety(SCAN).check_target(target, None, 0.0)
 
 
-def test_a_target_far_from_the_drone_is_refused():
+def test_one_target_far_from_the_drone_is_pulled_in_not_refused():
+    safety = RunSafety(SCAN)
+    sent = safety.check_target(ABOVE_LAUNCH_MARK + [0.0, -1.5, 0.0], ABOVE_LAUNCH_MARK, 0.0)
+    np.testing.assert_allclose(sent, ABOVE_LAUNCH_MARK + [0.0, -FARTHEST_TARGET_FROM_DRONE_METRES, 0.0])
+    # The next target is near again: nothing stops the run.
+    safety.check_target(ABOVE_LAUNCH_MARK + [0.0, -0.3, 0.0], ABOVE_LAUNCH_MARK, 0.1)
+    safety.check_target(ABOVE_LAUNCH_MARK + [0.0, -1.5, 0.0], ABOVE_LAUNCH_MARK, 0.2)
+
+
+def test_targets_that_stay_far_from_the_drone_stop_the_run():
+    safety = RunSafety(SCAN)
+    far = ABOVE_LAUNCH_MARK + [0.0, -1.5, 0.0]
+    safety.check_target(far, ABOVE_LAUNCH_MARK, 0.0)
+    safety.check_target(far, ABOVE_LAUNCH_MARK, 0.1)
+    safety.check_target(far, ABOVE_LAUNCH_MARK, 0.2)
     with pytest.raises(TargetRefused, match="too fast"):
-        RunSafety(SCAN).check_target(ABOVE_LAUNCH_MARK + [0.0, -1.5, 0.0], ABOVE_LAUNCH_MARK)
+        safety.check_target(far, ABOVE_LAUNCH_MARK, FAR_TARGET_LONGEST_SECONDS)
+
+
+def test_a_hold_between_two_far_targets_does_not_count_as_far_in_a_row():
+    safety = RunSafety(SCAN)
+    far = ABOVE_LAUNCH_MARK + [0.0, -1.5, 0.0]
+    safety.check_target(far, ABOVE_LAUNCH_MARK, 0.0)
+    assert safety.check(normal_condition(0.1, camera_report_age_seconds=0.6)).action == HOLD
+    safety.check_target(far, ABOVE_LAUNCH_MARK, 2.0)
 
 
 # ---- Rule 5: PX4 stops trusting camera tracking (drone 16, 2026-11-08) --------------------------
 
-def test_px4_swinging_to_the_compass_heading_lands_the_drone():
+def test_a_heading_gap_holds_at_once_with_px4s_heading():
+    safety = RunSafety(SCAN)
+    decision = safety.check(normal_condition(0.0, px4_heading_gap_degrees=-36.0))
+    assert decision.action == HOLD and decision.hold_with_px4_heading
+
+
+def test_a_heading_gap_like_the_1020_turn_test_does_not_land_the_drone():
+    # 10:20 on 2026-11-08: a -36 degree gap for about 1 s, then PX4 went back to the camera.
+    safety = RunSafety(SCAN)
+    for tenth in range(11):
+        assert safety.check(normal_condition(tenth / 10.0, px4_heading_gap_degrees=-36.0)).action == HOLD
+    assert safety.check(normal_condition(1.1, px4_heading_gap_degrees=2.0)).action == CARRY_ON
+
+
+def test_a_heading_gap_that_lasts_lands_the_drone():
     # In the 06:15 flight PX4's heading swung about 190 degrees away from the camera's.
     safety = RunSafety(SCAN)
-    assert safety.check(normal_condition(0.0, px4_heading_gap_degrees=-170.0)).action == CARRY_ON
-    decision = safety.check(normal_condition(HEADING_GAP_LONGEST_SECONDS + 0.05, px4_heading_gap_degrees=-170.0))
+    assert safety.check(normal_condition(0.0, px4_heading_gap_degrees=-170.0)).action == HOLD
+    decision = safety.check(normal_condition(HEADING_GAP_LONGEST_SECONDS, px4_heading_gap_degrees=-170.0))
     assert decision.action == LAND_HERE
     assert "compass" in decision.reason
     assert not decision.land_using_laser
@@ -227,18 +293,19 @@ def test_a_small_heading_gap_while_turning_carries_on():
         assert safety.check(normal_condition(step * 0.1, px4_heading_gap_degrees=12.0)).action == CARRY_ON
 
 
-def test_a_short_heading_blip_does_not_land_the_drone():
+def test_a_flickering_heading_gap_restarts_the_landing_clock():
     safety = RunSafety(SCAN)
     safety.check(normal_condition(0.0, px4_heading_gap_degrees=40.0))
-    assert safety.check(normal_condition(0.1, px4_heading_gap_degrees=3.0)).action == CARRY_ON
-    assert safety.check(normal_condition(0.2, px4_heading_gap_degrees=40.0)).action == CARRY_ON
+    assert safety.check(normal_condition(2.0, px4_heading_gap_degrees=3.0)).action == CARRY_ON
+    assert safety.check(normal_condition(2.1 + HEADING_GAP_LONGEST_SECONDS - 0.1,
+                                         px4_heading_gap_degrees=40.0)).action == HOLD
 
 
-def test_px4_not_using_the_camera_position_for_a_second_lands_the_drone():
+def test_px4_not_using_the_camera_position_holds_at_once_and_lands_only_if_it_lasts():
     safety = RunSafety(SCAN)
-    assert safety.check(normal_condition(0.0, px4_uses_camera_position=False)).action == CARRY_ON
-    assert safety.check(normal_condition(0.5, px4_uses_camera_position=False)).action == CARRY_ON
-    decision = safety.check(normal_condition(CAMERA_POSITION_UNUSED_LONGEST_SECONDS + 0.05, px4_uses_camera_position=False))
+    assert safety.check(normal_condition(0.0, px4_uses_camera_position=False)).action == HOLD
+    assert safety.check(normal_condition(1.0, px4_uses_camera_position=False)).action == HOLD
+    decision = safety.check(normal_condition(CAMERA_POSITION_UNUSED_LONGEST_SECONDS, px4_uses_camera_position=False))
     assert decision.action == LAND_HERE
     assert "motion sensors" in decision.reason
 
@@ -249,7 +316,30 @@ def test_camera_trust_is_checked_from_takeoff_even_on_the_floor():
     safety = RunSafety(SCAN)
     first = normal_condition(0.0, position_on_course_metres=on_floor, px4_heading_gap_degrees=166.0,
                              px4_height_risen_metres=0.0, laser_height_risen_metres=0.0)
-    later = normal_condition(HEADING_GAP_LONGEST_SECONDS + 0.05, position_on_course_metres=on_floor,
+    later = normal_condition(HEADING_GAP_LONGEST_SECONDS, position_on_course_metres=on_floor,
                              px4_heading_gap_degrees=166.0, px4_height_risen_metres=0.0, laser_height_risen_metres=0.0)
-    assert safety.check(first).action == CARRY_ON
+    assert safety.check(first).action == HOLD
     assert safety.check(later).action == LAND_HERE
+
+
+# ---- Camera tracking's height lags in a climb (drone 16, 12:15 and 12:16 on 2026-11-08) ---------
+
+def climbing(now_seconds, px4_height_metres, camera_height_metres, upward_speed_metres_per_second):
+    position = np.array([ABOVE_LAUNCH_MARK[0], ABOVE_LAUNCH_MARK[1], camera_height_metres])
+    return no_raw_laser(now_seconds, uses_laser=True, height_metres=camera_height_metres,
+                        px4_height_risen_metres=px4_height_metres, position_on_course_metres=position,
+                        px4_upward_speed_metres_per_second=upward_speed_metres_per_second)
+
+
+def test_camera_height_lagging_in_a_climb_does_not_stop_the_run():
+    # 12:15: PX4 0.52 m, camera 0.16 m, climbing at about 0.45 m/s.
+    safety = RunSafety(SCAN)
+    for tenth in range(20):
+        assert safety.check(climbing(tenth / 10.0, 0.52, 0.16, 0.45)).action == CARRY_ON
+
+
+def test_the_same_height_gap_while_level_stops_the_run():
+    safety = RunSafety(SCAN)
+    safety.check(climbing(0.0, 0.52, 0.16, 0.0))
+    decision = safety.check(climbing(CAMERA_HEIGHT_GAP_LONGEST_SECONDS, 0.52, 0.16, 0.0))
+    assert decision.action == LAND_HERE and decision.land_using_laser
