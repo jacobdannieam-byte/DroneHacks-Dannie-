@@ -1,0 +1,98 @@
+........................................................................ [ 11%]
+........................................................................ [ 23%]
+........................................................................ [ 35%]
+.....F.................................................................. [ 47%]
+........................................................................ [ 59%]
+........................................................................ [ 71%]
+........................................................................ [ 83%]
+..........F...F......................................................... [ 95%]
+.........................                                                [100%]
+================================== FAILURES ===================================
+___________ test_profile_default_and_activation_checks_without_ros ____________
+
+tmp_path = WindowsPath('C:/Users/Adity/AppData/Local/Packages/OpenAI.Codex_2p2nqsd0c76g0/AC/#!sandbox.{6b54b473-8103-44b3-a4d0-60ea3a05eea9}/Temp/pytest-of-Adity/pytest-0/test_profile_default_and_activ0')
+capsys = <_pytest.capture.CaptureFixture object at 0x000001D215F5EFD0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001D215CDD810>
+
+    def test_profile_default_and_activation_checks_without_ros(tmp_path, capsys, monkeypatch):
+        path = tmp_path / "classical.json"
+        path.write_text("{}", encoding="utf-8")
+        assert main(["--config", str(path), "--check"]) == 0
+        assert json.loads(capsys.readouterr().out)["strategy"] == "classical"
+        assert main(["--config", "scenarios/hybrid_gazebo.template.json", "--check"]) == 2
+>       assert "incomplete" in capsys.readouterr().err
+E       assert 'incomplete' in "hybrid_launch: [Errno 2] No such file or directory: 'scenarios\\\\hybrid_gazebo.template.json'\n"
+E        +  where "hybrid_launch: [Errno 2] No such file or directory: 'scenarios\\\\hybrid_gazebo.template.json'\n" = CaptureResult(out='', err="hybrid_launch: [Errno 2] No such file or directory: 'scenarios\\\\hybrid_gazebo.template.json'\n").err
+E        +    where CaptureResult(out='', err="hybrid_launch: [Errno 2] No such file or directory: 'scenarios\\\\hybrid_gazebo.template.json'\n") = readouterr()
+E        +      where readouterr = <_pytest.capture.CaptureFixture object at 0x000001D215F5EFD0>.readouterr
+
+policy-gates-integration\tests\test_hybrid_runtime.py:225: AssertionError
+____________ test_pinned_physics_model_and_explicit_load_fallback _____________
+
+    def test_pinned_physics_model_and_explicit_load_fallback():
+        path = Path('artifacts/goal_comparison/predictors/physics_11.npz')
+        config = StrategyConfig('hybrid_physics_informed', predictor_checkpoint=str(path),
+>                               predictor_sha256=sha256(path.read_bytes()).hexdigest())
+                                                        ^^^^^^^^^^^^^^^^^
+
+policy-gates-integration\tests\test_strategy_portfolio.py:26: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1050: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('artifacts/goal_comparison/predictors/physics_11.npz')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'artifacts\\goal_comparison\\predictors\\physics_11.npz'
+
+..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1044: FileNotFoundError
+___________ test_h1_passes_selected_predictor_to_actual_d5_consumer ___________
+
+    def test_h1_passes_selected_predictor_to_actual_d5_consumer():
+        from examples.h1_fixture import profile, setup, tick
+        from refnav.hybrid_integration import assess
+        path = Path('artifacts/goal_comparison/predictors/physics_11.npz')
+        config = StrategyConfig('hybrid_physics_informed', predictor_checkpoint=str(path),
+>                               predictor_sha256=sha256(path.read_bytes()).hexdigest())
+                                                        ^^^^^^^^^^^^^^^^^
+
+policy-gates-integration\tests\test_strategy_portfolio.py:77: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1050: in read_bytes
+    with self.open(mode='rb') as f:
+         ^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('artifacts/goal_comparison/predictors/physics_11.npz')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'artifacts\\goal_comparison\\predictors\\physics_11.npz'
+
+..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\pathlib.py:1044: FileNotFoundError
+=========================== short test summary info ===========================
+FAILED policy-gates-integration\tests\test_hybrid_runtime.py::test_profile_default_and_activation_checks_without_ros
+FAILED policy-gates-integration\tests\test_strategy_portfolio.py::test_pinned_physics_model_and_explicit_load_fallback
+FAILED policy-gates-integration\tests\test_strategy_portfolio.py::test_h1_passes_selected_predictor_to_actual_d5_consumer
+3 failed, 598 passed in 35.19s

@@ -1,0 +1,34 @@
+{
+  "result": "PASS",
+  "scope": "private ROS position delivery plus status fixtures; no vehicle or command publisher",
+  "recording": {
+    "clock_id": "fixture_system",
+    "frame_id": "ned",
+    "samples": [
+      {
+        "time_s": 1794123433.142189,
+        "receipt_ns": 1794123433142669862,
+        "position_m": [
+          0.0,
+          0.0,
+          -0.800000011920929
+        ],
+        "velocity_mps": [
+          0.20000000298023224,
+          0.0,
+          0.0
+        ]
+      }
+    ],
+    "events": [
+      {
+        "event": "disarm",
+        "stamp_ns": 1794123433142710000,
+        "receipt_ns": 1794123433142710145
+      }
+    ],
+    "disarm_s": 1794123433.14271,
+    "recording_faults": [],
+    "recording_complete": false
+  }
+}

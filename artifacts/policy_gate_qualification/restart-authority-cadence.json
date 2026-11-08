@@ -1,0 +1,20 @@
+{
+  "scope": "Recorded callback cadence, not source-stamp or loss-detection latency qualification",
+  "result": "OWNER_BUDGET_INCOMPATIBLE_WITH_OBSERVED_CADENCE",
+  "topics": [
+    {
+      "topic": "/fmu/out/vehicle_status_v1",
+      "count": 80,
+      "max_receipt_gap_s": 0.508,
+      "mean_receipt_gap_s": 0.5039999999999999,
+      "gaps_exceeding_owner_300ms": 79
+    },
+    {
+      "topic": "/fmu/out/vehicle_land_detected",
+      "count": 41,
+      "max_receipt_gap_s": 1.0,
+      "mean_receipt_gap_s": 1.0,
+      "gaps_exceeding_owner_300ms": 40
+    }
+  ]
+}

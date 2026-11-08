@@ -1,0 +1,31 @@
+{
+  "result": "PASS",
+  "scope": "actual ROS report ingestion with fixture stamps; no flight or PX4 fallback qualification",
+  "cases": [
+    {
+      "stream": "authority",
+      "age_s": 0.504,
+      "accepted": true
+    },
+    {
+      "stream": "authority",
+      "age_s": 0.8,
+      "accepted": false
+    },
+    {
+      "stream": "landed",
+      "age_s": 1.0,
+      "accepted": true
+    },
+    {
+      "stream": "landed",
+      "age_s": 1.6,
+      "accepted": false
+    },
+    {
+      "stream": "position",
+      "age_s": 0.31,
+      "accepted": false
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+Complete the remaining DroneHacks policy qualification gates.
+
+Work in policy-gates-integration on codex/policy-gates-integration. Start from
+the saved candidate 1d5c4fa and inspect subsequent changes before editing.
+Read AGENTS.md, AI_CONTEXT.md, CLAUDE.md, qualification-status.json and the
+restart handoff. Existing baseline evidence remains valid for its exact source.
+
+Non-negotiable constraints: map control and background registration off;
+isolated simulator only; no hardware; no invented free space or position fix;
+preserve every failure, source archive, recording and reanalysis separately.
+No PX4 parameter changes to make a trial pass. One motion owner. Moving trials
+require a concrete reviewed plan before arming, speed at most 0.50 m/s,
+landing timeout 30 seconds, and batch stop on first failure.
+
+Gate 1 implementation and closure:
+1. Extract native source and callback intervals for status and landed reports
+   from restart-observe. Quantify gaps against the current 300 ms owner budget.
+2. Resolve the cadence/latency contract explicitly. Do not simply widen every
+   timeout. Keep position, depth and health budgets independently enforced.
+3. Extend the private-topic ROS harness to exercise actual Hybrid owner expiry,
+   missing status, future/rewound stamps, mode takeover and disarm. Demonstrate
+   successful pre-fault ownership before each fault, then zero post-loss outputs.
+4. Record source, receipt, decision and publication times. Test clock stall and
+   scheduler delay independently. Validate causal timing and recording coverage.
+5. Prepare native PX4 expiry/recovery trials with bounded altitude, duration,
+   clear launch volume and recovery owner; never force airborne disarm.
+
+Gate 2 implementation and closure:
+1. Establish provenance for camera calibration, transforms, tracking and depth
+   uncertainty. Sensitivity assumptions cannot be labeled reviewed measurements.
+2. Acquire legitimate observations of the entire initial body/stopping volume.
+   Do not replace unknown space with a synthetic clear launch bubble.
+3. Run the same native recording through all four pinned strategy models with
+   complete clock-ingestion auditing and no silent model fallback.
+4. Require positive observed-clearance decisions and negative unknown, expired,
+   occupied and insufficient-clearance decisions. Preserve shadow-only strategy
+   restrictions. If native positive clearance fails, diagnose before motion.
+
+Gate 3 implementation and closure:
+1. Validate measurement report semantics as well as its hash: reviewed source,
+   vehicle dimensions, successful trials, covered speed, delay, braking distance,
+   and landing duration. Hash identity alone is not empirical qualification.
+2. Implement calibration recording and analysis with independent velocity and
+   position, brake-command timestamps, settling criterion, dropped-data refusal,
+   and uncertainty margins. Unit-test malformed and failed recordings.
+3. Prepare separate 0.20, 0.35 and at most 0.50 m/s trials, choosing lane bounds
+   from surveyed clearance. Include watchdog, recording, fallback and recovery.
+4. Review actual stop measurements and repeatability before creating a reviewed
+   envelope. Verify full body, overhead and all-direction stopping clearance.
+
+Final delivery:
+Run relevant tests, freeze a new candidate, and preserve exact evidence hashes.
+Produce a concrete trial package with prerequisites, commands, timeouts,
+acceptance criteria and recovery sequence. Request only the remaining movement
+approval once implementation and disarmed checks are complete. Never mark a
+gate closed from unit tests, synthetic fixtures, or safe refusals alone.
+Current status: unfinished; this brief is not a flight approval or gate closure.
