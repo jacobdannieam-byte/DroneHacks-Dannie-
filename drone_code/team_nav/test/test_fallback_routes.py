@@ -275,3 +275,15 @@ def test_on_the_changed_course_nothing_can_start_from_the_launch_mark():
         plan_route(course_map, load_side_gap_first_mission())
     for route_name in (FALLBACK_PAD, FALLBACK_TUNNEL):
         assert any("S1 start diagonal wall" in text for text in plan_fallback_route(course_map, route_name).rule_breaks())
+
+
+def test_the_cruise_height_setting_defaults_to_2_3_m_and_refuses_heights_outside_its_limits(monkeypatch):
+    from team_nav.fallback_routes import CRUISE_HEIGHT_SETTING, cruise_height_from_environment
+    monkeypatch.delenv(CRUISE_HEIGHT_SETTING, raising=False)
+    assert cruise_height_from_environment() == 2.3
+    monkeypatch.setenv(CRUISE_HEIGHT_SETTING, "2.4")
+    assert cruise_height_from_environment() == 2.4
+    for refused in ("2.6", "2.1", "high"):
+        monkeypatch.setenv(CRUISE_HEIGHT_SETTING, refused)
+        with pytest.raises(ValueError):
+            cruise_height_from_environment()

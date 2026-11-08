@@ -45,9 +45,10 @@ FLIGHT_INTERFACE_PROCESS="skybeta_flight_interface/flight_interface"
 SECONDS_TO_WAIT_FOR_STOP=20
 SECONDS_TO_WAIT_FOR_START=40
 
-# Settings our programs read from the environment (run_mode.py, run_log.py, and fallback_run.py for
-# TEAM_NAV_MISSION). If you set one before ./drone.sh, it is passed into the container.
-PASSED_SETTINGS="TEAM_NAV_RUN_MODE TEAM_NAV_STOP_AFTER_STAGE TEAM_NAV_RECORDS_FOLDER TEAM_NAV_MISSION"
+# Settings our programs read from the environment (run_mode.py, run_log.py, fallback_run.py for
+# TEAM_NAV_MISSION and fallback_routes.py for TEAM_NAV_FALLBACK_CRUISE_METRES). If you set one before
+# ./drone.sh, it is passed into the container.
+PASSED_SETTINGS="TEAM_NAV_RUN_MODE TEAM_NAV_STOP_AFTER_STAGE TEAM_NAV_RECORDS_FOLDER TEAM_NAV_MISSION TEAM_NAV_FALLBACK_CRUISE_METRES"
 
 
 # ---- Small helpers -------------------------------------------------------------------------------

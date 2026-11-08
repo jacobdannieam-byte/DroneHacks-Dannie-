@@ -20,8 +20,9 @@ the launch mark). The follower itself still works on camera tracking's positions
 The limits (the team's review, 2026-11-08), because camera tracking can be wrong too:
   - The correction is never more than LARGEST_DOWNWARD_CORRECTION_METRES down or
     LARGEST_UPWARD_CORRECTION_METRES up, so a target is never more than 0.15 m above the route's
-    height, whatever camera tracking says. (The route's highest point is 2.3 m, so the highest
-    target is below run_safety.py's 2.45 m limit and far below the 3.05 m net roof.)
+    height, whatever camera tracking says. (The route's highest point is the cruise height, 2.3 m by
+    default and at most 2.5 m, so the highest target stays within run_safety.py's limit of cruise
+    + 0.15 m and below the 3.05 m net roof.)
   - The correction changes by at most CORRECTION_RATE_METRES_PER_SECOND, so a sudden error in either
     height can only move the drone slowly.
   - A camera height that differs by more than CAMERA_HEIGHT_STEP_LIMIT_METRES from the last one

@@ -43,8 +43,9 @@ outside the net) and the landing itself.
 The stages, which practice mode can stop after with TEAM_NAV_STOP_AFTER_STAGE:
     fallback_pad:     climb, high climb
     fallback_tunnel:  climb, high climb, over the maze, tunnel
-"climb" is the takeoff to 0.8 m; "high climb" goes on up to 2.3 m on the launch mark. Stopping after
-a stage lands where it ends, which is always over open floor.
+"climb" is the takeoff to 0.8 m; "high climb" goes on up to the cruise height (2.3 m unless
+TEAM_NAV_FALLBACK_CRUISE_METRES says otherwise) on the launch mark. Stopping after a stage lands
+where it ends, which is always over open floor.
 
 What this file does not do: change the normal course route, the competition launch file, or any
 PX4 setting. If the planned route breaks one of the team's laser rules (high_path_rules.py), it

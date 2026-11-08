@@ -34,9 +34,13 @@ ARC_STEP_DEGREES. The route follower only stops at waypoints where the route tur
 speed. The drone stops only at
 the climbs, the descents and the pad, all over open floor.
 
+The cruise height can be changed for one run with TEAM_NAV_FALLBACK_CRUISE_METRES (drone.sh passes
+it into the container); without it the route flies at DEFAULT_HIGH_HEIGHT_METRES.
+
 What it does not do: fly, or change anything about the normal course route (route_planner.py).
 """
 import math
+import os
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -50,7 +54,32 @@ FALLBACK_ROUTES = (FALLBACK_PAD, FALLBACK_TUNNEL)
 
 # The team's choice (2026-11-07): above every wall top (1.73 to 1.87 m) by more than the drone's
 # half height, and below the net.
-HIGH_HEIGHT_METRES = 2.3
+DEFAULT_HIGH_HEIGHT_METRES = 2.3
+# The team's choice (2026-11-08): the cruise height may be set for one run with this environment
+# setting, but only within these limits. The lowest keeps the drone's underside 0.23 m over the
+# tallest (1.87 m) wall; the highest keeps the route's highest target (cruise + 0.15 m) at 2.65 m.
+CRUISE_HEIGHT_SETTING = "TEAM_NAV_FALLBACK_CRUISE_METRES"
+LOWEST_ALLOWED_CRUISE_METRES = 2.2
+HIGHEST_ALLOWED_CRUISE_METRES = 2.5
+
+
+def cruise_height_from_environment():
+    """TEAM_NAV_FALLBACK_CRUISE_METRES if it is set, else DEFAULT_HIGH_HEIGHT_METRES."""
+    text = os.environ.get(CRUISE_HEIGHT_SETTING, "").strip()
+    if not text:
+        return DEFAULT_HIGH_HEIGHT_METRES
+    try:
+        height_metres = float(text)
+    except ValueError:
+        raise ValueError(f"{CRUISE_HEIGHT_SETTING} is '{text}', which is not a number of metres. "
+                         f"Set it to a height such as 2.4, or leave it unset for {DEFAULT_HIGH_HEIGHT_METRES} m.")
+    if not LOWEST_ALLOWED_CRUISE_METRES <= height_metres <= HIGHEST_ALLOWED_CRUISE_METRES:
+        raise ValueError(f"{CRUISE_HEIGHT_SETTING} is {height_metres} m, outside the allowed "
+                         f"{LOWEST_ALLOWED_CRUISE_METRES} to {HIGHEST_ALLOWED_CRUISE_METRES} m. Choose a height in that range.")
+    return height_metres
+
+
+HIGH_HEIGHT_METRES = cruise_height_from_environment()
 # Measured: drone 16's flight_interface clamped targets to 3.00 m above the start point in the
 # logs of 2026-11-07 (the organizers' max_altitude_m). From the team: the net roof is 3.05 m high.
 FLIGHT_INTERFACE_CEILING_METRES = 3.00
