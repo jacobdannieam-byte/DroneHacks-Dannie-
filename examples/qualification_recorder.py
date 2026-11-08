@@ -369,7 +369,7 @@ def main():
     parser.add_argument('--contract-sha256',required=True)
     parser.add_argument('--ready-output',type=Path,required=True)
     args=parser.parse_args()
-    if args.output.exists() or args.ready_output.exists() or not 1 <= args.seconds <= 240:
+    if args.output.exists() or args.ready_output.exists() or not 1 <= args.seconds <= 900:
         raise ValueError('new output and bounded duration required')
     record, topics = load_contract(args.contract, args.contract_sha256)
     import rclpy

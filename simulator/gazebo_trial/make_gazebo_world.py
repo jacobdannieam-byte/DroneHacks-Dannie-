@@ -100,6 +100,18 @@ def make_world_file(map_file_path, include_drone=True, for_full_simulator=False)
     os.makedirs(FOLDER_FOR_WORLDS, exist_ok=True)
     with open(world_file_path, "w", encoding="utf-8") as world_file:
         world_file.write(world_sdf(course_map, drone if include_drone else "", course_origin_in_world_metres))
+    if os.environ.get("FULLCOURSE_VIDEO") == "1":
+        # Independent observer only: no changes to collisions or onboard sensors.
+        observer = f"""<model name="course_observer"><static>true</static>
+<pose>{-launch_x} {-launch_y} 2.8 0 1.57079632679 0</pose><link name="camera">
+<sensor name="overhead" type="camera"><always_on>true</always_on><update_rate>5</update_rate>
+<topic>/course_observer/image</topic><camera><horizontal_fov>2.05</horizontal_fov>
+<image><width>1024</width><height>768</height><format>R8G8B8</format></image>
+<clip><near>0.05</near><far>20</far></clip></camera></sensor></link></model>"""
+        with open(world_file_path, encoding='utf-8') as source:
+            contents = source.read()
+        with open(world_file_path, 'w', encoding='utf-8') as out:
+            out.write(contents.replace('</world>', observer + '\n</world>'))
     return world_file_path
 
 

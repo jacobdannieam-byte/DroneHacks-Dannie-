@@ -1,5 +1,7 @@
 """Launch the imported course and simulated sensors, with no command owner."""
 
+import os
+
 from launch import LaunchDescription
 from launch.actions import EmitEvent, ExecuteProcess, RegisterEventHandler
 from launch.event_handlers import OnProcessExit
@@ -33,6 +35,8 @@ def generate_launch_description():
         Node(package="course_simulator", executable="pretend_bottom_laser", parameters=[SIM]),
         observer,
     ]
+    if os.environ.get('FULLCOURSE_VIDEO') == '1':
+        stack.append(ExecuteProcess(cmd=['python3','-m','simulator.gazebo_trial.referee_status'], cwd=ROOT, output='screen'))
     handlers = [RegisterEventHandler(OnProcessExit(
         target_action=action, on_exit=[EmitEvent(event=Shutdown(reason="Gazebo service exited"))]))
         for action in stack]

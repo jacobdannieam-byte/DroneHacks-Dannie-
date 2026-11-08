@@ -12,7 +12,10 @@ from refnav.model_flight import ModelSelector
 
 def audit(rows, raw_commands, config):
     previous='0'*64; decisions={}; receipts={}; faults=[]; differences=0
-    selector=ModelSelector(config,monotonic=lambda:0.)
+    if config.get('full_course'):
+        from refnav.full_course_model import FullCourseSelector
+        selector=FullCourseSelector(config,monotonic=lambda:0.)
+    else:selector=ModelSelector(config,monotonic=lambda:0.)
     for source in rows:
         row=dict(source); identity=row.pop('sha256')
         raw=json.dumps(row,sort_keys=True,separators=(',',':'),allow_nan=False)
@@ -85,6 +88,16 @@ def main():
         and owner['result']=='complete' and owner['waypoints_reached']==len(config['waypoints_ned_m'])
         and owner['model_command_count']==report['selected_commands']
         and owner['max_observed_speed_mps']<=.50 and owner['native_disarm_ns'] is not None)
+    if config.get('full_course'):
+        summaries=list((root/'flight_records').glob('*_summary.json'))
+        referee=json.loads(summaries[0].read_text()) if len(summaries)==1 else {}
+        checkpoints=referee.get('checkpoint_seconds') or {}
+        course_pass=(len(checkpoints)==4 and all(v is not None for v in checkpoints.values())
+            and referee.get('touches')==0 and referee.get('landed_on_pad') is True
+            and referee.get('motors_off_seconds') is not None
+            and not any(referee.get(k,True) for k in ('height_estimate_went_wrong','stayed_above_a_boulder_too_long','went_above_walls','left_the_course')))
+        report.update(independent_full_course_pass=course_pass,referee=referee)
+        report['flight_pass']=report['flight_pass'] and course_pass
     with (root/'model-command-audit.json').open('x') as out:json.dump(report,out,indent=2)
     print(json.dumps(report));return int(not report['flight_pass'])
 

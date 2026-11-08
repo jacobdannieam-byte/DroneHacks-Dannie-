@@ -20,6 +20,7 @@ from refnav.model_flight import DecisionLog, ModelFlight, ModelSelector, REFEREN
 
 ROOT = Path(__file__).resolve().parents[1]
 PROFILE = 'scenarios/model_flight/h1_pinn_prefix.json'
+FULL_PROFILE = 'scenarios/model_flight/full_course.json'
 SOURCES = ('simulator/gazebo_trial/make_drone_16_model.py',
            'simulator/gazebo_trial/course_world_sdf.py', 'simulator/gazebo_trial/make_gazebo_world.py',
            'simulator/gazebo_trial/models/drone_16_with_oak_d_s2/model.sdf',
@@ -73,7 +74,7 @@ def approval_for(path, identity, contract_path, *, now=None):
         or any(approval.get(k) != v for k,v in identity.items())
         or approval.get('recording_contract_sha256') != sha(contract_path)
         or approval.get('parameter_overrides') != PARAMETER_OVERRIDES
-        or approval.get('trial_id') != 'hybrid-pinn-classical-prefix-001'
+        or approval.get('trial_id') != identity.get('trial_id', 'hybrid-pinn-classical-prefix-001')
         or not all(approval.get(k) is True for k in ('isolation_reviewed','recovery_reviewed','recording_ready',
             'allow_failed_simulator_termination','experimental_model_control_reviewed','static_prior_corridor_reviewed'))
         or not all(isinstance(approval.get(k),str) and approval[k].strip() for k in ('reviewed_by','recovery_operator'))):
@@ -100,14 +101,23 @@ def main():
     args=parser.parse_args()
     if not isolated() or not re.fullmatch('[0-9a-f]{40}',args.revision) or not re.fullmatch('sha256:[0-9a-f]{64}',args.image_sha256):
         raise ValueError('Isolated pinned SITL required')
-    if args.profile.resolve() != (ROOT/PROFILE).resolve():
+    if args.profile.resolve() not in ((ROOT/PROFILE).resolve(), (ROOT/FULL_PROFILE).resolve()):
         raise ValueError('Only the bounded PINN prefix profile is supported')
-    raw=_read(args.profile);config=raw['model_flight'];plan=CalibrationPlan(**raw['plan'])
-    mapping=ClockMapping(**raw['clock_mapping']);geometry=geometry_review(raw)
+    raw=_read(args.profile);config=raw['model_flight']
+    full=args.profile.resolve()==(ROOT/FULL_PROFILE).resolve()
+    if full:
+        from refnav.full_course_model import FullCoursePlan, FullCourseSelector, FullCourseFlight
+        plan=FullCoursePlan(**raw['plan']);selector=FullCourseSelector(config)
+        geometry=dict(scope='Full Classical participant-map route; .30 m body + .05 m margin; no general D3 promotion',
+            route=selector.route.describe(), registration_enabled=False,source_sha256={name:sha(ROOT/name) for name in SOURCES})
+    else:
+        plan=CalibrationPlan(**raw['plan']);geometry=geometry_review(raw);selector=ModelSelector(config)
+    mapping=ClockMapping(**raw['clock_mapping'])
     identity=dict(revision=args.revision,image_sha256=args.image_sha256,world_sha256=sha(args.world),
         vehicle_sha256=sha(args.vehicle),profile_sha256=sha(args.profile),ros_domain_id=int(os.environ['ROS_DOMAIN_ID']),
         checkpoint_sha256=config['checkpoint_sha256'],participant_map_sha256=config['participant_map_sha256'],
         registration_enabled=False,command_selection='physics_informed_residual_model',fallback_allowed=False)
+    if full:identity['trial_id']=config['trial_id']
     approval=expires=contract=ready=None
     if args.authorize_only and args.approval is None:
         raise ValueError('Authorize-only requires explicit approval')
@@ -117,7 +127,7 @@ def main():
             if None in (args.recorder_pid,args.bag_pid,args.recorder_ready):
                 raise ValueError('Both live recorders required')
             ready=verify_recorder_ready(args.recorder_ready,contract,approval,args.recorder_pid)
-    selector=ModelSelector(config)  # Invalid/missing weights cannot fall back to D0.
+    # Invalid/missing weights cannot fall back to D0.
     def preview(obs,now):
         # Actual disarmed state only. Ground hypotheses are expected to fail the
         # airborne corridor; never fabricate an airborne state to admit flight.
@@ -132,7 +142,7 @@ def main():
             json.dump(dict(identity,authorized_artifact=True,geometry=geometry),out,indent=2);return 0
         log=DecisionLog(args.output.with_suffix('.decisions.jsonl'))
         try:
-            driver=ModelFlight(plan,config,log,selector=selector)
+            driver=(FullCourseFlight if full else ModelFlight)(plan,config,log,selector=selector)
             report,code=_run(plan,mapping,approval=approval,expires=expires,contract=contract,identity=identity,
                 seconds=20.,recorder_pid=args.recorder_pid,bag_pid=args.bag_pid,recorder_ready=ready,
                 driver=driver,preview=preview)

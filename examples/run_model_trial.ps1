@@ -3,7 +3,8 @@ param(
     [Parameter(Mandatory=$true)][string]$SourceArchive,
     [Parameter(Mandatory=$true)][string]$OutputDirectory,
     [string]$ApprovalFile,
-    [switch]$DisarmedCheck
+    [switch]$DisarmedCheck,
+    [switch]$FullCourse
 )
 $ErrorActionPreference = 'Stop'
 $candidate = Get-Content -LiteralPath $CandidateFile -Raw | ConvertFrom-Json
@@ -13,6 +14,8 @@ if ((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant
 }
 if (Test-Path -LiteralPath $OutputDirectory) { throw 'Evidence output must be new' }
 $mode = 'model_check'
+$profilePath = 'scenarios/model_flight/h1_pinn_prefix.json'
+if ($FullCourse) { $profilePath = 'scenarios/model_flight/full_course.json' }
 $mounts = @()
 $approvalArgument = ''
 if (-not $DisarmedCheck) {
@@ -42,7 +45,7 @@ docker run --rm --init --network none --cap-drop ALL --security-opt no-new-privi
     --mount "type=bind,src=$($out.FullName),dst=/evidence" @mounts `
     $candidate.image bash -c 'cd /repository && tar --no-same-owner -xmf /source.tar && exec bash simulator/gazebo_trial/inside_the_box/run_hybrid.sh "$@"' _ `
     $mode drone_code/team_nav/course_maps/phone_scan_2026-11-06.json 10 $candidate.revision `
-    scenarios/model_flight/h1_pinn_prefix.json $approvalArgument 2>&1 |
+    $profilePath $approvalArgument 2>&1 |
     Tee-Object -FilePath (Join-Path $out.FullName 'console.txt')
 $runResult = $LASTEXITCODE
 if (-not $DisarmedCheck -and (Test-Path -LiteralPath (Join-Path $out.FullName 'observations'))) {

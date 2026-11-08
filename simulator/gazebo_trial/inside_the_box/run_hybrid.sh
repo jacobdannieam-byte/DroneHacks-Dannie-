@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
 set -eo pipefail
 mode=$1; world=$2; seconds=$3; revision=$4; profile=$5; approval=$6
+owner_timeout=130
+recorder_seconds=240
 cd /repository
 if [[ "$mode" == model_check || "$mode" == model_trial ]]; then
     [[ "$world" == drone_code/team_nav/course_maps/phone_scan_2026-11-06.json ]] || exit 2
-    [[ "$profile" == scenarios/model_flight/h1_pinn_prefix.json ]] || exit 2
+    [[ "$profile" == scenarios/model_flight/h1_pinn_prefix.json || "$profile" == scenarios/model_flight/full_course.json ]] || exit 2
     : "${CALIBRATION_IMAGE_SHA256:?Pinned image required}"
     contract=scenarios/model_flight/h1_recorder.json
+    if [[ "$profile" == scenarios/model_flight/full_course.json ]]; then
+        contract=scenarios/model_flight/full_course_recorder.json
+        owner_timeout=610; recorder_seconds=900
+        export FULLCOURSE_VIDEO=1
+    fi
 fi
 if [[ "$mode" == calibration_check || "$mode" == calibration_trial ]]; then
     [[ "$world" == scenarios/calibration/straight_lane_v1.json ]] || exit 2
@@ -72,6 +79,7 @@ fi
 
 stack_pid=
 bag_pid=
+video_pid=
 calibration_recorder_pid=
 bag_root="$(mktemp -d)"
 bag_path="$bag_root/observations"
@@ -102,7 +110,7 @@ YAML
 
 cleanup() {
     local status=$? bag_status=0 pid
-    for pid in "$calibration_recorder_pid" "$bag_pid" "$stack_pid"; do
+    for pid in "$video_pid" "$calibration_recorder_pid" "$bag_pid" "$stack_pid"; do
         [ -n "$pid" ] || continue
         kill -INT "$pid" 2>/dev/null || true
         for _ in {1..50}; do kill -0 "$pid" 2>/dev/null || break; sleep .1; done
@@ -164,12 +172,16 @@ fi
 
 ros2 launch /repository/simulator/gazebo_trial/hybrid_environment.launch.py > /evidence/stack.txt 2>&1 &
 stack_pid=$!
+if [[ "${FULLCOURSE_VIDEO:-0}" == 1 ]]; then
+    python3 -m simulator.gazebo_trial.course_video /evidence/video_frames > /evidence/video-capture.txt 2>&1 &
+    video_pid=$!
+fi
 topics="$(python3 -m examples.gazebo_container topics)"
 mapfile -t bag_topics <<< "$topics"
 required=("${bag_topics[@]}" /gazebo_hybrid/simulated_estimator/health_diagnostics /fmu/out/distance_sensor)
 start_recording "${required[@]}" \
     /fmu/in/offboard_control_mode /fmu/in/trajectory_setpoint /fmu/in/vehicle_command /refnav/status \
-    /qualification/events /calibration_trial/control /fmu/out/vehicle_command_ack /simulator_only/touches
+    /qualification/events /calibration_trial/control /fmu/out/vehicle_command_ack /simulator_only/touches /skybeta/state
 # Give DDS discovery / EKF bootstrap time without creating any owner. Every
 # attempt leaves its report, and the entire startup has a bounded wall budget.
 ready=0
@@ -199,7 +211,7 @@ case "$mode" in
         cp "$contract" /evidence/recorder_contract.json
         python3 -m examples.qualification_recorder --contract "$contract" --contract-sha256 "$contract_sha" \
             --output /evidence/calibration_recording.json --ready-output /evidence/calibration_recorder_ready.json \
-            --seconds 240 > /evidence/calibration_recorder.txt 2>&1 &
+            --seconds "$recorder_seconds" > /evidence/calibration_recorder.txt 2>&1 &
         calibration_recorder_pid=$!
         for attempt in {1..100}; do
             kill -0 "$calibration_recorder_pid" && kill -0 "$bag_pid" || exit 1
@@ -224,6 +236,10 @@ case "$mode" in
             kill -0 "$calibration_recorder_pid" && kill -0 "$bag_pid" && kill -0 "$stack_pid"
         else
             [ -n "$approval" ] || exit 2
+            cp "$approval" /evidence/trial_approval.json
+            if [[ "${FULLCOURSE_VIDEO:-0}" == 1 ]]; then
+                kill -0 "$video_pid" && test -s /evidence/video_frames/frames.jsonl || { echo 'Video recorder not ready'; exit 1; }
+            fi
             calibration_args+=(--approval "$approval" --recording-contract "$contract"
                 --recorder-ready /evidence/calibration_recorder_ready.json
                 --recorder-pid "$calibration_recorder_pid" --bag-pid "$bag_pid")
@@ -239,7 +255,7 @@ case "$mode" in
             result=0
             owner_output=/evidence/calibration_owner.json
             [[ "$mode" != model_trial ]] || owner_output=/evidence/model_owner.json
-            timeout --signal=INT --kill-after=5 130 python3 -m "$owner_module" \
+            timeout --signal=INT --kill-after=5 "$owner_timeout" python3 -m "$owner_module" \
                 "${calibration_args[@]}" --output "$owner_output" || result=$?
             # Observe recovery for at most 60 s after the command owner exits.
             # Emergency simulator cancellation requires its own explicit approval

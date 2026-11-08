@@ -19,13 +19,17 @@ from refnav.dynamics.physics import NominalParameters
 from refnav.model_flight import DecisionLog, ModelFlight, REFERENCE
 
 
-def run(output, tau, transport=None):
+def run(output, tau, transport=None, profile_path='scenarios/model_flight/h1_pinn_prefix.json'):
     output.mkdir(exist_ok=False,parents=True)
-    raw=json.loads(Path('scenarios/model_flight/h1_pinn_prefix.json').read_text())
-    log=DecisionLog(output/'decisions.jsonl');driver=ModelFlight(CalibrationPlan(**raw['plan']),raw['model_flight'],log)
+    raw=json.loads(Path(profile_path).read_text())
+    log=DecisionLog(output/'decisions.jsonl')
+    if raw['model_flight'].get('full_course'):
+        from refnav.full_course_model import FullCoursePlan, FullCourseFlight
+        driver=FullCourseFlight(FullCoursePlan(**raw['plan']),raw['model_flight'],log)
+    else:driver=ModelFlight(CalibrationPlan(**raw['plan']),raw['model_flight'],log)
     plant=DynamicsModel(NominalParameters(velocity_tau_s=tau))
     pos=np.zeros(3);velocity=np.zeros(3);armed=False;nav=0;commands=[];states=[]
-    for i in range(1200):
+    for i in range(int(driver.plan.trial_ros_limit_s*20)):
         ns=NS+i*50_000_000
         obs=Observation(tuple(map(float,pos)),tuple(map(float,velocity)),ns,ns,armed,bool(pos[2]>=0.),nav,0.)
         intent=driver.step(ns,ns,obs,admitted=True)

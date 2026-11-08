@@ -1,0 +1,183 @@
+{
+  "scope": "isolated_full_course_hybrid_pinn",
+  "plan": {
+    "trial_kind": "stopping",
+    "origin_ned_m": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "minimum_offset_m": [
+      -3.6124,
+      -0.1834,
+      -1.05
+    ],
+    "maximum_offset_m": [
+      1.7836,
+      5.2126,
+      0.02
+    ],
+    "origin_tolerance_m": 0.05,
+    "height_m": 0.8,
+    "hover_tolerance_m": 0.15,
+    "north_brake_m": 0.6,
+    "transit_speed_mps": 0.2,
+    "climb_speed_mps": 0.2,
+    "actual_speed_limit_mps": 0.5,
+    "transit_timeout_s": 360.0,
+    "trial_ros_limit_s": 420.0,
+    "trial_wall_limit_s": 600.0,
+    "receipt_wall_limit_s": 3.0,
+    "settle_duration_s": 0.6,
+    "brake_timeout_s": 4.0
+  },
+  "clock_mapping": {
+    "source_clock_id": "px4_sitl_lockstep",
+    "ros_clock_id": "ros_sim_time",
+    "offset_ns": 0,
+    "max_error_ns": 4000000,
+    "valid_from_ns": 0,
+    "valid_until_ns": 1200000000000,
+    "evidence_id": "batch003-native-timing-plus-pinned-lockstep-source"
+  },
+  "parameter_overrides": {
+    "MPC_LAND_SPEED": 0.3
+  },
+  "recovery_review": "Proposed one-shot Hybrid PINN trial in Classical launch corridor. Native lifecycle and LAND retained. Any model refusal, recorder loss, deadline, speed or height fault fails trial; no Classical fallback. Stop publishing on authority/input loss, observe native failsafe, allow only separately approved bounded simulator termination if recovery is unconfirmed. No retries.",
+  "model_flight": {
+    "registration_enabled": false,
+    "fallback_allowed": false,
+    "checkpoint": "artifacts/goal_comparison/predictors/physics_11.npz",
+    "checkpoint_sha256": "e935d56dfd0a9cf898c15ab2611afe9525fa9507f859f813121a9e181ed23375",
+    "participant_map": "drone_code/team_nav/course_maps/phone_scan_2026-11-06.json",
+    "participant_map_sha256": "74a3b67ed942292d880c79cc43eb2d0740466d0c27bfa42cb5045210e05f9ccf",
+    "waypoints_ned_m": [
+      [
+        1.5767999999999995,
+        0.15579999999999927,
+        -0.8
+      ],
+      [
+        1.7126000000000006,
+        0.6916000000000002,
+        -0.8
+      ],
+      [
+        1.4626000000000006,
+        1.2916000000000003,
+        -0.8
+      ],
+      [
+        0.3126000000000003,
+        1.3416000000000001,
+        -0.8
+      ],
+      [
+        0.012600000000000056,
+        1.7916000000000003,
+        -0.8
+      ],
+      [
+        0.06260000000000032,
+        2.3416,
+        -0.8
+      ],
+      [
+        0.4625999999999998,
+        2.6416000000000004,
+        -0.8
+      ],
+      [
+        1.7126000000000006,
+        3.2916000000000003,
+        -0.8
+      ],
+      [
+        1.7626000000000004,
+        3.6916000000000007,
+        -0.8
+      ],
+      [
+        1.7037000000000009,
+        4.000500000000001,
+        -0.8
+      ],
+      [
+        1.0875999999999997,
+        4.366600000000001,
+        -0.8
+      ],
+      [
+        0.06260000000000032,
+        4.4916,
+        -0.8
+      ],
+      [
+        -1.4361655451258042,
+        4.690365545125806,
+        -0.8
+      ],
+      [
+        -2.7624,
+        4.5166,
+        -0.8
+      ],
+      [
+        -2.9874,
+        3.9916,
+        -0.8
+      ],
+      [
+        -3.1374,
+        3.9416000000000007,
+        -0.8
+      ],
+      [
+        -2.4374,
+        3.2416000000000005,
+        -0.8
+      ],
+      [
+        -1.7374,
+        2.5916,
+        -0.8
+      ],
+      [
+        -1.7873999999999999,
+        2.0916,
+        -0.8
+      ],
+      [
+        -2.1374,
+        1.7017467594403268,
+        -0.8
+      ],
+      [
+        -2.0374,
+        0.8416000000000001,
+        -0.8
+      ],
+      [
+        -1.7069,
+        0.4724000000000004,
+        -0.8
+      ]
+    ],
+    "command_low_ned_m": [
+      -3.6124,
+      -0.1834,
+      -0.95
+    ],
+    "command_high_ned_m": [
+      1.7836,
+      5.2126,
+      -0.65
+    ],
+    "full_course": true,
+    "trial_id": "hybrid-pinn-full-course-001",
+    "mission": "drone_code/team_nav/missions/dronehacks_2026_side_gap_first.json",
+    "mission_sha256": "1953355230cb2ccc20b6cbb37061f4901c0174f7d719ed3daa119184bb997bbf",
+    "other_boulder_map": "drone_code/team_nav/course_maps/organizers_drawing.json",
+    "other_boulder_map_sha256": "68f7bfc59c985d8399bcd365b1dbcec1a939b8f21c8a0122bb0dfab2895ea29c"
+  }
+}
