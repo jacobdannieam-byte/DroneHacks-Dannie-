@@ -1,0 +1,8 @@
+{
+  "reasoner": {
+    "variant": "G2",
+    "budget_seconds": 0.005,
+    "checkpoint": "artifacts/goal_comparison/models/goal_mlp_11.json",
+    "checkpoint_sha256": "59328afdc2a5c0042b4f4699a52cc7d24ac5af92ca148b8bd9dbc61f6311240f"
+  }
+}

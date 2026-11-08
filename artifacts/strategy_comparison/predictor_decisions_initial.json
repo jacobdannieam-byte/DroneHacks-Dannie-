@@ -1,0 +1,1959 @@
+{
+  "scope": "S2 fixed; D5 fixed; logical deadline for accuracy; measured host timing",
+  "rows": [
+    {
+      "predictor": "d0",
+      "checkpoint_sha256": null,
+      "case": "grounded_positive_inspection",
+      "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b",
+      "selection_identity": "17ac85b17ffe409646d86188dcd0a019526014403f18cb9525db4cacbc7575ea",
+      "reason": "eligible_for_offline_review",
+      "ranked_ids": [
+        "forward",
+        "drift-check",
+        "short",
+        "right",
+        "left"
+      ],
+      "elapsed_ms": 23.96049999515526,
+      "evaluation": {
+        "candidates": [
+          {
+            "candidate_id": "hold",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03494368201377621,
+            "progress_m": 0.0,
+            "effort": 0.0,
+            "score": 0.010000000000000002,
+            "rank": 6,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1,
+              -0.1,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.0
+          },
+          {
+            "candidate_id": "drift-check",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03502897189737649,
+            "progress_m": 0.052144267399119926,
+            "effort": 0.01161585943983644,
+            "score": 0.0619119502103232,
+            "rank": 2,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1519728862988496,
+              -0.0970130523642201,
+              -1.297013052364221
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.05101435751701309,
+              0.002931859772037525,
+              0.002931859772038079
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.0
+          },
+          {
+            "candidate_id": "forward",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03509927991951687,
+            "progress_m": 0.09480775890748921,
+            "effort": 0.07646507677609952,
+            "score": 0.10327845737196722,
+            "rank": 1,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1944961569069976,
+              -0.09456918611676382,
+              -1.2945691861167636
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.09275337730366198,
+              0.005330654130977305,
+              0.005330654130977395
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.05323460637813816
+          },
+          {
+            "candidate_id": "short",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.035021188630922795,
+            "progress_m": 0.047403879453745676,
+            "effort": 0.0476654252723725,
+            "score": 0.05645057094829823,
+            "rank": 3,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1472480784535,
+              -0.09728459305838191,
+              -1.2972845930583825
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.04637668865183078,
+              0.002665327065488647,
+              0.0026653270654889193
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.05323460637813816
+          },
+          {
+            "candidate_id": "left",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.035058657664291705,
+            "progress_m": 0.05237843967924467,
+            "effort": 2.2246695723778185,
+            "score": 0.017885048231688308,
+            "rank": 5,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.167694976776985,
+              -0.14347735269791,
+              -1.2953838081992493
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.06644648764645539,
+              -0.04267550587186852,
+              0.004531056011331067
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": -0.41626703127158177
+          },
+          {
+            "candidate_id": "right",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03504215335562423,
+            "progress_m": 0.05237843967924494,
+            "effort": 2.2246695723778185,
+            "score": 0.01788504823168857,
+            "rank": 4,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.162268317852516,
+              -0.0490534920698867,
+              -1.2953838081992493
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.06111991184491245,
+              0.05000690850313115,
+              0.004531056011331067
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.41626703127158177
+          },
+          {
+            "candidate_id": "wide-left",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03500041361129485,
+            "progress_m": 0.01453206497248502,
+            "effort": 2.2157416804116634,
+            "score": -0.019782768635748245,
+            "rank": 8,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.132125338089051,
+              -0.1579472275728622,
+              -1.2961984302817342
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.031532854904502534,
+              -0.056878514837980405,
+              0.0037314578916837807
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": -0.41626703127158177
+          },
+          {
+            "candidate_id": "wide-right",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.0349793271094359,
+            "progress_m": 0.014532064972485687,
+            "effort": 2.2157416804116634,
+            "score": -0.01978276863574758,
+            "rank": 7,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1252751461584163,
+              -0.03875389385938372,
+              -1.2961984302817342
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.024809000119909736,
+              0.06011655264278764,
+              0.0037314578916837807
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.41626703127158177
+          }
+        ],
+        "ranked_candidate_ids": [
+          "forward",
+          "drift-check",
+          "short",
+          "right",
+          "left",
+          "hold",
+          "wide-right",
+          "wide-left"
+        ],
+        "fallback_reason": null,
+        "model_id": "d0",
+        "map_reference": {
+          "frame_id": "odom",
+          "clock_id": "synthetic",
+          "epoch": 0,
+          "body_frame": "base_link"
+        },
+        "map_capture_ns": 100000000,
+        "observation_id": "frame-100000000",
+        "calibration_id": "synthetic-rig-x1",
+        "alignment_provenance": "synthetic-frame-calibration",
+        "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b"
+      }
+    },
+    {
+      "predictor": "d0",
+      "checkpoint_sha256": null,
+      "case": "sensor_loss",
+      "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b",
+      "selection_identity": "17ac85b17ffe409646d86188dcd0a019526014403f18cb9525db4cacbc7575ea",
+      "reason": "estimator_unhealthy",
+      "ranked_ids": [],
+      "elapsed_ms": 0.12029999925289303,
+      "evaluation": null
+    },
+    {
+      "predictor": "plain_11",
+      "checkpoint_sha256": "a34dd7b2c29d50a0bed82f640538e9b1fac9e211bd2e75f2d75cc4c820f133e3",
+      "case": "grounded_positive_inspection",
+      "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b",
+      "selection_identity": "17ac85b17ffe409646d86188dcd0a019526014403f18cb9525db4cacbc7575ea",
+      "reason": "eligible_for_offline_review",
+      "ranked_ids": [
+        "forward",
+        "drift-check",
+        "short",
+        "right",
+        "left",
+        "wide-right"
+      ],
+      "elapsed_ms": 28.82980000867974,
+      "evaluation": {
+        "candidates": [
+          {
+            "candidate_id": "hold",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03494368201377621,
+            "progress_m": 0.0,
+            "effort": 0.0,
+            "score": 0.010000000000000002,
+            "rank": 6,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1,
+              -0.1,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.0
+          },
+          {
+            "candidate_id": "drift-check",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03501715175847644,
+            "progress_m": 0.04535022832056762,
+            "effort": 0.008248464128196352,
+            "score": 0.0551852590380037,
+            "rank": 2,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1451469237255254,
+              -0.09693564124300365,
+              -1.2968821059120696
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.047268086675398814,
+              0.0029520852764985525,
+              0.0030611776121670935
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.0
+          },
+          {
+            "candidate_id": "forward",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.0350714963393737,
+            "progress_m": 0.07878228473510206,
+            "effort": 0.05706601724435915,
+            "score": 0.08764096439021488,
+            "rank": 1,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1784182667859446,
+              -0.09439898648905165,
+              -1.294451084318521
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.08566871800493862,
+              0.005423950888894905,
+              0.005522941578062094
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.05306959712891101
+          },
+          {
+            "candidate_id": "short",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03501113669952294,
+            "progress_m": 0.04162947078834747,
+            "effort": 0.04207522302785262,
+            "score": 0.050787966327790424,
+            "rank": 3,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1414443274862087,
+              -0.09718963370567138,
+              -1.2971681522949825
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.04310241856579685,
+              0.0027562792749012835,
+              0.0027658813154432154
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.05352834739263471
+          },
+          {
+            "candidate_id": "left",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03504214015382702,
+            "progress_m": 0.04343849308941472,
+            "effort": 1.7409336249921339,
+            "score": 0.018619820589572046,
+            "rank": 5,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.158087219546827,
+              -0.14507492505683373,
+              -1.2951483583959096
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.06185049852079093,
+              -0.0497955267811402,
+              0.004885754666827401
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": -0.41406679563766025
+          },
+          {
+            "candidate_id": "right",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03502924809917782,
+            "progress_m": 0.04868540796190213,
+            "effort": 1.7689577181222589,
+            "score": 0.02330625359945695,
+            "rank": 4,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1546252415930343,
+              -0.057129327864559994,
+              -1.2952461259302308
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.059950855281593496,
+              0.04997490294193405,
+              0.004786239087140207
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.42355400994155673
+          },
+          {
+            "candidate_id": "wide-left",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.034993748803887725,
+            "progress_m": 0.01147205059716322,
+            "effort": 1.7307357538708248,
+            "score": -0.013142664480253273,
+            "rank": 8,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.128370994851976,
+              -0.15757372007540496,
+              -1.2959904661009676
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.02908610451205167,
+              -0.06478971094878273,
+              0.004062701171686507
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": -0.41357562282054
+          },
+          {
+            "candidate_id": "wide-right",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.034976180909747925,
+            "progress_m": 0.016633816863534073,
+            "effort": 1.75854301972651,
+            "score": -0.008537043530996123,
+            "rank": 7,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1232937634301723,
+              -0.04954535579677368,
+              -1.2960574937340543
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.02411494385670316,
+              0.05981482271615885,
+              0.0039686339806746865
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.42497513906675966
+          }
+        ],
+        "ranked_candidate_ids": [
+          "forward",
+          "drift-check",
+          "short",
+          "right",
+          "left",
+          "hold",
+          "wide-right",
+          "wide-left"
+        ],
+        "fallback_reason": null,
+        "model_id": "a34dd7b2c29d50a0bed82f640538e9b1fac9e211bd2e75f2d75cc4c820f133e3",
+        "map_reference": {
+          "frame_id": "odom",
+          "clock_id": "synthetic",
+          "epoch": 0,
+          "body_frame": "base_link"
+        },
+        "map_capture_ns": 100000000,
+        "observation_id": "frame-100000000",
+        "calibration_id": "synthetic-rig-x1",
+        "alignment_provenance": "synthetic-frame-calibration",
+        "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b"
+      }
+    },
+    {
+      "predictor": "plain_11",
+      "checkpoint_sha256": "a34dd7b2c29d50a0bed82f640538e9b1fac9e211bd2e75f2d75cc4c820f133e3",
+      "case": "sensor_loss",
+      "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b",
+      "selection_identity": "17ac85b17ffe409646d86188dcd0a019526014403f18cb9525db4cacbc7575ea",
+      "reason": "estimator_unhealthy",
+      "ranked_ids": [],
+      "elapsed_ms": 0.042800005758181214,
+      "evaluation": null
+    },
+    {
+      "predictor": "physics_11",
+      "checkpoint_sha256": "e935d56dfd0a9cf898c15ab2611afe9525fa9507f859f813121a9e181ed23375",
+      "case": "grounded_positive_inspection",
+      "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b",
+      "selection_identity": "17ac85b17ffe409646d86188dcd0a019526014403f18cb9525db4cacbc7575ea",
+      "reason": "eligible_for_offline_review",
+      "ranked_ids": [
+        "forward",
+        "drift-check",
+        "short",
+        "right",
+        "left",
+        "wide-right"
+      ],
+      "elapsed_ms": 29.04819999821484,
+      "evaluation": {
+        "candidates": [
+          {
+            "candidate_id": "hold",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03494368201377621,
+            "progress_m": 0.0,
+            "effort": 0.0,
+            "score": 0.010000000000000002,
+            "rank": 6,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1,
+              -0.1,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.0
+          },
+          {
+            "candidate_id": "drift-check",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03501866783916866,
+            "progress_m": 0.04622695410969557,
+            "effort": 0.008610849120796788,
+            "score": 0.05605473712727964,
+            "rank": 2,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.146026859862801,
+              -0.09693987371380527,
+              -1.2968925154104092
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.04790049061942945,
+              0.0029464455967360506,
+              0.0030508274683944134
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.0
+          },
+          {
+            "candidate_id": "forward",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03507459013337076,
+            "progress_m": 0.08057485467492086,
+            "effort": 0.05892006601170682,
+            "score": 0.08939645335468671,
+            "rank": 1,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1802147239175826,
+              -0.09440994846733687,
+              -1.2944569983685001
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.08676909829873036,
+              0.005398620666796589,
+              0.005520070658473843
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.05321094385309786
+          },
+          {
+            "candidate_id": "short",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03501215582271791,
+            "progress_m": 0.04221722168880962,
+            "effort": 0.04271973491746502,
+            "score": 0.05136282699046032,
+            "rank": 3,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1420345359388886,
+              -0.09719480198881131,
+              -1.2971776318564068
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.04355145400471522,
+              0.002747427667203659,
+              0.0027590617818200893
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.05360232554482547
+          },
+          {
+            "candidate_id": "left",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.035044811146869415,
+            "progress_m": 0.044853638223504494,
+            "effort": 1.7842594203517226,
+            "score": 0.01916844981647004,
+            "rank": 5,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1596482924059917,
+              -0.14490687076828723,
+              -1.295165336800755
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.06264493870552847,
+              -0.04936638148722538,
+              0.004872342372293539
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": -0.4138423569276789
+          },
+          {
+            "candidate_id": "right",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03503094141499116,
+            "progress_m": 0.04923889185790882,
+            "effort": 1.8139144613294487,
+            "score": 0.022960602631319847,
+            "rank": 4,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.155625191137308,
+              -0.05608853196160338,
+              -1.2952718252872657
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.06070079181715643,
+              0.05068793428978984,
+              0.004757002877113577
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.42310395869089323
+          },
+          {
+            "candidate_id": "wide-left",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03499487848490536,
+            "progress_m": 0.012044796746048303,
+            "effort": 1.773742152840641,
+            "score": -0.013430046310764512,
+            "rank": 8,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.129024589755466,
+              -0.1575642862799106,
+              -1.2960064200135257
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.02944992781346538,
+              -0.06423016314050684,
+              0.004047134286216628
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": -0.4134689996191223
+          },
+          {
+            "candidate_id": "wide-right",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03497666658647813,
+            "progress_m": 0.016494403955930353,
+            "effort": 1.8071837489548355,
+            "score": -0.009649271023166352,
+            "rank": 7,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1235942366876137,
+              -0.048270019630717045,
+              -1.296079536636766
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.02433212032919078,
+              0.06078403077793405,
+              0.0039413084300368205
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.42441136276627356
+          }
+        ],
+        "ranked_candidate_ids": [
+          "forward",
+          "drift-check",
+          "short",
+          "right",
+          "left",
+          "hold",
+          "wide-right",
+          "wide-left"
+        ],
+        "fallback_reason": null,
+        "model_id": "e935d56dfd0a9cf898c15ab2611afe9525fa9507f859f813121a9e181ed23375",
+        "map_reference": {
+          "frame_id": "odom",
+          "clock_id": "synthetic",
+          "epoch": 0,
+          "body_frame": "base_link"
+        },
+        "map_capture_ns": 100000000,
+        "observation_id": "frame-100000000",
+        "calibration_id": "synthetic-rig-x1",
+        "alignment_provenance": "synthetic-frame-calibration",
+        "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b"
+      }
+    },
+    {
+      "predictor": "physics_11",
+      "checkpoint_sha256": "e935d56dfd0a9cf898c15ab2611afe9525fa9507f859f813121a9e181ed23375",
+      "case": "sensor_loss",
+      "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b",
+      "selection_identity": "17ac85b17ffe409646d86188dcd0a019526014403f18cb9525db4cacbc7575ea",
+      "reason": "estimator_unhealthy",
+      "ranked_ids": [],
+      "elapsed_ms": 0.03650000144261867,
+      "evaluation": null
+    },
+    {
+      "predictor": "plain_29",
+      "checkpoint_sha256": "47e7b902952938b61d23d1d79795fded67958f35d07abb20aee4956e4a970fdf",
+      "case": "grounded_positive_inspection",
+      "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b",
+      "selection_identity": "17ac85b17ffe409646d86188dcd0a019526014403f18cb9525db4cacbc7575ea",
+      "reason": "eligible_for_offline_review",
+      "ranked_ids": [
+        "forward",
+        "drift-check",
+        "short",
+        "right",
+        "left",
+        "wide-right",
+        "wide-left"
+      ],
+      "elapsed_ms": 29.419999991660006,
+      "evaluation": {
+        "candidates": [
+          {
+            "candidate_id": "hold",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03494368201377621,
+            "progress_m": 0.0,
+            "effort": 0.0,
+            "score": 0.010000000000000002,
+            "rank": 6,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1,
+              -0.1,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.0
+          },
+          {
+            "candidate_id": "drift-check",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03501239640677915,
+            "progress_m": 0.04256520517467327,
+            "effort": 0.007020208231646005,
+            "score": 0.05242480101004035,
+            "rank": 2,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1423594113106197,
+              -0.09702782020836219,
+              -1.2968859946905338
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.04593313169306077,
+              0.002907226999378144,
+              0.003050331522336105
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.0
+          },
+          {
+            "candidate_id": "forward",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03505726903449946,
+            "progress_m": 0.07056195117292276,
+            "effort": 0.05104337829365769,
+            "score": 0.07954108360704962,
+            "rank": 1,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1701885706439734,
+              -0.09458659984423726,
+              -1.2943452383866574
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.07883021790555693,
+              0.00528699629448714,
+              0.00552021710001337
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.052715559120318486
+          },
+          {
+            "candidate_id": "short",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.035006412080418096,
+            "progress_m": 0.03886955936848327,
+            "effort": 0.03995875895998221,
+            "score": 0.048070384189283624,
+            "rank": 3,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1386823154840515,
+              -0.0973072106455441,
+              -1.2971552831530206
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.04122694870174033,
+              0.0026578977946148893,
+              0.002762675438287668
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.05362625339533759
+          },
+          {
+            "candidate_id": "left",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03504690569667445,
+            "progress_m": 0.04855732820184527,
+            "effort": 1.7681542956318894,
+            "score": 0.023194242289207488,
+            "rank": 5,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1609986447857232,
+              -0.13991609082844286,
+              -1.2955017349073632
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.06883116118037212,
+              -0.04453810193092609,
+              0.004671428768720474
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": -0.41089067520663053
+          },
+          {
+            "candidate_id": "right",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.035033655594831896,
+            "progress_m": 0.04932943423150954,
+            "effort": 1.6328670622842951,
+            "score": 0.02667209298582364,
+            "rank": 4,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1571934582172965,
+              -0.05260455419188895,
+              -1.2954433287577105
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.05794749009180221,
+              0.0516787927354154,
+              0.004490414621510934
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.42609140593383915
+          },
+          {
+            "candidate_id": "wide-left",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03499748310619159,
+            "progress_m": 0.016270281988269325,
+            "effort": 1.7642923489611053,
+            "score": -0.009015564990952782,
+            "rank": 8,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1307799456718195,
+              -0.15194098654699303,
+              -1.2963032786097486
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.03323962473706396,
+              -0.05880025749072909,
+              0.003876741529321038
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": -0.41089742368025534
+          },
+          {
+            "candidate_id": "wide-right",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03497815890029201,
+            "progress_m": 0.015861055241047556,
+            "effort": 1.633040982351987,
+            "score": -0.006799764405992184,
+            "rank": 7,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1244501313072317,
+              -0.04419614776157569,
+              -1.29625495733804
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.02390966287081311,
+              0.06195136930569317,
+              0.00371809839293674
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.42811312322174516
+          }
+        ],
+        "ranked_candidate_ids": [
+          "forward",
+          "drift-check",
+          "short",
+          "right",
+          "left",
+          "hold",
+          "wide-right",
+          "wide-left"
+        ],
+        "fallback_reason": null,
+        "model_id": "47e7b902952938b61d23d1d79795fded67958f35d07abb20aee4956e4a970fdf",
+        "map_reference": {
+          "frame_id": "odom",
+          "clock_id": "synthetic",
+          "epoch": 0,
+          "body_frame": "base_link"
+        },
+        "map_capture_ns": 100000000,
+        "observation_id": "frame-100000000",
+        "calibration_id": "synthetic-rig-x1",
+        "alignment_provenance": "synthetic-frame-calibration",
+        "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b"
+      }
+    },
+    {
+      "predictor": "plain_29",
+      "checkpoint_sha256": "47e7b902952938b61d23d1d79795fded67958f35d07abb20aee4956e4a970fdf",
+      "case": "sensor_loss",
+      "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b",
+      "selection_identity": "17ac85b17ffe409646d86188dcd0a019526014403f18cb9525db4cacbc7575ea",
+      "reason": "estimator_unhealthy",
+      "ranked_ids": [],
+      "elapsed_ms": 0.04430000262800604,
+      "evaluation": null
+    },
+    {
+      "predictor": "physics_29",
+      "checkpoint_sha256": "3004e7974bb11a15243bb79f00a56cac5af5b3c8a399f804aebb6785195fc3b1",
+      "case": "grounded_positive_inspection",
+      "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b",
+      "selection_identity": "17ac85b17ffe409646d86188dcd0a019526014403f18cb9525db4cacbc7575ea",
+      "reason": "eligible_for_offline_review",
+      "ranked_ids": [
+        "forward",
+        "drift-check",
+        "short",
+        "right",
+        "left",
+        "wide-right",
+        "wide-left"
+      ],
+      "elapsed_ms": 29.717799989157356,
+      "evaluation": {
+        "candidates": [
+          {
+            "candidate_id": "hold",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03494368201377621,
+            "progress_m": 0.0,
+            "effort": 0.0,
+            "score": 0.010000000000000002,
+            "rank": 6,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1,
+              -0.1,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.0
+          },
+          {
+            "candidate_id": "drift-check",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03501331452537233,
+            "progress_m": 0.04309654244379571,
+            "effort": 0.0072495634899512,
+            "score": 0.052951551173996685,
+            "rank": 2,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1428933235572383,
+              -0.09704618120258418,
+              -1.296889729155518
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.046181619339508415,
+              0.0028964880984979125,
+              0.0030459317694881806
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.0
+          },
+          {
+            "candidate_id": "forward",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.035060061045098054,
+            "progress_m": 0.07217705262239099,
+            "effort": 0.05243778051412988,
+            "score": 0.08112829701210839,
+            "rank": 1,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1718080031115385,
+              -0.09462862028979542,
+              -1.294353893090164
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.07994942865279843,
+              0.005259840779249041,
+              0.005514187759186665
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.052635570994516316
+          },
+          {
+            "candidate_id": "short",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03500724632403111,
+            "progress_m": 0.03935176701249442,
+            "effort": 0.040237946503958476,
+            "score": 0.04854700808241525,
+            "rank": 3,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1391669639196285,
+              -0.09732358950983064,
+              -1.2971599154141744
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.04148559034939042,
+              0.002647710896458127,
+              0.002759145547886363
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.053400114606616776
+          },
+          {
+            "candidate_id": "left",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03504724233667811,
+            "progress_m": 0.04841546222415914,
+            "effort": 1.826181086164968,
+            "score": 0.02189184050085978,
+            "rank": 5,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.161155971703484,
+              -0.14047272774944253,
+              -1.2955069289302688
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.06816169581703022,
+              -0.04489096280144473,
+              0.004672120646696847
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": -0.41130860926994467
+          },
+          {
+            "candidate_id": "right",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.035033447977495295,
+            "progress_m": 0.049324830709909645,
+            "effort": 1.6935937028809924,
+            "score": 0.025452956652289797,
+            "rank": 4,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1570711389353865,
+              -0.05286929840083608,
+              -1.2954345547717807
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.05791091062419232,
+              0.05130893144583987,
+              0.004498157567159706
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.4252321129173611
+          },
+          {
+            "candidate_id": "wide-left",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03499739557021952,
+            "progress_m": 0.015717057824373964,
+            "effort": 1.822069166410067,
+            "score": -0.010724325503827375,
+            "rank": 8,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1306579120039664,
+              -0.15289185588751691,
+              -1.296307696843052
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.03280563177473811,
+              -0.0594434379613321,
+              0.0038723057699922175
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": -0.41145043072182397
+          },
+          {
+            "candidate_id": "wide-right",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03497786895603058,
+            "progress_m": 0.015774419119908956,
+            "effort": 1.692518626215526,
+            "score": -0.008075953404401565,
+            "rank": 7,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.124282500969944,
+              -0.04438539522621919,
+              -1.296244843210094
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.02385079029032682,
+              0.06165929904215724,
+              0.003725885307228708
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.42718733471622655
+          }
+        ],
+        "ranked_candidate_ids": [
+          "forward",
+          "drift-check",
+          "short",
+          "right",
+          "left",
+          "hold",
+          "wide-right",
+          "wide-left"
+        ],
+        "fallback_reason": null,
+        "model_id": "3004e7974bb11a15243bb79f00a56cac5af5b3c8a399f804aebb6785195fc3b1",
+        "map_reference": {
+          "frame_id": "odom",
+          "clock_id": "synthetic",
+          "epoch": 0,
+          "body_frame": "base_link"
+        },
+        "map_capture_ns": 100000000,
+        "observation_id": "frame-100000000",
+        "calibration_id": "synthetic-rig-x1",
+        "alignment_provenance": "synthetic-frame-calibration",
+        "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b"
+      }
+    },
+    {
+      "predictor": "physics_29",
+      "checkpoint_sha256": "3004e7974bb11a15243bb79f00a56cac5af5b3c8a399f804aebb6785195fc3b1",
+      "case": "sensor_loss",
+      "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b",
+      "selection_identity": "17ac85b17ffe409646d86188dcd0a019526014403f18cb9525db4cacbc7575ea",
+      "reason": "estimator_unhealthy",
+      "ranked_ids": [],
+      "elapsed_ms": 0.034599986975081265,
+      "evaluation": null
+    },
+    {
+      "predictor": "plain_47",
+      "checkpoint_sha256": "b941e0dab6caaaaba252cc0f4c8acfc776636c959e4c94d4112147e0c921cad9",
+      "case": "grounded_positive_inspection",
+      "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b",
+      "selection_identity": "17ac85b17ffe409646d86188dcd0a019526014403f18cb9525db4cacbc7575ea",
+      "reason": "eligible_for_offline_review",
+      "ranked_ids": [
+        "forward",
+        "drift-check",
+        "short",
+        "right",
+        "left",
+        "wide-right"
+      ],
+      "elapsed_ms": 28.253399999812245,
+      "evaluation": {
+        "candidates": [
+          {
+            "candidate_id": "hold",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03494368201377621,
+            "progress_m": 0.0,
+            "effort": 0.0,
+            "score": 0.010000000000000002,
+            "rank": 6,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1,
+              -0.1,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.0
+          },
+          {
+            "candidate_id": "drift-check",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.035012083725687614,
+            "progress_m": 0.04233843421118155,
+            "effort": 0.0069227141702152195,
+            "score": 0.05219997992777725,
+            "rank": 2,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.142130883864243,
+              -0.09692296525039963,
+              -1.2969692081708861
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.04570638882403765,
+              0.003033600941381136,
+              0.002984198434651244
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.0
+          },
+          {
+            "candidate_id": "forward",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03505767932941581,
+            "progress_m": 0.07066178856382144,
+            "effort": 0.05238332041121229,
+            "score": 0.07961412215559718,
+            "rank": 1,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1702959143987473,
+              -0.09456191826868231,
+              -1.2945678309901518
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.08165166197239446,
+              0.005329177520453291,
+              0.0053751678685730695
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.054121293188131976
+          },
+          {
+            "candidate_id": "short",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03500730134815045,
+            "progress_m": 0.03933687014238359,
+            "effort": 0.040613922517237624,
+            "score": 0.048524591692038835,
+            "rank": 3,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1391509834784896,
+              -0.09721754497121664,
+              -1.2972473187687685
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.04220307429693226,
+              0.0027048870916021595,
+              0.0027062130396313133
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.054329813632305296
+          },
+          {
+            "candidate_id": "left",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.035035775566426994,
+            "progress_m": 0.04272759300653989,
+            "effort": 1.6408215973805365,
+            "score": 0.019911161058929157,
+            "rank": 5,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1545159075404774,
+              -0.14025752487952206,
+              -1.295434302841658
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.05782369127869587,
+              -0.03882521751467302,
+              0.0046329565686464656
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": -0.4164393048040267
+          },
+          {
+            "candidate_id": "right",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.035029129957489434,
+            "progress_m": 0.04756819918551963,
+            "effort": 1.7584366684373356,
+            "score": 0.02239946581677292,
+            "rank": 4,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.154510703411805,
+              -0.05439992808361151,
+              -1.2954394685655193
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.059452521702438095,
+              0.045964617556755,
+              0.004525435322780739
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.41831129936232947
+          },
+          {
+            "candidate_id": "wide-left",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03499254126531877,
+            "progress_m": 0.014555435057557187,
+            "effort": 1.6391282231419273,
+            "score": -0.008227129405281357,
+            "rank": 7,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1280281926569597,
+              -0.1503429700199913,
+              -1.2962492627666866
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.028119636842443764,
+              -0.05028284272784096,
+              0.0038053659767305105
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": -0.4169382816754521
+          },
+          {
+            "candidate_id": "wide-right",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03497652242088404,
+            "progress_m": 0.015513451555894453,
+            "effort": 1.7476538555500811,
+            "score": -0.009439625555107169,
+            "rank": 8,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.123466899979053,
+              -0.04578181143809329,
+              -1.2962400493890773
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.024357230381853296,
+              0.05630058748571861,
+              0.003725944517785285
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.4194200370454137
+          }
+        ],
+        "ranked_candidate_ids": [
+          "forward",
+          "drift-check",
+          "short",
+          "right",
+          "left",
+          "hold",
+          "wide-left",
+          "wide-right"
+        ],
+        "fallback_reason": null,
+        "model_id": "b941e0dab6caaaaba252cc0f4c8acfc776636c959e4c94d4112147e0c921cad9",
+        "map_reference": {
+          "frame_id": "odom",
+          "clock_id": "synthetic",
+          "epoch": 0,
+          "body_frame": "base_link"
+        },
+        "map_capture_ns": 100000000,
+        "observation_id": "frame-100000000",
+        "calibration_id": "synthetic-rig-x1",
+        "alignment_provenance": "synthetic-frame-calibration",
+        "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b"
+      }
+    },
+    {
+      "predictor": "plain_47",
+      "checkpoint_sha256": "b941e0dab6caaaaba252cc0f4c8acfc776636c959e4c94d4112147e0c921cad9",
+      "case": "sensor_loss",
+      "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b",
+      "selection_identity": "17ac85b17ffe409646d86188dcd0a019526014403f18cb9525db4cacbc7575ea",
+      "reason": "estimator_unhealthy",
+      "ranked_ids": [],
+      "elapsed_ms": 0.03530000685714185,
+      "evaluation": null
+    },
+    {
+      "predictor": "physics_47",
+      "checkpoint_sha256": "a9009edabb71d1484f84d7d2b298e4f53fc24074c2185959e1bae366e24f6f2e",
+      "case": "grounded_positive_inspection",
+      "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b",
+      "selection_identity": "17ac85b17ffe409646d86188dcd0a019526014403f18cb9525db4cacbc7575ea",
+      "reason": "eligible_for_offline_review",
+      "ranked_ids": [
+        "forward",
+        "drift-check",
+        "short",
+        "right",
+        "left",
+        "wide-right"
+      ],
+      "elapsed_ms": 29.236199989099987,
+      "evaluation": {
+        "candidates": [
+          {
+            "candidate_id": "hold",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03494368201377621,
+            "progress_m": 0.0,
+            "effort": 0.0,
+            "score": 0.010000000000000002,
+            "rank": 6,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1,
+              -0.1,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.0
+          },
+          {
+            "candidate_id": "drift-check",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03501394630791632,
+            "progress_m": 0.043418943034120513,
+            "effort": 0.007360653130828791,
+            "score": 0.05327172997150394,
+            "rank": 2,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.143214944632951,
+              -0.09692747199676267,
+              -1.2969777391740789
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.046371723036902825,
+              0.003029442444311014,
+              0.002975543335357407
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.0
+          },
+          {
+            "candidate_id": "forward",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.035062780045532184,
+            "progress_m": 0.07362087431114661,
+            "effort": 0.05445300815812438,
+            "score": 0.08253181414798413,
+            "rank": 1,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.173260089948979,
+              -0.09456099406847869,
+              -1.2945796163907266
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.08362903062032155,
+              0.005330823948224451,
+              0.005366844664392868
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.05396622638289786
+          },
+          {
+            "candidate_id": "short",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03500888925874073,
+            "progress_m": 0.04025792273391668,
+            "effort": 0.04123389361499778,
+            "score": 0.049433244861616724,
+            "rank": 3,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.140075206679926,
+              -0.09722098027267824,
+              -1.2972552497788563
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.04277418345578397,
+              0.0027056153087752647,
+              0.0026998920555666036
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.05418475802372237
+          },
+          {
+            "candidate_id": "left",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.035038670365698445,
+            "progress_m": 0.04409572455369695,
+            "effort": 1.696595779776428,
+            "score": 0.020163808958168397,
+            "rank": 5,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.156180669411186,
+              -0.1404545736761181,
+              -1.2954571829344965
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.0589724013829866,
+              -0.0392125302513522,
+              0.00460497153663182
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": -0.41676087879575213
+          },
+          {
+            "candidate_id": "right",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03503073472282742,
+            "progress_m": 0.04816716826414387,
+            "effort": 1.8080768958938984,
+            "score": 0.022005630346265903,
+            "rank": 4,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1554632564609557,
+              -0.05367272144990572,
+              -1.295442959342087
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.06014058826487924,
+              0.046714250856130415,
+              0.004535516410658718
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.4181614491976152
+          },
+          {
+            "candidate_id": "wide-left",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03499353976998413,
+            "progress_m": 0.014722573707875164,
+            "effort": 1.692987888013652,
+            "score": -0.009137184052397877,
+            "rank": 7,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.128555888976221,
+              -0.1510161019655175,
+              -1.296266138186433
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.02848244225655939,
+              -0.05114368778419958,
+              0.003781415812218865
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": -0.4171563897801581
+          },
+          {
+            "candidate_id": "wide-right",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ],
+            "evidence": "verified_observed_volume",
+            "clearance_lower_bound_m": 0.1,
+            "inflation_m": 0.03497687201239673,
+            "progress_m": 0.01537922062560762,
+            "effort": 1.7973588079463843,
+            "score": -0.010567955533320066,
+            "rank": 8,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": [
+              2.1236914394106283,
+              -0.04481523094541435,
+              -1.2962415231347826
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.024574802456776134,
+              0.057164598472857986,
+              0.0037333524892417523
+            ],
+            "inspection_yaw_progress_rad": null,
+            "predicted_end_yaw_rad": 0.4191300140970034
+          }
+        ],
+        "ranked_candidate_ids": [
+          "forward",
+          "drift-check",
+          "short",
+          "right",
+          "left",
+          "hold",
+          "wide-left",
+          "wide-right"
+        ],
+        "fallback_reason": null,
+        "model_id": "a9009edabb71d1484f84d7d2b298e4f53fc24074c2185959e1bae366e24f6f2e",
+        "map_reference": {
+          "frame_id": "odom",
+          "clock_id": "synthetic",
+          "epoch": 0,
+          "body_frame": "base_link"
+        },
+        "map_capture_ns": 100000000,
+        "observation_id": "frame-100000000",
+        "calibration_id": "synthetic-rig-x1",
+        "alignment_provenance": "synthetic-frame-calibration",
+        "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b"
+      }
+    },
+    {
+      "predictor": "physics_47",
+      "checkpoint_sha256": "a9009edabb71d1484f84d7d2b298e4f53fc24074c2185959e1bae366e24f6f2e",
+      "case": "sensor_loss",
+      "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b",
+      "selection_identity": "17ac85b17ffe409646d86188dcd0a019526014403f18cb9525db4cacbc7575ea",
+      "reason": "estimator_unhealthy",
+      "ranked_ids": [],
+      "elapsed_ms": 0.04410000110510737,
+      "evaluation": null
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "seed": 11,
+    "validation_mse": 0.26135373106735565,
+    "epoch": 103,
+    "checkpoint": "artifacts/goal_comparison/models/goal_mlp_11.json",
+    "sha256": "59328afdc2a5c0042b4f4699a52cc7d24ac5af92ca148b8bd9dbc61f6311240f"
+  },
+  {
+    "seed": 29,
+    "validation_mse": 0.2613087608888038,
+    "epoch": 70,
+    "checkpoint": "artifacts/goal_comparison/models/goal_mlp_29.json",
+    "sha256": "2887759d5ad5e94529a686e9ac61fee6ce853c8a52bc288a092f9eab434ab66f"
+  },
+  {
+    "seed": 47,
+    "validation_mse": 0.2628709537945147,
+    "epoch": 85,
+    "checkpoint": "artifacts/goal_comparison/models/goal_mlp_47.json",
+    "sha256": "082bf4c5b9b2ff4e7f5d41e08e9dd61921065339b2cbd9c2460d424d671308f7"
+  }
+]

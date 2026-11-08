@@ -1,0 +1,6 @@
+{
+  "reasoner": {
+    "variant": "G1",
+    "budget_seconds": 0.005
+  }
+}

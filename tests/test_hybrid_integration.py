@@ -18,7 +18,7 @@ def test_world_and_mission_goal_reach_d5_and_independent_review(inputs):
     receipt = result.receipt
     assert result.validation_reason == "eligible_for_offline_review"
     assert receipt.plan.decision == "candidate_proposed"
-    assert receipt.plan.ranked_ids[0] == "forward"
+    assert receipt.plan.ranked_ids[0] == "forward"  # Forward to the bounded inspection pose.
     assert receipt.plan.evaluation.goal_proposal_id == inputs["goal"].proposal.proposal_id
     assert receipt.plan.evaluation.model_id == "d0"
     assert receipt.plan.deadline_monotonic_s == .025
@@ -114,7 +114,17 @@ def test_validation_timeout_discards_previously_ranked_candidates(inputs, monkey
 def test_wall_rejects_trajectory_despite_semantic_hint(inputs):
     snapshot = replace(inputs["snapshot"], metric=fixture(blocked=True)[1].metric)
     state = replace(inputs["state"], position_m=(3.50, -.10, -1.3), velocity_mps=(.55, 0., 0.))
-    result = hybrid_integration.assess(**(inputs | {"snapshot": snapshot, "state": state}))
+    # Test collision rejection with an explicit investigation hint; a close
+    # viewpoint has no supported inspection pose and is tested separately.
+    from refnav.reasoning.schema import make_proposal
+    from refnav.trajectory_evaluation import GoalBinding
+    context = inputs['goal'].context
+    target = inputs['goal'].proposal.target_entity_id
+    proposal = make_proposal(context, 'investigate_candidate', target,
+                             reasons=('candidate_passage_exists', 'candidate_requires_investigation'),
+                             sources=(target,), missing=inputs['goal'].proposal.missing_information)
+    result = hybrid_integration.assess(**(inputs | {"snapshot": snapshot, "state": state,
+                                                  'goal': GoalBinding(context, proposal)}))
     decision = result.receipt.plan
     assert decision.decision == "safe_stop_requested"
     assert result.validation_reason == "no_verified_progress"

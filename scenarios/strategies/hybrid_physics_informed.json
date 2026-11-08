@@ -1,0 +1,8 @@
+{
+  "identifier": "hybrid_physics_informed",
+  "ranker_checkpoint": null,
+  "ranker_sha256": null,
+  "predictor_checkpoint": "artifacts/goal_comparison/predictors/physics_11.npz",
+  "predictor_sha256": "e935d56dfd0a9cf898c15ab2611afe9525fa9507f859f813121a9e181ed23375",
+  "schema_version": 1
+}

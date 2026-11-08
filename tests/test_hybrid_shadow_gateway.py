@@ -150,6 +150,19 @@ def test_gateway_fake_sink_selects_only_one_setpoint_and_never_replays(owner_inp
     assert not gate.pending
 
 
+def test_experimental_reasoner_cannot_enter_command_gateway(owner_input):
+    from examples.h0_hybrid_smoke import smoke_inputs
+    from refnav.reasoning.selection import ReasonerConfig, create_reasoner
+    from refnav.trajectory_evaluation import GoalBinding
+    assessment, args = owner_input
+    binding = smoke_inputs()['goal']
+    proposal, selection = create_reasoner(ReasonerConfig('G1')).select(binding.context, binding.selection.inputs)
+    args['inputs']['goal'] = GoalBinding(binding.context, proposal, selection)
+    gate = HybridGateway(enabled=True, monotonic=lambda: 0.)
+    gate.offer(assessment, owner_generation=2)
+    assert gate.choose(**args).reason == 'experimental_reasoner_is_shadow_only'
+
+
 @pytest.mark.parametrize("case, reason", [
     ("hardware", "gateway_disabled"),
     ("takeover", "offboard_authority_absent"),

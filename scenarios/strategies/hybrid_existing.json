@@ -1,0 +1,8 @@
+{
+  "identifier": "hybrid_existing",
+  "ranker_checkpoint": null,
+  "ranker_sha256": null,
+  "predictor_checkpoint": null,
+  "predictor_sha256": null,
+  "schema_version": 1
+}

@@ -1,0 +1,123 @@
+{
+  "base_commit": "bfb09c8a44607d0c7efbf3532749207b25500385",
+  "implementation_commit": "6aa6498845bb5d8ace55bd0c7a50dcc66db6ab25",
+  "branch": "codex/goal-reasoning-comparison",
+  "source_hash_format": "SHA-256 of UTF-8 text with LF newlines",
+  "source_sha256": {
+    ".gitattributes": "88f8e521224901053ddff468a546da89148c3b995a2e9c128d59b3ff6a0b9504",
+    "docs/adaptive_dynamics_roadmap.md": "76c2dd676d06a5ce0be4112b4c30b92812d56f8a3dbd414fc6ec0526b32294ab",
+    "docs/goal_comparison_audit.md": "bc10640a8b15d4fd1758bb916547de33738cdc9d60c1380c33de011ceff6259b",
+    "docs/goal_comparison_notion_update.md": "2b4c3abe10e90b7eb1f7ace314087da39550fb9a373dce83f1b4ac22f29647d9",
+    "docs/goal_reasoning_comparison.md": "580ea5c1c6daa0ec0d6651aa47e453b465f6ceb9e8afee3b116cf63cf33fb24b",
+    "docs/hybrid_gazebo_runtime.md": "73dff57505d1d1f42bc0132b401113a7b041f61e5aef7695295425f3f716621e",
+    "docs/semantic_reasoning_integration.md": "d19fc42e68cb95e393f9ede461fc68b45cad184fd6179119c18f1e1c6c59899e",
+    "examples/README.md": "4cd243a8d232fe9d0953e2fa0dfe54417aa92538674ed4a9e5297a3452d9ca24",
+    "examples/compare_diagnostic_mpc.py": "633ee8a43eb8d877f563709d0f85d670da72a15aaa9457b7cad045e9cb35f088",
+    "examples/compare_goal_reasoners.py": "87f3a164c2659d70c0f6dcfaabd07e6352894a641830d693b71cc220a7f64e2d",
+    "examples/compare_goal_shadow.py": "218304cae22831c86c3227081aaa9a9e4c701fad3c275734cc624563579fda85",
+    "examples/compare_physics_residual.py": "1516708bb17ab7c5451cdcb864098777d51c66a3c68582033973237608b9fdb9",
+    "examples/diagnostic_mpc.py": "f4cc646d64a6c2290b5ad234cc35e6daa8e330995dd94700c08c72928c0e723c",
+    "examples/goal_synthetic.py": "67e41fb19249f1c6067577966c5c215bc795c973ca18e5e30de8df3d4e368a61",
+    "examples/h0_hybrid_smoke.py": "2550ceb878900e86ef14b34645f188df29f5c191b3457bdc1b6fc10de3103a95",
+    "examples/h1_observation.py": "04a344201a87ab921b30bad2f8805b99c7de681ac831e09a377bb190f5f019b6",
+    "examples/hybrid_runtime.py": "9d2e2eacf67304ac7e7f11966634310105a9828be2e5e98d041ba7ff7862a47c",
+    "examples/train_adaptive_dynamics_d1.py": "c53e5f4106c312f7802f2d21d21cedb0fbb94b00a0944c5faea2cb2a91f0d4f7",
+    "examples/train_goal_ranker.py": "13dba539ee144a4b92b543581f40e2f5acba20ee3588f14331b00ccf04b89dcc",
+    "examples/unified_planner_ablation.py": "d6602fa6fb6ee6881c3c9088460803f8cc8abff1e62ff500b02382d3a30b6ff7",
+    "examples/unified_trajectory_replay.py": "fb16f3686d583a684838d4a5f477051fd5fc62a9548f8d3312597271b2a1732c",
+    "refnav/hybrid_gateway.py": "1d0796449efc996de9b9cdeb7d5e2db8c1f1537264be62f1d82e925c46d73ef9",
+    "refnav/hybrid_integration.py": "c1b616acc9c293a0e915c60e172ad9298cc3a542daa4d518397bb641f62593d6",
+    "refnav/hybrid_mission.py": "8a9519c42a6347c225d05223c78fa36ce0295a7c582e26f597cbb9f46f8d7fc1",
+    "refnav/predictive_planner.py": "532ed396a8bc1b75e621dd7c3d9fb55d988645e0fd4d4fa591b8f707cb66d24a",
+    "refnav/reasoning/README.md": "b0296fea85a4db18e592396f060ed57c636958face7c0addbac9aaaaba499f01",
+    "refnav/reasoning/bridge.py": "35329ee123e5d3a7789390b74020bc073a6930f2d74e7db4906bd4308f66dadf",
+    "refnav/reasoning/inspection.py": "dc6ea7d1bb36004e56ac634900c21e513a0b5b12dc2c126122c96e9ec1888146",
+    "refnav/reasoning/learned.py": "2b0d7d236ff6d7ffdc03cb07b7688d56b656d0d6f0b566783655631e72c092b2",
+    "refnav/reasoning/schema.py": "829a4f20ed01528a956af8152c1da09b5aa0f09c7a28abd905eb6355970852a4",
+    "refnav/reasoning/selection.py": "bdf11dff8e4c8ad6eb410f99a2515d3ca0adfcf1e9fb27d01902ff66d04b6fb6",
+    "refnav/reasoning/validation.py": "257bf4139913cf308479ff2d3b91db4143b0fe037a011db0cddaabbe02ff3906",
+    "refnav/trajectory_evaluation.py": "185ed19227e74b55782296ac9ce74f1a736ad9cd8056d7ea72f6dfce90e20499",
+    "tests/test_diagnostic_mpc.py": "d2290eed149746c95796d5d3a8172aac100c13e9a2074684c912e0c76e050b2b",
+    "tests/test_goal_comparison.py": "f429d48367ae645b088903c58e3892c0f70f4f526bfdcfdd081b319d7d37054c",
+    "tests/test_hybrid_integration.py": "5c94c92510c42cfd0cf171d58af5fab84cefccd509f5d209bccc008e5cebf34b",
+    "tests/test_hybrid_shadow_gateway.py": "537a518f28521c4b0f2ec1b360a4f3ca3d4a9bacd1b18c0f240f1f4c4406a5b8",
+    "tests/test_physics_consistency.py": "9d5a2dbdaf3108cda0340920c0782ec1e91070d6930e57acd004dd991c89f87b"
+  },
+  "artifact_sha256": {
+    "artifacts/goal_comparison/audit.json": "029d0157845318094bfb61b757bd6124995de5fd569034b18bde6a6b66ad630b",
+    "artifacts/goal_comparison/comparison-run.txt": "e6d968bf9a8d037cad3e19e03b5e5eec9f3856ea65ad38b9c19e0d1c3183d17c",
+    "artifacts/goal_comparison/comparison.json": "6c8995d3363e053b97a9f73d525803636c933a9b6f2d094a2b56337d4e0b9a68",
+    "artifacts/goal_comparison/configs/G0.json": "c5a0972fa0e7097ee2bb19e34e9ffd16a5c67dd19ff16edf2bdc9c861034b2ae",
+    "artifacts/goal_comparison/configs/G1.json": "1db50068583ea22fd931e876143ea651002e90e76266a1046a1880b577891e43",
+    "artifacts/goal_comparison/configs/G2.json": "7bac83cdb28e138318aa01c72f570b875a35fda741970e887e6be25844aa973e",
+    "artifacts/goal_comparison/configs/G2_seed11.json": "7bac83cdb28e138318aa01c72f570b875a35fda741970e887e6be25844aa973e",
+    "artifacts/goal_comparison/configs/G2_seed29.json": "ebc013f0f3217e56a4e9026e7dede4c813bb413b8bfeaecc56b59b970608a2af",
+    "artifacts/goal_comparison/configs/G2_seed47.json": "068a13a023617b9819726ea680cf227dd65d2619bea040a8f5a4f7740b6f5458",
+    "artifacts/goal_comparison/episodes.json": "ffd1bb2e2e6b402da336c9ccf4302391260da0badddd1f68b2907e6f05879c8b",
+    "artifacts/goal_comparison/exploratory-comparison.json": "abfb6d87af37526d1d7dd7a5b9251c51b9fac2682e3618f20d6c5ebfec38f26c",
+    "artifacts/goal_comparison/h0-smoke.json": "16a9c71c0be40b35dd02c5edd959f8ce7ea4094f6c8fdefe4c3def8a63c978bb",
+    "artifacts/goal_comparison/models/goal_mlp_11.json": "59328afdc2a5c0042b4f4699a52cc7d24ac5af92ca148b8bd9dbc61f6311240f",
+    "artifacts/goal_comparison/models/goal_mlp_29.json": "2887759d5ad5e94529a686e9ac61fee6ce853c8a52bc288a092f9eab434ab66f",
+    "artifacts/goal_comparison/models/goal_mlp_47.json": "082bf4c5b9b2ff4e7f5d41e08e9dd61921065339b2cbd9c2460d424d671308f7",
+    "artifacts/goal_comparison/models/training.json": "c6e98be8f61d6e63b94ccf311fe283a0a90a2f60053ab0fe1f9f64f13d51f277",
+    "artifacts/goal_comparison/mpc-run.txt": "f6ea6225a364b8a8214c784af2ba237c56d3dd95ba24a5d98e6b37fa76dccca2",
+    "artifacts/goal_comparison/mpc.json": "3c42a455d950ddd15d831fd9bba874fae23d3f2cbd088ac4f440dc783ecbb5bf",
+    "artifacts/goal_comparison/notion_sources.json": "c0387d35f47d370d328d5f616d14a4f8853f80711ec8da3e34dcd957492720c0",
+    "artifacts/goal_comparison/predictor-run.txt": "139fe5fb93a4898b973634740e366f68433611fdfe956fcda93cd9bab1d4299a",
+    "artifacts/goal_comparison/predictors/comparison.json": "dfc35852132dc2b53c343f757e626cea76c07e71c32704a23935f97e1bd51aa6",
+    "artifacts/goal_comparison/predictors/physics_11.npz": "e935d56dfd0a9cf898c15ab2611afe9525fa9507f859f813121a9e181ed23375",
+    "artifacts/goal_comparison/predictors/physics_29.npz": "3004e7974bb11a15243bb79f00a56cac5af5b3c8a399f804aebb6785195fc3b1",
+    "artifacts/goal_comparison/predictors/physics_47.npz": "a9009edabb71d1484f84d7d2b298e4f53fc24074c2185959e1bae366e24f6f2e",
+    "artifacts/goal_comparison/predictors/plain_11.npz": "a34dd7b2c29d50a0bed82f640538e9b1fac9e211bd2e75f2d75cc4c820f133e3",
+    "artifacts/goal_comparison/predictors/plain_29.npz": "47e7b902952938b61d23d1d79795fded67958f35d07abb20aee4956e4a970fdf",
+    "artifacts/goal_comparison/predictors/plain_47.npz": "b941e0dab6caaaaba252cc0f4c8acfc776636c959e4c94d4112147e0c921cad9",
+    "artifacts/goal_comparison/pulls.json": "7741001889a6acbbd43611347b6e8378fac4760d7d1f41eb09cfb01c630c1f77",
+    "artifacts/goal_comparison/shadow-run.txt": "4b4ce5f93a2d25d293e7a33583017131002d128e897e322e10b59dab6f0ccdf9",
+    "artifacts/goal_comparison/shadow.json": "0e0fec2a3c68fa892664c909233c15b30901fbca2902c5d32cbcea90e3d51df9",
+    "artifacts/goal_comparison/tests.txt": "196e0e5ef979fbf821a1f24f4630625b4f403048ea5e70a03e3e1d3d40bfabe7",
+    "artifacts/goal_comparison/training-run.txt": "9bc0276e6c75d0a6c6a200918cff3d2360145ff688f5c92b246431528464ec05"
+  },
+  "commands": [
+    [
+      "python -m pytest -q tests",
+      "444 passed in 43.94s"
+    ],
+    [
+      "python -m examples.train_goal_ranker",
+      "three reproducible checkpoints"
+    ],
+    [
+      "python -m examples.compare_goal_reasoners",
+      "420 paired episodes per variant; final layouts 300-359"
+    ],
+    [
+      "python -m examples.compare_goal_shadow",
+      "9/9 read-only stops per variant"
+    ],
+    [
+      "python -m examples.h0_hybrid_smoke",
+      "eligible_for_offline_review"
+    ],
+    [
+      "python -m examples.compare_physics_residual",
+      "three matched training seeds; 4 episodes per six regimes; existing A1/A2 models"
+    ],
+    [
+      "python -m examples.compare_diagnostic_mpc",
+      "eight diagnostic fixtures; no gateway artifact"
+    ],
+    [
+      "git diff --check",
+      "passed"
+    ]
+  ],
+  "host": {
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+    "numpy": "2.3.5"
+  },
+  "evidence_level": "offline synthetic only",
+  "default_reasoner": "G0",
+  "default_predictor": "D0",
+  "notion_update": "prepared only; not published"
+}

@@ -1,0 +1,266 @@
+{
+  "evidence": "synthetic_h0",
+  "validation_reason": "eligible_for_offline_review",
+  "state_reference": {
+    "frame_id": "local_ned",
+    "reference_epoch": 0,
+    "clock_id": "synthetic"
+  },
+  "state_capture_ns": 100000000,
+  "state_received_ns": 100000000,
+  "depth_received_ns": 100000000,
+  "decision_ns": 100000000,
+  "vehicle_bounds": {
+    "radius_m": 0.07,
+    "state_position_error_m": 0.01,
+    "tracking_error_m": 0.015
+  },
+  "estimator_reset_counter": 0,
+  "plan": {
+    "decision": "candidate_proposed",
+    "reason": "verified_progress",
+    "ranked_ids": [
+      "forward",
+      "drift-check",
+      "short",
+      "right",
+      "left"
+    ],
+    "evaluation": {
+      "candidates": [
+        {
+          "candidate_id": "hold",
+          "status": "feasible",
+          "reasons": [
+            "observed_swept_volume"
+          ],
+          "evidence": "verified_observed_volume",
+          "clearance_lower_bound_m": 0.1,
+          "inflation_m": 0.03494368201377621,
+          "progress_m": 0.0,
+          "effort": 0.0,
+          "score": 0.010000000000000002,
+          "rank": 6,
+          "occupied_segments": 0,
+          "unknown_segments": 0,
+          "predicted_end_position_ned_m": [
+            2.1,
+            -0.1,
+            -1.3
+          ],
+          "predicted_end_velocity_ned_mps": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate_id": "drift-check",
+          "status": "feasible",
+          "reasons": [
+            "observed_swept_volume"
+          ],
+          "evidence": "verified_observed_volume",
+          "clearance_lower_bound_m": 0.1,
+          "inflation_m": 0.03502897189737649,
+          "progress_m": 0.052144267399119926,
+          "effort": 0.01161585943983644,
+          "score": 0.0619119502103232,
+          "rank": 2,
+          "occupied_segments": 0,
+          "unknown_segments": 0,
+          "predicted_end_position_ned_m": [
+            2.1519728862988496,
+            -0.0970130523642201,
+            -1.297013052364221
+          ],
+          "predicted_end_velocity_ned_mps": [
+            0.05101435751701309,
+            0.002931859772037525,
+            0.002931859772038079
+          ]
+        },
+        {
+          "candidate_id": "forward",
+          "status": "feasible",
+          "reasons": [
+            "observed_swept_volume"
+          ],
+          "evidence": "verified_observed_volume",
+          "clearance_lower_bound_m": 0.1,
+          "inflation_m": 0.03509927991951687,
+          "progress_m": 0.09480775890748921,
+          "effort": 0.07646507677609952,
+          "score": 0.10327845737196722,
+          "rank": 1,
+          "occupied_segments": 0,
+          "unknown_segments": 0,
+          "predicted_end_position_ned_m": [
+            2.1944961569069976,
+            -0.09456918611676382,
+            -1.2945691861167636
+          ],
+          "predicted_end_velocity_ned_mps": [
+            0.09275337730366198,
+            0.005330654130977305,
+            0.005330654130977395
+          ]
+        },
+        {
+          "candidate_id": "short",
+          "status": "feasible",
+          "reasons": [
+            "observed_swept_volume"
+          ],
+          "evidence": "verified_observed_volume",
+          "clearance_lower_bound_m": 0.1,
+          "inflation_m": 0.035021188630922795,
+          "progress_m": 0.047403879453745676,
+          "effort": 0.0476654252723725,
+          "score": 0.05645057094829823,
+          "rank": 3,
+          "occupied_segments": 0,
+          "unknown_segments": 0,
+          "predicted_end_position_ned_m": [
+            2.1472480784535,
+            -0.09728459305838191,
+            -1.2972845930583825
+          ],
+          "predicted_end_velocity_ned_mps": [
+            0.04637668865183078,
+            0.002665327065488647,
+            0.0026653270654889193
+          ]
+        },
+        {
+          "candidate_id": "left",
+          "status": "feasible",
+          "reasons": [
+            "observed_swept_volume"
+          ],
+          "evidence": "verified_observed_volume",
+          "clearance_lower_bound_m": 0.1,
+          "inflation_m": 0.035058657664291705,
+          "progress_m": 0.05237843967924467,
+          "effort": 2.2246695723778185,
+          "score": 0.017885048231688308,
+          "rank": 5,
+          "occupied_segments": 0,
+          "unknown_segments": 0,
+          "predicted_end_position_ned_m": [
+            2.167694976776985,
+            -0.14347735269791,
+            -1.2953838081992493
+          ],
+          "predicted_end_velocity_ned_mps": [
+            0.06644648764645539,
+            -0.04267550587186852,
+            0.004531056011331067
+          ]
+        },
+        {
+          "candidate_id": "right",
+          "status": "feasible",
+          "reasons": [
+            "observed_swept_volume"
+          ],
+          "evidence": "verified_observed_volume",
+          "clearance_lower_bound_m": 0.1,
+          "inflation_m": 0.03504215335562423,
+          "progress_m": 0.05237843967924494,
+          "effort": 2.2246695723778185,
+          "score": 0.01788504823168857,
+          "rank": 4,
+          "occupied_segments": 0,
+          "unknown_segments": 0,
+          "predicted_end_position_ned_m": [
+            2.162268317852516,
+            -0.0490534920698867,
+            -1.2953838081992493
+          ],
+          "predicted_end_velocity_ned_mps": [
+            0.06111991184491245,
+            0.05000690850313115,
+            0.004531056011331067
+          ]
+        },
+        {
+          "candidate_id": "wide-left",
+          "status": "feasible",
+          "reasons": [
+            "observed_swept_volume"
+          ],
+          "evidence": "verified_observed_volume",
+          "clearance_lower_bound_m": 0.1,
+          "inflation_m": 0.03500041361129485,
+          "progress_m": 0.01453206497248502,
+          "effort": 2.2157416804116634,
+          "score": -0.019782768635748245,
+          "rank": 8,
+          "occupied_segments": 0,
+          "unknown_segments": 0,
+          "predicted_end_position_ned_m": [
+            2.132125338089051,
+            -0.1579472275728622,
+            -1.2961984302817342
+          ],
+          "predicted_end_velocity_ned_mps": [
+            0.031532854904502534,
+            -0.056878514837980405,
+            0.0037314578916837807
+          ]
+        },
+        {
+          "candidate_id": "wide-right",
+          "status": "feasible",
+          "reasons": [
+            "observed_swept_volume"
+          ],
+          "evidence": "verified_observed_volume",
+          "clearance_lower_bound_m": 0.1,
+          "inflation_m": 0.0349793271094359,
+          "progress_m": 0.014532064972485687,
+          "effort": 2.2157416804116634,
+          "score": -0.01978276863574758,
+          "rank": 7,
+          "occupied_segments": 0,
+          "unknown_segments": 0,
+          "predicted_end_position_ned_m": [
+            2.1252751461584163,
+            -0.03875389385938372,
+            -1.2961984302817342
+          ],
+          "predicted_end_velocity_ned_mps": [
+            0.024809000119909736,
+            0.06011655264278764,
+            0.0037314578916837807
+          ]
+        }
+      ],
+      "ranked_candidate_ids": [
+        "forward",
+        "drift-check",
+        "short",
+        "right",
+        "left",
+        "hold",
+        "wide-right",
+        "wide-left"
+      ],
+      "fallback_reason": null,
+      "model_id": "d0",
+      "map_reference": {
+        "frame_id": "odom",
+        "clock_id": "synthetic",
+        "epoch": 0,
+        "body_frame": "base_link"
+      },
+      "map_capture_ns": 100000000,
+      "observation_id": "frame-100000000",
+      "calibration_id": "synthetic-rig-x1",
+      "alignment_provenance": "synthetic-frame-calibration",
+      "goal_proposal_id": "goal_905f5759802ddc5d8611dfd0ba1bbe438fb90f41daacc6435d5add8f8b4ba91b"
+    },
+    "deadline_monotonic_s": 0.025
+  }
+}

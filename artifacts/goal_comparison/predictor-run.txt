@@ -1,0 +1,12 @@
+Trained plain_11
+Trained physics_11
+Trained plain_29
+Trained physics_29
+Trained plain_47
+Trained physics_47
+Scored matched_nominal
+Scored in_range
+Scored shifted
+Scored switched
+Scored delayed
+Scored noisy

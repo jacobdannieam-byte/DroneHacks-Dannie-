@@ -77,7 +77,8 @@ echo "Container: $name; evidence: $out"
 # Stage only the approved revision. A live Windows bind mount can change
 # directory metadata during tar and must not supply untracked runtime code.
 git -C "$repo" archive --format=tar --output="$out/source.tar" "$revision" \
-    simulator drone_code examples refnav onboard scenarios
+    simulator drone_code examples refnav onboard scenarios \
+    artifacts/goal_comparison/models artifacts/goal_comparison/predictors
 docker run --rm --init --network none --cap-drop ALL --security-opt no-new-privileges \
     --name "$name" --env "ROS_DOMAIN_ID=$domain" --env ROS_LOCALHOST_ONLY=1 --env GZ_IP=127.0.0.1 \
     --mount "type=bind,src=$out/source.tar,dst=/source.tar,readonly" --mount "type=bind,src=$out,dst=/evidence" \

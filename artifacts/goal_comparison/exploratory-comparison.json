@@ -1,0 +1,348 @@
+{
+  "thresholds": {
+    "invalid_action_rate": 0.0,
+    "paired_evidence_gain_lower_95ci": 0.0,
+    "host_reasoner_target_ms": 5.0,
+    "native_concurrent_budget": "unmeasured",
+    "default": "G0",
+    "promotion_requires_native_evidence": true
+  },
+  "host": "Windows-10-10.0.26200-SP0",
+  "layout_count": 60,
+  "regimes": [
+    "nominal",
+    "dead_end",
+    "stale",
+    "contradiction",
+    "missing_support",
+    "reset",
+    "omissions"
+  ],
+  "episodes_per_variant": 420,
+  "steps_per_episode": 6,
+  "interactive": {
+    "G0": {
+      "acquired": 72,
+      "switching": 0,
+      "repeats": 250,
+      "invalid": 720,
+      "rejected": 1080,
+      "abstentions": 2090,
+      "appropriate_abstentions": 1628,
+      "reasoner_ms": {
+        "p50": 0.6219999995664693,
+        "p95": 1.224050005839671,
+        "p99": 1.5393390097597148,
+        "max": 3.834100003587082,
+        "over_5ms": 0
+      },
+      "context_ms": {
+        "p50": 1.8818000025930814,
+        "p95": 3.976115007390035,
+        "p99": 4.883397007215535,
+        "max": 7.22660000610631,
+        "over_5ms": 18
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null
+    },
+    "G1": {
+      "acquired": 302,
+      "switching": 561,
+      "repeats": 380,
+      "invalid": 0,
+      "rejected": 360,
+      "abstentions": 1484,
+      "appropriate_abstentions": 1484,
+      "reasoner_ms": {
+        "p50": 0.8591499936301261,
+        "p95": 1.7395800008671338,
+        "p99": 2.055369001027429,
+        "max": 5.079400012618862,
+        "over_5ms": 1
+      },
+      "context_ms": {
+        "p50": 1.6562499949941412,
+        "p95": 3.4439099996234277,
+        "p99": 4.108165003272006,
+        "max": 9.81859999592416,
+        "over_5ms": 10
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null
+    },
+    "G2_seed11": {
+      "acquired": 286,
+      "switching": 743,
+      "repeats": 308,
+      "invalid": 0,
+      "rejected": 360,
+      "abstentions": 1481,
+      "appropriate_abstentions": 1481,
+      "reasoner_ms": {
+        "p50": 0.7106000048224814,
+        "p95": 1.249749998532934,
+        "p99": 1.463119998952606,
+        "max": 4.261100009898655,
+        "over_5ms": 0
+      },
+      "context_ms": {
+        "p50": 1.2707999994745478,
+        "p95": 2.180080009566154,
+        "p99": 2.394078001671005,
+        "max": 3.89220000943169,
+        "over_5ms": 0
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null
+    },
+    "G2_seed29": {
+      "acquired": 270,
+      "switching": 700,
+      "repeats": 331,
+      "invalid": 0,
+      "rejected": 360,
+      "abstentions": 1483,
+      "appropriate_abstentions": 1483,
+      "reasoner_ms": {
+        "p50": 0.7199999963631853,
+        "p95": 1.2852999934693798,
+        "p99": 1.4692350018594873,
+        "max": 3.953799998271279,
+        "over_5ms": 0
+      },
+      "context_ms": {
+        "p50": 1.2857999972766265,
+        "p95": 2.1969699933833904,
+        "p99": 2.5688790112326383,
+        "max": 5.021200006012805,
+        "over_5ms": 1
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null
+    },
+    "G2_seed47": {
+      "acquired": 296,
+      "switching": 705,
+      "repeats": 294,
+      "invalid": 0,
+      "rejected": 360,
+      "abstentions": 1483,
+      "appropriate_abstentions": 1483,
+      "reasoner_ms": {
+        "p50": 0.7086000041454099,
+        "p95": 1.242555001954315,
+        "p99": 1.3932870035932863,
+        "max": 1.9437000009929761,
+        "over_5ms": 0
+      },
+      "context_ms": {
+        "p50": 1.2875999964307994,
+        "p95": 2.1875749946048013,
+        "p99": 2.4596679910609955,
+        "max": 4.900100000668317,
+        "over_5ms": 0
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null
+    }
+  },
+  "paired": {
+    "G0": {
+      "mean_evidence_difference": 0.0,
+      "95ci": [
+        0.0,
+        0.0
+      ]
+    },
+    "G1": {
+      "mean_evidence_difference": 0.5476190476190474,
+      "95ci": [
+        0.46654761904761893,
+        0.6334523809523802
+      ]
+    },
+    "G2_seed11": {
+      "mean_evidence_difference": 0.5095238095238094,
+      "95ci": [
+        0.4380952380952381,
+        0.5857738095238092
+      ]
+    },
+    "G2_seed29": {
+      "mean_evidence_difference": 0.4714285714285715,
+      "95ci": [
+        0.4023809523809524,
+        0.5452380952380953
+      ]
+    },
+    "G2_seed47": {
+      "mean_evidence_difference": 0.5333333333333333,
+      "95ci": [
+        0.4642857142857143,
+        0.6095238095238094
+      ]
+    }
+  },
+  "recorded_replay": {
+    "G0": {
+      "acquired": 0,
+      "switching": 0,
+      "repeats": 0,
+      "invalid": 0,
+      "rejected": 0,
+      "abstentions": 0,
+      "appropriate_abstentions": 0,
+      "reasoner_ms": {
+        "p50": 0.5148999989614822,
+        "p95": 0.6844649979029782,
+        "p99": 0.7200230007583739,
+        "max": 0.7556000055046752,
+        "over_5ms": 0
+      },
+      "context_ms": {
+        "p50": 1.499300000432413,
+        "p95": 2.200589999119984,
+        "p99": 2.224344995483989,
+        "max": 2.226999989943579,
+        "over_5ms": 0
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null
+    },
+    "G1": {
+      "acquired": 0,
+      "switching": 0,
+      "repeats": 0,
+      "invalid": 0,
+      "rejected": 0,
+      "abstentions": 0,
+      "appropriate_abstentions": 0,
+      "reasoner_ms": {
+        "p50": 0.847700001031626,
+        "p95": 1.1961899959715083,
+        "p99": 1.281162998639047,
+        "max": 1.3132000021869317,
+        "over_5ms": 0
+      },
+      "context_ms": {
+        "p50": 1.5109000014490448,
+        "p95": 2.166424995084526,
+        "p99": 2.286393998365383,
+        "max": 2.341499988688156,
+        "over_5ms": 0
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null
+    },
+    "G2_seed11": {
+      "acquired": 0,
+      "switching": 0,
+      "repeats": 0,
+      "invalid": 0,
+      "rejected": 0,
+      "abstentions": 0,
+      "appropriate_abstentions": 0,
+      "reasoner_ms": {
+        "p50": 0.91229999816278,
+        "p95": 1.247964998765383,
+        "p99": 1.478979999374131,
+        "max": 1.7433000029996037,
+        "over_5ms": 0
+      },
+      "context_ms": {
+        "p50": 1.58124999870779,
+        "p95": 2.2417699925426855,
+        "p99": 2.9201889998512294,
+        "max": 3.759700004593469,
+        "over_5ms": 0
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null
+    },
+    "G2_seed29": {
+      "acquired": 0,
+      "switching": 0,
+      "repeats": 0,
+      "invalid": 0,
+      "rejected": 0,
+      "abstentions": 0,
+      "appropriate_abstentions": 0,
+      "reasoner_ms": {
+        "p50": 0.9021000005304813,
+        "p95": 1.2339750057435594,
+        "p99": 1.286136004491709,
+        "max": 1.3389999949140474,
+        "over_5ms": 0
+      },
+      "context_ms": {
+        "p50": 1.5268999995896593,
+        "p95": 2.1893250064749736,
+        "p99": 2.290803004725603,
+        "max": 2.354700001887977,
+        "over_5ms": 0
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null
+    },
+    "G2_seed47": {
+      "acquired": 0,
+      "switching": 0,
+      "repeats": 0,
+      "invalid": 0,
+      "rejected": 0,
+      "abstentions": 0,
+      "appropriate_abstentions": 0,
+      "reasoner_ms": {
+        "p50": 0.9234500030288473,
+        "p95": 1.276884990511462,
+        "p99": 1.3254630034498405,
+        "max": 1.3398000010056421,
+        "over_5ms": 0
+      },
+      "context_ms": {
+        "p50": 1.5502999958698638,
+        "p95": 2.2175850041094236,
+        "p99": 2.266014995984733,
+        "max": 2.2669000027235597,
+        "over_5ms": 0
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null
+    }
+  },
+  "python_peak_bytes_one_G1_episode": 129714,
+  "GPU_CPU_load": "not measured",
+  "scope": "abstract synthetic evidence acquisition; no flight or route progress",
+  "selection": "G0 retained; native concurrent timing and physical outcomes unavailable"
+}

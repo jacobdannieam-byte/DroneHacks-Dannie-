@@ -17,6 +17,9 @@ from refnav.hybrid_integration import assess
 from refnav.integration_timing import measure
 from refnav.reasoning import DeterministicReasoner, WorldReference, build_context
 from refnav.reasoning.schema import MissionGoal
+from refnav.reasoning.selection import ReasonerConfig, create_reasoner
+from refnav.reasoning.inspection import make_inputs, Attempt, HISTORY_SECONDS
+from refnav.strategies import StrategyConfig
 from refnav.trajectory_evaluation import EvaluationPolicy, FrameAlignment, GoalBinding, MetricGoal, VehicleBounds
 from refnav.world_model.spatial_input import NS, PoseSample, stamp_ok, vector
 
@@ -86,8 +89,15 @@ class HybridBagProfile:
     local_reset_counters: tuple
     mission_goal: MissionGoal | None = None
     tracking_source: str = "visual"
+    reasoner: ReasonerConfig = ReasonerConfig()
+    strategy_config: StrategyConfig | None = None
 
     def __post_init__(self):
+        if self.strategy_config is not None:
+            if not isinstance(self.strategy_config, StrategyConfig) or self.reasoner != self.strategy_config.reasoner():
+                raise ValueError('Strategy and reasoner configurations disagree')
+        if not isinstance(self.reasoner, ReasonerConfig):
+            raise ValueError('Supply a validated reasoner configuration.')
         if self.tracking_source not in ("visual", "simulated_estimator"):
             raise ValueError("invalid tracking source")
         ref = self.spatial.reference
@@ -105,6 +115,8 @@ class HybridBagProfile:
 
     @classmethod
     def from_dict(cls, data):
+        strategy = StrategyConfig(**data['strategy']) if 'strategy' in data else None
+        reasoner = ReasonerConfig(**data['reasoner']) if 'reasoner' in data else (strategy.reasoner() if strategy else ReasonerConfig())
         spatial = BagProfile.from_dict(data["spatial"])
         ref = spatial.reference
         alignment = FrameAlignment(LocalNED(data["ned_frame"], ref.epoch, ref.clock_id), ref,
@@ -113,7 +125,7 @@ class HybridBagProfile:
                    MetricGoal(ref, data["objective_m"]), data["px4_topics"], data["ev_reset_counter"],
                    tuple(data["local_reset_counters"]),
                    MissionGoal.from_dict(data["mission_goal"]) if data.get("mission_goal") is not None else None,
-                   data.get("tracking_source", "visual"))
+                   data.get("tracking_source", "visual"), reasoner, strategy)
 
 
 class HybridBagReplay(RecordedSpatialReplay):
@@ -129,6 +141,12 @@ class HybridBagReplay(RecordedSpatialReplay):
             self.rows = deque(maxlen=1)
         self._snapshot = self._goal = None
         self.hybrid = profile
+        self.reasoner = create_reasoner(profile.reasoner)
+        self.predictor, self.predictor_id, self.predictor_fallback = (profile.strategy_config.load_predictor()
+            if profile.strategy_config else (None, None, None))
+        self._inspection_last = None
+        self._inspection_scope = None
+        self._inspection_attempts = ()
         self.planner_budget_s = planner_budget_s
         self.monotonic = monotonic
         self.topics = {**TOPICS, TF: "tf2_msgs/msg/TFMessage", TRACKING: "diagnostic_msgs/msg/DiagnosticArray",
@@ -304,12 +322,46 @@ class HybridBagReplay(RecordedSpatialReplay):
         if not self.continuous:
             row["hybrid"] = self.diagnostic() if row["accepted"] else {"reason": row["reason"]}
 
-    def select_goal(self, snapshot, mission_goal):
+    def select_goal(self, snapshot, mission_goal, *, stage_id='inspection'):
         ref = self.hybrid.alignment.map
-        context = build_context(snapshot.semantic, mission_goal,
+        context = measure(self.timings, 'reasoning_context', build_context, snapshot.semantic, mission_goal,
                                 now=snapshot.semantic["query_timestamp"],
                                 reference=WorldReference(ref.frame_id, ref.epoch, ref.clock_id))
-        return GoalBinding(context, DeterministicReasoner().propose(context))
+        if self._state is None:
+            return GoalBinding(context, self.reasoner.propose(context))
+        state, capture = self._state[:2]
+        alignment = replace(self.hybrid.alignment, capture_ns=capture)
+        previous = self._inspection_history(context, snapshot, mission_goal, stage_id)
+        auxiliary = measure(self.timings, 'inspection_inputs', make_inputs, context, snapshot, state, alignment, self.profile.calibration,
+                                attempts=self._inspection_attempts, previous_entity_id=previous, stage_id=stage_id)
+        proposal, selection = measure(self.timings, 'reasoner_inference', self.reasoner.select, context, auxiliary)
+        entity = next((e for e in context.entities if e.entity_id == selection.selected_entity_id), None)
+        if entity is not None:
+            self._inspection_last = (context.reference, mission_goal, snapshot.metric.observation_id,
+                                     entity.entity_id, entity.missing_evidence)
+        return GoalBinding(context, proposal, selection)
+
+    def _inspection_history(self, context, snapshot, mission_goal, stage_id):
+        prior = self._inspection_last
+        now = context.context_created_at
+        scope = (context.reference, mission_goal, stage_id)
+        if self._inspection_scope != scope:
+            self._inspection_scope = scope
+            self._inspection_attempts = ()
+            self._inspection_last = None
+            return None
+        self._inspection_attempts = tuple(a for a in self._inspection_attempts
+                                          if 0 <= now - a.stamp_seconds <= HISTORY_SECONDS)
+        if prior is None:
+            return None
+        if prior[2] != snapshot.metric.observation_id:
+            entity = next((e for e in context.entities if e.entity_id == prior[3]), None)
+            if entity is not None:
+                acquired = bool(set(prior[4]) - set(entity.missing_evidence))
+                attempt = Attempt(entity.entity_id, now, 'acquired' if acquired else 'failed')
+                self._inspection_attempts = (*self._inspection_attempts, attempt)[-32:]
+            self._inspection_last = None
+        return prior[3]
 
     @property
     def px4_sample_us(self):
@@ -338,8 +390,9 @@ class HybridBagReplay(RecordedSpatialReplay):
             return "unconfirmed_or_stale_visual_tracking", None
         if (self._health is None or not self._health[1] or now_ns - self._health[0] > HEALTH_MAX_AGE_NS
                 or self._ev_received is None or now_ns - self._ev_received > HEALTH_MAX_AGE_NS
-                or any(sample is None or not sample[1] or now_ns - sample[0] > HEALTH_MAX_AGE_NS
-                       for sample in (self._flags, self._local))):
+                or self._local is None or not self._local[1]
+                or not 0 <= now_ns-self._local[0] <= HEALTH_MAX_AGE_NS
+                or not self._flags_fresh(now_ns)):
             return "estimator_health_missing_or_stale", None
         if self._state is None:
             return self._state_reason, None
@@ -353,7 +406,18 @@ class HybridBagReplay(RecordedSpatialReplay):
         return None, dict(state=state, snapshot=snapshot, now_ns=now_ns, alignment=alignment,
                           vehicle=self.hybrid.vehicle, objective=self.hybrid.objective, goal=self._goal,
                           state_received_ns=received, estimator_reset_counter=alignment.estimator_reset_counter,
-                          estimator_healthy=True)
+                          estimator_healthy=True, predictor=self.predictor, model_id=self.predictor_id)
+
+    def _flags_fresh(self, now_ns):
+        # Match the already-reviewed Gazebo health bridge's 1 Hz flag cadence.
+        # Hardware/visual profiles retain their existing 300 ms requirement;
+        # fast pose, local position, EV and health checks are unchanged.
+        maximum = HEALTH_MAX_AGE_NS
+        if self.hybrid.tracking_source == 'simulated_estimator':
+            from examples.gazebo_sensor_contract import ESTIMATOR_FLAGS_MAX_AGE_NS
+            maximum = ESTIMATOR_FLAGS_MAX_AGE_NS
+        return (self._flags is not None and self._flags[1]
+                and 0 <= now_ns-self._flags[0] <= maximum)
 
     def diagnostic(self):
         """Run one H1 replay assessment and summarize its evidence."""
@@ -367,6 +431,8 @@ class HybridBagReplay(RecordedSpatialReplay):
         result = assess(**inputs, budget_s=self.planner_budget_s, timings=self.timings, **clock_arg)
         plan = result.receipt.plan
         return {"reason": result.validation_reason, "decision": plan.decision, "ranked_ids": plan.ranked_ids,
+                "strategy_identity": self.hybrid.strategy_config.identity if self.hybrid.strategy_config else None,
+                "predictor_fallback": self.predictor_fallback,
                 "px4_sample_us": sample_us, "state_capture_ns": capture, "state_received_ns": received,
                 "depth_capture_ns": snapshot.metric.capture_ns,
                 "depth_received_ns": snapshot.metric.received_ns, "assessment_ns": self.now, "px4_variances": variances,

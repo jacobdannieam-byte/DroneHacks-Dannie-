@@ -70,6 +70,8 @@ class RefNav(Node):
             if (hybrid_runtime.strategy != "hybrid_sitl" or hybrid_runtime.adapter is None
                     or not isinstance(hybrid_approval, IsolationApproval)):
                 raise ValueError("native owner needs a reviewed Hybrid SITL composition")
+            if hybrid_runtime.executor.stopping_envelope is None:
+                raise ValueError('native owner requires a reviewed measured stopping envelope')
         route, doc = load_route(self) if hybrid_runtime is None else ([], {})
         prm = C.Params(route=route)
         for k, v in vars(C.Params()).items():

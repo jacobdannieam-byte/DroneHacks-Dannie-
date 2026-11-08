@@ -8,6 +8,9 @@ from refnav.hybrid_integration import assess
 from refnav.reasoning import DeterministicReasoner, WorldReference, build_context
 from refnav.reasoning.schema import MissionGoal
 from refnav.trajectory_evaluation import GoalBinding, MetricGoal, state_capture_ns
+from refnav.reasoning.selection import create_reasoner
+from refnav.reasoning.inspection import make_inputs
+from examples.unified_spatial_replay import calibration
 
 
 def smoke_inputs():
@@ -16,7 +19,9 @@ def smoke_inputs():
     context = build_context(snapshot.semantic, MissionGoal(),
                             now=snapshot.semantic["query_timestamp"],
                             reference=WorldReference(reference.frame_id, reference.epoch, reference.clock_id))
-    goal = GoalBinding(context, DeterministicReasoner().propose(context))
+    auxiliary = make_inputs(context, snapshot, state, alignment, calibration())
+    proposal, selection = create_reasoner().select(context, auxiliary)
+    goal = GoalBinding(context, proposal, selection)
     return dict(state=state, snapshot=snapshot, now_ns=STAMP, vehicle=VEHICLE,
                 alignment=replace(alignment, estimator_reset_counter=0),
                 objective=MetricGoal(reference, (4., .10, 1.3)), goal=goal,

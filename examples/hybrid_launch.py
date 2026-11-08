@@ -56,7 +56,16 @@ def configured(path):
         raise ValueError("unexpected logging settings")
     if strategy == "hybrid_sitl" and (not adapter.can_attach_owner or not stages[-1].landing_site_review):
         raise ValueError("SITL requires a reviewed owner graph and landing site")
-    return strategy, HybridRuntime(profile, course, strategy=strategy, adapter=adapter, **settings, **logging)
+    runtime = HybridRuntime(profile, course, strategy=strategy, adapter=adapter, **settings, **logging)
+    if 'stopping_envelope' in doc:
+        import hashlib
+        from refnav.stopping_envelope import StoppingEnvelope
+        envelope = dict(doc['stopping_envelope'])
+        measurement = root / envelope.pop('measurement_file')
+        if hashlib.sha256(measurement.read_bytes()).hexdigest() != envelope['evidence_sha256']:
+            raise ValueError('stopping measurement identity mismatch')
+        runtime.executor.stopping_envelope = StoppingEnvelope(**envelope)
+    return strategy, runtime
 
 
 def run_reviewed_sitl(runtime, approval, *, ros_args, output):
@@ -64,6 +73,8 @@ def run_reviewed_sitl(runtime, approval, *, ros_args, output):
     if (runtime.strategy != "hybrid_sitl" or not isinstance(approval, IsolationApproval)
             or not approval.permits(runtime.adapter, os.environ.get("ROS_DOMAIN_ID"))):
         raise ValueError("live isolated-SITL approval refused")
+    if runtime.executor.stopping_envelope is None:
+        raise ValueError('reviewed measured stopping envelope required before native policy execution')
     output = Path(output)
     if output.exists():
         raise ValueError("choose a new runtime log output")
@@ -105,6 +116,7 @@ def run_reviewed_sitl(runtime, approval, *, ros_args, output):
             json.dump({"strategy": runtime.strategy, "records": list(runtime.records),
                        "status": runtime.status(), "timing": runtime.timings.summary(),
                        "total_records": runtime.record_count,
+                       "clock_ingestion": runtime.clock_fence.report() if runtime.clock_fence else None,
                        "last_issue": runtime.last_issued, "exit_code": code}, log, indent=2, allow_nan=False)
             log.write("\n")
     return code

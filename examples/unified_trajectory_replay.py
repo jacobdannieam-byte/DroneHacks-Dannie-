@@ -48,7 +48,12 @@ def _binding(snapshot):
     proposal = DeterministicReasoner().propose(context)
     if proposal.intent != "observe_more":
         raise RuntimeError("fixture did not produce a semantic observation hint")
-    return GoalBinding(context, proposal)
+    from refnav.reasoning.inspection import make_inputs
+    from refnav.reasoning.selection import create_reasoner
+    state, _, alignment = fixture()
+    auxiliary = make_inputs(context, snapshot, state, alignment, calibration())
+    proposal, selection = create_reasoner().select(context, auxiliary)
+    return GoalBinding(context, proposal, selection)
 
 
 def exercise():
@@ -56,7 +61,7 @@ def exercise():
     goal = _binding(snapshot)
     candidates = (
         candidate(state, "hold", state.position_m),
-        candidate(state, "advance", (3.25, -.10, -1.3)),
+        candidate(state, "advance", (2.25, -.10, -1.3)),
         candidate(state, "high_climb", (3.25, -.10, -3.0)),
     )
 

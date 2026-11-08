@@ -24,6 +24,13 @@ OPTIONS = (
     ("wide-right", .70, pi / 2.8),
 )
 MIN_PROGRESS_M = .015
+MIN_INSPECTION_YAW_RAD = .02
+
+
+def has_progress(entry):
+    return ((entry.progress_m is not None and entry.progress_m >= MIN_PROGRESS_M)
+            or (entry.candidate_id == 'inspection-yaw' and entry.inspection_yaw_progress_rad is not None
+                and entry.inspection_yaw_progress_rad >= MIN_INSPECTION_YAW_RAD))
 
 
 @dataclass(frozen=True)
@@ -70,10 +77,41 @@ def _generate(state, objective, alignment):
                           state.position_m[2] + climb * scale), state.yaw_rad + yaw_step)
 
 
-def candidate_for_id(state, objective, alignment, candidate_id):
+def inspection_objective(state, objective, alignment, goal, snapshot, now_ns):
+    if isinstance(goal, GoalBinding) and goal.proposal.intent == 'observe_more':
+        from refnav.trajectory_evaluation import _resolve_goal
+        point, status, _ = _resolve_goal(snapshot, goal, now_ns, state, alignment)
+        if status is None and point is not None:
+            return MetricGoal(objective.reference, tuple(point))
+    return objective
+
+
+def candidate_for_id(state, objective, alignment, candidate_id, *, goal=None, snapshot=None, now_ns=None):
     """Recover the exact bounded D5 candidate from its original in-process inputs."""
+    objective = inspection_objective(state, objective, alignment, goal, snapshot, now_ns)
+    if candidate_id == 'inspection-yaw':
+        return inspection_yaw(state, alignment, goal, snapshot, now_ns)
     return next((item for item in _generate(state, objective, alignment)
                  if item.candidate_id == candidate_id), None)
+
+
+def inspection_yaw(state, alignment, goal, snapshot, now_ns):
+    """Reconstruct a bounded grounded yaw hypothesis; never a generic hold ID."""
+    if not isinstance(goal, GoalBinding) or goal.proposal.intent != 'observe_more' or snapshot is None:
+        return None
+    from refnav.trajectory_evaluation import _resolve_goal
+    from refnav.reasoning.inspection import candidates
+    _, status, _ = _resolve_goal(snapshot, goal, now_ns, state, alignment)
+    if status is not None or goal.selection is None:
+        return None
+    selected = next((item for item in candidates(goal.context, goal.selection.inputs)
+                     if item.entity_id == goal.proposal.target_entity_id and item.mode == 'yaw'), None)
+    if selected is None:
+        return None
+    # Map up and NED down have opposite yaw signs.
+    command = PositionSetpoint(state.reference, state.timestamp_s, state.timestamp_s + STEPS * STEP_SECONDS,
+                               state.position_m, state.yaw_rad - selected.yaw_delta_map_rad)
+    return Candidate('inspection-yaw', (command,) * STEPS)
 
 
 def plan(state, snapshot, *, now_ns, alignment, vehicle, objective, goal=None,
@@ -101,7 +139,11 @@ def plan(state, snapshot, *, now_ns, alignment, vehicle, objective, goal=None,
     reason = interrupted()
     if reason:
         return Plan("safe_stop_requested", reason, deadline_monotonic_s=deadline)
+    objective = inspection_objective(state, objective, alignment, goal, snapshot, now_ns)
     candidates = tuple(_generate(state, objective, alignment))
+    yaw = inspection_yaw(state, alignment, goal, snapshot, now_ns)
+    if yaw is not None:
+        candidates = (candidates[0], yaw)
     evaluation = measure(timings, "d3_evaluation", evaluate_candidates, state, candidates, snapshot,
                          now_ns=now_ns, alignment=alignment, vehicle=vehicle,
                          goal=objective if goal is None else goal, predictor=predictor,
@@ -110,7 +152,7 @@ def plan(state, snapshot, *, now_ns, alignment, vehicle, objective, goal=None,
     if reason or evaluation.fallback_reason in ("cancelled", "deadline_exceeded"):
         return Plan("safe_stop_requested", reason or evaluation.fallback_reason, deadline_monotonic_s=deadline)
     eligible = [entry for entry in evaluation.candidates if entry.candidate_id != "hold" and entry.status == "feasible"
-                and entry.clearance_lower_bound_m >= clearance and entry.progress_m >= MIN_PROGRESS_M]
+                and entry.clearance_lower_bound_m >= clearance and has_progress(entry)]
     ordered = sorted(eligible, key=lambda entry: (-(entry.score - .10 * entry.inflation_m), entry.candidate_id))
     reason = interrupted()
     if reason:

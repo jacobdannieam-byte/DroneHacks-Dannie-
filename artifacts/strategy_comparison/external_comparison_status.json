@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "comparable": false,
+  "issues": [
+    {
+      "run_id": "run-AdMalPxA",
+      "missing_conditions": [
+        "permitted_map",
+        "initial_pose",
+        "seed",
+        "termination"
+      ]
+    },
+    {
+      "run_id": "no_matched_hybrid_course_run",
+      "missing_conditions": [
+        "course",
+        "permitted_map",
+        "initial_pose",
+        "vehicle",
+        "sensors",
+        "seed",
+        "mission",
+        "scoring",
+        "termination"
+      ]
+    },
+    {
+      "run_id": "no_matched_hybrid_course_run",
+      "reason": "missing_source_or_configuration_identity"
+    },
+    {
+      "run_id": "no_matched_hybrid_course_run",
+      "mismatched_conditions": [
+        "course",
+        "vehicle",
+        "sensors",
+        "mission",
+        "scoring"
+      ]
+    }
+  ],
+  "runs": [
+    {
+      "strategy": "S1",
+      "run_id": "run-AdMalPxA",
+      "metrics": {
+        "completion": true,
+        "checkpoints": 4,
+        "touches": 0,
+        "minimum_clearance_m": 0.0751,
+        "unknown_space_violations": null,
+        "elapsed_seconds": 84.3,
+        "path_length_m": 17.97392015946742,
+        "recoveries": null,
+        "useful_evidence": null,
+        "appropriate_abstentions": null,
+        "unnecessary_abstentions": null,
+        "goal_switches": null,
+        "invalid_proposals": null,
+        "validator_interventions": null,
+        "fallbacks": null,
+        "real_time_factor": 0.999
+      }
+    },
+    {
+      "strategy": "S0",
+      "run_id": "no_matched_hybrid_course_run",
+      "metrics": {
+        "completion": null,
+        "checkpoints": null,
+        "touches": null,
+        "minimum_clearance_m": null,
+        "unknown_space_violations": null,
+        "elapsed_seconds": null,
+        "path_length_m": null,
+        "recoveries": null,
+        "useful_evidence": null,
+        "appropriate_abstentions": null,
+        "unnecessary_abstentions": null,
+        "goal_switches": null,
+        "invalid_proposals": null,
+        "validator_interventions": null,
+        "fallbacks": null,
+        "real_time_factor": null
+      }
+    }
+  ],
+  "interpretation": "Matched descriptive runs only; repeated paired seeds are required for superiority claims."
+}

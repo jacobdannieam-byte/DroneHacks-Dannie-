@@ -1,0 +1,383 @@
+{
+  "G0": {
+    "reasons": [
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress"
+    ],
+    "timings": {
+      "d3_evaluation": {
+        "p50_ms": 2.207,
+        "p95_ms": 14.1809,
+        "p99_ms": 14.3233,
+        "samples": 9,
+        "max_ms": 14.3589
+      },
+      "d5_planning": {
+        "p50_ms": 4.5048,
+        "p95_ms": 17.29784,
+        "p99_ms": 17.863568,
+        "samples": 9,
+        "max_ms": 18.005
+      },
+      "depth_capture_to_tick_ros": {
+        "p50_ms": 3.0,
+        "p95_ms": 3.0,
+        "p99_ms": 3.0,
+        "samples": 9,
+        "max_ms": 3.0
+      },
+      "depth_normalization": {
+        "p50_ms": 0.0476,
+        "p95_ms": 0.05058,
+        "p99_ms": 0.050996,
+        "samples": 9,
+        "max_ms": 0.0511
+      },
+      "h0_total": {
+        "p50_ms": 4.5523,
+        "p95_ms": 17.350479999999997,
+        "p99_ms": 17.918256,
+        "samples": 9,
+        "max_ms": 18.0602
+      },
+      "inspection_inputs": {
+        "p50_ms": 0.1937,
+        "p95_ms": 0.24194,
+        "p99_ms": 0.253268,
+        "samples": 9,
+        "max_ms": 0.2561
+      },
+      "metric_apply": {
+        "p50_ms": 0.2681,
+        "p95_ms": 0.35766,
+        "p99_ms": 0.397212,
+        "samples": 9,
+        "max_ms": 0.4071
+      },
+      "metric_prepare": {
+        "p50_ms": 12.4036,
+        "p95_ms": 16.964779999999998,
+        "p99_ms": 19.265996,
+        "samples": 9,
+        "max_ms": 19.8413
+      },
+      "pose_alignment": {
+        "p50_ms": 0.0129,
+        "p95_ms": 0.015899999999999997,
+        "p99_ms": 0.0167,
+        "samples": 9,
+        "max_ms": 0.0169
+      },
+      "prediction_rollout": {
+        "p50_ms": 0.83395,
+        "p95_ms": 1.0458749999999997,
+        "p99_ms": 1.068924,
+        "samples": 24,
+        "max_ms": 1.0692
+      },
+      "reasoner_inference": {
+        "p50_ms": 0.5479,
+        "p95_ms": 0.593,
+        "p99_ms": 0.59828,
+        "samples": 9,
+        "max_ms": 0.5996
+      },
+      "reasoning_context": {
+        "p50_ms": 1.6144,
+        "p95_ms": 1.74674,
+        "p99_ms": 1.796148,
+        "samples": 9,
+        "max_ms": 1.8085
+      },
+      "receipt_validation": {
+        "p50_ms": 0.0148,
+        "p95_ms": 0.02062,
+        "p99_ms": 0.021644,
+        "samples": 9,
+        "max_ms": 0.0219
+      },
+      "semantic_goal": {
+        "p50_ms": 2.4324,
+        "p95_ms": 2.61572,
+        "p99_ms": 2.710344,
+        "samples": 9,
+        "max_ms": 2.734
+      },
+      "state_capture_to_tick_ros": {
+        "p50_ms": 3.0,
+        "p95_ms": 3.0,
+        "p99_ms": 3.0,
+        "samples": 9,
+        "max_ms": 3.0
+      },
+      "worldstate_update": {
+        "p50_ms": 5.6101,
+        "p95_ms": 17.754499999999993,
+        "p99_ms": 23.9985,
+        "samples": 9,
+        "max_ms": 25.5595
+      }
+    }
+  },
+  "G1": {
+    "reasons": [
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress"
+    ],
+    "timings": {
+      "d3_evaluation": {
+        "p50_ms": 1.9787,
+        "p95_ms": 13.23608,
+        "p99_ms": 13.307376,
+        "samples": 9,
+        "max_ms": 13.3252
+      },
+      "d5_planning": {
+        "p50_ms": 2.119,
+        "p95_ms": 15.63162,
+        "p99_ms": 15.766564,
+        "samples": 9,
+        "max_ms": 15.8003
+      },
+      "depth_capture_to_tick_ros": {
+        "p50_ms": 3.0,
+        "p95_ms": 3.0,
+        "p99_ms": 3.0,
+        "samples": 9,
+        "max_ms": 3.0
+      },
+      "depth_normalization": {
+        "p50_ms": 0.0465,
+        "p95_ms": 0.06457999999999998,
+        "p99_ms": 0.07331599999999999,
+        "samples": 9,
+        "max_ms": 0.0755
+      },
+      "h0_total": {
+        "p50_ms": 2.1539,
+        "p95_ms": 15.675180000000001,
+        "p99_ms": 15.812236,
+        "samples": 9,
+        "max_ms": 15.8465
+      },
+      "inspection_inputs": {
+        "p50_ms": 0.1736,
+        "p95_ms": 0.20246,
+        "p99_ms": 0.202492,
+        "samples": 9,
+        "max_ms": 0.2025
+      },
+      "metric_apply": {
+        "p50_ms": 0.2844,
+        "p95_ms": 0.3384,
+        "p99_ms": 0.36447999999999997,
+        "samples": 9,
+        "max_ms": 0.371
+      },
+      "metric_prepare": {
+        "p50_ms": 12.1783,
+        "p95_ms": 12.49738,
+        "p99_ms": 12.527716,
+        "samples": 9,
+        "max_ms": 12.5353
+      },
+      "pose_alignment": {
+        "p50_ms": 0.0117,
+        "p95_ms": 0.01234,
+        "p99_ms": 0.012468,
+        "samples": 9,
+        "max_ms": 0.0125
+      },
+      "prediction_rollout": {
+        "p50_ms": 0.8226500000000001,
+        "p95_ms": 0.900015,
+        "p99_ms": 0.915538,
+        "samples": 24,
+        "max_ms": 0.92
+      },
+      "reasoner_inference": {
+        "p50_ms": 0.884,
+        "p95_ms": 0.89696,
+        "p99_ms": 0.9006719999999999,
+        "samples": 9,
+        "max_ms": 0.9016
+      },
+      "reasoning_context": {
+        "p50_ms": 1.582,
+        "p95_ms": 1.70804,
+        "p99_ms": 1.746248,
+        "samples": 9,
+        "max_ms": 1.7558
+      },
+      "receipt_validation": {
+        "p50_ms": 0.0126,
+        "p95_ms": 0.01696,
+        "p99_ms": 0.018432,
+        "samples": 9,
+        "max_ms": 0.0188
+      },
+      "semantic_goal": {
+        "p50_ms": 2.69,
+        "p95_ms": 2.8505599999999998,
+        "p99_ms": 2.896352,
+        "samples": 9,
+        "max_ms": 2.9078
+      },
+      "state_capture_to_tick_ros": {
+        "p50_ms": 3.0,
+        "p95_ms": 3.0,
+        "p99_ms": 3.0,
+        "samples": 9,
+        "max_ms": 3.0
+      },
+      "worldstate_update": {
+        "p50_ms": 5.6395,
+        "p95_ms": 5.92744,
+        "p99_ms": 5.945168,
+        "samples": 9,
+        "max_ms": 5.9496
+      }
+    }
+  },
+  "G2": {
+    "reasons": [
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress",
+      "no_verified_progress"
+    ],
+    "timings": {
+      "d3_evaluation": {
+        "p50_ms": 1.9557,
+        "p95_ms": 12.94914,
+        "p99_ms": 12.972947999999999,
+        "samples": 9,
+        "max_ms": 12.9789
+      },
+      "d5_planning": {
+        "p50_ms": 2.0935,
+        "p95_ms": 15.18014,
+        "p99_ms": 15.229228,
+        "samples": 9,
+        "max_ms": 15.2415
+      },
+      "depth_capture_to_tick_ros": {
+        "p50_ms": 3.0,
+        "p95_ms": 3.0,
+        "p99_ms": 3.0,
+        "samples": 9,
+        "max_ms": 3.0
+      },
+      "depth_normalization": {
+        "p50_ms": 0.0487,
+        "p95_ms": 0.07075999999999999,
+        "p99_ms": 0.073352,
+        "samples": 9,
+        "max_ms": 0.074
+      },
+      "h0_total": {
+        "p50_ms": 2.1306,
+        "p95_ms": 15.218440000000001,
+        "p99_ms": 15.269128,
+        "samples": 9,
+        "max_ms": 15.2818
+      },
+      "inspection_inputs": {
+        "p50_ms": 0.1837,
+        "p95_ms": 0.19714,
+        "p99_ms": 0.19886800000000002,
+        "samples": 9,
+        "max_ms": 0.1993
+      },
+      "metric_apply": {
+        "p50_ms": 0.2769,
+        "p95_ms": 0.37944,
+        "p99_ms": 0.412848,
+        "samples": 9,
+        "max_ms": 0.4212
+      },
+      "metric_prepare": {
+        "p50_ms": 12.3958,
+        "p95_ms": 14.455739999999999,
+        "p99_ms": 15.194268,
+        "samples": 9,
+        "max_ms": 15.3789
+      },
+      "pose_alignment": {
+        "p50_ms": 0.012,
+        "p95_ms": 0.01346,
+        "p99_ms": 0.014132,
+        "samples": 9,
+        "max_ms": 0.0143
+      },
+      "prediction_rollout": {
+        "p50_ms": 0.8215,
+        "p95_ms": 0.860665,
+        "p99_ms": 0.920249,
+        "samples": 24,
+        "max_ms": 0.9372
+      },
+      "reasoner_inference": {
+        "p50_ms": 0.9096,
+        "p95_ms": 0.9555400000000001,
+        "p99_ms": 0.9691080000000001,
+        "samples": 9,
+        "max_ms": 0.9725
+      },
+      "reasoning_context": {
+        "p50_ms": 1.5873,
+        "p95_ms": 1.61736,
+        "p99_ms": 1.6301919999999999,
+        "samples": 9,
+        "max_ms": 1.6334
+      },
+      "receipt_validation": {
+        "p50_ms": 0.0128,
+        "p95_ms": 0.01486,
+        "p99_ms": 0.015212,
+        "samples": 9,
+        "max_ms": 0.0153
+      },
+      "semantic_goal": {
+        "p50_ms": 2.7352,
+        "p95_ms": 2.801,
+        "p99_ms": 2.80292,
+        "samples": 9,
+        "max_ms": 2.8034
+      },
+      "state_capture_to_tick_ros": {
+        "p50_ms": 3.0,
+        "p95_ms": 3.0,
+        "p99_ms": 3.0,
+        "samples": 9,
+        "max_ms": 3.0
+      },
+      "worldstate_update": {
+        "p50_ms": 5.5912,
+        "p95_ms": 5.925,
+        "p99_ms": 6.026599999999999,
+        "samples": 9,
+        "max_ms": 6.052
+      }
+    }
+  }
+}

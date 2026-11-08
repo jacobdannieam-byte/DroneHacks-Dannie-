@@ -10,7 +10,7 @@ from onboard.adapters.geometry import R_ENU_NED, rot_z
 from refnav.dynamics.validation import wrap_yaw
 from refnav.hybrid_integration import HybridAssessment, _input_reason
 from refnav.integration_timing import measure
-from refnav.predictive_planner import MIN_PROGRESS_M, candidate_for_id
+from refnav.predictive_planner import MIN_PROGRESS_M, candidate_for_id, has_progress
 from refnav.sitl_review import review
 from refnav.trajectory_evaluation import (
     CLEARANCE_PROBE_M, VehicleBounds, evaluate_candidates, state_capture_ns,
@@ -74,6 +74,9 @@ class HybridGateway:
         if reason != "eligible_for_offline_review":
             return GatewayDecision(reason, fallback)
         bounds, objective, goal = (inputs[key] for key in ("vehicle", "objective", "goal"))
+        if (goal is not None and goal.selection is not None
+                and not goal.selection.model_identity.startswith('G0:')):
+            return GatewayDecision('experimental_reasoner_is_shadow_only', fallback)
         if (not isinstance(bounds, VehicleBounds) or bounds != assessment.vehicle_bounds
                 or objective != assessment.objective or goal != assessment.goal
                 or receipt.state_received_ns != inputs["state_received_ns"]
@@ -96,7 +99,8 @@ class HybridGateway:
             return GatewayDecision("handoff_deadline_exceeded", fallback)
         if plan.evaluation.model_id != "d0":
             return GatewayDecision("unsupported_proposal_model", fallback)
-        candidate = candidate_for_id(state, objective, alignment, plan.ranked_ids[0])
+        candidate = candidate_for_id(state, objective, alignment, plan.ranked_ids[0],
+                                     goal=goal, snapshot=snapshot, now_ns=now_ns)
         if candidate is None or any(command != candidate.schedule[0] for command in candidate.schedule):
             return GatewayDecision("unsupported_position_schedule", fallback)
         checked = measure(self.timings, "gateway_d3_recheck", evaluate_candidates, state, (candidate,), snapshot,
@@ -107,7 +111,7 @@ class HybridGateway:
         if self.monotonic() >= deadline:
             return GatewayDecision("handoff_deadline_exceeded", fallback)
         if (row.status != "feasible" or row.clearance_lower_bound_m < CLEARANCE_PROBE_M
-                or row.progress_m < MIN_PROGRESS_M):
+                or not has_progress(row)):
             return GatewayDecision("sweep_rejected:" + row.reasons[0], fallback)
 
         target = candidate.schedule[0]

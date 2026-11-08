@@ -106,6 +106,7 @@ def validate_proposal(proposal, context, *, now, reference, max_context_age_s=.5
             if not {'alternatives_available','review_ranked_alternative'} <= reasons:
                 errors.add('required_reason_missing')
     facts = {
+        'no_supported_inspection': proposal.intent == 'insufficient_information' and target is None,
         'context_invalid': not context.context_valid,
         'no_relevant_entities': not any(e.semantic_type == 'opening' for e in entities.values()),
         'candidate_passage_exists': target is not None and target.semantic_type == 'opening',

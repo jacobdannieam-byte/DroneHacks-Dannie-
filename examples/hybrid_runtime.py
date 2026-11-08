@@ -32,6 +32,10 @@ class HybridRuntime:
         if course.stage.goal.reference != profile.spatial.reference:
             raise ValueError("course must use the reviewed H1 map reference")
         self.strategy, self.course, self.adapter = strategy, course, adapter
+        from examples.sim_clock_fence import SimulationClockFence
+        self.clock_fence = SimulationClockFence(profile.clock) if profile.tracking_source == 'simulated_estimator' else None
+        if strategy == 'hybrid_sitl' and profile.reasoner.variant != 'G0':
+            raise ValueError('Experimental goal reasoners are restricted to read-only shadow.')
         self.loop = ShadowLoop(replace(profile, mission_goal=None), rate_hz=plan_hz, budget_s=budget_s,
                                monotonic=monotonic, completion_clock=completion_clock,
                                measure_receipt_wall=True)
@@ -61,9 +65,18 @@ class HybridRuntime:
 
     def feed(self, topic, message, received_ns, wall_ns, *, receipt_wall_ns=None):
         canonical = topic if self.adapter is None else self.adapter.canonical(topic)
-        self.loop.feed(canonical, message, received_ns, wall_ns, receipt_wall_ns=receipt_wall_ns)
+        try:
+            rows = (self.clock_fence.accept(canonical, message, received_ns, wall_ns)
+                    if self.clock_fence else [(canonical, message, received_ns, wall_ns)])
+            for name, data, ingestion_ns, ingestion_wall in rows:
+                self.loop.feed(name, data, ingestion_ns, ingestion_wall, receipt_wall_ns=receipt_wall_ns)
+        except ValueError:
+            self.invalidate()
+            self.loop.close()
+            raise
 
     def close(self):
+        if self.clock_fence: self.clock_fence.close()
         self.executor.invalidate()
         self.loop.close()
 
@@ -79,7 +92,8 @@ class HybridRuntime:
                 and now_ns - self._semantic_sample < self.semantic_period_ns):
             return None
         self._semantic_key, self._semantic_metric, self._semantic_sample = key, snapshot.metric, now_ns
-        self._binding = measure(self.timings, "semantic_goal", self.loop.replay.select_goal, snapshot, stage.semantic)
+        self._binding = measure(self.timings, "semantic_goal", self.loop.replay.select_goal, snapshot, stage.semantic,
+                                stage_id=stage.stage_id)
         return self._binding
 
     def _select(self, inputs, now_ns):
@@ -100,7 +114,7 @@ class HybridRuntime:
         self._objective = MetricGoal(goal.reference, local)
         self._motion_allowed = True
         return None, {**inputs, "objective": self._objective,
-                      "goal": binding if self.course.reason == "goal_grounded" else None}
+                      "goal": binding if self.course.reason in ("goal_grounded", 'inspection_goal') else None}
 
     def poll(self, now_ns, wall_ns):
         """Run the course in shadow, or once per due cycle during existing-owner navigation."""
@@ -129,6 +143,11 @@ class HybridRuntime:
     def status(self):
         stage = self.course.stage
         return {"strategy": self.strategy, "mission_state": self.course.state,
+                "reasoning_strategy": (self.loop.replay.hybrid.strategy_config.identifier
+                                       if self.loop.replay.hybrid.strategy_config else 'legacy_reasoner_config'),
+                "strategy_identity": (self.loop.replay.hybrid.strategy_config.identity
+                                      if self.loop.replay.hybrid.strategy_config else None),
+                "predictor_fallback": self.loop.replay.predictor_fallback,
                 "mission_reason": self.course.reason, "stage_id": stage.stage_id, "stage_kind": stage.kind,
                 "goal_m": self.course.goal.position_m, "goal_slot": self.course.alternative,
                 "landing_request": self.course.land_reason}

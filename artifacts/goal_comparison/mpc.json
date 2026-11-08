@@ -1,0 +1,202 @@
+{
+  "scope": "diagnostic only; no gateway artifact",
+  "checkpoint_sha256": "a34dd7b2c29d50a0bed82f640538e9b1fac9e211bd2e75f2d75cc4c820f133e3",
+  "rows": [
+    {
+      "case": "rendered_corridor",
+      "variant": "classical_mpc",
+      "status": "diagnostic_only",
+      "elapsed_ms": 32.808600008138455,
+      "evaluations": 21,
+      "truth": {
+        "truth_min_clearance_m": 2.929047643764466,
+        "truth_progress_m": 0.3009523562355345,
+        "truth_collision": false,
+        "truth_near_miss": false
+      }
+    },
+    {
+      "case": "rendered_corridor",
+      "variant": "neural_model_mpc",
+      "status": "deadline_exceeded",
+      "elapsed_ms": 52.04080000112299,
+      "evaluations": 21,
+      "truth": null
+    },
+    {
+      "case": "rendered_corridor",
+      "variant": "D5",
+      "status": "verified_progress",
+      "truth": {
+        "truth_min_clearance_m": 2.5311707271900925,
+        "truth_progress_m": 0.6988292728099079,
+        "truth_collision": false,
+        "truth_near_miss": false
+      }
+    },
+    {
+      "case": "rendered_wall_with_opening_hint",
+      "variant": "classical_mpc",
+      "status": "infeasible",
+      "elapsed_ms": 10.024699993664399,
+      "evaluations": 7,
+      "truth": null
+    },
+    {
+      "case": "rendered_wall_with_opening_hint",
+      "variant": "neural_model_mpc",
+      "status": "infeasible",
+      "elapsed_ms": 17.787699995096773,
+      "evaluations": 7,
+      "truth": null
+    },
+    {
+      "case": "rendered_wall_with_opening_hint",
+      "variant": "D5",
+      "status": "no_verified_progress",
+      "truth": null
+    },
+    {
+      "case": "clear",
+      "variant": "classical_mpc",
+      "status": "diagnostic_only",
+      "elapsed_ms": 30.978299997514114,
+      "evaluations": 21,
+      "truth": {
+        "truth_min_clearance_m": 2.429047643764466,
+        "truth_progress_m": 0.3009523562355345,
+        "truth_collision": false,
+        "truth_near_miss": false
+      }
+    },
+    {
+      "case": "clear",
+      "variant": "neural_model_mpc",
+      "status": "deadline_exceeded",
+      "elapsed_ms": 51.08049999398645,
+      "evaluations": 21,
+      "truth": null
+    },
+    {
+      "case": "clear",
+      "variant": "D5",
+      "status": "verified_progress",
+      "truth": {
+        "truth_min_clearance_m": 2.0311707271900925,
+        "truth_progress_m": 0.6988292728099079,
+        "truth_collision": false,
+        "truth_near_miss": false
+      }
+    },
+    {
+      "case": "crosswind_moderate",
+      "variant": "classical_mpc",
+      "status": "infeasible",
+      "elapsed_ms": 10.012300001108088,
+      "evaluations": 7,
+      "truth": null
+    },
+    {
+      "case": "crosswind_moderate",
+      "variant": "neural_model_mpc",
+      "status": "infeasible",
+      "elapsed_ms": 17.308299997239374,
+      "evaluations": 7,
+      "truth": null
+    },
+    {
+      "case": "crosswind_moderate",
+      "variant": "D5",
+      "status": "no_verified_progress",
+      "truth": null
+    },
+    {
+      "case": "crosswind_shifted",
+      "variant": "classical_mpc",
+      "status": "infeasible",
+      "elapsed_ms": 10.269500009599142,
+      "evaluations": 7,
+      "truth": null
+    },
+    {
+      "case": "crosswind_shifted",
+      "variant": "neural_model_mpc",
+      "status": "infeasible",
+      "elapsed_ms": 18.577700000605546,
+      "evaluations": 7,
+      "truth": null
+    },
+    {
+      "case": "crosswind_shifted",
+      "variant": "D5",
+      "status": "no_verified_progress",
+      "truth": null
+    },
+    {
+      "case": "narrow_clearance",
+      "variant": "classical_mpc",
+      "status": "infeasible",
+      "elapsed_ms": 11.008500005118549,
+      "evaluations": 7,
+      "truth": null
+    },
+    {
+      "case": "narrow_clearance",
+      "variant": "neural_model_mpc",
+      "status": "infeasible",
+      "elapsed_ms": 18.0158000002848,
+      "evaluations": 7,
+      "truth": null
+    },
+    {
+      "case": "narrow_clearance",
+      "variant": "D5",
+      "status": "no_verified_progress",
+      "truth": null
+    },
+    {
+      "case": "unobserved",
+      "variant": "classical_mpc",
+      "status": "infeasible",
+      "elapsed_ms": 9.633099994971417,
+      "evaluations": 7,
+      "truth": null
+    },
+    {
+      "case": "unobserved",
+      "variant": "neural_model_mpc",
+      "status": "infeasible",
+      "elapsed_ms": 16.755000004195608,
+      "evaluations": 7,
+      "truth": null
+    },
+    {
+      "case": "unobserved",
+      "variant": "D5",
+      "status": "no_verified_progress",
+      "truth": null
+    },
+    {
+      "case": "stale",
+      "variant": "classical_mpc",
+      "status": "infeasible",
+      "elapsed_ms": 0.3335999936098233,
+      "evaluations": 7,
+      "truth": null
+    },
+    {
+      "case": "stale",
+      "variant": "neural_model_mpc",
+      "status": "infeasible",
+      "elapsed_ms": 0.3108999953838065,
+      "evaluations": 7,
+      "truth": null
+    },
+    {
+      "case": "stale",
+      "variant": "D5",
+      "status": "no_verified_progress",
+      "truth": null
+    }
+  ]
+}

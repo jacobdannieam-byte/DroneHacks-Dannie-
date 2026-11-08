@@ -2,6 +2,7 @@
 set -eo pipefail
 mode=$1; world=$2; seconds=$3; revision=$4; profile=$5; approval=$6
 cd /repository
+# The host stages an immutable source archive, including pinned strategy models.
 mkdir -p /evidence/ros /evidence/flight_records /evidence/gazebo_generated
 mkdir -p simulator/generated_files
 ln -s /evidence/flight_records simulator/generated_files/flight_records

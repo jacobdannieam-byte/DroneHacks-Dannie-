@@ -41,6 +41,7 @@ class HeldExecutor:
                                      fallback_to_owner=False)
         self.lease_s, self.clock, self.timings = lease_s, monotonic, timings
         self.held = None
+        self.stopping_envelope = None
 
     def invalidate(self):
         self.held = None
@@ -76,6 +77,12 @@ class HeldExecutor:
     def _checked(self, target, inputs, now_ns, *, deadline, hold=False):
         state, snapshot, alignment = inputs["state"], inputs["snapshot"], inputs["alignment"]
         bounds = inputs["vehicle"]
+        if self.stopping_envelope is not None:
+            from dataclasses import replace
+            reason = self.stopping_envelope.check(state, snapshot, alignment, bounds, now_ns)
+            if reason:
+                return reason
+            bounds = replace(bounds, radius_m=max(bounds.radius_m, self.stopping_envelope.body_radius_m))
         if not self._bounded(state, target, hold=hold):
             return "target_outside_execution_limits"
         if self.clock() >= deadline:
@@ -105,6 +112,11 @@ class HeldExecutor:
                                          vehicle=vehicle, owner_ready=ready, owner_generation=generation,
                                          simulation=True)
             if result.setpoint is not None and self._bounded(state, result.setpoint):
+                if self.stopping_envelope is not None:
+                    reason = self._checked(result.setpoint, inputs, now_ns,
+                                           deadline=min(assessment.receipt.plan.deadline_monotonic_s, self.clock()+.01))
+                    if reason:
+                        return GatewayDecision(reason, None)
                 self.held = Held(result.setpoint, generation, key, metric.reference, metric.calibration_id,
                                  now_ns + round(self.lease_s * NS), self.clock() + self.lease_s)
                 return result

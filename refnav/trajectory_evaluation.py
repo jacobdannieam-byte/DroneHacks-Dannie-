@@ -105,10 +105,14 @@ class Candidate:
 class GoalBinding:
     context: ReasoningContext
     proposal: GoalProposal
+    selection: object | None = None
 
     def __post_init__(self):
         if not isinstance(self.context, ReasoningContext) or not isinstance(self.proposal, GoalProposal):
             raise ValueError("goal requires a bounded reasoning context and proposal")
+        from refnav.reasoning.selection import Selection
+        if self.selection is not None and not isinstance(self.selection, Selection):
+            raise ValueError('Inspection selection must be an immutable bounded envelope.')
 
 
 @dataclass(frozen=True)
@@ -141,6 +145,8 @@ class CandidateDiagnostic:
     unknown_segments: int = 0
     predicted_end_position_ned_m: tuple | None = None
     predicted_end_velocity_ned_mps: tuple | None = None
+    inspection_yaw_progress_rad: float | None = None
+    predicted_end_yaw_rad: float | None = None
 
 
 @dataclass(frozen=True)
@@ -216,7 +222,7 @@ def _shared_reasons(state, metric, alignment, now_ns, policy):
     return tuple(reasons)
 
 
-def _resolve_goal(snapshot, goal, now_ns):
+def _resolve_goal(snapshot, goal, now_ns, state=None, alignment=None):
     if goal is None:
         return None, None, ()
     metric = snapshot.metric
@@ -243,6 +249,12 @@ def _resolve_goal(snapshot, goal, now_ns):
     target = next(entity for entity in context.entities if entity.entity_id == goal.proposal.target_entity_id)
     if target.status in ("stale", "uncertain") or now - target.last_observed > context.stale_after_s:
         return None, "unknown", ("semantic_target_stale",)
+    if goal.proposal.intent == 'observe_more':
+        from refnav.reasoning.bridge import resolve_inspection
+        if state is None or alignment is None:
+            return None, 'unknown', ('inspection_pose_required',)
+        point, reason = resolve_inspection(goal, snapshot, state, alignment, now_ns)
+        return (None, 'unknown', (reason,)) if reason else (np.asarray(point), None, ())
     return np.asarray(target.geometry.center), None, ()
 
 
@@ -295,7 +307,8 @@ def _evaluate_one(candidate, state, predictor, history, transform, alignment, ve
     details = {"inflation_m": float(margin), "progress_m": progress, "effort": effort,
                "occupied_segments": occupied, "unknown_segments": unknown,
                "predicted_end_position_ned_m": predicted_end.position_m,
-               "predicted_end_velocity_ned_mps": predicted_end.velocity_mps}
+               "predicted_end_velocity_ned_mps": predicted_end.velocity_mps,
+               "predicted_end_yaw_rad": predicted_end.yaw_rad}
     if occupied:
         return CandidateDiagnostic(candidate.candidate_id, "rejected", ("occupied_swept_volume",), "occupied", **details)
     if unknown:
@@ -333,7 +346,7 @@ def evaluate_candidates(state, candidates, snapshot, *, now_ns, alignment, vehic
     reasons = _shared_reasons(state, metric, alignment, now_ns, policy)
     status, goal_point = "unknown", None
     if not reasons:
-        goal_point, status, reasons = _resolve_goal(snapshot, goal, now_ns)
+        goal_point, status, reasons = _resolve_goal(snapshot, goal, now_ns, state, alignment)
     if reasons:
         diagnostics = tuple(CandidateDiagnostic(item.candidate_id, status, reasons, "unverified")
                             for item in candidates)
@@ -348,6 +361,18 @@ def evaluate_candidates(state, candidates, snapshot, *, now_ns, alignment, vehic
             evaluated.append(_evaluate_one(item, state, predictor, history, transform, alignment, vehicle,
                                            geometry, goal_point, timings))
         diagnostics = tuple(evaluated)
+        if isinstance(goal, GoalBinding) and goal.selection is not None:
+            from refnav.predictive_planner import inspection_yaw
+            expected_yaw = inspection_yaw(state, alignment, goal, snapshot, now_ns)
+            if expected_yaw is not None:
+                # Reconstruct before measuring angular progress. A supplied ID
+                # alone cannot convert an arbitrary rotation into an inspection.
+                for index, item in enumerate(candidates):
+                    if item == expected_yaw and index < len(diagnostics) and diagnostics[index].status == 'feasible':
+                        target = item.schedule[0].yaw_rad
+                        progress = abs(wrap_yaw(target - state.yaw_rad)) - abs(wrap_yaw(target - diagnostics[index].predicted_end_yaw_rad))
+                        diagnostics = tuple(replace(row, inspection_yaw_progress_rad=progress)
+                                            if i == index else row for i, row in enumerate(diagnostics))
 
     if interruption is None and interrupted is not None:
         interruption = interrupted()
