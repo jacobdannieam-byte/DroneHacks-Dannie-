@@ -131,7 +131,8 @@ class FiveWaypointFlight(first_maze_leg.FirstMazeLegFlight):
             self.watch.send_target_on_course(position, heading_on_course_radians=commanded)
         flight_steps.fly_until(self.link, lambda: complete, send, longest, 'heading and position to settle', self.watch)
 
-    def advance(self, start, end, heading, reverse):
+    def advance(self, start, end, heading, reverse, speed=SPEED_METRES_PER_SECOND,
+                target_lead=TARGET_LEAD_METRES, extra_hold=None):
         direction = end-start
         length = float(np.linalg.norm(direction))
         direction /= length
@@ -155,6 +156,8 @@ class FiveWaypointFlight(first_maze_leg.FirstMazeLegFlight):
                 reason = 'heading is not aligned with the segment'
             if reason is None:
                 reason = self.depth.reason_to_hold(actual, end, heading, reverse)
+            if reason is None and extra_hold is not None:
+                reason = extra_hold(actual, measured)
             if reason:
                 if hold_since is None:
                     hold_since = now
@@ -172,9 +175,9 @@ class FiveWaypointFlight(first_maze_leg.FirstMazeLegFlight):
                     target = start + direction*np.clip(np.dot(actual-start, direction), 0, length)
                     self.log.event('resume', 'Depth and heading allow the next step.', stage=self.link.stage)
                 hold_since = None
-                if np.linalg.norm(target[:2]-actual[:2]) < TARGET_LEAD_METRES:
+                if np.linalg.norm(target-actual) < target_lead:
                     remaining = float(np.linalg.norm(end-target))
-                    target = end.copy() if remaining <= SPEED_METRES_PER_SECOND*seconds else target+direction*SPEED_METRES_PER_SECOND*seconds
+                    target = end.copy() if remaining <= speed*seconds else target+direction*speed*seconds
                 arrived = (np.allclose(target, end)
                            and np.linalg.norm(actual[:2]-end[:2]) < ARRIVAL_TOLERANCE_METRES
                            and abs(actual[2]-end[2]) < ARRIVAL_HEIGHT_TOLERANCE_METRES)
@@ -182,5 +185,5 @@ class FiveWaypointFlight(first_maze_leg.FirstMazeLegFlight):
                 complete = settled is not None and now-settled >= SETTLE_SECONDS
             last_reason = reason
             self.watch.send_target_on_course(target, heading_on_course_radians=heading)
-        flight_steps.fly_until(self.link, lambda: complete, send, length/SPEED_METRES_PER_SECOND+TRAVEL_EXTRA_WAIT_SECONDS,
+        flight_steps.fly_until(self.link, lambda: complete, send, length/speed+TRAVEL_EXTRA_WAIT_SECONDS,
                                f'arrival at {end.tolist()}', self.watch)

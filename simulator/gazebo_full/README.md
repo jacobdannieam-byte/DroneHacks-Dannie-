@@ -120,3 +120,17 @@ All on our M1 Mac on 2026-11-07, with nothing else running. Run folders are in `
 - **Stereo depth is right.** OpenCV StereoSGBM on one pair from the launch mark matched 65% of pixels. Against the world map, the wall to the right (1.14 m) read 1.12 to 1.13 m and the floor (0.36 to 0.37 m) read 0.37 to 0.39 m: median error 1.5 to 3 cm.
 - **The left and right stamps must be equal.** At first each eye was stamped when it arrived. In flight the pair then arrived 30 to 40 ms apart (median), more than the 20 ms within which `depth_camera` pairs pictures, so live navigation got only 9 to 16 depth pictures in a whole flight. With one shared stamp per Gazebo moment (`pretend_oak_stereo_cameras.py`), the gap is 0 ms and live navigation used 169 depth pictures in about 50 s (`depth_camera` 3.5 per second in flight, about 0.2 s of calculation each).
 - **Flights so far have not reached the pad.** In the sketch world (20261107_193810), the drone crossed the north-west boulder, PX4 stopped using the bottom laser, and the drone truly sank from 0.82 m to the floor while PX4 believed it was at 0.8 m. This is the same as the Gazebo trial's height problem; check PX4's log before blaming flight code. Earlier runs ended with a propeller touching a wall end in the maze, which flips the drone in Gazebo, or with live navigation's 300 s limit.
+
+
+## Window-alignment records
+
+`record_window_depth.py RUN_FOLDER/window_depth_samples` subscribes to the ordinary
+stereo point cloud and matching camera poses for offline diagnosis. Run it inside
+the simulation container after sourcing ROS and the PX4 message package. It writes
+one compressed cloud/pose pair per second and never publishes a control message.
+
+`python3 simulator/gazebo_full/plot_window_flight.py RUN_FOLDER OUTPUT_FOLDER`
+creates the recorded-route plot, window-height trace, alignment events, waypoint
+height table, and referee summary. It requires NumPy and Matplotlib. Its additional
+window-clearance metric uses recorded Gazebo positions only for evaluation; it is
+not supplied to the flight controller. See [the validation report](../../docs/window_alignment/README.md).

@@ -1,4 +1,7 @@
-# Corrected course: verified upper passage, blocked window alternatives
+# Earlier corrected-course verification (commit 54c15b6)
+
+This records the earlier bounded test. For the current sensor-alignment implementation
+and its full-course validation status, see [window alignment](../window_alignment/README.md).
 
 Status on 2026-11-08: **the first two goals passed a bounded Gazebo flight. Neither
 window alternative is flight-qualified, and no corrected full-course pass is claimed.**

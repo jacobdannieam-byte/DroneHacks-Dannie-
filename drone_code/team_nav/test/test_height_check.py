@@ -108,3 +108,26 @@ def test_a_large_gap_to_camera_height_stops_the_run_after_a_second_either_way():
     assert feed_camera_check(CameraHeightCheck(), too_big, seconds=CAMERA_HEIGHT_GAP_LONGEST_SECONDS - 0.2) is None
     assert "camera tracking says" in feed_camera_check(CameraHeightCheck(), too_big, seconds=CAMERA_HEIGHT_GAP_LONGEST_SECONDS)
     assert feed_camera_check(CameraHeightCheck(), -too_big, seconds=CAMERA_HEIGHT_GAP_LONGEST_SECONDS) is not None
+
+
+def test_raised_window_sill_is_not_mistaken_for_clear_floor():
+    course = load_our_map('real_course_2026-11-08')
+    wall = next(wall for wall in course.walls if wall.openings)
+    opening = wall.openings[0]
+    centre = wall.point_along_wall_metres((opening.start_along_wall_metres+opening.end_along_wall_metres)/2)
+    check = HeightCheck(course)
+    above = np.append(centre,1.3626)
+    assert not check.laser_sees_clear_floor(above)
+    assert not check.laser_sees_clear_floor(centre)
+    assert check.laser_sees_clear_floor(np.append(centre,.30))
+    for seconds in range(5):
+        assert check.check(seconds,above,1.3626,.30) is None
+    # On clear floor the same discrepancy must still stop the flight.
+    pad = np.append(course.landing_pad_centre_metres,1.3626)
+    assert check.laser_sees_clear_floor(pad)
+    assert check.check(5.,pad,1.3626,.30) is None
+    assert check.check(6.1,pad,1.3626,.30) is not None
+    # Camera height is valid above a sill and still detects estimator errors there.
+    camera = CameraHeightCheck()
+    assert camera.check(0.,1.8,1.3626) is None
+    assert camera.check(1.1,1.8,1.3626) is not None

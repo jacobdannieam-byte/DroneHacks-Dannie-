@@ -143,11 +143,11 @@
       "openings": [
         {
           "name": "window",
-          "start_along_wall_metres": 0.68,
-          "end_along_wall_metres": 1.26,
+          "start_along_wall_metres": 0.6598,
+          "end_along_wall_metres": 1.2636,
           "bottom_height_metres": 1.0626,
           "top_height_metres": 1.6626,
-          "source": "Measured from the corrected model (corrected_dronehacks.obj) by course_map_tools/make_map_from_corrected_model.py: the empty stretch of the wall, sliced every 2 cm."
+          "source": "Measured from the corrected model (corrected_dronehacks.obj) by course_map_tools/make_map_from_corrected_model.py: the empty stretch of the wall, sliced every 2 cm. Width refined from actual triangle-plane intersections over the crossing envelope by check_corrected_window.py; bounds rounded inward to 0.1 mm."
         }
       ],
       "source": "Measured from the corrected model (corrected_dronehacks.obj) by course_map_tools/make_map_from_corrected_model.py, region C2a chicane wall (window)."
@@ -274,12 +274,12 @@
     {
       "name": "through the window",
       "start_metres": [
-        -0.4886,
-        -2.3612
+        -0.4954490693210706,
+        -2.3802493426583045
       ],
       "end_metres": [
-        -0.2903,
-        -1.8162
+        -0.28904159441361754,
+        -1.812824991486865
       ],
       "far_side_point_metres": [
         -0.8593,

@@ -298,6 +298,8 @@ def main():
         landing_pad_source=f"{SOURCE}: the painted outer ring. Approach ring copied from organizers_drawing.json.",
         walls=walls, tubes=[tunnel], low_obstacles=boulders,
     )
+    from check_corrected_window import refine_window
+    refine_window(course_map)
     course_map.checkpoint_lines = [
         drawing.checkpoint_line_named("end of first corridor"),
         drawing.checkpoint_line_named("Gate A"),

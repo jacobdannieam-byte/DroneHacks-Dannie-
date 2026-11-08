@@ -18,10 +18,11 @@ def test_corrected_first_two_goals_are_direct_and_clear():
     assert room.min() > .24
 
 
-def test_through_window_refuses_insufficient_tracking_margin():
+def test_through_window_requires_live_alignment():
     proposal = window_proposal(load_our_map('real_course_2026-11-08'), 'through')
     assert not proposal['flight_ready']
-    assert 'tracking error' in ' '.join(proposal['refusal_reasons'])
+    assert proposal['requires_sensor_alignment']
+    assert not proposal['refusal_reasons']
     assert np.isclose(proposal['crossing_height_metres'], 1.3626)
     assert proposal['points_metres'][0][2] == proposal['points_metres'][-1][2] == .75
 
@@ -51,5 +52,10 @@ def test_refused_routes_never_start_ros_or_publish_targets(monkeypatch, alternat
         pytest.fail('An infeasible proposal must not start flight control.')
     monkeypatch.setattr(corrected_course.first_maze_leg, 'fly_with_ros', unexpected_flight)
     monkeypatch.setattr(corrected_course, 'find_package_file', lambda *args: Path(our_files.MISSIONS_FOLDER).parent/'course_maps'/corrected_course.MAP_NAME)
+    if alternative == 'through':
+        course_map = load_our_map('real_course_2026-11-08')
+        opening = next(wall for wall in course_map.walls if wall.openings).openings[0]
+        opening.end_along_wall_metres = opening.start_along_wall_metres + .58
+        monkeypatch.setattr(corrected_course,'load_course_map',lambda *args:course_map)
     log = SimpleNamespace(save_text_file=lambda *args: None, event=lambda *args: None)
     assert corrected_course.run(['--route', alternative], SimpleNamespace(stop_after_stage=None), log) == 2

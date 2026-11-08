@@ -4,23 +4,26 @@
 
 `corrected_course` uses Dannie's corrected model through Soham's derived
 `real_course_2026-11-08.json` map. Goal 1 to goal 2 is a checked straight segment.
-The window alternatives are **unflown proposals**, not qualified full-course routes:
-the through proposal lacks the existing tracking-error allowance and the over proposal
-exceeds the course height limit. See [measurements and results](../../../../docs/corrected_course_verification/README.md).
-
-To reproduce the bounded Gazebo verification (first two goals, then land at goal 2):
+The full `through` route now requires stereo alignment before crossing the window.
+Read [`window_route.py`](window_route.py) for the five-goal plan,
+[`window_flight.py`](window_flight.py) for the stop/align/cross controller,
+[`window_inspection.py`](window_inspection.py) for the camera inspection, and
+[`../window_alignment.py`](../window_alignment.py) for the jamb detector.
+See [current validation and commands](../../../../docs/window_alignment/README.md)
+and [earlier first-two-goal verification](../../../../docs/corrected_course_verification/README.md).
 
 ```bash
 bash simulator/gazebo_full/fly_course_in_gazebo.sh \
   --world drone_code/team_nav/course_maps/real_course_2026-11-08.json \
-  --run-mode practice --longest-run-seconds 450 -- practice_flight corrected_course \
-  --route verify-first-two
+  --run-mode practice --longest-run-seconds 900 -- practice_flight corrected_course \
+  --route through
 ```
 
-`ros2 run team_nav practice_flight corrected_course --route through` and `--route over`
-save the alternatives and refuse before starting ROS control. No height, contact, or
-tracking checks are disabled. The earlier `astar_five_waypoints` entry below still
-reproduces the previous sketch-map experiments; it is not the corrected-course flight.
+Use `--route verify-first-two` to land after goal 2. `--route over` still refuses
+before starting ROS control because it exceeds the course height limit. Height,
+contact, authority, and stale-sensor checks remain active. The earlier
+`astar_five_waypoints` entry below reproduces the previous sketch-map experiments;
+it is not the corrected-course flight.
 
 ## A* intermediate waypoints (`hardcoded` branch)
 

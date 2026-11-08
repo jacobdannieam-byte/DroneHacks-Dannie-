@@ -1,0 +1,702 @@
+[
+  {
+    "time": "2026-11-08T23:51:33+0000",
+    "seconds_since_start": 224.205,
+    "kind": "window_unobserved",
+    "text": "Both window jambs are not yet reliably visible."
+  },
+  {
+    "time": "2026-11-08T23:51:33+0000",
+    "seconds_since_start": 224.302,
+    "kind": "window_unobserved",
+    "text": "Both window jambs are not yet reliably visible."
+  },
+  {
+    "time": "2026-11-08T23:51:33+0000",
+    "seconds_since_start": 224.502,
+    "kind": "window_unobserved",
+    "text": "Both window jambs are not yet reliably visible."
+  },
+  {
+    "time": "2026-11-08T23:51:36+0000",
+    "seconds_since_start": 226.903,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      1.989310219691065e-05,
+      0.15109590157350028
+    ],
+    "total_correction_metres": [
+      1.316587797374493e-06,
+      0.00999999991332983
+    ],
+    "width_metres": 0.6000000000000005,
+    "plane_spread_metres": 0.01332287135550111,
+    "wall_points": 945,
+    "stamp": 1794181895.5024018,
+    "measured_position_metres": [
+      0.3587819605973363,
+      -2.342231095424589,
+      1.3506415851095461
+    ],
+    "measured_heading_degrees": 168.56055020714808
+  },
+  {
+    "time": "2026-11-08T23:51:36+0000",
+    "seconds_since_start": 227.103,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      -0.0029676496889734713,
+      0.1479262299995125
+    ],
+    "total_correction_metres": [
+      -0.00019925992066303105,
+      0.01999798816418579
+    ],
+    "width_metres": 0.5920000000000005,
+    "plane_spread_metres": 0.011171287090998258,
+    "wall_points": 898,
+    "stamp": 1794181895.6787283,
+    "measured_position_metres": [
+      0.3486812865388331,
+      -2.3287907593685477,
+      1.3651549146863662
+    ],
+    "measured_heading_degrees": 169.46866089651692
+  },
+  {
+    "time": "2026-11-08T23:51:36+0000",
+    "seconds_since_start": 227.303,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      -0.011044365886070301,
+      0.13383852758118972
+    ],
+    "total_correction_metres": [
+      -0.0010216653516565398,
+      0.02996411325406262
+    ],
+    "width_metres": 0.5920000000000005,
+    "plane_spread_metres": 0.008639432800209196,
+    "wall_points": 924,
+    "stamp": 1794181895.8521805,
+    "measured_position_metres": [
+      0.3453319182644324,
+      -2.3153582903329912,
+      1.360418774697766
+    ],
+    "measured_heading_degrees": 170.06487649753072
+  },
+  {
+    "time": "2026-11-08T23:51:36+0000",
+    "seconds_since_start": 227.507,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      -0.008160571617423451,
+      0.12427665967414125
+    ],
+    "total_correction_metres": [
+      -0.00167689979518547,
+      0.03994262355490479
+    ],
+    "width_metres": 0.5920000000000005,
+    "plane_spread_metres": 0.01033225569019976,
+    "wall_points": 933,
+    "stamp": 1794181896.0301855,
+    "measured_position_metres": [
+      0.336769630399788,
+      -2.3241216018370476,
+      1.3550092364062196
+    ],
+    "measured_heading_degrees": 170.33773771315208
+  },
+  {
+    "time": "2026-11-08T23:51:36+0000",
+    "seconds_since_start": 227.702,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      -0.0068020973228975,
+      0.11526964536763745
+    ],
+    "total_correction_metres": [
+      -0.0022659781214357418,
+      0.04992525781273184
+    ],
+    "width_metres": 0.5920000000000005,
+    "plane_spread_metres": 0.007388283013741925,
+    "wall_points": 932,
+    "stamp": 1794181896.2054079,
+    "measured_position_metres": [
+      0.33135482432566216,
+      -2.3120307068375925,
+      1.3561967808806705
+    ],
+    "measured_heading_degrees": 170.30397991602385
+  },
+  {
+    "time": "2026-11-08T23:51:36+0000",
+    "seconds_since_start": 227.803,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      -0.0017850860409688515,
+      0.10918822037563441
+    ],
+    "total_correction_metres": [
+      -0.0024294433307406166,
+      0.05992392167973662
+    ],
+    "width_metres": 0.6000000000000005,
+    "plane_spread_metres": 0.004045063453740685,
+    "wall_points": 941,
+    "stamp": 1794181896.5541675,
+    "measured_position_metres": [
+      0.3428918671152907,
+      -2.3151215254232476,
+      1.3655996319668302
+    ],
+    "measured_heading_degrees": 170.2392432178808
+  },
+  {
+    "time": "2026-11-08T23:51:37+0000",
+    "seconds_since_start": 228.003,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      0.002806472568705906,
+      0.09474870610100462
+    ],
+    "total_correction_metres": [
+      -0.0021333715047264926,
+      0.06991953779250529
+    ],
+    "width_metres": 0.5920000000000005,
+    "plane_spread_metres": 0.0036893951304137044,
+    "wall_points": 923,
+    "stamp": 1794181896.7340467,
+    "measured_position_metres": [
+      0.3377071739072488,
+      -2.301888036560708,
+      1.363183958982246
+    ],
+    "measured_heading_degrees": 169.94501048265832
+  },
+  {
+    "time": "2026-11-08T23:51:37+0000",
+    "seconds_since_start": 228.203,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      -0.012563299687789655,
+      0.0833139410874147
+    ],
+    "total_correction_metres": [
+      -0.003624460703377819,
+      0.07980774556751008
+    ],
+    "width_metres": 0.5920000000000005,
+    "plane_spread_metres": 0.005446268915483006,
+    "wall_points": 918,
+    "stamp": 1794181896.903619,
+    "measured_position_metres": [
+      0.3303962831812474,
+      -2.2977539395991884,
+      1.3468970088013965
+    ],
+    "measured_heading_degrees": 169.60470943256797
+  },
+  {
+    "time": "2026-11-08T23:51:37+0000",
+    "seconds_since_start": 228.403,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      -0.00635166663921732,
+      0.06402867870835749
+    ],
+    "total_correction_metres": [
+      -0.004611618818288098,
+      0.08975890222672145
+    ],
+    "width_metres": 0.5920000000000005,
+    "plane_spread_metres": 0.005658064890689566,
+    "wall_points": 895,
+    "stamp": 1794181897.0858996,
+    "measured_position_metres": [
+      0.3369844145622165,
+      -2.2909344891975687,
+      1.3567441582400221
+    ],
+    "measured_heading_degrees": 169.32821940036055
+  },
+  {
+    "time": "2026-11-08T23:51:37+0000",
+    "seconds_since_start": 228.624,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      -0.0065967803721529925,
+      0.05986141537459695
+    ],
+    "total_correction_metres": [
+      -0.005706996383259606,
+      0.09969872858285851
+    ],
+    "width_metres": 0.6000000000000005,
+    "plane_spread_metres": 0.00560028252616936,
+    "wall_points": 905,
+    "stamp": 1794181897.2633002,
+    "measured_position_metres": [
+      0.33492177941713824,
+      -2.2851933826673454,
+      1.358072599886664
+    ],
+    "measured_heading_degrees": 169.18054164771547
+  },
+  {
+    "time": "2026-11-08T23:51:37+0000",
+    "seconds_since_start": 228.803,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      -0.006954731657897648,
+      0.051478771645701964
+    ],
+    "total_correction_metres": [
+      -0.00704582387195952,
+      0.10960870037673873
+    ],
+    "width_metres": 0.6000000000000005,
+    "plane_spread_metres": 0.005832906109617607,
+    "wall_points": 898,
+    "stamp": 1794181897.4386144,
+    "measured_position_metres": [
+      0.3254254789871933,
+      -2.289301505520427,
+      1.3589363384988187
+    ],
+    "measured_heading_degrees": 169.10411398528416
+  },
+  {
+    "time": "2026-11-08T23:51:38+0000",
+    "seconds_since_start": 228.903,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      -0.002869583576007112,
+      0.0414798967498802
+    ],
+    "total_correction_metres": [
+      -0.0077359753908774805,
+      0.11958485649424888
+    ],
+    "width_metres": 0.6000000000000005,
+    "plane_spread_metres": 0.004679921520714115,
+    "wall_points": 889,
+    "stamp": 1794181897.6054733,
+    "measured_position_metres": [
+      0.32740324836237916,
+      -2.2704334175702003,
+      1.3633567794220136
+    ],
+    "measured_heading_degrees": 169.09856215543113
+  },
+  {
+    "time": "2026-11-08T23:51:38+0000",
+    "seconds_since_start": 229.103,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      0.005737646275098752,
+      0.034092486303252546
+    ],
+    "total_correction_metres": [
+      -0.006301563822102793,
+      0.12810797807006202
+    ],
+    "width_metres": 0.5920000000000005,
+    "plane_spread_metres": 0.0065163954774107025,
+    "wall_points": 873,
+    "stamp": 1794181897.7797391,
+    "measured_position_metres": [
+      0.3273672180793571,
+      -2.2652077590708313,
+      1.3628538684248084
+    ],
+    "measured_heading_degrees": 169.13179138807152
+  },
+  {
+    "time": "2026-11-08T23:51:38+0000",
+    "seconds_since_start": 229.302,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      -0.009570570174630175,
+      0.01837890319941286
+    ],
+    "total_correction_metres": [
+      -0.008694206365760336,
+      0.13270270386991523
+    ],
+    "width_metres": 0.6000000000000005,
+    "plane_spread_metres": 0.0044046729390723365,
+    "wall_points": 879,
+    "stamp": 1794181897.9599717,
+    "measured_position_metres": [
+      0.32464076180905976,
+      -2.26904141054291,
+      1.3645637337707888
+    ],
+    "measured_heading_degrees": 169.1857475699714
+  },
+  {
+    "time": "2026-11-08T23:51:38+0000",
+    "seconds_since_start": 229.503,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      0.0021050264198459543,
+      0.014131763636000381
+    ],
+    "total_correction_metres": [
+      -0.008167949760798848,
+      0.1362356447789153
+    ],
+    "width_metres": 0.6000000000000005,
+    "plane_spread_metres": 0.004103358827735591,
+    "wall_points": 878,
+    "stamp": 1794181898.1282172,
+    "measured_position_metres": [
+      0.3397462703037414,
+      -2.2655445923169655,
+      1.3561603246538212
+    ],
+    "measured_heading_degrees": 169.24058476541794
+  },
+  {
+    "time": "2026-11-08T23:51:38+0000",
+    "seconds_since_start": 229.703,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      -0.004484686750187289,
+      0.008015998711486996
+    ],
+    "total_correction_metres": [
+      -0.00928912144834567,
+      0.13823964445678705
+    ],
+    "width_metres": 0.6000000000000005,
+    "plane_spread_metres": 0.005637637347325843,
+    "wall_points": 913,
+    "stamp": 1794181898.3067005,
+    "measured_position_metres": [
+      0.3258308662600909,
+      -2.278399759956322,
+      1.3671408749883525
+    ],
+    "measured_heading_degrees": 169.2924760100342
+  },
+  {
+    "time": "2026-11-08T23:51:39+0000",
+    "seconds_since_start": 229.903,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      -0.005935591524610677,
+      0.025569488564816445
+    ],
+    "total_correction_metres": [
+      -0.01077301932949834,
+      0.14463201659799116
+    ],
+    "width_metres": 0.6000000000000005,
+    "plane_spread_metres": 0.004019981667491112,
+    "wall_points": 884,
+    "stamp": 1794181898.4851367,
+    "measured_position_metres": [
+      0.3270187983024204,
+      -2.2697937614206416,
+      1.3555269026396135
+    ],
+    "measured_heading_degrees": 169.32588358705374
+  },
+  {
+    "time": "2026-11-08T23:51:39+0000",
+    "seconds_since_start": 230.009,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      -0.0017394482358992457,
+      0.01127381139864219
+    ],
+    "total_correction_metres": [
+      -0.011207881388473152,
+      0.1474504694476517
+    ],
+    "width_metres": 0.5920000000000005,
+    "plane_spread_metres": 0.004041192246325564,
+    "wall_points": 879,
+    "stamp": 1794181898.6531632,
+    "measured_position_metres": [
+      0.33259538958978385,
+      -2.2732597512331862,
+      1.3583667666669599
+    ],
+    "measured_heading_degrees": 169.3329482134975
+  },
+  {
+    "time": "2026-11-08T23:51:39+0000",
+    "seconds_since_start": 230.312,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      -0.006524058658471593,
+      0.00024499208318388803
+    ],
+    "total_correction_metres": [
+      -0.012838896053091051,
+      0.14751171746844766
+    ],
+    "width_metres": 0.6000000000000005,
+    "plane_spread_metres": 0.0041291741667887644,
+    "wall_points": 855,
+    "stamp": 1794181898.8303592,
+    "measured_position_metres": [
+      0.32632341635676554,
+      -2.287024012522166,
+      1.3633068416329448
+    ],
+    "measured_heading_degrees": 169.33050652650857
+  },
+  {
+    "time": "2026-11-08T23:51:39+0000",
+    "seconds_since_start": 230.424,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      0.007829881817449438,
+      0.01630570462147928
+    ],
+    "total_correction_metres": [
+      -0.010881425598728692,
+      0.15158814362381748
+    ],
+    "width_metres": 0.5920000000000005,
+    "plane_spread_metres": 0.008158706994326859,
+    "wall_points": 891,
+    "stamp": 1794181899.0051239,
+    "measured_position_metres": [
+      0.33327579849858985,
+      -2.2906257810597443,
+      1.3771282803076723
+    ],
+    "measured_heading_degrees": 169.32180610922063
+  },
+  {
+    "time": "2026-11-08T23:51:39+0000",
+    "seconds_since_start": 230.703,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      0.0037393010097110176,
+      0.009280850054803325
+    ],
+    "total_correction_metres": [
+      -0.009946600346300937,
+      0.1539083561375183
+    ],
+    "width_metres": 0.5920000000000005,
+    "plane_spread_metres": 0.009851094115464285,
+    "wall_points": 888,
+    "stamp": 1794181899.2089856,
+    "measured_position_metres": [
+      0.33057015627912717,
+      -2.284400920753554,
+      1.3602818458403776
+    ],
+    "measured_heading_degrees": 169.30693821202834
+  },
+  {
+    "time": "2026-11-08T23:51:40+0000",
+    "seconds_since_start": 230.903,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      0.0023880151881193554,
+      0.0012595437850062125
+    ],
+    "total_correction_metres": [
+      -0.009349596549271099,
+      0.15422324208376986
+    ],
+    "width_metres": 0.5920000000000005,
+    "plane_spread_metres": 0.007679452090429355,
+    "wall_points": 871,
+    "stamp": 1794181899.3962386,
+    "measured_position_metres": [
+      0.33453532710728645,
+      -2.3069440889326516,
+      1.3665124500681178
+    ],
+    "measured_heading_degrees": 169.28798766623802
+  },
+  {
+    "time": "2026-11-08T23:51:40+0000",
+    "seconds_since_start": 231.121,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      -0.0006805639970752725,
+      0.01088862944178091
+    ],
+    "total_correction_metres": [
+      -0.009519737548539917,
+      0.1569453994442151
+    ],
+    "width_metres": 0.5920000000000005,
+    "plane_spread_metres": 0.0067473253847317,
+    "wall_points": 865,
+    "stamp": 1794181899.6090875,
+    "measured_position_metres": [
+      0.3350671924059469,
+      -2.3020596669609583,
+      1.3535973046904755
+    ],
+    "measured_heading_degrees": 169.27714168377332
+  },
+  {
+    "time": "2026-11-08T23:51:40+0000",
+    "seconds_since_start": 231.312,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      0.0033297383823330945,
+      0.005173406996614437
+    ],
+    "total_correction_metres": [
+      -0.008687302952956643,
+      0.1582387511933687
+    ],
+    "width_metres": 0.6000000000000005,
+    "plane_spread_metres": 0.006207020550589265,
+    "wall_points": 883,
+    "stamp": 1794181899.811238,
+    "measured_position_metres": [
+      0.34346740581584484,
+      -2.32275560721753,
+      1.3621266351038606
+    ],
+    "measured_heading_degrees": 169.27376861137884
+  },
+  {
+    "time": "2026-11-08T23:51:40+0000",
+    "seconds_since_start": 231.515,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      -0.006490180398648131,
+      0.00023266845616650138
+    ],
+    "total_correction_metres": [
+      -0.010309848052618677,
+      0.15829691830741033
+    ],
+    "width_metres": 0.6000000000000005,
+    "plane_spread_metres": 0.0047712800984719686,
+    "wall_points": 869,
+    "stamp": 1794181899.984527,
+    "measured_position_metres": [
+      0.33582071270807967,
+      -2.315341436206504,
+      1.3677192350456482
+    ],
+    "measured_heading_degrees": 169.2723055051349
+  },
+  {
+    "time": "2026-11-08T23:51:40+0000",
+    "seconds_since_start": 231.814,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      -0.0019258610953265306,
+      0.0028287684911559603
+    ],
+    "total_correction_metres": [
+      -0.01079131332645031,
+      0.15900411043019932
+    ],
+    "width_metres": 0.5920000000000005,
+    "plane_spread_metres": 0.006215646129107284,
+    "wall_points": 875,
+    "stamp": 1794181900.1644387,
+    "measured_position_metres": [
+      0.3248211189113732,
+      -2.3272087860180686,
+      1.3603164264613732
+    ],
+    "measured_heading_degrees": 169.27416024783943
+  },
+  {
+    "time": "2026-11-08T23:51:41+0000",
+    "seconds_since_start": 232.016,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      -0.0059382296289997045,
+      -0.008480963157332055
+    ],
+    "total_correction_metres": [
+      -0.012275870733700235,
+      0.1568838696408663
+    ],
+    "width_metres": 0.6000000000000005,
+    "plane_spread_metres": 0.008959387527366573,
+    "wall_points": 888,
+    "stamp": 1794181900.3995469,
+    "measured_position_metres": [
+      0.33589612990592493,
+      -2.341862967560089,
+      1.3649044307761904
+    ],
+    "measured_heading_degrees": 169.27607317548552
+  },
+  {
+    "time": "2026-11-08T23:51:41+0000",
+    "seconds_since_start": 232.53,
+    "kind": "window_observation",
+    "text": "Measured window alignment.",
+    "correction_metres": [
+      0.001041437628341184,
+      0.006005804089698631
+    ],
+    "total_correction_metres": [
+      -0.01201551132661494,
+      0.15838532066329097
+    ],
+    "width_metres": 0.6000000000000005,
+    "plane_spread_metres": 0.006817604646722617,
+    "wall_points": 878,
+    "stamp": 1794181901.3107898,
+    "measured_position_metres": [
+      0.34101045817360087,
+      -2.353962470454898,
+      1.3633897926820908
+    ],
+    "measured_heading_degrees": 169.27866817702656
+  },
+  {
+    "time": "2026-11-08T23:51:41+0000",
+    "seconds_since_start": 232.602,
+    "kind": "window_aligned",
+    "text": "Window alignment confirmed from five fresh stereo observations.",
+    "correction_metres": [
+      -0.01201551132661494,
+      0.15838532066329097
+    ]
+  }
+]

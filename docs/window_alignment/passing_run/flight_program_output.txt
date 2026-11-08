@@ -1,0 +1,217 @@
+[gazebo_full] Starting the team's flight recorder.
+[gazebo_full] Waiting for the camera pictures...
+[gazebo_full] Measuring the camera rates for 30 seconds with ros2 topic hz.
+[gazebo_full] Left eye: average rate: 4.544
+[gazebo_full] Right eye: average rate: 10.003
+[gazebo_full] Recording every camera picture's time stamp, for the in-flight rates.
+[gazebo_full] Checking stereo depth once, on the launch mark.
+Pictures: 512 x 320, focal length 317.272 pixels, eye spacing 0.07515 m.
+Drone's true position on the course: [-2.515, 0.914, -0.0] m.
+Pixels with a stereo match: 65%.
+column  row  stereo_depth_m  true_depth_m
+    77   48            nan           inf
+   137   48           1.34           inf
+   196   48           1.99           inf
+   256   48           1.97          1.92
+   316   48           1.95          1.90
+   375   48           1.85          1.90
+   435   48           1.84          1.88
+    77  104            nan           inf
+   137  104           1.33           inf
+   196  104           1.99           inf
+   256  104           1.97          1.92
+   316  104           1.96          1.90
+   375  104           1.83          1.90
+   435  104           1.84          1.88
+    77  160            nan           inf
+   137  160           1.33           inf
+   196  160           1.99           inf
+   256  160           1.99           inf
+   316  160           1.99           inf
+   375  160           1.97           inf
+   435  160           1.99           inf
+    77  216            nan          0.37
+   137  216           0.37          0.36
+   196  216           0.37          0.36
+   256  216           0.39          0.37
+   316  216           0.38          0.37
+   375  216           0.39          0.36
+   435  216           0.37          0.37
+    77  272            nan          0.19
+   137  272           0.50          0.19
+   196  272            nan          0.19
+   256  272            nan          0.19
+   316  272           7.63          0.19
+   375  272            nan          0.19
+   435  272            nan          0.19
+Grid points compared: 16. Median error 0.042 m, largest 7.443 m.
+[gazebo_full] Starting practice flight: ros2 run team_nav practice_flight corrected_course --route through
+Starting the program: ros2 run team_nav practice_flight corrected_course --route through
+  | [23:47:49] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:47:49] This run's records are in /repository/simulator/generated_files/gazebo_full_runs/20261108_154709/course_run_records/20261108_234749_practice_practice_corrected_course.
+  | [23:47:53] Corrected-course mode: through; 5 main goals.
+  | [23:47:53] Topics in use: /fmu/out/battery_status, /fmu/out/distance_sensor, /fmu/out/estimator_status_flags, /fmu/out/sensor_combined, /fmu/out/vehicle_attitude, /fmu/out/vehicle_land_detected, /fmu/out/vehicle_local_position, /fmu/out/vehicle_odometry, /fmu/out/vehicle_status_v1, /skybeta/state, /visual_slam/tracking/odometry, /visual_slam/status, /skybeta/setpoint/pose, /skybeta/setpoint/twist
+  | [23:47:53] Waiting until the drone is ready on the ground. Nothing is being sent yet.
+  | [23:47:54] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:47:59] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:47:59] The drone is ready on the ground: fresh reports, landed, disarmed, tracking.
+  | [23:47:59] Raw laser used: True.
+  | [23:47:59] On the launch mark: camera tracking at [-0.004, 0.01, -0.007], PX4's distance to the ground 0.104 m, raw laser 0.046 m.
+  | [23:47:59] Sending a target 0.75 m above the launch mark. Waiting for a teammate to arm the drone and flip the switch to Position.
+[real_program_test] The program is sending targets. Pressing start, in place of a teammate arming the drone and flipping the switch to Position.
+  | [23:48:02] On the launch mark: camera tracking at [0.0, -0.001, -0.004], PX4's distance to the ground 0.101 m, raw laser 0.046 m.
+  | [23:48:02] Control is ours: PX4 is in Offboard mode and follows our targets.
+  | [23:48:04] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:48:09] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:48:09] Reached 0.66 m above the launch mark.
+  | [23:48:14] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:48:14] First corridor: advance, target [-2.5146, 2.451, 0.75], height 0.750 m
+  | [23:48:18] obstacle in the next forward step
+  | [23:48:18] Depth and heading allow the next step.
+  | [23:48:19] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:48:24] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:48:29] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:48:34] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:48:38] Maze exit: advance, target [1.65, 2.12, 0.75], height 0.750 m
+  | [23:48:39] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:48:41] obstacle in the next forward step
+  | [23:48:41] Depth and heading allow the next step.
+  | [23:48:44] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:48:45] obstacle in the next forward step
+  | [23:48:45] Depth and heading allow the next step.
+  | [23:48:45] obstacle in the next forward step
+  | [23:48:45] Depth and heading allow the next step.
+  | [23:48:49] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:48:54] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:48:59] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:49:04] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:49:09] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:49:14] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:49:19] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:49:24] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:49:25] Tunnel exit: advance, target [2.15, 1.52, 0.75], height 0.750 m
+  | [23:49:29] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:49:34] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:49:39] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:49:41] Tunnel exit: advance, target [2.15, -0.48, 0.75], height 0.750 m
+  | [23:49:44] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:49:48] obstacle in the next forward step
+  | [23:49:48] Depth and heading allow the next step.
+  | [23:49:49] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:49:54] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:49:59] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:50:03] Tunnel exit: advance, target [2.06, -0.65, 0.75], height 0.750 m
+  | [23:50:04] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:50:09] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:50:12] Chicane exit: advance, target [1.26, -1.65, 0.75], height 0.750 m
+  | [23:50:14] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:50:15] obstacle in the next forward step
+  | [23:50:15] Depth and heading allow the next step.
+  | [23:50:15] obstacle in the next forward step
+  | [23:50:15] Depth and heading allow the next step.
+  | [23:50:15] obstacle in the next forward step
+  | [23:50:16] Depth and heading allow the next step.
+  | [23:50:19] obstacle in the next forward step
+  | [23:50:19] Depth and heading allow the next step.
+  | [23:50:19] obstacle in the next forward step
+  | [23:50:19] Depth and heading allow the next step.
+  | [23:50:19] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:50:24] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:50:29] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:50:34] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:50:38] Chicane exit: advance, target [0.45999999999999996, -2.0500000000000003, 0.75], height 0.750 m
+  | [23:50:39] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:50:43] obstacle in the next forward step
+  | [23:50:43] Depth and heading allow the next step.
+  | [23:50:44] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:50:49] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:50:54] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:50:59] Chicane exit: advance, target [0.3407639326469369, -2.36317815817529, 0.75], height 0.750 m
+  | [23:50:59] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:51:04] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:51:09] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:51:14] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:51:18] Chicane exit: advance, target [0.3407639326469369, -2.36317815817529, 1.3626], height 1.363 m
+  | [23:51:20] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:51:25] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:51:30] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:51:33] Chicane exit: advance, target [-1.125254596381625, -1.8298961759698795, 1.3626], height 1.363 m
+  | [23:51:33] Both window jambs are not yet reliably visible.
+  | [23:51:33] Both window jambs are not yet reliably visible.
+  | [23:51:33] Both window jambs are not yet reliably visible.
+  | [23:51:35] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:51:36] Measured window alignment.
+  | [23:51:36] Measured window alignment.
+  | [23:51:36] Measured window alignment.
+  | [23:51:36] Measured window alignment.
+  | [23:51:36] Measured window alignment.
+  | [23:51:36] Measured window alignment.
+  | [23:51:37] Measured window alignment.
+  | [23:51:37] Measured window alignment.
+  | [23:51:37] Measured window alignment.
+  | [23:51:37] Measured window alignment.
+  | [23:51:37] Measured window alignment.
+  | [23:51:38] Measured window alignment.
+  | [23:51:38] Measured window alignment.
+  | [23:51:38] Measured window alignment.
+  | [23:51:38] Measured window alignment.
+  | [23:51:38] Measured window alignment.
+  | [23:51:39] Measured window alignment.
+  | [23:51:39] Measured window alignment.
+  | [23:51:39] Measured window alignment.
+  | [23:51:39] Measured window alignment.
+  | [23:51:39] Measured window alignment.
+  | [23:51:40] Measured window alignment.
+  | [23:51:40] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:51:40] Measured window alignment.
+  | [23:51:40] Measured window alignment.
+  | [23:51:40] Measured window alignment.
+  | [23:51:40] Measured window alignment.
+  | [23:51:41] Measured window alignment.
+  | [23:51:41] Measured window alignment.
+  | [23:51:41] Window alignment confirmed from five fresh stereo observations.
+  | [23:51:45] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:51:50] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:51:51] obstacle in the next forward step
+  | [23:51:51] Depth and heading allow the next step.
+  | [23:51:54] obstacle in the next forward step
+  | [23:51:55] Depth and heading allow the next step.
+  | [23:51:55] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:52:00] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:52:05] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:52:10] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:52:15] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:52:20] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:52:25] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:52:27] Chicane exit: advance, target [-1.125254596381625, -1.8298961759698795, 0.75], height 0.750 m
+  | [23:52:30] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:52:35] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:52:40] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:52:45] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:52:50] Chicane exit: advance, target [-1.2, -1.35, 0.75], height 0.750 m
+  | [23:52:50] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:52:52] obstacle in the next forward step
+  | [23:52:53] Depth and heading allow the next step.
+  | [23:52:55] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:53:00] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:53:05] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:53:10] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:53:11] Landing pad: advance, target [-2.0422, -0.7925, 0.75], height 0.750 m
+  | [23:53:15] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:53:20] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:53:25] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:53:25] Landing, finding the floor with PX4's distance to the ground.
+  | [23:53:30] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:53:34] Touchdown: the height is back to the launch mark's and the drone has stopped moving down.
+  | [23:53:35] Pushing down at 1.0 m/s until PX4 switches the motors off.
+  | [23:53:35] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:53:40] Still waiting for PX4 to switch the motors off. Armed: True. Mode: OFFBOARD. Landed: False.
+  | [23:53:40] PX4 says landed, 5.5 s after touchdown.
+  | [23:53:40] PRACTICE MODE: the whole program flies, and the recorder saves extra data.
+  | [23:53:43] The motors are off, 8.9 s after touchdown.
+  | [23:53:43] SENSOR-ALIGNED WINDOW ROUTE FINISHED. Check the independent referee.
+  | [23:53:43] Corrected-course through ended with code 0. Check the referee for completed checkpoints.
+  | [23:53:43] practice flight corrected_course is ending with exit code 0.
+[real_program_test] Records written: /repository/simulator/generated_files/gazebo_full_runs/20261108_154709/course_run_records/20261108_234749_practice_practice_corrected_course: astar_plan.json, drone_condition.csv, events.jsonl, mission.json, over_window_proposal.json, safety_checks.csv, targets.csv, through_window_proposal.json, waypoints_with_heights.csv
+TEST PASSED: the program ended with exit code 0, as expected.
+[gazebo_full] Stopping the flight recorder, the stamp recorder and the team's depth program.

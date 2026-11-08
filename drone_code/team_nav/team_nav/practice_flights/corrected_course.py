@@ -1,8 +1,9 @@
-"""Check the corrected course and fly a bounded first-two-goal verification.
+"""Fly the corrected course with a sensor-aligned window crossing.
 
 Reads the participant map, never simulator truth. The through/over window alternatives
 are proposals: their clearance and height checks run before any ROS control starts.
-This does not implement the sensor-based window alignment needed for a narrow crossing.
+The full through route requires fresh measured alignment at the window. The over route
+still refuses the existing course-height violation. A bounded first-two-goal mode remains.
 """
 import argparse
 import json
@@ -16,16 +17,14 @@ from team_nav.practice_flights import first_maze_leg
 from team_nav.practice_flights.astar_five_waypoints import AstarFlight
 from team_nav.practice_flights.astar_geometry import RouteGeometry, MOTORS_METRES, PROPELLER_RADIUS_METRES, BODY_MARGIN_METRES
 from team_nav.start_frame import StartFrame
+from team_nav.practice_flights.window_route import full_window_plan, STANDOFF_METRES
+from team_nav.practice_flights.window_flight import WindowFlight
 
 FLIGHT_NAME = 'corrected_course'
 MAP_NAME = 'real_course_2026-11-08.json'
 # Our choices: preserve the existing five goals and 0.75 m cruise height.
 FIRST_GOAL = [-2.5146, 2.451, .75]
 SECOND_GOAL = [1.65, 2.12, .75]
-# Our choice: change height while stopped 0.60 m from the window wall.
-WINDOW_STANDOFF_METRES = .60
-# The parent's declared chicane tracking-error case; not a measurement in flight.
-NORTH_ERROR_METRES = .25
 
 
 def window_proposal(course_map, alternative):
@@ -34,24 +33,23 @@ def window_proposal(course_map, alternative):
     along = wall.direction()
     normal = np.array([-along[1], along[0]])
     middle = wall.point_along_wall_metres((opening.start_along_wall_metres + opening.end_along_wall_metres) / 2)
-    before = middle - WINDOW_STANDOFF_METRES * normal
-    after = middle + WINDOW_STANDOFF_METRES * normal
+    before = middle - STANDOFF_METRES * normal
+    after = middle + STANDOFF_METRES * normal
     height = (opening.bottom_height_metres + opening.top_height_metres) / 2
     if alternative == 'over':
         height = wall.top_height_metres + HALF_HEIGHT_NEEDED_METRES
     width = opening.end_along_wall_metres - opening.start_along_wall_metres
     body_width = float(np.ptp(MOTORS_METRES[:, 1]) + 2 * PROPELLER_RADIUS_METRES)
     side_room = (width - body_width) / 2
-    drift_along_opening = abs(along[1] * NORTH_ERROR_METRES)
     ceiling = course_map.wall_top_height_metres - DRONE_HALF_HEIGHT_METRES
     reasons = []
     if height > ceiling:
         reasons.append(f'The {height:.3f} m crossing exceeds the existing {ceiling:.3f} m target-height limit.')
-    if alternative == 'through' and side_room < BODY_MARGIN_METRES + drift_along_opening:
-        reasons.append(f'The map leaves {side_room:.3f} m per side; the existing {BODY_MARGIN_METRES:.3f} m margin plus '
-                       f'the declared tracking error projected along the opening needs {BODY_MARGIN_METRES + drift_along_opening:.3f} m. '
-                       'Verify the aperture and implement measured window alignment before flying through it.')
-    return {'alternative': alternative, 'flight_ready': not reasons, 'refusal_reasons': reasons,
+    if alternative == 'through' and side_room < BODY_MARGIN_METRES:
+        reasons.append(f'The map leaves {side_room:.3f} m per side, below the existing {BODY_MARGIN_METRES:.3f} m margin. '
+                       'The nominal plan cannot fit. Verify the aperture before flying through it.')
+    return {'alternative': alternative, 'flight_ready': False, 'refusal_reasons': reasons,
+            'requires_sensor_alignment': alternative == 'through',
             'window_width_metres': width, 'nominal_side_room_metres': side_room,
             'crossing_height_metres': height, 'target_height_limit_metres': ceiling,
             'points_metres': [np.append(before, .75).tolist(), np.append(before, height).tolist(),
@@ -91,20 +89,26 @@ def run(words, run_mode, log):
         for alternative in ['through', 'over']:
             proposal = window_proposal(course_map, alternative)
             log.save_text_file(f'{alternative}_window_proposal.json', json.dumps(proposal, indent=2))
+        plan = first_two_plan(course_map)
         if arguments.route != 'verify-first-two':
             proposal = window_proposal(course_map, arguments.route)
             if proposal['refusal_reasons']:
                 raise ValueError(' '.join(proposal['refusal_reasons']))
-            raise ValueError('Window alignment and full-route qualification are not implemented. Do not use this proposal as a flight plan.')
-        plan = first_two_plan(course_map)
+            plan = full_window_plan(course_map,plan)
         log.save_text_file('astar_plan.json', json.dumps(plan, indent=2))
-        log.event('scope', 'Bounded verification only: first corridor, straight to Maze exit, then land there. This is not a full-course pass.')
+        rows = ['stage,east_metres,north_metres,height_metres']
+        for stage in plan['stages']:
+            for point in stage['points']:
+                rows.append(stage['name']+','+','.join(map(str,point)))
+        log.save_text_file('waypoints_with_heights.csv','\n'.join(rows)+'\n')
+        log.event('scope', f"Corrected-course mode: {arguments.route}; {len(plan['stages'])} main goals.")
     except (OSError, ValueError, KeyError, StopIteration) as problem:
         log.event('refused', f'Corrected-course flight refused before arming: {problem}')
         return EXIT_REFUSED_TO_START
     frame = StartFrame(course_map.launch_mark_centre_metres, 90)
     def make_flight(*args, **kwargs):
-        return AstarFlight(*args, plan=plan, **kwargs)
+        flight_type = WindowFlight if arguments.route == 'through' else AstarFlight
+        return flight_type(*args, plan=plan, **kwargs)
     result = first_maze_leg.fly_with_ros(course_map, frame, arguments, log, flight_class=make_flight)
-    log.event('scope_result', f'First-two-goal verification ended with code {result}; no window crossing or pad landing was requested.')
+    log.event('scope_result', f'Corrected-course {arguments.route} ended with code {result}. Check the referee for completed checkpoints.')
     return result

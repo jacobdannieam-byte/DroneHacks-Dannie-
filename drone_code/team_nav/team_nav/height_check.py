@@ -18,8 +18,8 @@ reading is the drone's true height (allowing for tilt). So if PX4's height and t
 disagree by more than HEIGHT_GAP_LIMIT_METRES, for longer than HEIGHT_GAP_LONGEST_SECONDS,
 while the laser sees clear floor, PX4's height can't be trusted, and the run should stop.
 
-"Clear floor" means that nothing standing on the floor (walls, tunnel sides, the safety net,
-boulders in the drone's map or in any other map of the course) is within
+"Clear floor" means that no mapped surface below the drone (including raised wall sills,
+tunnel sides, the safety net, and boulders from any supplied map) is within
 CLEAR_FLOOR_MARGIN_METRES of the drone's centre. Elsewhere the laser may be seeing the top of a
 boulder or a wall, so its reading is not the height above the floor, and the check waits.
 
@@ -43,7 +43,7 @@ import math
 
 import numpy as np
 
-from team_nav.course_map import BlockingCircle, distance_to_shapes_metres, shapes_blocking_between_heights
+from team_nav.course_map import BlockingCircle, BlockingStrip, distance_to_shapes_metres, shapes_blocking_between_heights
 
 # Our own choice, from six simulator flights on 2026-11-07. Over clear floor, while PX4 was
 # still using the laser, PX4's height and the laser's were within 9 cm of each other almost all
@@ -86,13 +86,25 @@ class HeightCheck:
         self.shapes_on_the_floor = shapes_blocking_between_heights(course_map, 0.0, FLOOR_LEVEL_HEIGHT_METRES)
         for boulder in other_possible_boulders:
             self.shapes_on_the_floor.append(BlockingCircle(boulder.name, boulder.centre_metres, boulder.radius_metres))
+        # Raised walls do not intersect the floor slice, but their sills can still
+        # intercept a downward beam. Keep them for a height-aware check each cycle.
+        self.raised_walls = [wall for wall in course_map.walls
+                             if wall.bottom_height_metres>FLOOR_LEVEL_HEIGHT_METRES]
         # When the two heights first disagreed by too much, or None if they agree.
         self.gap_began_at_seconds = None
 
     def laser_sees_clear_floor(self, drone_position_on_course_metres):
-        point = np.asarray(drone_position_on_course_metres, dtype=float)[np.newaxis, :2]
-        distance_metres, _ = distance_to_shapes_metres(point, self.shapes_on_the_floor)
-        return float(distance_metres[0]) > CLEAR_FLOOR_MARGIN_METRES
+        position = np.asarray(drone_position_on_course_metres,dtype=float)
+        # Callers with only horizontal position cannot establish that they are
+        # below a raised surface, so conservatively include those surfaces.
+        height = position[2] if len(position)>2 else float('inf')
+        shapes = list(self.shapes_on_the_floor)
+        for wall in self.raised_walls:
+            for start,end in wall.solid_pieces_between_heights(0.,height):
+                shapes.append(BlockingStrip(wall.name,wall.point_along_wall_metres(start),
+                    wall.point_along_wall_metres(end),wall.thickness_metres/2))
+        distance_metres,_ = distance_to_shapes_metres(position[np.newaxis,:2],shapes)
+        return float(distance_metres[0])>CLEAR_FLOOR_MARGIN_METRES
 
     def check(self, now_seconds, drone_position_on_course_metres, px4_height_metres, laser_height_metres):
         """Both heights are metres risen since the launch mark. Returns None while all is well, or

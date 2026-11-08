@@ -1,0 +1,296 @@
+[
+  {
+    "run": "20261108_144114",
+    "referee": {
+      "flight_record": "flight_20261108_224132.csv",
+      "world_map_file": "/repository/drone_code/team_nav/course_maps/real_course_2026-11-08.json",
+      "course_model_file": "/repository/simulator/generated_files/worlds/real_course_2026-11-08_7c84ec51d8/course.obj",
+      "checkpoint_seconds": {
+        "First corridor": 16.9,
+        "Maze": 73.43,
+        "Tunnel": 173.9
+      },
+      "checkpoint_lines_used": {
+        "First corridor": "end of first corridor",
+        "Maze": "Gate A",
+        "Tunnel": "tunnel exit"
+      },
+      "motors_off_seconds": 354.63,
+      "landed_on_pad": false,
+      "touches": 0,
+      "penalty_seconds": 0.0,
+      "went_above_walls": false,
+      "left_the_course": false,
+      "px4_clock_speed_compared_with_real_time": 0.504,
+      "times_above_boulders": [],
+      "stayed_above_a_boulder_too_long": false,
+      "largest_height_estimate_error_metres": 0.267,
+      "largest_height_estimate_error_at_seconds": 302.1,
+      "largest_height_estimate_error_during_takeoff_climb_metres": 0.037,
+      "largest_height_estimate_error_during_takeoff_climb_at_seconds": 2.8,
+      "largest_height_estimate_error_on_the_floor_after_touchdown_metres": 0.078,
+      "height_estimate_went_wrong": true
+    },
+    "relevant_source_sha256": {
+      "drone_code/team_nav/team_nav/depth_camera.py": "ce6c92c5c854c83fa33b2d2f2f2cbbd9200d58b65b34d92d18919f3b4043f5de",
+      "drone_code/team_nav/team_nav/window_alignment.py": "70d4aace30026aadef15e9bdf2b6db26e0d31ff32f87d1e58e5b35fdcfca7a56",
+      "drone_code/team_nav/team_nav/height_check.py": "97a3a0efde22c79a36413ca76345795def29c507ebb8b7ef7c81f4b3ab247d0f",
+      "drone_code/team_nav/team_nav/practice_flights/window_route.py": "df58915ac804c9f7bf0d1ef766b124d84c65a83d07b13a883eaf9ba97440733e",
+      "drone_code/team_nav/team_nav/practice_flights/window_flight.py": "cdd3de521604891108ea242b821fdaf324680121726cbef56a9ed393bd4a5bb1"
+    }
+  },
+  {
+    "run": "20261108_145207",
+    "referee": {
+      "flight_record": "flight_20261108_225214.csv",
+      "world_map_file": "/repository/drone_code/team_nav/course_maps/real_course_2026-11-08.json",
+      "course_model_file": "/repository/simulator/generated_files/worlds/real_course_2026-11-08_7c84ec51d8/course.obj",
+      "checkpoint_seconds": {
+        "First corridor": 19.0,
+        "Maze": 75.03,
+        "Tunnel": 176.47,
+        "Chicane": 336.67
+      },
+      "checkpoint_lines_used": {
+        "First corridor": "end of first corridor",
+        "Maze": "Gate A",
+        "Tunnel": "tunnel exit",
+        "Chicane": "through the window"
+      },
+      "motors_off_seconds": 348.9,
+      "landed_on_pad": false,
+      "touches": 2,
+      "penalty_seconds": 10.0,
+      "went_above_walls": false,
+      "left_the_course": false,
+      "px4_clock_speed_compared_with_real_time": 0.512,
+      "times_above_boulders": [],
+      "stayed_above_a_boulder_too_long": false,
+      "largest_height_estimate_error_metres": 0.256,
+      "largest_height_estimate_error_at_seconds": 296.2,
+      "largest_height_estimate_error_during_takeoff_climb_metres": 0.025,
+      "largest_height_estimate_error_during_takeoff_climb_at_seconds": 3.9,
+      "largest_height_estimate_error_on_the_floor_after_touchdown_metres": 0.447,
+      "height_estimate_went_wrong": true
+    },
+    "relevant_source_sha256": {
+      "drone_code/team_nav/team_nav/depth_camera.py": "ce6c92c5c854c83fa33b2d2f2f2cbbd9200d58b65b34d92d18919f3b4043f5de",
+      "drone_code/team_nav/team_nav/window_alignment.py": "70d4aace30026aadef15e9bdf2b6db26e0d31ff32f87d1e58e5b35fdcfca7a56",
+      "drone_code/team_nav/team_nav/height_check.py": "97a3a0efde22c79a36413ca76345795def29c507ebb8b7ef7c81f4b3ab247d0f",
+      "drone_code/team_nav/team_nav/practice_flights/window_route.py": "df58915ac804c9f7bf0d1ef766b124d84c65a83d07b13a883eaf9ba97440733e",
+      "drone_code/team_nav/team_nav/practice_flights/window_flight.py": "9e3d2f468f4b094d925e075fda9a4f58752f2077876882ac95ac827a62149b4a",
+      "drone_code/team_nav/course_maps/real_course_2026-11-08.json": "607d20427b8f8962cd530c509289b13e65d2a78c437ed929f89cf7cfe1afbf3c"
+    }
+  },
+  {
+    "run": "20261108_150453",
+    "referee": {
+      "flight_record": "flight_20261108_230501.csv",
+      "world_map_file": "/repository/drone_code/team_nav/course_maps/real_course_2026-11-08.json",
+      "course_model_file": "/repository/simulator/generated_files/worlds/real_course_2026-11-08_7c84ec51d8/course.obj",
+      "checkpoint_seconds": {
+        "First corridor": 21.07,
+        "Maze": 74.23,
+        "Tunnel": 175.07
+      },
+      "checkpoint_lines_used": {
+        "First corridor": "end of first corridor",
+        "Maze": "Gate A",
+        "Tunnel": "tunnel exit"
+      },
+      "motors_off_seconds": 362.03,
+      "landed_on_pad": false,
+      "touches": 0,
+      "penalty_seconds": 0.0,
+      "went_above_walls": false,
+      "left_the_course": false,
+      "px4_clock_speed_compared_with_real_time": 0.518,
+      "times_above_boulders": [],
+      "stayed_above_a_boulder_too_long": false,
+      "largest_height_estimate_error_metres": 0.086,
+      "largest_height_estimate_error_at_seconds": 129.8,
+      "largest_height_estimate_error_during_takeoff_climb_metres": 0.036,
+      "largest_height_estimate_error_during_takeoff_climb_at_seconds": 1.9,
+      "largest_height_estimate_error_on_the_floor_after_touchdown_metres": 0.041,
+      "height_estimate_went_wrong": false
+    },
+    "relevant_source_sha256": {
+      "drone_code/team_nav/team_nav/depth_camera.py": "92c167be9883a672dc15c642e7028e74272cfae3415f9bcb9a7a7bffc010d5c1",
+      "drone_code/team_nav/team_nav/window_alignment.py": "11c573475bf17430a63d708b7a599baaa04a5846b9f506242cf8a40f4b233500",
+      "drone_code/team_nav/team_nav/height_check.py": "97a3a0efde22c79a36413ca76345795def29c507ebb8b7ef7c81f4b3ab247d0f",
+      "drone_code/team_nav/team_nav/practice_flights/window_route.py": "df58915ac804c9f7bf0d1ef766b124d84c65a83d07b13a883eaf9ba97440733e",
+      "drone_code/team_nav/team_nav/practice_flights/window_flight.py": "6a27c81b65e0c9e8b2acdc1d847d568475fc7f4dc508d3a3db107836eeacab0d",
+      "drone_code/team_nav/course_maps/real_course_2026-11-08.json": "607d20427b8f8962cd530c509289b13e65d2a78c437ed929f89cf7cfe1afbf3c"
+    }
+  },
+  {
+    "run": "20261108_151342",
+    "referee": {
+      "flight_record": "flight_20261108_231349.csv",
+      "world_map_file": "/repository/drone_code/team_nav/course_maps/real_course_2026-11-08.json",
+      "course_model_file": "/repository/simulator/generated_files/worlds/real_course_2026-11-08_7c84ec51d8/course.obj",
+      "checkpoint_seconds": {
+        "First corridor": 18.23,
+        "Maze": 58.53,
+        "Tunnel": 132.3
+      },
+      "checkpoint_lines_used": {
+        "First corridor": "end of first corridor",
+        "Maze": "Gate A",
+        "Tunnel": "tunnel exit"
+      },
+      "motors_off_seconds": 289.83,
+      "landed_on_pad": false,
+      "touches": 1,
+      "penalty_seconds": 5.0,
+      "went_above_walls": false,
+      "left_the_course": false,
+      "px4_clock_speed_compared_with_real_time": 0.653,
+      "times_above_boulders": [],
+      "stayed_above_a_boulder_too_long": false,
+      "largest_height_estimate_error_metres": 0.145,
+      "largest_height_estimate_error_at_seconds": 257.9,
+      "largest_height_estimate_error_during_takeoff_climb_metres": 0.031,
+      "largest_height_estimate_error_during_takeoff_climb_at_seconds": 2.0,
+      "largest_height_estimate_error_on_the_floor_after_touchdown_metres": 0.057,
+      "height_estimate_went_wrong": true
+    },
+    "relevant_source_sha256": {
+      "drone_code/team_nav/team_nav/depth_camera.py": "92c167be9883a672dc15c642e7028e74272cfae3415f9bcb9a7a7bffc010d5c1",
+      "drone_code/team_nav/team_nav/window_alignment.py": "11c573475bf17430a63d708b7a599baaa04a5846b9f506242cf8a40f4b233500",
+      "drone_code/team_nav/team_nav/height_check.py": "97a3a0efde22c79a36413ca76345795def29c507ebb8b7ef7c81f4b3ab247d0f",
+      "drone_code/team_nav/team_nav/practice_flights/window_route.py": "df58915ac804c9f7bf0d1ef766b124d84c65a83d07b13a883eaf9ba97440733e",
+      "drone_code/team_nav/team_nav/practice_flights/window_flight.py": "7cf990dc799e89fd51ab00d01096d882346fbe97b388e68c7684e184be8213f3",
+      "drone_code/team_nav/course_maps/real_course_2026-11-08.json": "607d20427b8f8962cd530c509289b13e65d2a78c437ed929f89cf7cfe1afbf3c"
+    }
+  },
+  {
+    "run": "20261108_152136",
+    "referee": {
+      "flight_record": "flight_20261108_232141.csv",
+      "world_map_file": "/repository/drone_code/team_nav/course_maps/real_course_2026-11-08.json",
+      "course_model_file": "/repository/simulator/generated_files/worlds/real_course_2026-11-08_7c84ec51d8/course.obj",
+      "checkpoint_seconds": {
+        "First corridor": 21.43,
+        "Maze": 62.03,
+        "Tunnel": 138.73
+      },
+      "checkpoint_lines_used": {
+        "First corridor": "end of first corridor",
+        "Maze": "Gate A",
+        "Tunnel": "tunnel exit"
+      },
+      "motors_off_seconds": 302.57,
+      "landed_on_pad": false,
+      "touches": 0,
+      "penalty_seconds": 0.0,
+      "went_above_walls": false,
+      "left_the_course": false,
+      "px4_clock_speed_compared_with_real_time": 0.692,
+      "times_above_boulders": [],
+      "stayed_above_a_boulder_too_long": false,
+      "largest_height_estimate_error_metres": 0.099,
+      "largest_height_estimate_error_at_seconds": 295.8,
+      "largest_height_estimate_error_during_takeoff_climb_metres": 0.036,
+      "largest_height_estimate_error_during_takeoff_climb_at_seconds": 2.2,
+      "largest_height_estimate_error_on_the_floor_after_touchdown_metres": 0.097,
+      "height_estimate_went_wrong": false
+    },
+    "relevant_source_sha256": {
+      "drone_code/team_nav/team_nav/depth_camera.py": "92c167be9883a672dc15c642e7028e74272cfae3415f9bcb9a7a7bffc010d5c1",
+      "drone_code/team_nav/team_nav/window_alignment.py": "11c573475bf17430a63d708b7a599baaa04a5846b9f506242cf8a40f4b233500",
+      "drone_code/team_nav/team_nav/height_check.py": "97a3a0efde22c79a36413ca76345795def29c507ebb8b7ef7c81f4b3ab247d0f",
+      "drone_code/team_nav/team_nav/practice_flights/window_route.py": "1667d373e5b5352cf3dc91fef03fc2a27978e9f170591ec8555045d49338f1fc",
+      "drone_code/team_nav/team_nav/practice_flights/window_flight.py": "e7eb9f16f63c0d0838da350b2de95007ca75aefb85ca25db2c40a89b8c2afb21",
+      "drone_code/team_nav/course_maps/real_course_2026-11-08.json": "607d20427b8f8962cd530c509289b13e65d2a78c437ed929f89cf7cfe1afbf3c"
+    }
+  },
+  {
+    "run": "20261108_153217",
+    "referee": {
+      "flight_record": "flight_20261108_233222.csv",
+      "world_map_file": "/repository/drone_code/team_nav/course_maps/real_course_2026-11-08.json",
+      "course_model_file": "/repository/simulator/generated_files/worlds/real_course_2026-11-08_7c84ec51d8/course.obj",
+      "checkpoint_seconds": {
+        "First corridor": 17.8,
+        "Maze": 58.97,
+        "Tunnel": 137.77,
+        "Chicane": 250.37
+      },
+      "checkpoint_lines_used": {
+        "First corridor": "end of first corridor",
+        "Maze": "Gate A",
+        "Tunnel": "tunnel exit",
+        "Chicane": "through the window"
+      },
+      "motors_off_seconds": 260.77,
+      "landed_on_pad": false,
+      "touches": 1,
+      "penalty_seconds": 5.0,
+      "went_above_walls": false,
+      "left_the_course": false,
+      "px4_clock_speed_compared_with_real_time": 0.7,
+      "times_above_boulders": [],
+      "stayed_above_a_boulder_too_long": false,
+      "largest_height_estimate_error_metres": 0.116,
+      "largest_height_estimate_error_at_seconds": 255.2,
+      "largest_height_estimate_error_during_takeoff_climb_metres": 0.035,
+      "largest_height_estimate_error_during_takeoff_climb_at_seconds": 1.8,
+      "largest_height_estimate_error_on_the_floor_after_touchdown_metres": 0.313,
+      "height_estimate_went_wrong": true
+    },
+    "relevant_source_sha256": {
+      "drone_code/team_nav/team_nav/depth_camera.py": "92c167be9883a672dc15c642e7028e74272cfae3415f9bcb9a7a7bffc010d5c1",
+      "drone_code/team_nav/team_nav/window_alignment.py": "0038b59402c253ae7c471432ac0c2e3f6345466096e38df85b704b401fd09986",
+      "drone_code/team_nav/team_nav/height_check.py": "97a3a0efde22c79a36413ca76345795def29c507ebb8b7ef7c81f4b3ab247d0f",
+      "drone_code/team_nav/team_nav/practice_flights/window_route.py": "1667d373e5b5352cf3dc91fef03fc2a27978e9f170591ec8555045d49338f1fc",
+      "drone_code/team_nav/team_nav/practice_flights/window_inspection.py": "d7036f77c361090072dd3ef01b012a0a69e263dacb141ad8cc8641496ddd6cbf",
+      "drone_code/team_nav/team_nav/practice_flights/window_flight.py": "4e4efd1d9ed90ba54fd7865115290675b6a482532b239355a4e700eebc14c893",
+      "drone_code/team_nav/course_maps/real_course_2026-11-08.json": "607d20427b8f8962cd530c509289b13e65d2a78c437ed929f89cf7cfe1afbf3c"
+    }
+  },
+  {
+    "run": "20261108_153917",
+    "referee": {
+      "flight_record": "flight_20261108_233923.csv",
+      "world_map_file": "/repository/drone_code/team_nav/course_maps/real_course_2026-11-08.json",
+      "course_model_file": "/repository/simulator/generated_files/worlds/real_course_2026-11-08_7c84ec51d8/course.obj",
+      "checkpoint_seconds": {
+        "First corridor": 20.13,
+        "Maze": 61.03,
+        "Tunnel": 134.03,
+        "Chicane": 257.8
+      },
+      "checkpoint_lines_used": {
+        "First corridor": "end of first corridor",
+        "Maze": "Gate A",
+        "Tunnel": "tunnel exit",
+        "Chicane": "Gate B"
+      },
+      "motors_off_seconds": 347.57,
+      "landed_on_pad": true,
+      "touches": 0,
+      "penalty_seconds": 0.0,
+      "went_above_walls": false,
+      "left_the_course": false,
+      "px4_clock_speed_compared_with_real_time": 0.649,
+      "times_above_boulders": [],
+      "stayed_above_a_boulder_too_long": false,
+      "largest_height_estimate_error_metres": 0.181,
+      "largest_height_estimate_error_at_seconds": 227.4,
+      "largest_height_estimate_error_during_takeoff_climb_metres": 0.033,
+      "largest_height_estimate_error_during_takeoff_climb_at_seconds": 2.5,
+      "largest_height_estimate_error_on_the_floor_after_touchdown_metres": 0.032,
+      "height_estimate_went_wrong": true
+    },
+    "relevant_source_sha256": {
+      "drone_code/team_nav/team_nav/depth_camera.py": "92c167be9883a672dc15c642e7028e74272cfae3415f9bcb9a7a7bffc010d5c1",
+      "drone_code/team_nav/team_nav/window_alignment.py": "0038b59402c253ae7c471432ac0c2e3f6345466096e38df85b704b401fd09986",
+      "drone_code/team_nav/team_nav/height_check.py": "3b38cd1b8eaed9898e32b0307237bf2bb565cedcde8f51d898e32940e91e7d7e",
+      "drone_code/team_nav/team_nav/practice_flights/window_route.py": "1667d373e5b5352cf3dc91fef03fc2a27978e9f170591ec8555045d49338f1fc",
+      "drone_code/team_nav/team_nav/practice_flights/window_inspection.py": "d7036f77c361090072dd3ef01b012a0a69e263dacb141ad8cc8641496ddd6cbf",
+      "drone_code/team_nav/team_nav/practice_flights/window_flight.py": "4e4efd1d9ed90ba54fd7865115290675b6a482532b239355a4e700eebc14c893",
+      "drone_code/team_nav/course_maps/real_course_2026-11-08.json": "607d20427b8f8962cd530c509289b13e65d2a78c437ed929f89cf7cfe1afbf3c"
+    }
+  }
+]

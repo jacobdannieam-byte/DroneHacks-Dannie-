@@ -1,10 +1,12 @@
 """Measure horizontal slices of Dannie's corrected mesh, independently of map rounding.
 
-Laptop analysis only. Imports the mesh reader from the map builder and writes evidence;
-it never changes the map, the world, flight limits, or a running drone's position.
+Laptop analysis only. The standalone command prints measurements. The map generator
+can call refine_window to replace coarse aperture bounds with inward-rounded mesh
+bounds. Neither path changes flight limits or a running drone's position.
 Run from the repository with PYTHONPATH=drone_code/team_nav:course_map_tools.
 """
 import json
+import math
 from pathlib import Path
 import numpy as np
 from make_map_from_corrected_model import read_corners_and_triangles, MODEL_FILE, FLOOR_TOP_METRES
@@ -37,9 +39,10 @@ def slice_intervals(triangles, wall, height):
     return merged
 
 
-def measure():
+def measure(course_map=None):
     root = Path(__file__).resolve().parents[1]
-    course_map = load_course_map(root/'drone_code/team_nav/course_maps/real_course_2026-11-08.json')
+    if course_map is None:
+        course_map = load_course_map(root/'drone_code/team_nav/course_maps/real_course_2026-11-08.json')
     wall = next(wall for wall in course_map.walls if wall.openings)
     corners, faces = read_corners_and_triangles(MODEL_FILE)
     triangles = corners[faces]
@@ -62,6 +65,17 @@ def measure():
     return {'source_commit': '2b56750b6ee84446302a49bd0e9af43834333b8a', 'mesh_width_metres': width,
             'map_width_metres': wall.openings[0].end_along_wall_metres-wall.openings[0].start_along_wall_metres,
             'samples': samples}
+
+
+def refine_window(course_map):
+    """Replace only the coarse along-wall aperture bounds with inward-rounded mesh bounds."""
+    measured = measure(course_map)
+    opening = next(wall for wall in course_map.walls if wall.openings).openings[0]
+    # Our choice: round inward to 0.1 mm so the map never enlarges the measured opening.
+    opening.start_along_wall_metres = math.ceil(max(row['opening_start_metres'] for row in measured['samples'])*10000)/10000
+    opening.end_along_wall_metres = math.floor(min(row['opening_end_metres'] for row in measured['samples'])*10000)/10000
+    opening.source += (' Width refined from actual triangle-plane intersections over the crossing envelope '
+                       'by check_corrected_window.py; bounds rounded inward to 0.1 mm.')
 
 
 if __name__ == '__main__':

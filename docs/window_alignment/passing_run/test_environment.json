@@ -1,0 +1,12 @@
+{
+  "docker_image_id": "sha256:5c77127ce2507438394ec48bf0346daa15445fd0b467ab265d08a992e072bcfe",
+  "transport": "WSL Docker internal network astar-hardcoded-net, UDP Fast DDS profile; no external network route",
+  "run_mode": "practice",
+  "deadline_seconds": 900,
+  "route": "corrected_course --route through",
+  "world": "drone_code/team_nav/course_maps/real_course_2026-11-08.json",
+  "px4_parameters": "unchanged",
+  "sensor_physics": "unchanged",
+  "referee": "unchanged",
+  "run_id": "20261108_154709"
+}

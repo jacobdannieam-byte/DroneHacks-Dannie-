@@ -1,0 +1,9 @@
+{
+  "run_id": "20261108_154709",
+  "full_course_passed": true,
+  "window_crossing_confirmed": true,
+  "test_command": "python3 -m pytest test/ -q",
+  "tests_passed": 316,
+  "test_seconds": 170.86,
+  "source_matches_tested_flight": true
+}

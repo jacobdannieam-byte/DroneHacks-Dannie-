@@ -159,14 +159,22 @@ class DepthCamera(Node):
         distances[distances > FARTHEST_USEFUL_METRES] = np.nan
         points = stereo_depth.points_ahead_of_camera(distances, focal_length, self.calibration.k[2] / factor,
                                                      self.calibration.k[5] / factor, EVERY_NTH_PIXEL)
-        points[:, 0] += CAMERA_FORWARD_OF_CENTRE_METRES
-        points[:, 2] += CAMERA_ABOVE_CENTRE_METRES
+        points = left_eye_points_to_body(points, self.eye_spacing_metres)
         self.publisher.publish(_point_message(points, left_message.header.stamp))
         calculation_seconds = time.monotonic() - start
         self.records.write_line(_stamp_seconds(left_message), calculation_seconds, distances, len(points))
         if start - self.last_saved_picture_seconds >= SECONDS_BETWEEN_SAVED_PICTURES:
             self.last_saved_picture_seconds = start
             self.records.save_picture(_stamp_seconds(left_message), distances)
+
+
+def left_eye_points_to_body(points, eye_spacing_metres):
+    """Apply the calibrated eye spacing and the documented midpoint mount translation."""
+    # Reconstruction is relative to the left eye, not the midpoint of the stereo pair.
+    # CameraInfo supplies eye spacing; the mount constants describe that midpoint.
+    offset = np.array([CAMERA_FORWARD_OF_CENTRE_METRES, eye_spacing_metres/2.0,
+                       CAMERA_ABOVE_CENTRE_METRES])
+    return np.asarray(points) + offset
 
 
 class DepthRecords:
