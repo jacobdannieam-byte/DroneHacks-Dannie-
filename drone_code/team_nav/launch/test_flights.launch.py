@@ -3,7 +3,8 @@
 !!! The hand-over is ON in this file. Use it only after the team has approved test flights, with a
 teammate holding the kill switch. !!!
 
-It starts the organizers' flight_interface with the hand-over ON, and our flight_recorder. No
+It starts the organizers' flight_interface with the hand-over ON, our flight_recorder and our
+depth_camera (team_nav/depth_camera.py, which only reads pictures). No
 flight program starts by itself. A test flight flies only when all three of these happen, in order:
   1. someone starts one test program by hand (drone_code/TEST_SEQUENCE.md), which then sends a
      target to hold still above the launch mark;
@@ -17,7 +18,7 @@ The other two launch files, and what they share, are described in team_nav/launc
 """
 from launch import LaunchDescription
 
-from team_nav.launch_pieces import flight_recorder, organizers_flight_interface
+from team_nav.launch_pieces import depth_camera, flight_recorder, organizers_flight_interface
 
 # Our own choice: test flights are practice, so record the extra practice data.
 RECORDER_MODE = {"TEAM_NAV_RUN_MODE": "practice"}
@@ -27,4 +28,5 @@ def generate_launch_description():
     return LaunchDescription([
         organizers_flight_interface(hand_over_on=True),
         flight_recorder(RECORDER_MODE),
+        depth_camera(RECORDER_MODE),
     ])

@@ -196,15 +196,44 @@ expect approximately 1.3 s on the drone. The simulator gave 1.7 s.
 
 ## Step 8. The full course in practice mode
 
+course_run uses live navigation. The drone looks with its depth camera, keeps a live map, plans
+its path again and again, and turns its nose to where it flies. The map file
+(`sketch_2026-11-08.json`) is only a first guess. Read `team_nav/team_nav/live_flight.py` for how
+it works.
+
+What you will see:
+- After the climb, the drone does not look around. It turns slowly (15 degrees a second) to face
+  its path. It looks around (four quarter turns) only if it finds no path.
+- After each turn, it holds still until it is back within 10 cm of its hold point (at most 5 s).
+  This is correct: on drone 16 a turn makes it slide.
+- It stops and holds when something is close ahead, or when no depth picture comes for 1.5 s.
+  Then it plans again.
+- If it finds no way forward for 20 s, it lands where it is.
+
+Get the team's approval before the flight. Use Reset world if keyboard RC was used. Hold the
+kill switch.
+
+First start test_flights. It now also starts the depth program:
+
 ```bash
 ./drone.sh start test_flights
 ```
+
+Then start the run:
 
 ```bash
 TEAM_NAV_RUN_MODE=practice ./drone.sh course_run
 ```
 
-The organizer arms the drone and moves the switch to Position when the program asks. The drone flies the whole course and lands on the pad. The route goes through the side gap, not the window (`docs/HANDOFF_boulders_and_height.md` says why).
+The drone flies the whole course and lands on the pad. The route goes through the side gap, not
+the window (`docs/HANDOFF_boulders_and_height.md` says why).
+
+Before the first flight, check that the depth program runs: in the records folder, the newest
+`*_depth_camera/depth_camera.csv` must grow by about 8 lines a second, with GPU in the last column.
+
+After the flight, copy the records to the Mac (Step 11). The folder `live_maps` holds what the drone
+saw and planned every 2 seconds. To compare with the old way of flying (follow the map route, never
+turn), add `--navigation map_route`.
 
 The result is correct if the drone lands on the pad and touches nothing. When the program ends, it shows a number: 0 finished, 1 stopped or failed, 2 did not start, 130 Ctrl+C.
 

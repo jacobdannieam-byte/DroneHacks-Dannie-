@@ -17,13 +17,15 @@ that after the team has approved a real flight of this program, with a teammate 
 allow_mode_request stays False always: it lets software ask for the hand-over, which the
 organizers reserve for their simulator.
 
-The three programs
-------------------
+The four programs
+-----------------
   1. flight_interface (the organizers' program) is the only program that talks to PX4. It turns
      our targets into PX4's, and does the hand-over ("Offboard") when the switch flips.
   2. course_run (team_nav/course_run.py) plans the route and flies it.
   3. flight_recorder (team_nav/flight_recorder.py) records everything the drone reports, as a
      separate program, so the record survives a crash of course_run.
+  4. depth_camera (team_nav/depth_camera.py) turns the stereo pictures into obstacle points for
+     course_run's live map.
 If course_run ends, the other two keep running. course_run.py's header says what the drone does
 if course_run dies mid-flight.
 
@@ -43,7 +45,7 @@ from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
-from team_nav.launch_pieces import flight_recorder, organizers_flight_interface
+from team_nav.launch_pieces import depth_camera, flight_recorder, organizers_flight_interface
 
 # !!! OFF until the team approves a real flight of course_run. See the header. !!!
 HAND_OVER_ON = False
@@ -55,7 +57,7 @@ def generate_launch_description():
                               description="competition or practice."),
         DeclareLaunchArgument("stop_after_stage", default_value="",
                               description="Practice mode only: the stage after which the drone lands."),
-        DeclareLaunchArgument("map_file", default_value="phone_scan_2026-11-06.json"),
+        DeclareLaunchArgument("map_file", default_value="sketch_2026-11-08.json"),
         DeclareLaunchArgument("mission_file", default_value="dronehacks_2026_side_gap_first.json"),
         DeclareLaunchArgument("other_boulder_map_files", default_value="organizers_drawing.json"),
         DeclareLaunchArgument("start_heading_degrees", default_value="90.0",
@@ -87,4 +89,5 @@ def generate_launch_description():
         organizers_flight_interface(HAND_OVER_ON),
         course_run,
         flight_recorder(mode_settings),
+        depth_camera(mode_settings),
     ])

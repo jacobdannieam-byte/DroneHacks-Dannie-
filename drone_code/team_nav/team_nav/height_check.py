@@ -69,6 +69,11 @@ FLOOR_LEVEL_HEIGHT_METRES = 0.05
 # true height by up to 12 cm while climbing, and the boulder failure above reached 30 cm within
 # half a second and 50 cm within a second.
 CAMERA_HEIGHT_GAP_LIMIT_METRES = 0.30
+# Our own choice, decided by the team on 2026-11-08. After PX4 stops using the bottom laser, its
+# height comes from the air pressure sensor, which drifts. The flight then goes on, so this
+# tighter limit replaces the one above. Measured on drone 16 on 2026-11-08 (the out-and-back
+# flight): after PX4 stopped using the laser, the two heights stayed within about 8 cm.
+CAMERA_HEIGHT_GAP_LIMIT_WITHOUT_LASER_METRES = 0.15
 # Our own choice, the same as the laser comparison's.
 CAMERA_HEIGHT_GAP_LONGEST_SECONDS = 1.0
 
@@ -120,10 +125,11 @@ class CameraHeightCheck:
         # When the two heights first disagreed by too much, or None if they agree.
         self.gap_began_at_seconds = None
 
-    def check(self, now_seconds, px4_height_metres, camera_height_metres):
-        """Returns None while all is well, or a sentence saying why the run must stop."""
+    def check(self, now_seconds, px4_height_metres, camera_height_metres, limit_metres=CAMERA_HEIGHT_GAP_LIMIT_METRES):
+        """Returns None while all is well, or a sentence saying why the run must stop. limit_metres
+        is the largest allowed difference between the two heights."""
         gap_metres = px4_height_metres - camera_height_metres
-        if abs(gap_metres) <= CAMERA_HEIGHT_GAP_LIMIT_METRES:
+        if abs(gap_metres) <= limit_metres:
             self.gap_began_at_seconds = None
             return None
         if self.gap_began_at_seconds is None:
@@ -132,7 +138,7 @@ class CameraHeightCheck:
             return None
         return (
             f"PX4 thinks the drone has risen {px4_height_metres:.2f} m since the launch mark, but camera tracking says "
-            f"{camera_height_metres:.2f} m, and they have disagreed by more than {CAMERA_HEIGHT_GAP_LIMIT_METRES:.2f} m "
+            f"{camera_height_metres:.2f} m, and they have disagreed by more than {limit_metres:.2f} m "
             f"for {CAMERA_HEIGHT_GAP_LONGEST_SECONDS:.0f} second. PX4's height has probably gone wrong, for example "
             f"after the bottom laser crossed a boulder (docs/ARCHITECTURE.md, section 7), so it can't be trusted."
         )

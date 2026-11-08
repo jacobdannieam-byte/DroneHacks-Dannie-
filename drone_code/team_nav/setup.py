@@ -37,6 +37,7 @@ setup(
     entry_points={
         "console_scripts": [
             "course_run = team_nav.course_run:main",
+            "depth_camera = team_nav.depth_camera:main",
             "flight_recorder = team_nav.flight_recorder:main",
             "hand_test = team_nav.hand_tests.run_hand_test:main",
             "practice_flight = team_nav.practice_flights.run_practice_flight:main",

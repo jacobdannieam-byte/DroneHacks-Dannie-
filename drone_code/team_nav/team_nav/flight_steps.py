@@ -48,6 +48,7 @@ decide what is safe (run_safety.py). It never arms the drone or changes PX4's mo
 """
 import math
 import time
+from collections import deque
 from dataclasses import dataclass
 
 import numpy as np
@@ -71,6 +72,15 @@ SECONDS_BETWEEN_REMINDERS = 5.0
 # From the organizers' code (flight_interface.py's default odometry_topic) and their cuVSLAM
 # program (onboard/slam/cuvslam_lib_node.py).
 CAMERA_TRACKING_POSITION_TOPIC = "/visual_slam/tracking/odometry"
+
+# Our own choice. How many of camera tracking's recent reports are kept, to look up where the
+# drone was when a depth picture was taken. Reports come about 30 times a second, so 60 is
+# about 2 seconds; depth pictures arrive well under 0.5 s after they are taken.
+TRACKING_HISTORY_LENGTH = 60
+
+# Our own choice. A depth picture is only placed on the map if a tracking report exists within
+# this time of the moment it was taken.
+LONGEST_POSE_LOOKUP_GAP_SECONDS = 0.1
 CAMERA_TRACKING_STATUS_TOPIC = "/visual_slam/status"
 # From the message definition (simulator/ros_packages/isaac_ros_visual_slam_interfaces, read from
 # drone 16): vo_state 2 means camera tracking has failed.
@@ -189,6 +199,9 @@ class DroneLink:
         self.reports = DroneReports(node)
         self.targets = TargetSender(node, on_target_sent=self._record_target)
         self.launch = None                   # LaunchReadings, once remember_launch_mark has run.
+        # Extra height asked of PX4 to make up for its height going wrong (height_keeper.py).
+        # Zero unless live navigation sets it.
+        self.height_correction_metres = 0.0
         self.ignore_raw_laser = ignore_raw_laser
         # Decided once the drone is ready on the ground (announce_which_checks_can_run).
         self.raw_laser_available = False
@@ -202,7 +215,10 @@ class DroneLink:
         which arrives 5 times a second. To notice a 0.5 s silence we need its own reports."""
         from nav_msgs.msg import Odometry
         self.tracked_position_metres = None
+        self.tracked_rotation = None              # Quaternion (x, y, z, w): how the drone is turned.
         self.tracked_position_arrival_seconds = None
+        # (time the camera pictures were taken, position, rotation) of the recent reports.
+        self.tracking_history = deque(maxlen=TRACKING_HISTORY_LENGTH)
         self.camera_tracking_state = None
         self.node.create_subscription(Odometry, CAMERA_TRACKING_POSITION_TOPIC, self._on_tracked_position, 10)
         try:
@@ -216,8 +232,12 @@ class DroneLink:
 
     def _on_tracked_position(self, message):
         position = message.pose.pose.position
+        rotation = message.pose.pose.orientation
         self.tracked_position_metres = np.array([position.x, position.y, position.z], dtype=float)
+        self.tracked_rotation = np.array([rotation.x, rotation.y, rotation.z, rotation.w], dtype=float)
         self.tracked_position_arrival_seconds = time.monotonic()
+        stamp_seconds = message.header.stamp.sec + message.header.stamp.nanosec * 1e-9
+        self.tracking_history.append((stamp_seconds, self.tracked_position_metres, self.tracked_rotation))
 
     def _on_tracking_status(self, message):
         self.camera_tracking_state = int(message.vo_state)
@@ -250,6 +270,23 @@ class DroneLink:
         """Camera tracking's latest (forward, left, up) in metres, or None."""
         return None if self.tracked_position_metres is None else self.tracked_position_metres.copy()
 
+    def tracked_heading_radians(self):
+        """Which way the nose points, in camera tracking's frame, measured from the starting
+        forward toward left. None before the first report."""
+        if self.tracked_rotation is None:
+            return None
+        return heading_from_rotation(self.tracked_rotation)
+
+    def tracked_pose_at(self, stamp_seconds):
+        """(position, rotation) from the tracking report nearest the given picture time, or None
+        if no report is within LONGEST_POSE_LOOKUP_GAP_SECONDS of it."""
+        best, best_gap = None, LONGEST_POSE_LOOKUP_GAP_SECONDS
+        for report_seconds, position, rotation in self.tracking_history:
+            gap = abs(report_seconds - stamp_seconds)
+            if gap <= best_gap:
+                best, best_gap = (position, rotation), gap
+        return best
+
     def camera_tracking_age_seconds(self):
         if self.tracked_position_arrival_seconds is None:
             return float("inf")
@@ -267,7 +304,7 @@ class DroneLink:
             return None
         return tracked - self.launch.tracked_position_metres
 
-    def send_position_from_launch(self, forward_left_up_metres):
+    def send_position_from_launch(self, forward_left_up_metres, heading_radians=None):
         """Sends a position target given in the launch frame.
 
         The height needs a correction. flight_interface turns our target's "up" straight into
@@ -280,8 +317,9 @@ class DroneLink:
         correction, because PX4 takes them from camera tracking (they agreed within 2 cm)."""
         target = self.launch.tracked_position_metres + np.asarray(forward_left_up_metres, dtype=float)
         px4_launch_height_up_metres = -self.launch.px4_z_metres
-        target[2] = px4_launch_height_up_metres + float(forward_left_up_metres[2])
-        self.targets.send_position(target)
+        target[2] = px4_launch_height_up_metres + float(forward_left_up_metres[2]) + self.height_correction_metres
+        # The launch frame has camera tracking's directions, so a heading needs no change.
+        self.targets.send_position(target, heading_radians)
 
     # ---- Heights -------------------------------------------------------------------------------
 
@@ -441,14 +479,24 @@ class SafetyWatch:
         from_launch = self.link.position_from_launch()
         return None if from_launch is None else self.start_frame.course_from_start_frame(from_launch)
 
-    def send_target_on_course(self, target_on_course_metres, check_distance_from_drone=True):
-        """Checks the target is inside the course, then sends it. A refused target stops the run."""
+    def drone_heading_on_course(self):
+        """Which way the nose points on the course, from east toward north, in radians, or None."""
+        heading = self.link.tracked_heading_radians()
+        return None if heading is None else self.start_frame.course_heading_from_start_frame(heading)
+
+    def send_target_on_course(self, target_on_course_metres, check_distance_from_drone=True,
+                              heading_on_course_radians=None):
+        """Checks the target is inside the course, then sends it. A refused target stops the run.
+        heading_on_course_radians, if given, turns the nose that way (from east toward north)."""
         drone = self.drone_on_course() if check_distance_from_drone else None
         try:
             self.run_safety.check_target(target_on_course_metres, drone)
         except TargetRefused as refusal:
             raise RunMustStop(str(refusal)) from refusal
-        self.link.send_position_from_launch(self.start_frame.start_frame_from_course(target_on_course_metres))
+        heading = None
+        if heading_on_course_radians is not None:
+            heading = self.start_frame.start_frame_heading_from_course(heading_on_course_radians)
+        self.link.send_position_from_launch(self.start_frame.start_frame_from_course(target_on_course_metres), heading)
 
     def check(self):
         """Runs the checks. Returns True if the drone must hold still this cycle. Raises
@@ -461,6 +509,8 @@ class SafetyWatch:
         if decision.action == LAND_HERE:
             self.height_problem_seen = self.height_problem_seen or decision.land_using_laser
             raise RunMustStop(decision.reason, land_using_laser=decision.land_using_laser)
+        if decision.warning:
+            self.link.log.event("warning", decision.warning)
         self._announce_hold_changes(decision)
         return decision.action == HOLD
 
@@ -511,6 +561,7 @@ class SafetyWatch:
             raw_laser_available=link.raw_laser_available,
             px4_uses_laser_for_height=uses_laser,
             px4_says_laser_is_faulty=laser_is_faulty,
+            height_correction_metres=link.height_correction_metres,
         )
 
     def _record(self, condition, decision):
@@ -545,6 +596,24 @@ class SafetyWatch:
 # =================================================================================================
 # 3. The steps
 # =================================================================================================
+
+def heading_from_rotation(rotation_xyzw):
+    """The turn about the "up" axis in a quaternion (x, y, z, w), in radians, from forward toward
+    left. Tilt is ignored. The usual formula for the "yaw" angle of a quaternion."""
+    x, y, z, w = rotation_xyzw
+    return math.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+
+
+def rotation_matrix(rotation_xyzw):
+    """The 3 x 3 matrix that turns a direction in the drone's own frame (forward, left, up)
+    into camera tracking's frame, from a quaternion (x, y, z, w). The usual formula."""
+    x, y, z, w = rotation_xyzw
+    return np.array([
+        [1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
+        [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
+        [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)],
+    ])
+
 
 def fly_until(link, is_finished, send_target, longest_seconds, what_we_are_waiting_for, watch=None):
     """Every cycle: run the safety checks (if a watch is given), send a target, record the

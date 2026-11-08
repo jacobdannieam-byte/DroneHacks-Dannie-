@@ -256,7 +256,7 @@ def test_the_fallback_run_uses_its_own_speeds_and_height_limit(routes):
     run.plan, run.stop_after_stage = plan, ""
     safety = run.make_run_safety()
     assert safety.highest_target_height_metres == HIGHEST_TARGET_HEIGHT_METRES
-    assert safety.laser_use_check.stop_when_px4_stops_using_the_laser is False
+    assert safety.tighten_camera_check_when_laser_stops is False
     run.link = None
     follower = run.make_route_follower().follower
     assert follower.target_lead_metres == 1.0

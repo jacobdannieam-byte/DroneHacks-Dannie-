@@ -58,7 +58,7 @@ import numpy as np
 
 from team_nav import flight_steps
 from team_nav.course_map import load_course_map
-from team_nav.course_run import (CLIMB_STAGE, EXIT_REFUSED_TO_START, CourseRun, announce_the_inputs,
+from team_nav.course_run import (CLIMB_STAGE, EXIT_REFUSED_TO_START, MAP_ROUTE_NAVIGATION, CourseRun, announce_the_inputs,
                                  check_stop_after_stage, find_package_file)
 from team_nav.fallback_abort import ABORT_SPEED_METRES_PER_SECOND, choose_landing_spot, longest_abort_seconds
 from team_nav.fallback_routes import (CRUISE_HEIGHT_AT_THE_START_METRES, FALLBACK_ROUTES, HIGH_HEIGHT_METRES,
@@ -130,6 +130,11 @@ class FallbackRun(CourseRun):
     """course_run's CourseRun, with the fallback route's speeds, height limit and height hold, a
     check of the launch pose before the start, and the two-way abort."""
 
+    def __init__(self, plan, run_mode, link, navigation=None):
+        # The fallback routes always fly their planned route with the route follower, whatever
+        # course_run's --navigation says: live navigation (live_flight.py) is for the course route.
+        super().__init__(plan, run_mode, link, MAP_ROUTE_NAVIGATION)
+
     def run(self):
         self.refusal = None
         exit_code = super().run()
@@ -175,7 +180,7 @@ class FallbackRun(CourseRun):
     def make_run_safety(self):
         return RunSafety(self.plan.course_map, self.plan.other_possible_boulders,
                          highest_target_height_metres=HIGHEST_TARGET_HEIGHT_METRES,
-                         stop_when_px4_stops_using_the_laser=False)
+                         tighten_camera_check_when_laser_stops=False)
 
     def make_route_follower(self):
         follower = RouteFollower(self.plan.waypoints_to_fly(self.stop_after_stage),

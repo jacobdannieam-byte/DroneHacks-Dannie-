@@ -36,10 +36,18 @@ drone holds still waiting for camera tracking.
        probably stopped using the laser.
      - Without it (the real drone does not publish that topic, checked on 2026-11-07),
        LaserUseCheck below watches PX4's own report of whether it uses the laser for height
-       (estimator_status_flags). If PX4 reports it has stopped, or that the laser is faulty,
-       for LASER_UNUSED_LONGEST_SECONDS while the drone is above AIRBORNE_HEIGHT_METRES, the
-       check fires.
-   Either way the drone lands where it is, and the landing does not trust PX4's height.
+       (estimator_status_flags). If PX4 reports that the laser is faulty for
+       LASER_UNUSED_LONGEST_SECONDS while the drone is above AIRBORNE_HEIGHT_METRES, the check
+       fires. If PX4 reports only that it has stopped using the laser, the flight goes on
+       (the team decided this on 2026-11-08): the records get a warning, and the camera height
+       comparison above uses a tighter limit from then on.
+   When a check fires, the drone lands where it is, and the landing does not trust PX4's height.
+
+   Why a stopped laser no longer stops the run: on 2026-11-08 PX4 on drone 16 stopped using the
+   laser in mid-flight because of its own "range kinematic consistency" check, while the laser
+   still worked. PX4's height then still agreed with camera tracking's within about 8 cm, but the
+   old rule landed the drone halfway back from the out-and-back flight. PX4 did not start to use
+   the laser again before the end of that flight.
 
 Separately, check_target asks whether a target is inside the course, before it is sent. A target
 outside the course (beyond the safety net, or above the wall tops) is refused, which stops the
@@ -52,7 +60,8 @@ from dataclasses import dataclass
 import numpy as np
 
 from team_nav.drone_dimensions import DRONE_HALF_HEIGHT_METRES, DRONE_RADIUS_METRES
-from team_nav.height_check import CameraHeightCheck, HeightCheck
+from team_nav.height_check import (CAMERA_HEIGHT_GAP_LIMIT_METRES, CAMERA_HEIGHT_GAP_LIMIT_WITHOUT_LASER_METRES,
+                                   CameraHeightCheck, HeightCheck)
 from team_nav.touch_detector import TouchDetector
 
 # Measured on drone 16 on 2026-11-08 (the out-and-back flight's recorder, 24330 reports).
@@ -80,6 +89,10 @@ AIRBORNE_HEIGHT_METRES = 0.3
 # Our own choice, the same as height_check.py's HEIGHT_GAP_LONGEST_SECONDS. PX4 reports its
 # estimator flags about twice a second on drone 16, so this is two reports in a row.
 LASER_UNUSED_LONGEST_SECONDS = 1.0
+
+# The two laser problems that LaserUseCheck reports.
+LASER_FAULTY = "PX4 reports that the bottom laser is faulty"
+LASER_STOPPED = "PX4 reports that it has stopped using the bottom laser for height"
 
 # What the flight program must do next.
 CARRY_ON = "carry on"
@@ -109,6 +122,9 @@ class DroneCondition:
     raw_laser_available: bool = True         # False on the real drone, which doesn't publish the raw reading.
     px4_uses_laser_for_height: object = None # PX4's own flag (cs_rng_hgt), or None if not reported recently.
     px4_says_laser_is_faulty: object = None  # PX4's own flag (cs_rng_fault), or None if not reported recently.
+    # How much higher than wanted the flight program asks PX4 to fly, to make up for PX4's height
+    # going wrong (height_keeper.py). The height checks expect PX4 to be off by this much.
+    height_correction_metres: float = 0.0
 
 
 @dataclass
@@ -116,26 +132,31 @@ class SafetyDecision:
     action: str                              # CARRY_ON, HOLD, LAND_HERE or CONTROL_LOST.
     reason: str = ""                         # A full sentence, empty for CARRY_ON.
     land_using_laser: bool = False           # True if PX4's height can't be trusted for the landing.
+    warning: str = ""                        # A sentence for the records, given once. The flight goes on.
 
 
 class RunSafety:
 
     def __init__(self, course_map, other_possible_boulders=(), highest_target_height_metres=None,
-                 stop_when_px4_stops_using_the_laser=True):
+                 tighten_camera_check_when_laser_stops=True):
         """course_map is the drone's map. other_possible_boulders are boulders from other maps of
         the same course, which the bottom laser may see (height_check.py explains why).
         highest_target_height_metres is optional: without it, targets must keep the drone below the
         wall tops, as the rulebook says. Only the fallback routes (fallback_routes.py), which fly
         over the walls on purpose and accept the penalty, pass a higher limit.
-        stop_when_px4_stops_using_the_laser is True except for the fallback routes: up there PX4
-        stops using the laser at every wall crossing, as expected, and flies on its air pressure
-        height, so stopping the run then would land the drone in the middle of the course. Camera
-        tracking's height comparison and the faulty-laser report still stop the run."""
+        tighten_camera_check_when_laser_stops is True except for the fallback routes. Normally,
+        once PX4 stops using the laser, the camera height comparison tightens from
+        CAMERA_HEIGHT_GAP_LIMIT_METRES to CAMERA_HEIGHT_GAP_LIMIT_WITHOUT_LASER_METRES. Up high PX4
+        stops using the laser at every wall crossing, as expected, and its air pressure height then
+        drifts 0.3 to 0.6 m in the simulator while height_hold.py keeps the true height; the tighter
+        limit would stop every fallback run. The fallback routes keep the 0.30 m limit, which their
+        simulator tests were flown with. The faulty-laser report still stops the run."""
         self.course_map = course_map
         self.highest_target_height_metres = highest_target_height_metres
         self.touch_detector = TouchDetector()
         self.height_check = HeightCheck(course_map, other_possible_boulders)
-        self.laser_use_check = LaserUseCheck(stop_when_px4_stops_using_the_laser)
+        self.laser_use_check = LaserUseCheck()
+        self.tighten_camera_check_when_laser_stops = tighten_camera_check_when_laser_stops
         self.camera_height_check = CameraHeightCheck()
         # When the current hold began, or None if the drone isn't holding.
         self.hold_began_at_seconds = None
@@ -155,12 +176,15 @@ class RunSafety:
         height_problem = self._check_height(condition)
         if height_problem is not None:
             return SafetyDecision(LAND_HERE, height_problem, land_using_laser=True)
+        warning = self.laser_use_check.take_new_warning()
 
         tracking_problem = _camera_tracking_problem(condition)
         if tracking_problem is not None:
-            return self._hold_or_give_up(condition.now_seconds, tracking_problem)
+            decision = self._hold_or_give_up(condition.now_seconds, tracking_problem)
+            decision.warning = warning
+            return decision
         self.hold_began_at_seconds = None
-        return SafetyDecision(CARRY_ON)
+        return SafetyDecision(CARRY_ON, warning=warning)
 
     def check_target(self, target_on_course_metres, drone_on_course_metres=None):
         """Raises TargetRefused if the target is outside the course or too far from the drone.
@@ -209,17 +233,21 @@ class RunSafety:
             if value is None:
                 return None
         return self.height_check.check(condition.now_seconds, condition.position_on_course_metres,
-                                       condition.px4_height_risen_metres, condition.laser_height_risen_metres)
+                                       _px4_height_less_correction(condition), condition.laser_height_risen_metres)
 
     def _compare_with_camera_height(self, condition):
-        """Only while camera tracking reports normally: a late or lost camera height proves nothing."""
+        """Only while camera tracking reports normally: a late or lost camera height proves nothing.
+        After PX4 has stopped using the laser, the tighter limit applies."""
         tracking_is_normal = _camera_tracking_problem(condition) is None
         have_both = condition.position_on_course_metres is not None and condition.px4_height_risen_metres is not None
         if not (tracking_is_normal and have_both):
             self.camera_height_check.gap_began_at_seconds = None
             return None
-        return self.camera_height_check.check(condition.now_seconds, condition.px4_height_risen_metres,
-                                              condition.position_on_course_metres[2])
+        limit_metres = CAMERA_HEIGHT_GAP_LIMIT_METRES
+        if self.laser_use_check.laser_has_stopped and self.tighten_camera_check_when_laser_stops:
+            limit_metres = CAMERA_HEIGHT_GAP_LIMIT_WITHOUT_LASER_METRES
+        return self.camera_height_check.check(condition.now_seconds, _px4_height_less_correction(condition),
+                                              condition.position_on_course_metres[2], limit_metres)
 
     def _refuse_if_outside_the_course(self, target):
         # The whole drone, not just its centre, must stay inside the safety net.
@@ -253,21 +281,31 @@ class RunSafety:
             )
 
 
+def _px4_height_less_correction(condition):
+    """PX4's height, less the height correction we asked for on purpose. If PX4's height has
+    drifted by exactly the correction, this equals the true height."""
+    return condition.px4_height_risen_metres - condition.height_correction_metres
+
+
 class LaserUseCheck:
-    """The height check for when the laser's raw reading is not available: fires when PX4 itself
-    reports that it has stopped using the laser for height, or that the laser is faulty, for
-    LASER_UNUSED_LONGEST_SECONDS, while the drone is above AIRBORNE_HEIGHT_METRES.
+    """The height check for when the laser's raw reading is not available. It watches PX4's own
+    laser flags while the drone is above AIRBORNE_HEIGHT_METRES, and each problem must last
+    LASER_UNUSED_LONGEST_SECONDS to count:
+      - PX4 reports that the laser is faulty: the check fires, and the run stops.
+      - PX4 reports that it has stopped using the laser for height: the flight goes on. The
+        check sets laser_has_stopped, which tightens the camera height comparison, and gives
+        one warning for the records (take_new_warning).
 
     "Stopped" means PX4 was using the laser at some moment while airborne, and then wasn't. If
     PX4 never uses the laser at all after takeoff, this check stays quiet, and the flight program's
-    records show it (px4_uses_laser_for_height in drone_condition.csv). We chose that because we
-    don't yet know whether the real drone uses the laser in flight; stopping every run for it
-    would stop the very practice flights that would tell us. A faulty-laser report always counts."""
+    records show it (px4_uses_laser_for_height in drone_condition.csv). laser_has_stopped stays
+    set for the rest of the run, because on 2026-11-08 PX4 did not start to use the laser again."""
 
-    def __init__(self, stop_when_px4_stops_using_the_laser=True):
-        self.stop_when_px4_stops_using_the_laser = stop_when_px4_stops_using_the_laser
+    def __init__(self):
         self.laser_was_used_while_airborne = False
         self.problem_began_at_seconds = None
+        self.laser_has_stopped = False
+        self.new_warning = ""
 
     def check(self, condition):
         """Returns None while all is well, or a sentence saying why the run must stop."""
@@ -285,16 +323,35 @@ class LaserUseCheck:
             self.problem_began_at_seconds = condition.now_seconds
         if condition.now_seconds - self.problem_began_at_seconds < LASER_UNUSED_LONGEST_SECONDS:
             return None
+        if problem == LASER_STOPPED:
+            self._note_that_the_laser_has_stopped(position)
+            return None
         return (f"{problem} for {LASER_UNUSED_LONGEST_SECONDS:.0f} second, {position[2]:.2f} m above the floor. "
                 f"Its height now comes from the air pressure sensor, which drifts (docs/ARCHITECTURE.md, "
                 f"section 7), so its height can't be trusted.")
 
+    def take_new_warning(self):
+        """The warning sentence, once, or an empty string."""
+        warning = self.new_warning
+        self.new_warning = ""
+        return warning
+
+    def _note_that_the_laser_has_stopped(self, position):
+        if self.laser_has_stopped:
+            return
+        self.laser_has_stopped = True
+        self.new_warning = (
+            f"{LASER_STOPPED} for {LASER_UNUSED_LONGEST_SECONDS:.0f} second, {position[2]:.2f} m above the floor. "
+            f"Its height now comes from the air pressure sensor, which drifts. The flight goes on, but from now on "
+            f"the drone lands if PX4's height and camera tracking's height differ by more than "
+            f"{CAMERA_HEIGHT_GAP_LIMIT_WITHOUT_LASER_METRES:.2f} m.")
+
     def _problem_now(self, condition):
         if condition.px4_says_laser_is_faulty:
-            return "PX4 reports that the bottom laser is faulty"
+            return LASER_FAULTY
         stopped_using = condition.px4_uses_laser_for_height is False and self.laser_was_used_while_airborne
-        if stopped_using and self.stop_when_px4_stops_using_the_laser:
-            return "PX4 reports that it has stopped using the bottom laser for height"
+        if stopped_using:
+            return LASER_STOPPED
         return None
 
 
