@@ -78,3 +78,40 @@ calibration and stopping distance; qualify capture-age limits against speed and
 clearance. Obtain an authorized reference and real synchronized depth/VIO before
 P2 localization acceptance. Native subscriber-only shadow and Orin latency are
 unverified. No deployment, arming, flight or safety-parameter changes occurred.
+
+## Follow-up: H2 consumer and swept-body validation
+
+This section supersedes the earlier outstanding offline-hookup items while
+preserving their historical status.
+
+- 2fafeb3 connects the opt-in ShadowMapConsumer through ShadowLoop.poll into
+  HybridAssessment.map_reasoning. It pins reference/map version/epoch and uses
+  the current H2 state with its reviewed NED-to-spatial alignment. The pose is
+  gravity-aligned because H2 does not model roll/pitch. Invalid estimator input
+  does not reach the consumer. The command receipt and local collision geometry
+  are unchanged; default map_consumer is None and the consumer defaults disabled.
+- An actual H1 fixture now passes depth through the background MapLocalizer and
+  H2 polling loop. It verifies a map result is consumed, the planning receipt
+  remains identical to the baseline, and tracking loss fences the worker.
+- 4ab00f5 adds swept_first_segment using the existing conservative metric sweep.
+  A sphere of radius hypot(horizontal radius, half height) encloses the vehicle
+  cylinder at every attitude. It may reject feasible tight passages but does not
+  omit body height. Checks include start/end and continuous segment interiors.
+  Regressions cover clear space, jamb, unknown, expired, floor and map boundary.
+
+Validation from this checkout:
+
+```powershell
+python -m pytest tests -q
+python -m pytest tests/test_p2_shadow_replay.py tests/test_hybrid_integration.py tests/test_first_segment.py -q
+```
+
+Full run: 505 passed in 43.15s. After strengthening the async test to use
+ShadowLoop.poll instead of calling assess directly, focused run: 32 passed in
+6.39s. git diff --check passed. No failed tests remain in these offline runs.
+
+Scope limit: this is tested diagnostic H2 adoption, not map-driven command
+selection or demonstrated route improvement. No runtime enables the consumer.
+The first-segment function validates geometry only; existing mission ownership,
+health and command gates remain required. Physical body dimensions, calibration,
+real synchronized replay and concurrent Orin timing remain acceptance gates.
