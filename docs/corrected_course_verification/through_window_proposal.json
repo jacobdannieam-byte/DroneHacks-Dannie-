@@ -1,0 +1,33 @@
+{
+  "alternative": "through",
+  "flight_ready": false,
+  "refusal_reasons": [
+    "The map leaves 0.041 m per side; the existing 0.050 m margin plus the declared tracking error projected along the opening needs 0.285 m. Verify the aperture and implement measured window alignment before flying through it."
+  ],
+  "window_width_metres": 0.58,
+  "nominal_side_room_metres": 0.04109999999999997,
+  "crossing_height_metres": 1.3626,
+  "target_height_limit_metres": 1.627,
+  "points_metres": [
+    [
+      0.17444528215152894,
+      -2.2938456513881675,
+      0.75
+    ],
+    [
+      0.17444528215152894,
+      -2.2938456513881675,
+      1.3626
+    ],
+    [
+      -0.9532612786396724,
+      -1.8836287419993905,
+      1.3626
+    ],
+    [
+      -0.9532612786396724,
+      -1.8836287419993905,
+      0.75
+    ]
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "drone_code/team_nav/team_nav/practice_flights/corrected_course.py": "278ee6c7eee368cc195f3a0677b6ede73a5b2ca37ff1023574131fe53c4f533f",
+  "drone_code/team_nav/team_nav/practice_flights/five_waypoints.py": "8143e68323c7710999ade710d5b2746575f87637bc82f15a5dc7520e5870c7fe",
+  "drone_code/team_nav/team_nav/practice_flights/astar_five_waypoints.py": "bcb1fe2385bce549ac6f2cccd1d15d2dada2616e9e83c39752c1adb73c49f14d",
+  "drone_code/team_nav/team_nav/practice_flights/astar_geometry.py": "253308fe3efb2e79bc8c54898b7e89978dd43fcaa2dee29f000ecdf328f7ccf3",
+  "drone_code/team_nav/course_maps/real_course_2026-11-08.json": "84b197a1eb3193a1de51b47651b35261f97b09cc71c690bff59fedd649338b88",
+  "corrected_dronehacks.obj": "164d6bab377d4d097ebd4511de5d3481c54f4cac1a95ec388106358df092d689"
+}

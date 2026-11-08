@@ -8,6 +8,13 @@ This folder makes those map files, and draws the routes planned on them.
 
 ## Which file to read first
 
+For the team's corrected model, `make_map_from_corrected_model.py` is imported from
+Soham's commit `36561d1`; its header lists intentional map approximations, including
+the shortened start wall and omitted tunnel cradles. It reads Dannie's root-level
+`corrected_dronehacks.obj` from commit `2b56750`. `check_corrected_window.py` independently
+intersects that mesh with horizontal planes and reports the aperture width without
+changing the map. See `docs/corrected_course_verification/` for the measurements.
+
 1. **`make_map_from_organizers_model.py`** turns the organizers' 3D model into `organizers_drawing.json`. It's the simplest of the map makers.
 2. **`checkpoint_line_rules.py`** says where each checkpoint line goes, from the walls around it. Both map makers use it, so the lines follow the walls if a wall moves.
 3. **`make_map_from_phone_scan.py`** turns our phone scan into two maps. Its header says which scanned walls we trust and why. It uses:

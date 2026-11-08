@@ -23,9 +23,12 @@ from team_nav.course_run import EXIT_REFUSED_TO_START, treat_terminate_as_ctrl_c
 from team_nav.practice_flights import first_maze_leg, full_course, five_waypoints, astar_five_waypoints, mock_gap_and_window, out_and_back
 from team_nav.run_log import RunLog
 from team_nav.run_mode import RUN_MODE_SETTING, read_run_mode
+from team_nav.practice_flights import corrected_course
 
 # (name, the flight's file, what it proves). In the order to fly them (docs/ARCHITECTURE.md, section 11).
 FLIGHTS = [
+    (corrected_course.FLIGHT_NAME, corrected_course,
+     "corrected-map window feasibility checks or bounded first-two-goal verification"),
     (astar_five_waypoints.FLIGHT_NAME, astar_five_waypoints,
      "five main goals with A* intermediate waypoints, forward-only turns and explicit heights"),
     (five_waypoints.FLIGHT_NAME, five_waypoints,

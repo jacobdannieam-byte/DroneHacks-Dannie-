@@ -1,0 +1,33 @@
+{
+  "alternative": "over",
+  "flight_ready": false,
+  "refusal_reasons": [
+    "The 2.685 m crossing exceeds the existing 1.627 m target-height limit."
+  ],
+  "window_width_metres": 0.58,
+  "nominal_side_room_metres": 0.04109999999999997,
+  "crossing_height_metres": 2.6848,
+  "target_height_limit_metres": 1.627,
+  "points_metres": [
+    [
+      0.17444528215152894,
+      -2.2938456513881675,
+      0.75
+    ],
+    [
+      0.17444528215152894,
+      -2.2938456513881675,
+      2.6848
+    ],
+    [
+      -0.9532612786396724,
+      -1.8836287419993905,
+      2.6848
+    ],
+    [
+      -0.9532612786396724,
+      -1.8836287419993905,
+      0.75
+    ]
+  ]
+}

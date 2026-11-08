@@ -1,0 +1,308 @@
+{
+  "map_format_version": 1,
+  "name": "Real course 2026-11-08",
+  "description": "The corrected model of the course (corrected_dronehacks.obj), without the tube cradles. Made by course_map_tools/make_map_from_corrected_model.py. Not yet measured against the built course.",
+  "course_edges": {
+    "lowest_corner_metres": [
+      -3.048,
+      -3.048
+    ],
+    "highest_corner_metres": [
+      3.048,
+      3.048
+    ],
+    "wall_top_height_metres": 1.727,
+    "source": "Copied from organizers_drawing.json; the corrected model's net is in the same place."
+  },
+  "launch_mark": {
+    "centre_metres": [
+      -2.5146,
+      0.9144
+    ],
+    "source": "Measured from the corrected model (corrected_dronehacks.obj) by course_map_tools/make_map_from_corrected_model.py: the painted launch mark."
+  },
+  "landing_pad": {
+    "centre_metres": [
+      -2.0422,
+      -0.7925
+    ],
+    "outer_radius_metres": 0.762,
+    "approach_ring_radius_metres": 1.0033,
+    "source": "Measured from the corrected model (corrected_dronehacks.obj) by course_map_tools/make_map_from_corrected_model.py: the painted outer ring. Approach ring copied from organizers_drawing.json."
+  },
+  "walls": [
+    {
+      "name": "North-west wall",
+      "start_metres": [
+        -1.0406,
+        2.9409
+      ],
+      "end_metres": [
+        -2.6526,
+        2.9972
+      ],
+      "thickness_metres": 0.1016,
+      "bottom_height_metres": 0.0931,
+      "top_height_metres": 1.8203,
+      "openings": [],
+      "source": "Measured from the corrected model (corrected_dronehacks.obj) by course_map_tools/make_map_from_corrected_model.py, region North-west wall."
+    },
+    {
+      "name": "Start diagonal wall",
+      "start_metres": [
+        -2.1153,
+        1.0792
+      ],
+      "end_metres": [
+        -0.9513,
+        1.6889
+      ],
+      "thickness_metres": 0.1198,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7273,
+      "openings": [],
+      "source": "Measured from the corrected model (corrected_dronehacks.obj) by course_map_tools/make_map_from_corrected_model.py, region Start diagonal wall. South-west end moved 0.30 m north-east along the wall: the team's decision of 2026-11-08, because the model's end would overlap a drone on the launch mark."
+    },
+    {
+      "name": "Barrier",
+      "start_metres": [
+        -3.0482,
+        0.4485
+      ],
+      "end_metres": [
+        1.575,
+        0.4659
+      ],
+      "thickness_metres": 0.1191,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7273,
+      "openings": [],
+      "source": "Measured from the corrected model (corrected_dronehacks.obj) by course_map_tools/make_map_from_corrected_model.py, region Barrier."
+    },
+    {
+      "name": "A1 approach wall",
+      "start_metres": [
+        -0.9708,
+        -0.6227
+      ],
+      "end_metres": [
+        -0.9799,
+        0.4068
+      ],
+      "thickness_metres": 0.1107,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7273,
+      "openings": [],
+      "source": "Measured from the corrected model (corrected_dronehacks.obj) by course_map_tools/make_map_from_corrected_model.py, region A1 approach wall."
+    },
+    {
+      "name": "North-east diagonal wall",
+      "start_metres": [
+        0.1336,
+        0.5175
+      ],
+      "end_metres": [
+        1.5728,
+        1.1266
+      ],
+      "thickness_metres": 0.1032,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7273,
+      "openings": [],
+      "source": "Measured from the corrected model (corrected_dronehacks.obj) by course_map_tools/make_map_from_corrected_model.py, region North-east diagonal wall. East end moved along the wall's line to the tunnel's west side, which it meets."
+    },
+    {
+      "name": "C1 chicane wall",
+      "start_metres": [
+        0.9677,
+        -1.1268
+      ],
+      "end_metres": [
+        1.5307,
+        0.3854
+      ],
+      "thickness_metres": 0.1135,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7273,
+      "openings": [],
+      "source": "Measured from the corrected model (corrected_dronehacks.obj) by course_map_tools/make_map_from_corrected_model.py, region C1 chicane wall."
+    },
+    {
+      "name": "C2a chicane wall (window)",
+      "start_metres": [
+        -0.721,
+        -3.0003
+      ],
+      "end_metres": [
+        -0.0635,
+        -1.1928
+      ],
+      "thickness_metres": 0.114,
+      "bottom_height_metres": 0.4626,
+      "top_height_metres": 2.4848,
+      "openings": [
+        {
+          "name": "window",
+          "start_along_wall_metres": 0.68,
+          "end_along_wall_metres": 1.26,
+          "bottom_height_metres": 1.0626,
+          "top_height_metres": 1.6626,
+          "source": "Measured from the corrected model (corrected_dronehacks.obj) by course_map_tools/make_map_from_corrected_model.py: the empty stretch of the wall, sliced every 2 cm."
+        }
+      ],
+      "source": "Measured from the corrected model (corrected_dronehacks.obj) by course_map_tools/make_map_from_corrected_model.py, region C2a chicane wall (window)."
+    }
+  ],
+  "tubes": [
+    {
+      "name": "Tunnel",
+      "entrance_centre_metres": [
+        2.3064,
+        1.2192
+      ],
+      "exit_centre_metres": [
+        2.3064,
+        -0.3048
+      ],
+      "outside_width_metres": 1.4672,
+      "outside_height_metres": 1.8543,
+      "wall_thickness_metres": 0.0341,
+      "source": "Measured from the corrected model (corrected_dronehacks.obj) by course_map_tools/make_map_from_corrected_model.py: the shell's outside extents above the cradles. The map stands it on the floor. Wall thickness copied from organizers_drawing.json."
+    }
+  ],
+  "low_obstacles": [
+    {
+      "name": "Boulder 1",
+      "centre_metres": [
+        2.0117,
+        -2.4689
+      ],
+      "radius_metres": 0.2285,
+      "top_height_metres": 0.5335,
+      "source": "Measured from the corrected model (corrected_dronehacks.obj) by course_map_tools/make_map_from_corrected_model.py."
+    },
+    {
+      "name": "Boulder 2",
+      "centre_metres": [
+        2.5298,
+        -1.5545
+      ],
+      "radius_metres": 0.2285,
+      "top_height_metres": 0.5335,
+      "source": "Measured from the corrected model (corrected_dronehacks.obj) by course_map_tools/make_map_from_corrected_model.py."
+    },
+    {
+      "name": "Boulder 3",
+      "centre_metres": [
+        0.7925,
+        -2.347
+      ],
+      "radius_metres": 0.2285,
+      "top_height_metres": 0.5335,
+      "source": "Measured from the corrected model (corrected_dronehacks.obj) by course_map_tools/make_map_from_corrected_model.py."
+    },
+    {
+      "name": "Boulder 4",
+      "centre_metres": [
+        -2.5603,
+        -2.4994
+      ],
+      "radius_metres": 0.2285,
+      "top_height_metres": 0.5335,
+      "source": "Measured from the corrected model (corrected_dronehacks.obj) by course_map_tools/make_map_from_corrected_model.py."
+    },
+    {
+      "name": "Boulder 5",
+      "centre_metres": [
+        -1.3411,
+        -2.3774
+      ],
+      "radius_metres": 0.2285,
+      "top_height_metres": 0.5335,
+      "source": "Measured from the corrected model (corrected_dronehacks.obj) by course_map_tools/make_map_from_corrected_model.py."
+    }
+  ],
+  "checkpoint_lines": [
+    {
+      "name": "end of first corridor",
+      "start_metres": [
+        -3.048,
+        2.1209
+      ],
+      "end_metres": [
+        -1.9304,
+        2.1209
+      ],
+      "far_side_point_metres": [
+        -2.4892,
+        2.6209
+      ],
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    },
+    {
+      "name": "Gate A",
+      "start_metres": [
+        0.3556,
+        0.508
+      ],
+      "end_metres": [
+        0.3556,
+        3.048
+      ],
+      "far_side_point_metres": [
+        0.8556,
+        1.778
+      ],
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    },
+    {
+      "name": "tunnel exit",
+      "start_metres": [
+        1.5728,
+        -0.3048
+      ],
+      "end_metres": [
+        3.04,
+        -0.3048
+      ],
+      "far_side_point_metres": [
+        2.3064,
+        -0.8048
+      ],
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    },
+    {
+      "name": "through the window",
+      "start_metres": [
+        -0.4886,
+        -2.3612
+      ],
+      "end_metres": [
+        -0.2903,
+        -1.8162
+      ],
+      "far_side_point_metres": [
+        -0.8593,
+        -1.9178
+      ],
+      "opening_name": "window",
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    },
+    {
+      "name": "Gate B",
+      "start_metres": [
+        -0.9708,
+        -0.6227
+      ],
+      "end_metres": [
+        -0.0635,
+        -1.1928
+      ],
+      "far_side_point_metres": [
+        -0.7832,
+        -1.3311
+      ],
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    }
+  ]
+}

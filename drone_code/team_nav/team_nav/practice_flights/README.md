@@ -1,5 +1,27 @@
 # Practice flights
 
+## Corrected simulator model: verification status
+
+`corrected_course` uses Dannie's corrected model through Soham's derived
+`real_course_2026-11-08.json` map. Goal 1 to goal 2 is a checked straight segment.
+The window alternatives are **unflown proposals**, not qualified full-course routes:
+the through proposal lacks the existing tracking-error allowance and the over proposal
+exceeds the course height limit. See [measurements and results](../../../../docs/corrected_course_verification/README.md).
+
+To reproduce the bounded Gazebo verification (first two goals, then land at goal 2):
+
+```bash
+bash simulator/gazebo_full/fly_course_in_gazebo.sh \
+  --world drone_code/team_nav/course_maps/real_course_2026-11-08.json \
+  --run-mode practice --longest-run-seconds 450 -- practice_flight corrected_course \
+  --route verify-first-two
+```
+
+`ros2 run team_nav practice_flight corrected_course --route through` and `--route over`
+save the alternatives and refuse before starting ROS control. No height, contact, or
+tracking checks are disabled. The earlier `astar_five_waypoints` entry below still
+reproduces the previous sketch-map experiments; it is not the corrected-course flight.
+
 ## A* intermediate waypoints (`hardcoded` branch)
 
 `astar_five_waypoints` keeps the five main course goals and computes its intermediate

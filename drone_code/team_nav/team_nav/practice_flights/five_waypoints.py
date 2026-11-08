@@ -98,7 +98,7 @@ class FiveWaypointFlight(first_maze_leg.FirstMazeLegFlight):
         self.link.stage = 'landing on pad'
         source = flight_steps.choose_landing_height_source(self.link, self.watch.px4_height_is_in_doubt())
         flight_steps.land(self.link, source, self.watch, descent_speed_limit=LANDING_SPEED_METRES_PER_SECOND)
-        self.log.event('result', 'FIVE WAYPOINTS FINISHED. Check the independent referee for results.',
+        self.log.event('result', 'PLANNED ROUTE FINISHED. Check the independent referee for results.',
                        total_seconds=round(self.link.now_seconds()-self.flight_start_seconds, 2),
                        depth_pictures=self.depth.messages_used)
 

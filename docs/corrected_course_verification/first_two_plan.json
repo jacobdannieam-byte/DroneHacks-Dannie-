@@ -1,0 +1,31 @@
+{
+  "start_metres": [
+    -2.5146,
+    0.9144,
+    0.75
+  ],
+  "stages": [
+    {
+      "name": "First corridor",
+      "checkpoint": "end of first corridor",
+      "points": [
+        [
+          -2.5146,
+          2.451,
+          0.75
+        ]
+      ]
+    },
+    {
+      "name": "Maze exit",
+      "checkpoint": "Gate A",
+      "points": [
+        [
+          1.65,
+          2.12,
+          0.75
+        ]
+      ]
+    }
+  ]
+}
