@@ -1,0 +1,46 @@
+{
+  "source_commit": "e072f4538cea058523444624af3bc5b51da7e764",
+  "archive_sha256": "cce1b57647ea2231dceb7f112e85ca50a7d9476ce45666d73477d030d5b50d50",
+  "tracked_tests": 799,
+  "test_seconds": 37.49,
+  "records": 96,
+  "full_assessments": 4,
+  "reasons": {
+    "missing_synchronized_depth": 4,
+    "unconfirmed_or_stale_visual_tracking": 10,
+    "stale_geometry": 41,
+    "no_verified_progress": 25,
+    "awaiting_capture_pose": 16
+  },
+  "candidate_reasons": {
+    "occupied_swept_volume": 32
+  },
+  "fault": null,
+  "observation_error": null,
+  "observed_rtf": 1.0000177024288182,
+  "gpu": {
+    "status": "single_post_window_sample",
+    "csv": "name, utilization.gpu [%], memory.used [MiB], memory.total [MiB], temperature.gpu\nNVIDIA GeForce RTX 5070 Laptop GPU, 2 %, 201 MiB, 8151 MiB, 54"
+  },
+  "command_graph_samples": 13,
+  "nonempty_command_graphs": 0,
+  "native_mode": "observed-only subscriber shadow; no prior lease or command owner",
+  "status": {
+    "strategy": "hybrid_shadow",
+    "mission_state": "MISSION_ABORT",
+    "reasoning_strategy": "hybrid_existing",
+    "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+    "predictor_fallback": null,
+    "mission_reason": "no_verified_progress",
+    "stage_id": "diagnostic",
+    "stage_kind": "waypoint",
+    "goal_m": [
+      0.4,
+      0.0,
+      0.8
+    ],
+    "goal_slot": 0,
+    "landing_request": "no_verified_progress"
+  },
+  "recording": 45468000000
+}

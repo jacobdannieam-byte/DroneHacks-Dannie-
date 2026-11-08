@@ -1,0 +1,15 @@
+{
+  "scope": "raw native disarmed state and absence of control publication; no flight qualification",
+  "runs": [
+    {
+      "run": "native-gpu",
+      "raw_bag_sha256": "b67dadbbf04b1cf8029b43872ae514d7364a84ce3ad9d8e502ffa89fc960679c",
+      "native_status_count": 90,
+      "native_arming_states": [
+        1
+      ],
+      "control_message_counts": {},
+      "result": "PASS"
+    }
+  ]
+}
