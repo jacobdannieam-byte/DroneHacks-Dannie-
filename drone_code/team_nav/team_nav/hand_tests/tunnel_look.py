@@ -13,7 +13,7 @@ sideways: the offset must follow. Stop with Ctrl+C. It always passes; it is for 
 import time
 
 from team_nav.hand_tests.hand_test_tools import passed
-from team_nav.tunnel_look import depth_left_offset_metres, edges_match_depth, find_opening_edges
+from team_nav.tunnel_look import depth_left_offset_metres, find_opening_edges
 from team_nav.tunnel_look_camera import TunnelLookCamera
 
 # Our own choice: twice a second, as the team asked.
@@ -43,14 +43,12 @@ def one_reading(camera):
         return f"{time.strftime('%H:%M:%S')} waiting for the left picture and its camera_info..."
     fx, cx = lens
     _, gray, _ = picture
-    look = find_opening_edges(gray, fx, cx)
+    look = find_opening_edges(gray, fx, cx, points_from_camera=camera.latest_points_from_camera, check_depth=True)
     if not look.found_both():
         side = "left" if look.clipped_left else "right" if look.clipped_right else None
         return (f"{time.strftime('%H:%M:%S')} both edges not found"
-                + (f"; the {side} edge seems cut off by the picture's border" if side else ""))
-    matches, why = edges_match_depth(look, camera.latest_points_from_camera, fx, cx)
-    if not matches:
-        return f"{time.strftime('%H:%M:%S')} edges at {look.left_column} and {look.right_column} px rejected: {why}"
+                + (f"; the {side} edge seems cut off by the picture's border" if side else "")
+                + (f"; {look.rejected_because}" if look.rejected_because else ""))
     text = (f"{time.strftime('%H:%M:%S')} width {look.width_pixels:.0f} px, distance {look.distance_metres:.2f} m: "
             f"tunnel centre is {abs(look.left_offset_metres):.2f} m to your {'LEFT' if look.left_offset_metres > 0 else 'RIGHT'}")
     if camera.latest_points_from_camera is not None:

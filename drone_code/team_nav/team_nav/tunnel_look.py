@@ -17,9 +17,12 @@ Method 1, the edges (the team's design, 2026-11-08)
 In a horizontal band across the middle of the picture, the tunnel's two inner edges (where its
 inside surface meets the rim) are near-vertical lines. A column is "supported" if most rows of the
 band have a strong left-right brightness change there (a Sobel filter): random texture rarely lines
-up over many rows; an edge does. The left and right edges uL and uR are the best supported columns
-in the left and right parts of the picture whose spacing fits a tunnel between NEAREST_Z_METRES and
-FARTHEST_Z_METRES away. Then, with W = TUNNEL_INSIDE_WIDTH_METRES:
+up over many rows as the strongest change among its neighbours; an edge does. The left and right edges uL and uR are the WIDEST pair of supported
+columns, one in each part of the picture, whose spacing fits a tunnel between NEAREST_Z_METRES and
+FARTHEST_Z_METRES away and that passes the depth check below. Widest, because the mouth's rim is the
+outermost tunnel edge in view; the far exit's edges and the inside's texture lie within it (Gazebo,
+2026-11-08). Without depth points (the hand test before depth arrives, the tests) the best supported
+pair is taken instead. Then, with W = TUNNEL_INSIDE_WIDTH_METRES:
     w = uR - uL                 the opening's width in pixels
     uc = (uL + uR) / 2          its centre column
     Z = fx * W / w              its distance from the camera
@@ -41,7 +44,9 @@ Gazebo, 2026-11-08: at S the tunnel's mouth was wider than the picture, and the 
 the far exit's left edge and the tunnel's outside on the right as a pair: 316 px, "1.48 m away",
 offset the wrong way. So each frame's pair must also match the stereo depth: the median distance
 of the depth points near each edge column (within EDGE_DEPTH_COLUMN_PIXELS, near the camera's
-height) must be within EDGE_DEPTH_TOLERANCE_FRACTION of Z = fx * W / w. A pair with no depth
+height; the nearer quarter of them, EDGE_DEPTH_PERCENTILE, because an edge belongs to the nearer
+surface and the background shows just beside it) must be within EDGE_DEPTH_TOLERANCE_FRACTION of
+Z = fx * W / w. A pair with no depth
 points at an edge, or a mismatch, is not a tunnel opening at that distance, and the frame counts
 as showing no edges.
 
@@ -69,20 +74,26 @@ LOOK_FRAMES_NEEDED = 5
 LOOK_WINDOW_SECONDS = 1.0
 LARGEST_CENTRE_JITTER_PIXELS = 5.0
 LARGEST_WIDTH_CHANGE_FRACTION = 0.05
-# Our own choices for the edge finder: the band is this fraction of the picture's height, centred;
+# Our own choices for the edge finder (tuned on Gazebo pictures, 2026-11-08, where the rim's edge is
+# faint and slightly curved; every pair must then pass the depth check, which removes false ones):
+# the band is this fraction of the picture's height, centred;
 # a column is supported if this fraction of the band's rows has a strong change there; "strong" is
 # this many times the band's median change.
 BAND_HEIGHT_FRACTION = 0.15
-SUPPORTED_ROW_FRACTION = 0.6
+SUPPORTED_ROW_FRACTION = 0.5
 STRONG_CHANGE_TIMES_MEDIAN = 3.0
 # Our own choice: columns this close to the picture's border can't hold a trustworthy edge.
 BORDER_PIXELS = 4
+# Our own choice: a change must be the largest within this many columns on each side to count.
+LOCAL_PEAK_PIXELS = 3
+EDGE_WANDER_PIXELS = 2
 # Our own choice: the stereo method needs at least this many points on each wall.
 LEAST_POINTS_PER_WALL = 20
 # Our own choices for the depth check of each frame's edges (see above).
 EDGE_DEPTH_COLUMN_PIXELS = 6.0
 EDGE_DEPTH_TOLERANCE_FRACTION = 0.20
 LEAST_POINTS_PER_EDGE = 3
+EDGE_DEPTH_PERCENTILE = 25
 
 
 @dataclass
@@ -98,6 +109,7 @@ class EdgeLook:
     left_offset_metres: float = float("nan")
     band_rows: tuple = (0, 0)
     support: object = None          # The band's supported fraction for every column, for the PNG.
+    rejected_because: str = ""      # Why the widest pairs failed the depth check, if they did.
 
     def found_both(self):
         return self.left_column is not None and self.right_column is not None
@@ -117,14 +129,26 @@ def column_support(gray_band):
     across = padded[:, 2:] - padded[:, :-2]
     change = np.abs(across[:-2] + 2.0 * across[1:-1] + across[2:])
     threshold = STRONG_CHANGE_TIMES_MEDIAN * max(float(np.median(change)), 1.0)
-    strong = change > threshold
-    # An edge may wander by a pixel between rows: count a row if any of three neighbours is strong.
-    near = strong | np.roll(strong, 1, axis=1) | np.roll(strong, -1, axis=1)
+    # A real edge is the strongest change among its neighbours in nearly every row; a texture peak
+    # wanders from row to row. So a row counts for a column only where the change there is strong
+    # and the largest within LOCAL_PEAK_PIXELS on each side.
+    padded_change = np.pad(change, ((0, 0), (LOCAL_PEAK_PIXELS, LOCAL_PEAK_PIXELS)), mode="constant")
+    neighbourhood_largest = np.zeros_like(change)
+    for shift in range(2 * LOCAL_PEAK_PIXELS + 1):
+        neighbourhood_largest = np.maximum(neighbourhood_largest, padded_change[:, shift:shift + change.shape[1]])
+    peak = (change > threshold) & (change >= neighbourhood_largest)
+    # The rim is part of an oval, so its edge may wander between rows: count a row if the peak is
+    # within EDGE_WANDER_PIXELS columns.
+    near = peak.copy()
+    for shift in range(1, EDGE_WANDER_PIXELS + 1):
+        near[:, shift:] |= peak[:, :-shift]
+        near[:, :-shift] |= peak[:, shift:]
     return near.mean(axis=0)
 
 
-def find_opening_edges(gray_picture, fx_pixels, cx_pixels):
-    """The edge method on one rectified picture (height x width brightness)."""
+def find_opening_edges(gray_picture, fx_pixels, cx_pixels, points_from_camera=None, check_depth=False):
+    """The edge method on one rectified picture (height x width brightness). With check_depth, the
+    pair must also pass edges_match_depth with these points (from the camera)."""
     gray = np.asarray(gray_picture, dtype=np.float32)
     height, width = gray.shape
     top, bottom = middle_band_rows(height)
@@ -137,27 +161,47 @@ def find_opening_edges(gray_picture, fx_pixels, cx_pixels):
     candidates = np.nonzero(support >= SUPPORTED_ROW_FRACTION)[0]
     left_candidates = candidates[candidates < cx_pixels]
     right_candidates = candidates[candidates > cx_pixels]
-    best = _best_pair(left_candidates, right_candidates, support, narrowest, widest)
-    if best is None:
+    pairs = _pairs_widest_first(left_candidates, right_candidates, narrowest, widest)
+    if not check_depth:
+        # Without depth points to weed out texture, the best supported pair (texture rarely lines up
+        # over the whole band as well as a real edge does).
+        pairs.sort(key=lambda pair: -(support[pair[0]] + support[pair[1]]))
+    if not pairs:
         look.clipped_left = len(left_candidates) == 0 and len(right_candidates) > 0
         look.clipped_right = len(right_candidates) == 0 and len(left_candidates) > 0
         return look
-    look.left_column, look.right_column = best
-    _measure(look, fx_pixels, cx_pixels)
+    if not check_depth:
+        look.left_column, look.right_column = pairs[0]
+        _measure(look, fx_pixels, cx_pixels)
+        return look
+    depths = edge_depths_metres(points_from_camera, np.r_[left_candidates, right_candidates], fx_pixels, cx_pixels)
+    for left, right in pairs:
+        look.left_column, look.right_column = left, right
+        _measure(look, fx_pixels, cx_pixels)
+        matches, why = _depths_match(look, depths.get(left), depths.get(right))
+        if matches:
+            return look
+        look.rejected_because = look.rejected_because or f"widest pair {left}-{right}: {why}"
+    rejected = look.rejected_because
+    look = EdgeLook(band_rows=(top, bottom), support=support, rejected_because=rejected)
     return look
 
 
-def _best_pair(left_candidates, right_candidates, support, narrowest, widest):
-    best, best_score = None, -1.0
+def _pairs_widest_first(left_candidates, right_candidates, narrowest, widest):
+    """Every (left, right) pair of supported columns whose spacing fits, widest first. Neighbouring
+    columns of one edge make near-duplicate pairs; only pairs at least 3 px apart from the last
+    kept one on both sides are kept."""
+    pairs = []
     for left in left_candidates:
         for right in right_candidates:
-            spacing = right - left
-            if not narrowest <= spacing <= widest:
-                continue
-            score = support[left] + support[right]
-            if score > best_score:
-                best, best_score = (int(left), int(right)), score
-    return best
+            if narrowest <= right - left <= widest:
+                pairs.append((int(left), int(right)))
+    pairs.sort(key=lambda pair: pair[0] - pair[1])
+    kept = []
+    for pair in pairs:
+        if all(abs(pair[0] - other[0]) >= 3 or abs(pair[1] - other[1]) >= 3 for other in kept):
+            kept.append(pair)
+    return kept
 
 
 def _measure(look, fx_pixels, cx_pixels):
@@ -167,19 +211,35 @@ def _measure(look, fx_pixels, cx_pixels):
     look.left_offset_metres = -TUNNEL_INSIDE_WIDTH_METRES * (look.centre_column - cx_pixels) / look.width_pixels
 
 
-def edges_match_depth(look, points_from_camera, fx_pixels, cx_pixels):
-    """(True, why) if the depth points at both edge columns are about Z away, else (False, why)."""
+def edge_depths_metres(points_from_camera, edge_columns, fx_pixels, cx_pixels):
+    """{column: the nearer-quarter distance of the depth points near that column}, for the columns
+    with at least LEAST_POINTS_PER_EDGE points near them. Empty without points."""
     if points_from_camera is None or len(points_from_camera) == 0:
-        return False, "no stereo depth points to check the edges with"
+        return {}
     points = np.asarray(points_from_camera, dtype=float)
     in_front = (points[:, 0] > 0.1) & (np.abs(points[:, 2]) <= CAMERA_HEIGHT_BAND_METRES)
     points = points[in_front]
     columns = cx_pixels - fx_pixels * points[:, 1] / points[:, 0]
-    for name, edge_column in (("left", look.left_column), ("right", look.right_column)):
+    depths = {}
+    for edge_column in set(int(column) for column in edge_columns):
         near_edge = np.abs(columns - edge_column) <= EDGE_DEPTH_COLUMN_PIXELS
-        if np.count_nonzero(near_edge) < LEAST_POINTS_PER_EDGE:
+        if np.count_nonzero(near_edge) >= LEAST_POINTS_PER_EDGE:
+            depths[edge_column] = float(np.percentile(points[near_edge, 0], EDGE_DEPTH_PERCENTILE))
+    return depths
+
+
+def edges_match_depth(look, points_from_camera, fx_pixels, cx_pixels):
+    """(True, why) if the depth points at both edge columns are about Z away, else (False, why)."""
+    if points_from_camera is None or len(points_from_camera) == 0:
+        return False, "no stereo depth points to check the edges with"
+    depths = edge_depths_metres(points_from_camera, [look.left_column, look.right_column], fx_pixels, cx_pixels)
+    return _depths_match(look, depths.get(look.left_column), depths.get(look.right_column))
+
+
+def _depths_match(look, left_depth_metres, right_depth_metres):
+    for name, edge_distance in (("left", left_depth_metres), ("right", right_depth_metres)):
+        if edge_distance is None:
             return False, f"no depth points at the {name} edge"
-        edge_distance = float(np.median(points[near_edge, 0]))
         if abs(edge_distance - look.distance_metres) > EDGE_DEPTH_TOLERANCE_FRACTION * look.distance_metres:
             return False, (f"the {name} edge is {edge_distance:.2f} m away by depth, but the width says "
                            f"{look.distance_metres:.2f} m")

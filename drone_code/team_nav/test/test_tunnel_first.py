@@ -256,3 +256,19 @@ def test_an_edge_pair_that_the_depth_points_put_at_another_distance_is_rejected(
     right = points_at_columns([(117, look.distance_metres), (433, look.distance_metres * 1.05)])
     assert edges_match_depth(look, right, 317.0, 256.0)[0] is True
     assert edges_match_depth(look, None, 317.0, 256.0)[0] is False
+
+
+def test_with_depth_points_the_widest_pair_at_the_right_distance_is_the_tunnel_mouth():
+    # As in Gazebo: the mouth's rim (outer, about 1.06 m away) around the far exit (inner, 2.35 m away).
+    from team_nav.tunnel_look import find_opening_edges
+    fx, cx = 317.0, 256.0
+    picture = picture_with_opening(60, 500)
+    picture[:, 190:370] = 120.0 + 10.0 * np.random.default_rng(3).random((320, 180))
+    rim_distance = fx * 1.47 / 440.0
+    points = points_at_columns([(column, rim_distance) for column in range(55, 66)]
+                               + [(column, rim_distance) for column in range(495, 506)]
+                               + [(column, 2.35) for column in range(185, 375, 2)])
+    look = find_opening_edges(picture, fx, cx, points_from_camera=points, check_depth=True)
+    true_offset = -1.47 * ((60 + 500) / 2.0 - cx) / 440.0
+    assert look.found_both() and look.left_offset_metres == pytest.approx(true_offset, abs=0.03)
+    assert look.distance_metres == pytest.approx(rim_distance, rel=0.05)

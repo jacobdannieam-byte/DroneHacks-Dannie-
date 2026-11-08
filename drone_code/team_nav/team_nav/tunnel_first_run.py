@@ -284,7 +284,7 @@ class TunnelFirstRun(FallbackRun):
         self.height_hold = HeightHeldByCameraTracking(None, self.link)
         self.watch.height_hold = self.height_hold
         self.locked_heading_on_course = None
-        self.tunnel_camera = None
+        self.tunnel_camera = self.start_listening_to_the_camera()
         self.go_start_metres = np.asarray(self.plan.route.s_metres, dtype=float)
         self.watch.start_the_heading_guard(heading_split_degrees(self.link))
         route = self.plan.route
@@ -317,11 +317,14 @@ class TunnelFirstRun(FallbackRun):
         else:
             self.land_here("RUN FINISHED: landed at the end of the tunnel line.")
 
+    def start_listening_to_the_camera(self):
+        """From the start of the flight, so pictures, camera_info and depth points are arriving by the
+        LOOK (in Gazebo the first look found no depth points when it started listening only then)."""
+        from team_nav.tunnel_look_camera import TunnelLookCamera   # Needs ROS, so only loaded to fly.
+        return TunnelLookCamera(self.link.node)
+
     def look(self):
         """The LOOK step (tunnel_first_look.py): sets where GO starts."""
-        from team_nav.tunnel_look_camera import TunnelLookCamera   # Needs ROS, so only loaded to fly.
-        if self.tunnel_camera is None:
-            self.tunnel_camera = TunnelLookCamera(self.link.node)
         self.go_start_metres = LookStep(self, self.tunnel_camera).run_look()
 
     def go_through_the_tunnel(self):

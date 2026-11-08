@@ -33,8 +33,8 @@ import numpy as np
 
 from team_nav import flight_steps
 from team_nav.camera_pictures import colour_array_to_png, picture_message_to_png
-from team_nav.tunnel_look import (LARGEST_DISAGREEMENT_METRES, EdgeLook, band_picture_with_edges, body_left_on_course,
-                                  depth_left_offset_metres, edges_match_depth, find_opening_edges, judge_frames)
+from team_nav.tunnel_look import (LARGEST_DISAGREEMENT_METRES, band_picture_with_edges, body_left_on_course,
+                                  depth_left_offset_metres, find_opening_edges, judge_frames)
 
 IF_UNSURE_SETTING = "TEAM_NAV_TUNNEL_IF_UNSURE"
 IF_UNSURE_MAP = "map"
@@ -121,12 +121,14 @@ class LookStep:
         """Waits until still, collects frames until they agree or the deadline passes. Returns the
         verdict and the stereo depth method's offset (or None)."""
         self.look_number += 1
+        self.rejected_frames = 0
         looks, stamps, last_picture = [], [], None
-        hold_target = self.current_target()
         deadline_seconds = self.link.now_seconds() + LOOK_DEADLINE_SECONDS
         verdict = None
         while self.link.now_seconds() < deadline_seconds:
-            self.run.send_one_cycle(hold_target, heading_on_course_radians=self.run.locked_heading_on_course)
+            # The height hold is updated every cycle: in Gazebo (2026-11-08) the drone sank 0.33 m during
+            # a 3 s look with a fixed target, and the hold then took the change for a jump and froze.
+            self.run.send_one_cycle(self.current_target(), heading_on_course_radians=self.run.locked_heading_on_course)
             new_picture = self.camera.newest_picture()
             lens = self.camera.lens()
             if new_picture is None or lens is None or not self.drone_is_still():
@@ -134,12 +136,10 @@ class LookStep:
             if stamps and new_picture[0] <= stamps[-1]:
                 continue
             last_picture = new_picture
-            look = find_opening_edges(new_picture[1], *lens)
-            if look.found_both():
-                matches, why = edges_match_depth(look, self.camera.latest_points_from_camera, *lens)
-                if not matches:
-                    self.note_rejected_pair(look, why)
-                    look = EdgeLook(band_rows=look.band_rows, support=look.support)
+            look = find_opening_edges(new_picture[1], *lens, points_from_camera=self.camera.latest_points_from_camera,
+                                      check_depth=True)
+            if look.rejected_because:
+                self.note_rejected_pair(look.rejected_because)
             looks.append(look)
             stamps.append(new_picture[0])
             verdict = judge_frames(looks, stamps)
@@ -153,12 +153,13 @@ class LookStep:
         self.record(looks, verdict, depth_offset, last_picture)
         return verdict, depth_offset
 
-    def note_rejected_pair(self, look, why):
-        """Writes down the first rejected edge pair of each look."""
+    def note_rejected_pair(self, why):
+        """Counts the frames whose pairs all failed the depth check; writes down the first reason."""
+        self.rejected_frames = getattr(self, "rejected_frames", 0) + 1
         if getattr(self, "rejected_in_look", None) == self.look_number:
             return
         self.rejected_in_look = self.look_number
-        self.log.event("look", f"Edge pair uL={look.left_column}, uR={look.right_column} rejected: {why}.")
+        self.log.event("look", f"Edge pairs rejected by the depth check ({why}).")
 
     def drone_is_still(self):
         from team_nav.tunnel_first_run import px4_speed_metres_per_second
@@ -209,6 +210,8 @@ class LookStep:
         entry = {
             "look_number": self.look_number, "frames": len(looks), "frames_with_both_edges": len(good),
             "accepted": verdict.accepted, "reason": verdict.reason, "clipped_side": verdict.clipped_side,
+            "frames_rejected_by_depth": getattr(self, "rejected_frames", 0),
+            "depth_points_available": self.camera.latest_points_from_camera is not None,
             "uL": None if last is None else last.left_column, "uR": None if last is None else last.right_column,
             "w_pixels": None if last is None or not last.found_both() else round(last.width_pixels, 1),
             "Z_metres": None if not verdict.accepted else round(verdict.distance_metres, 3),
