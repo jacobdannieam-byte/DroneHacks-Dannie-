@@ -99,9 +99,9 @@ def test_without_a_raw_reading_the_height_check_also_runs_during_a_hold():
     safety = RunSafety(SCAN)
     safety.check(no_raw_laser(0.0, uses_laser=True))
     safety.check(no_raw_laser(1.0, uses_laser=False, camera_tracking_says_lost=True))
-    decision = safety.check(no_raw_laser(1.0 + LASER_UNUSED_LONGEST_SECONDS, uses_laser=False,
+    decision = safety.check(no_raw_laser(1.0 + LASER_UNUSED_LONGEST_SECONDS, uses_laser=False, faulty=True,
                                          camera_tracking_says_lost=True))
-    assert decision.action == LAND_HERE and "stopped using the bottom laser" in decision.reason
+    assert decision.action == LAND_HERE and "faulty" in decision.reason
 
 
 def test_without_a_laser_reading_the_height_check_waits():
@@ -121,14 +121,35 @@ def no_raw_laser(now_seconds, uses_laser, height_metres=0.8, faulty=False, **cha
     return normal_condition(now_seconds, **values)
 
 
-def test_without_a_raw_reading_px4_stopping_using_the_laser_lands_the_drone():
+def test_without_a_raw_reading_px4_stopping_using_the_laser_warns_once_and_flies_on():
+    # As on drone 16 on 2026-11-08: PX4 stopped using the laser, but its height stayed close to
+    # camera tracking's. The team decided that the flight goes on.
     safety = RunSafety(SCAN)
     assert safety.check(no_raw_laser(0.0, uses_laser=True)).action == CARRY_ON
     assert safety.check(no_raw_laser(1.0, uses_laser=False)).action == CARRY_ON
     decision = safety.check(no_raw_laser(1.0 + LASER_UNUSED_LONGEST_SECONDS, uses_laser=False))
+    later = safety.check(no_raw_laser(5.0, uses_laser=False))
+
+    assert decision.action == CARRY_ON and "stopped using the bottom laser" in decision.warning
+    assert later.action == CARRY_ON and later.warning == ""
+    assert safety.laser_use_check.laser_has_stopped
+
+
+def test_after_the_laser_stops_a_smaller_height_difference_lands_the_drone():
+    # 20 cm is inside the normal 30 cm limit, but outside the 15 cm limit for a stopped laser.
+    with_laser = RunSafety(SCAN)
+    with_laser.check(no_raw_laser(0.0, uses_laser=True, px4_height_risen_metres=1.0))
+    assert with_laser.check(no_raw_laser(1.5, uses_laser=True, px4_height_risen_metres=1.0)).action == CARRY_ON
+
+    without_laser = RunSafety(SCAN)
+    without_laser.check(no_raw_laser(0.0, uses_laser=True))
+    without_laser.check(no_raw_laser(1.0, uses_laser=False))
+    without_laser.check(no_raw_laser(2.1, uses_laser=False))
+    without_laser.check(no_raw_laser(3.0, uses_laser=False, px4_height_risen_metres=1.0))
+    decision = without_laser.check(no_raw_laser(4.1, uses_laser=False, px4_height_risen_metres=1.0))
 
     assert decision.action == LAND_HERE and decision.land_using_laser
-    assert "stopped using the bottom laser" in decision.reason
+    assert "more than 0.15 m" in decision.reason
 
 
 def test_without_a_raw_reading_the_floor_and_a_px4_that_never_used_the_laser_dont_stop_the_run():

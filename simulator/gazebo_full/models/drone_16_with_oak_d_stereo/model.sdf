@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<!--
+  A drone shaped like drone 16, with two pretend OAK-D camera eyes on its nose. SIMULATOR ONLY.
+
+  "drone_16_like" is made by simulator/gazebo_trial/make_drone_16_model.py from PX4's x500,
+  with drone 16's motor positions and estimated weight and thrust. That file says where each
+  number comes from. Its centre is at the model's origin.
+
+  The two eyes stand in for the OAK-D's left and right cameras. On the drone, the OAK-D driver
+  publishes their straightened ("rectified") colour pictures on /oak/left/image_raw and
+  /oak/right/image_raw. Here Gazebo draws them, and pretend_oak_stereo_cameras.py passes them
+  on to ROS 2 under the same names.
+
+  Where the numbers come from
+  ...........................
+  Camera position: from drone 16's launch line for the camera tracking,
+      "oakd_vslam.launch.py camera_x:=0.1053 camera_y:=0 camera_z:=0.0304". So the point between
+      the two eyes is 0.1053 m in front of the drone's centre and 0.0304 m above it, looking
+      straight forward with no tilt.
+  Eye spacing ("baseline") 0.07515 m: from drone 16's calibration, the right camera's P[3] is
+      -47.689 with a focal length of 634.544 pixels, and 47.689 / 634.544 = 0.07515 m. Each eye
+      sits half of that, 0.037577 m, to its side. Left is +y in Gazebo's body directions.
+  Picture size 512 x 320, 10 per second: our own choice. The real eyes give 1024 x 640 at about
+      25 per second, but this Mac draws pictures without a graphics card, and the Gazebo trial
+      measured that two full-size eyes at 30 per second slowed the whole simulation to 0.84 of
+      real time. Half size in each direction at 10 per second is about a sixth of that work.
+  Lens ("intrinsics"): drone 16's left camera calibration, fx = 634.544, fy = 634.556,
+      cx = 507.673, cy = 314.526 pixels at 1024 x 640, each divided by 2 for 512 x 320. The
+      straightened pictures have no lens distortion, so none is drawn here.
+  horizontal_fov 1.3578 radians (77.8 degrees): from the same focal length,
+      2 * atan(512 / (2 * 317.272)). Gazebo needs it as well as the intrinsics.
+  Nearest drawn distance 0.10 m: our own choice, so the propellers are not drawn. Farthest 20 m:
+      our own choice, more than the 8.6 m from corner to corner of the course.
+
+  We have not measured how the real camera's colours, brightness or blur compare with these.
+-->
+<sdf version="1.9">
+  <model name="drone_16_with_oak_d_stereo">
+    <!-- "merge" folds the included model's parts into this one, so PX4 sees a single drone. -->
+    <include merge="true">
+      <uri>model://drone_16_like</uri>
+    </include>
+
+    <link name="oak_camera_link">
+      <pose>0.1053 0 0.0304 0 0 0</pose>
+      <inertial>
+        <!-- Estimated, the same as the Gazebo trial's camera. We have not weighed it. -->
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.00007</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>0.00001</iyy><iyz>0</iyz><izz>0.00007</izz>
+        </inertia>
+      </inertial>
+      <!-- Estimated: a box roughly the size of the camera, 2 x 10 x 3 cm. Seen only. -->
+      <visual name="oak_camera_body">
+        <pose>-0.012 0 0 0 0 0</pose>
+        <geometry><box><size>0.02 0.10 0.03</size></box></geometry>
+        <material><ambient>0.1 0.1 0.1 1</ambient><diffuse>0.1 0.1 0.1 1</diffuse></material>
+      </visual>
+
+      <sensor name="oak_left_eye" type="camera">
+        <pose>0 0.037577 0 0 0 0</pose>
+        <always_on>true</always_on>
+        <update_rate>10</update_rate>
+        <topic>simulator_only/oak_left/image</topic>
+        <camera>
+          <horizontal_fov>1.3578</horizontal_fov>
+          <image><width>512</width><height>320</height><format>R8G8B8</format></image>
+          <clip><near>0.10</near><far>20.0</far></clip>
+          <lens>
+            <intrinsics>
+              <fx>317.272</fx><fy>317.278</fy><cx>253.8365</cx><cy>157.263</cy><s>0</s>
+            </intrinsics>
+          </lens>
+        </camera>
+      </sensor>
+
+      <sensor name="oak_right_eye" type="camera">
+        <pose>0 -0.037577 0 0 0 0</pose>
+        <always_on>true</always_on>
+        <update_rate>10</update_rate>
+        <topic>simulator_only/oak_right/image</topic>
+        <camera>
+          <horizontal_fov>1.3578</horizontal_fov>
+          <image><width>512</width><height>320</height><format>R8G8B8</format></image>
+          <clip><near>0.10</near><far>20.0</far></clip>
+          <lens>
+            <!-- The same lens numbers as the left eye. Straightening a stereo pair gives both
+                 pictures one shared set of lens numbers; only the eye spacing differs. -->
+
+            <intrinsics>
+              <fx>317.272</fx><fy>317.278</fy><cx>253.8365</cx><cy>157.263</cy><s>0</s>
+            </intrinsics>
+          </lens>
+        </camera>
+      </sensor>
+    </link>
+
+    <!-- Fixes the camera rigidly to the drone's body. -->
+    <joint name="oak_camera_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>oak_camera_link</child>
+    </joint>
+  </model>
+</sdf>

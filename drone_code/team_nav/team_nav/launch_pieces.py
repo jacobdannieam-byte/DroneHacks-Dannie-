@@ -55,6 +55,22 @@ def organizers_flight_interface(hand_over_on, px4_system_number=DRONE_16_PX4_SYS
     )
 
 
+def depth_camera(mode_settings):
+    """Our depth camera program (team_nav/depth_camera.py). It only reads the stereo pictures and
+    publishes obstacle points, so it is safe in every launch file. respawn restarts it if it
+    crashes, so live navigation gets its depth back within seconds."""
+    return Node(
+        package="team_nav",
+        executable="depth_camera",
+        name="team_nav_depth_camera",
+        output="log",
+        additional_env=mode_settings,
+        # Our own choice, as for the recorder: wait 2 seconds before restarting.
+        respawn=True,
+        respawn_delay=2.0,
+    )
+
+
 def flight_recorder(mode_settings):
     """Our recorder. It only listens, so it is safe in every launch file. respawn restarts it if it
     ever crashes, so a recorder problem never leaves a flight unrecorded for long."""

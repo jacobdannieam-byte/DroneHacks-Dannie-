@@ -20,7 +20,8 @@ It never publishes on /fmu/in/* (PX4's own inputs), never sends PX4 a command, n
 drone ("arming" gives the motors permission to spin) and never changes PX4's mode. The rules
 and the organizers' software reserve all of those for flight_interface and for the teammate
 with the remote control. It does not check whether a target is safe; run_safety.py does that.
-It does not decide when to send; flight_steps.py does.
+It does not decide when to send; flight_steps.py does. It only turns the drone when a caller
+gives a heading (live navigation does, so the camera faces where the drone flies).
 """
 import math
 import time
@@ -47,6 +48,7 @@ class SentTarget:
     kind: str                        # POSITION or SPEED.
     forward_left_up: tuple           # Metres for a position, metres per second for a speed.
     monotonic_seconds: float         # When it was sent, by time.monotonic().
+    heading_radians: object = None   # For a position: the nose direction asked for, or None.
 
 
 class TargetSender:
@@ -61,18 +63,29 @@ class TargetSender:
         self.last_target = None
         self.targets_sent = 0
 
-    def send_position(self, forward_left_up_metres):
-        """Fly to this position, in camera tracking's frame, and hold it."""
+    def send_position(self, forward_left_up_metres, heading_radians=None):
+        """Fly to this position, in camera tracking's frame, and hold it.
+
+        heading_radians, if given, is where the nose should point, measured in camera
+        tracking's frame from "forward" toward "left" (so 0 keeps the starting direction and
+        pi/2 is a quarter turn to the left). If None, PX4 keeps the heading it has."""
         values = _checked_numbers(forward_left_up_metres, "position target")
         target = PoseStamped()
         target.header.stamp = self.clock.now().to_msg()
         target.header.frame_id = TARGET_FRAME_NAME
         target.pose.position.x, target.pose.position.y, target.pose.position.z = values
-        # An orientation of all zeros tells flight_interface not to command a heading, so PX4
-        # keeps the heading the drone already has. We never turn the drone on purpose.
-        target.pose.orientation.w = 0.0
+        if heading_radians is None:
+            # From the organizers' code: an orientation of all zeros tells flight_interface not
+            # to command a heading, so PX4 keeps the heading the drone already has.
+            target.pose.orientation.w = 0.0
+        else:
+            # A turn about the "up" axis only, written as a quaternion (the usual way robots
+            # store a rotation): (0, 0, sin(half the angle), cos(half the angle)).
+            heading_radians = float(heading_radians)
+            target.pose.orientation.z = math.sin(heading_radians / 2.0)
+            target.pose.orientation.w = math.cos(heading_radians / 2.0)
         self.pose_publisher.publish(target)
-        self._remember(POSITION, values)
+        self._remember(POSITION, values, heading_radians)
 
     def send_speed(self, forward_left_up_metres_per_second):
         """Move at this speed, in camera tracking's directions. Must be repeated within 1 s."""
@@ -93,12 +106,12 @@ class TargetSender:
         if self.last_target is None:
             return
         if self.last_target.kind == POSITION:
-            self.send_position(self.last_target.forward_left_up)
+            self.send_position(self.last_target.forward_left_up, self.last_target.heading_radians)
         else:
             self.send_speed(self.last_target.forward_left_up)
 
-    def _remember(self, kind, values):
-        self.last_target = SentTarget(kind, values, time.monotonic())
+    def _remember(self, kind, values, heading_radians=None):
+        self.last_target = SentTarget(kind, values, time.monotonic(), heading_radians)
         self.targets_sent += 1
         if self.on_target_sent is not None:
             self.on_target_sent(self.last_target)
