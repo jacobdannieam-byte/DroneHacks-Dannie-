@@ -11,7 +11,7 @@ import numpy as np
 from refnav.integration_timing import measure
 
 from .observations import Config, Observation, validate
-from .spatial_input import DepthCalibration, DepthCapture, NS, PoseBuffer, PoseSample, SpatialReference, stamp_ok
+from .spatial_input import AlignedDepth, Alignment, DepthCalibration, DepthCapture, NS, PoseBuffer, PoseSample, SpatialReference, stamp_ok
 from .spatial_volume import Cell, MapPolicy, MetricSnapshot, RollingVolume
 from .state import WorldState
 
@@ -22,6 +22,7 @@ class SpatialUpdate:
     reason: str
     pose_bracket_ns: tuple = ()
     semantic_events: tuple = ()
+    aligned_depth: AlignedDepth | None = None
 
 
 @dataclass(frozen=True)
@@ -104,7 +105,7 @@ class SpatialWorld:
                 self._revoke()
             return accepted
 
-    def process(self, frame, *, now_ns):
+    def process(self, frame, *, now_ns, retain_aligned_depth=False):
         if not isinstance(frame, DepthCapture) or not stamp_ok(now_ns):
             raise ValueError("expected depth capture and valid processing time")
         with self._lock:
@@ -177,7 +178,16 @@ class SpatialWorld:
             self._last_capture, self._last_id, self._time_origin = frame.capture_ns, frame.observation_id, origin
             self._last_received = frame.received_ns
             self._ready = True
-            return SpatialUpdate(True, "accepted", pose.bracket_ns, tuple(semantic["events"]))
+            aligned_depth = None
+            if retain_aligned_depth:
+                # Detached from caller and the live map, even if a consumer tries setflags().
+                depth_view = np.frombuffer(depth.tobytes(), dtype=depth.dtype).reshape(depth.shape)
+                rotation = np.frombuffer(pose.rotation.tobytes(), dtype=pose.rotation.dtype).reshape(3, 3)
+                aligned_pose = Alignment(pose.position_m, rotation, pose.position_error_m,
+                                         pose.angle_error_rad, pose.bracket_ns)
+                aligned_depth = AlignedDepth(self._ref, frame.capture_ns, frame.received_ns, now_ns,
+                                             frame.observation_id, self._calibration, depth_view, aligned_pose)
+            return SpatialUpdate(True, "accepted", pose.bracket_ns, tuple(semantic["events"]), aligned_depth)
 
     @property
     def observations_available(self):
