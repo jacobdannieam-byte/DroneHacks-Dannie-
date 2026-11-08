@@ -10,7 +10,7 @@ profile=
 approval=
 check=0
 usage() {
-    echo "Usage: bash simulator/gazebo_trial/run_hybrid.sh [--mode observe|classical|hybrid_shadow|hybrid_sitl] [--profile FILE] [--approval FILE] [--domain 1..99] [--world TRACKED_MAP] [--seconds 4..120] [--check]"
+    echo "Usage: bash simulator/gazebo_trial/run_hybrid.sh [--mode observe|classical_observe|classical_smoke|classical|hybrid_shadow|hybrid_sitl] [--profile FILE] [--approval FILE] [--domain 1..99] [--world TRACKED_MAP] [--seconds 4..120] [--check]"
 }
 while (($#)); do
     case "$1" in
@@ -26,7 +26,7 @@ while (($#)); do
         *) usage >&2; exit 2 ;;
     esac
 done
-case "$mode" in observe|classical|hybrid_shadow|hybrid_sitl) ;; *) usage >&2; exit 2 ;; esac
+case "$mode" in observe|classical_observe|classical_smoke|classical|hybrid_shadow|hybrid_sitl) ;; *) usage >&2; exit 2 ;; esac
 [[ "$domain" =~ ^[1-9][0-9]?$ && "$seconds" =~ ^[1-9][0-9]{0,2}$ && "$seconds" -ge 4 && "$seconds" -le 120 ]] ||
     { echo "Invalid domain or observation duration" >&2; exit 2; }
 [[ "$world" =~ ^drone_code/team_nav/course_maps/[A-Za-z0-9_.-]+\.json$ ]] &&
@@ -35,7 +35,7 @@ case "$mode" in observe|classical|hybrid_shadow|hybrid_sitl) ;; *) usage >&2; ex
 if [[ "$mode" == hybrid_shadow || "$mode" == hybrid_sitl ]]; then
     [ -f "$profile" ] || { echo "A reviewed Gazebo profile is required" >&2; exit 2; }
 fi
-if [[ "$mode" == hybrid_sitl || "$mode" == classical ]]; then
+if [[ "$mode" == hybrid_sitl || "$mode" == classical || "$mode" == classical_smoke ]]; then
     [ -f "$approval" ] || { echo "This flight mode needs the exact team-approved trial record" >&2; exit 2; }
 elif [ -n "$approval" ]; then
     echo "An approval record is used only in flight modes" >&2

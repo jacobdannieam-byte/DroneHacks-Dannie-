@@ -53,6 +53,7 @@ import sys
 import time
 
 import rclpy
+from rclpy.utilities import remove_ros_args
 from std_msgs.msg import String
 
 from team_nav.course_map import load_course_map
@@ -194,7 +195,7 @@ def main():
                              "Give the option with no files to use only the drone's map.")
     parser.add_argument("--mission", default=DEFAULT_MISSION,
                         help="The mission file, named from the top of the repository.")
-    arguments = parser.parse_args()
+    arguments = parser.parse_args(remove_ros_args()[1:])
     for file_name in [arguments.drone_map, arguments.mission] + arguments.also_avoid_boulders_from:
         if not os.path.isfile(os.path.join(REPOSITORY, file_name)):
             raise SystemExit(f"There is no file at {file_name}. Name it from the top of the repository.")

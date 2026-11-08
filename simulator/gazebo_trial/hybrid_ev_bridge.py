@@ -1,5 +1,7 @@
 """Use the authored Gazebo heading reference for simulated external vision."""
 
+import sys
+
 import rclpy
 from rclpy.parameter import Parameter
 from rclpy.utilities import try_shutdown
@@ -9,10 +11,10 @@ from simulator.organizers_code.px4_odom_bridge import PX4OdomBridge
 
 
 class GazeboExternalVision(PX4OdomBridge):
-    def __init__(self):
+    def __init__(self, odometry_topic=SIM_ODOM, status_topic=SIM_STATUS):
         super().__init__(parameter_overrides=[
-            Parameter("input_topic", value=SIM_ODOM),
-            Parameter("status_topic", value=SIM_STATUS),
+            Parameter("input_topic", value=odometry_topic),
+            Parameter("status_topic", value=status_topic),
             Parameter("pose_frame", value="NED"),
             Parameter("use_sim_time", value=True),
         ], use_global_arguments=False)
@@ -31,8 +33,10 @@ class GazeboExternalVision(PX4OdomBridge):
 
 
 def main():
-    rclpy.init()
-    node = GazeboExternalVision()
+    classical_topics = ("/visual_slam/tracking/odometry", "/visual_slam/status")
+    topics = classical_topics if sys.argv[1:] == ["--classical"] else (SIM_ODOM, SIM_STATUS)
+    rclpy.init(args=[])
+    node = GazeboExternalVision(*topics)
     try:
         rclpy.spin(node)
     finally:
