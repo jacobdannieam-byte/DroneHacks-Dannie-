@@ -1,0 +1,510 @@
+{
+  "thresholds": {
+    "invalid_action_rate": 0.0,
+    "paired_evidence_gain_lower_95ci": 0.0,
+    "host_reasoner_target_ms": 5.0,
+    "native_concurrent_budget": "unmeasured",
+    "default": "G0",
+    "promotion_requires_native_evidence": true
+  },
+  "host": "Windows-10-10.0.26200-SP0",
+  "layout_count": 60,
+  "regimes": [
+    "nominal",
+    "dead_end",
+    "stale",
+    "contradiction",
+    "missing_support",
+    "reset",
+    "omissions"
+  ],
+  "episodes_per_variant": 420,
+  "steps_per_episode": 6,
+  "interactive": {
+    "G0": {
+      "acquired": 68,
+      "switching": 0,
+      "repeats": 244,
+      "invalid": 720,
+      "rejected": 1080,
+      "abstentions": 2099,
+      "appropriate_abstentions": 1659,
+      "reasoner_ms": {
+        "p50": 0.45420000242302194,
+        "p95": 0.7780100015224889,
+        "p99": 1.0214000067207962,
+        "max": 3.070299993851222,
+        "over_5ms": 0
+      },
+      "context_ms": {
+        "p50": 1.38975000299979,
+        "p95": 2.5142200087429956,
+        "p99": 3.0574070051079607,
+        "max": 5.542400002013892,
+        "over_5ms": 2
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null,
+      "decisions": 2520,
+      "invalid_targeted_proposal_rate": 0.2857142857142857,
+      "validator_rejection_rate": 0.42857142857142855,
+      "unnecessary_abstentions": 440
+    },
+    "G1": {
+      "acquired": 260,
+      "switching": 533,
+      "repeats": 403,
+      "invalid": 0,
+      "rejected": 360,
+      "abstentions": 1490,
+      "appropriate_abstentions": 1490,
+      "reasoner_ms": {
+        "p50": 0.7433999999193475,
+        "p95": 1.3453749990731008,
+        "p99": 1.7173299999558365,
+        "max": 3.873800000292249,
+        "over_5ms": 0
+      },
+      "context_ms": {
+        "p50": 1.391449994116556,
+        "p95": 2.4846200016327202,
+        "p99": 3.050322999624767,
+        "max": 4.492599997320212,
+        "over_5ms": 0
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null,
+      "decisions": 2520,
+      "invalid_targeted_proposal_rate": 0.0,
+      "validator_rejection_rate": 0.14285714285714285,
+      "unnecessary_abstentions": 0
+    },
+    "G2_seed11": {
+      "acquired": 259,
+      "switching": 739,
+      "repeats": 314,
+      "invalid": 0,
+      "rejected": 360,
+      "abstentions": 1489,
+      "appropriate_abstentions": 1489,
+      "reasoner_ms": {
+        "p50": 0.7827500012353994,
+        "p95": 1.4363750065967897,
+        "p99": 1.7856290051713586,
+        "max": 3.3552999957464635,
+        "over_5ms": 0
+      },
+      "context_ms": {
+        "p50": 1.3699999981326982,
+        "p95": 2.5068049959372725,
+        "p99": 3.017692004796116,
+        "max": 5.774400007794611,
+        "over_5ms": 3
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null,
+      "decisions": 2520,
+      "invalid_targeted_proposal_rate": 0.0,
+      "validator_rejection_rate": 0.14285714285714285,
+      "unnecessary_abstentions": 0
+    },
+    "G2_seed29": {
+      "acquired": 244,
+      "switching": 709,
+      "repeats": 338,
+      "invalid": 0,
+      "rejected": 360,
+      "abstentions": 1487,
+      "appropriate_abstentions": 1487,
+      "reasoner_ms": {
+        "p50": 0.7901000062702224,
+        "p95": 1.4684050052892417,
+        "p99": 1.8841540034918574,
+        "max": 2.6473000034457073,
+        "over_5ms": 0
+      },
+      "context_ms": {
+        "p50": 1.4081999979680404,
+        "p95": 2.5870700097584627,
+        "p99": 3.131985997897573,
+        "max": 4.949099995428696,
+        "over_5ms": 0
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null,
+      "decisions": 2520,
+      "invalid_targeted_proposal_rate": 0.0,
+      "validator_rejection_rate": 0.14285714285714285,
+      "unnecessary_abstentions": 0
+    },
+    "G2_seed47": {
+      "acquired": 243,
+      "switching": 702,
+      "repeats": 315,
+      "invalid": 0,
+      "rejected": 360,
+      "abstentions": 1483,
+      "appropriate_abstentions": 1483,
+      "reasoner_ms": {
+        "p50": 0.7985999982338399,
+        "p95": 1.5082200014148832,
+        "p99": 1.925323992036283,
+        "max": 2.858200008631684,
+        "over_5ms": 0
+      },
+      "context_ms": {
+        "p50": 1.4400000000023283,
+        "p95": 2.6010449997556857,
+        "p99": 3.303509996767384,
+        "max": 6.289099997957237,
+        "over_5ms": 2
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null,
+      "decisions": 2520,
+      "invalid_targeted_proposal_rate": 0.0,
+      "validator_rejection_rate": 0.14285714285714285,
+      "unnecessary_abstentions": 0
+    }
+  },
+  "paired": {
+    "G0": {
+      "mean_evidence_difference": 0.0,
+      "95ci": [
+        0.0,
+        0.0
+      ],
+      "versus_G1_95ci": [
+        -0.5429761904761904,
+        -0.36666666666666664
+      ]
+    },
+    "G1": {
+      "mean_evidence_difference": 0.4571428571428571,
+      "95ci": [
+        0.36666666666666664,
+        0.5429761904761898
+      ],
+      "versus_G1_95ci": [
+        0.0,
+        0.0
+      ]
+    },
+    "G2_seed11": {
+      "mean_evidence_difference": 0.45476190476190476,
+      "95ci": [
+        0.37380952380952387,
+        0.5380952380952381
+      ],
+      "versus_G1_95ci": [
+        -0.03809523809523809,
+        0.03095238095238095
+      ]
+    },
+    "G2_seed29": {
+      "mean_evidence_difference": 0.41904761904761906,
+      "95ci": [
+        0.3428571428571428,
+        0.5
+      ],
+      "versus_G1_95ci": [
+        -0.0761904761904762,
+        0.0
+      ]
+    },
+    "G2_seed47": {
+      "mean_evidence_difference": 0.41666666666666663,
+      "95ci": [
+        0.33571428571428563,
+        0.5023809523809524
+      ],
+      "versus_G1_95ci": [
+        -0.0761904761904762,
+        -0.004761904761904762
+      ]
+    }
+  },
+  "recorded_replay": {
+    "G0": {
+      "acquired": 0,
+      "switching": 0,
+      "repeats": 0,
+      "invalid": 0,
+      "rejected": 0,
+      "abstentions": 1,
+      "appropriate_abstentions": 0,
+      "reasoner_ms": {
+        "p50": 0.5574499955400825,
+        "p95": 0.8487750055792275,
+        "p99": 0.9977189984056161,
+        "max": 1.1073999921791255,
+        "over_5ms": 0
+      },
+      "context_ms": {
+        "p50": 1.7201000009663403,
+        "p95": 2.565599988156464,
+        "p99": 2.9203310079174116,
+        "max": 2.9375000012805685,
+        "over_5ms": 0
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null,
+      "decisions": 60,
+      "invalid_targeted_proposal_rate": 0.0,
+      "validator_rejection_rate": 0.0,
+      "unnecessary_abstentions": 1
+    },
+    "G1": {
+      "acquired": 0,
+      "switching": 0,
+      "repeats": 0,
+      "invalid": 0,
+      "rejected": 0,
+      "abstentions": 0,
+      "appropriate_abstentions": 0,
+      "reasoner_ms": {
+        "p50": 0.9535500066704117,
+        "p95": 1.6120749904075635,
+        "p99": 1.6603489963745233,
+        "max": 1.665599993430078,
+        "over_5ms": 0
+      },
+      "context_ms": {
+        "p50": 1.6081499998108484,
+        "p95": 2.8503099951194595,
+        "p99": 3.17279099850566,
+        "max": 3.3881999988807365,
+        "over_5ms": 0
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null,
+      "decisions": 60,
+      "invalid_targeted_proposal_rate": 0.0,
+      "validator_rejection_rate": 0.0,
+      "unnecessary_abstentions": 0
+    },
+    "G2_seed11": {
+      "acquired": 0,
+      "switching": 0,
+      "repeats": 0,
+      "invalid": 0,
+      "rejected": 0,
+      "abstentions": 0,
+      "appropriate_abstentions": 0,
+      "reasoner_ms": {
+        "p50": 1.0308999917469919,
+        "p95": 1.4930199940863529,
+        "p99": 1.8426870048278932,
+        "max": 2.031900003203191,
+        "over_5ms": 0
+      },
+      "context_ms": {
+        "p50": 1.7326999950455502,
+        "p95": 2.560669997910736,
+        "p99": 2.75806499630562,
+        "max": 2.80909999855794,
+        "over_5ms": 0
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null,
+      "decisions": 60,
+      "invalid_targeted_proposal_rate": 0.0,
+      "validator_rejection_rate": 0.0,
+      "unnecessary_abstentions": 0
+    },
+    "G2_seed29": {
+      "acquired": 0,
+      "switching": 0,
+      "repeats": 0,
+      "invalid": 0,
+      "rejected": 0,
+      "abstentions": 0,
+      "appropriate_abstentions": 0,
+      "reasoner_ms": {
+        "p50": 1.0846500008483417,
+        "p95": 1.486445008049486,
+        "p99": 2.6596949943632264,
+        "max": 4.205199991702102,
+        "over_5ms": 0
+      },
+      "context_ms": {
+        "p50": 1.825549996283371,
+        "p95": 2.7476550043502352,
+        "p99": 3.0572460034454707,
+        "max": 3.0694000015500933,
+        "over_5ms": 0
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null,
+      "decisions": 60,
+      "invalid_targeted_proposal_rate": 0.0,
+      "validator_rejection_rate": 0.0,
+      "unnecessary_abstentions": 0
+    },
+    "G2_seed47": {
+      "acquired": 0,
+      "switching": 0,
+      "repeats": 0,
+      "invalid": 0,
+      "rejected": 0,
+      "abstentions": 0,
+      "appropriate_abstentions": 0,
+      "reasoner_ms": {
+        "p50": 1.0728499910328537,
+        "p95": 1.533020005444996,
+        "p99": 1.6458299967052878,
+        "max": 1.6711999924154952,
+        "over_5ms": 0
+      },
+      "context_ms": {
+        "p50": 1.7910000024130568,
+        "p95": 2.610790007020114,
+        "p99": 2.816021995677147,
+        "max": 2.8184999973746017,
+        "over_5ms": 0
+      },
+      "unsupported_connectivity_claims": 0,
+      "verified_mission_progress": null,
+      "recovery_success": null,
+      "collisions": null,
+      "completion": null,
+      "decisions": 60,
+      "invalid_targeted_proposal_rate": 0.0,
+      "validator_rejection_rate": 0.0,
+      "unnecessary_abstentions": 0
+    }
+  },
+  "python_peak_bytes_one_G1_episode": 131856,
+  "GPU_CPU_load": "not measured",
+  "scope": "abstract synthetic evidence acquisition; no flight or route progress",
+  "selection": "G0 retained; native concurrent timing and physical outcomes unavailable",
+  "legacy_recorded_semantic_replay": {
+    "scenario_count": 7,
+    "expected_decisions_matched": 7,
+    "grounded_proposals_validated": 7,
+    "width_only_proposals_rejected": 6,
+    "scope": "Hand-written expected replay decisions and deliberately weak width-only comparison; no navigation, learned model or physical flight benefit measured.",
+    "scenarios": [
+      {
+        "label": "partial_wall",
+        "expected_intent": "insufficient_information",
+        "selected_intent": "insufficient_information",
+        "target_entity_id": null,
+        "matches_expected": true,
+        "validated": true,
+        "width_only_intent": "insufficient_information",
+        "width_only_validated": true,
+        "width_only_rejections": []
+      },
+      {
+        "label": "opening_revealed",
+        "expected_intent": "observe_more",
+        "selected_intent": "observe_more",
+        "target_entity_id": "opening_0003",
+        "matches_expected": true,
+        "validated": true,
+        "width_only_intent": "investigate_candidate",
+        "width_only_validated": false,
+        "width_only_rejections": [
+          "missing_evidence_suppressed"
+        ]
+      },
+      {
+        "label": "translated_and_turned",
+        "expected_intent": "observe_more",
+        "selected_intent": "observe_more",
+        "target_entity_id": "opening_0003",
+        "matches_expected": true,
+        "validated": true,
+        "width_only_intent": "investigate_candidate",
+        "width_only_validated": false,
+        "width_only_rejections": [
+          "missing_evidence_suppressed"
+        ]
+      },
+      {
+        "label": "out_of_view",
+        "expected_intent": "observe_more",
+        "selected_intent": "observe_more",
+        "target_entity_id": "opening_0003",
+        "matches_expected": true,
+        "validated": true,
+        "width_only_intent": "investigate_candidate",
+        "width_only_validated": false,
+        "width_only_rejections": [
+          "missing_evidence_suppressed"
+        ]
+      },
+      {
+        "label": "stale_memory",
+        "expected_intent": "observe_more",
+        "selected_intent": "observe_more",
+        "target_entity_id": "opening_0003",
+        "matches_expected": true,
+        "validated": true,
+        "width_only_intent": "investigate_candidate",
+        "width_only_validated": false,
+        "width_only_rejections": [
+          "missing_evidence_suppressed",
+          "reason_inconsistent_with_context",
+          "stale_target_requires_reobservation"
+        ]
+      },
+      {
+        "label": "reobserved_after_staleness",
+        "expected_intent": "observe_more",
+        "selected_intent": "observe_more",
+        "target_entity_id": "opening_0003",
+        "matches_expected": true,
+        "validated": true,
+        "width_only_intent": "investigate_candidate",
+        "width_only_validated": false,
+        "width_only_rejections": [
+          "missing_evidence_suppressed"
+        ]
+      },
+      {
+        "label": "passage_blocked",
+        "expected_intent": "reject_blocked_candidate",
+        "selected_intent": "reject_blocked_candidate",
+        "target_entity_id": "opening_0003",
+        "matches_expected": true,
+        "validated": true,
+        "width_only_intent": "investigate_candidate",
+        "width_only_validated": false,
+        "width_only_rejections": [
+          "invalidated_target_requires_rejection",
+          "missing_evidence_suppressed",
+          "reason_inconsistent_with_context"
+        ]
+      }
+    ]
+  }
+}

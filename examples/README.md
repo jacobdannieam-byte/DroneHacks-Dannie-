@@ -16,3 +16,12 @@ optimizer diagnostics that the command gateway cannot accept.
 
 Exact commands, evidence limits and the relation to the unified phases are in
 [the comparison report](../docs/goal_reasoning_comparison.md).
+
+`configure_strategy.py` composes a reviewed H1 profile with one pinned strategy.
+`compare_strategy_predictors.py` holds S2 and D5 fixed to measure predictor
+decision impact. `strategy_comparison.py` compares external run records and
+refuses missing or mismatched conditions. `strategy_audit.py` only reads the
+protected baseline. `recorded_native_inventory.py` is the prior evidence
+inventory reader reused from `physical-gazebo-evidence/native_bag_summary.py`;
+its wrapper mounts the saved bag read-only in a separate container with no ROS
+network. See [the portfolio runbook](../docs/strategy_comparison.md).

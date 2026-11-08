@@ -3,7 +3,7 @@
   "strategy": "S1",
   "run_id": "run-AdMalPxA",
   "revision": "ad31ae55ebf7cd3b2eaf57917537242831e3c752",
-  "configuration_sha256": null,
+  "configuration_sha256": "848b89d23b63c43d1551c31c782b741aeb3361b0ce17d51ab9937bc278818925",
   "identity_confirmation": "User identified this successful run; saved report and approval agree on revision.",
   "artifact_root": "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\classical-smoke-ad31ae5\\simulator\\gazebo_trial\\generated\\hybrid_runs\\run-AdMalPxA",
   "artifact_sha256": {
@@ -20,10 +20,10 @@
     "course": "74a3b67ed942292d880c79cc43eb2d0740466d0c27bfa42cb5045210e05f9ccf",
     "permitted_map": null,
     "initial_pose": null,
-    "vehicle": null,
-    "sensors": null,
+    "vehicle": "12d2b065f4467456f58666c8d05733491859565445937a41603fe02b07e493de",
+    "sensors": "abcfc9977bdc8fe29ec1f7a319d97470ea407a1ce2abf46796022dcffa2cb61c",
     "seed": null,
-    "mission": "side-gap-first",
+    "mission": "1953355230cb2ccc20b6cbb37061f4901c0174f7d719ed3daa119184bb997bbf",
     "scoring": "saved full-course referee",
     "termination": null
   },
@@ -39,6 +39,27 @@
   "limitations": [
     "One passing run, not repeated paired evidence.",
     "Minimum clearance is sampled referee propeller-point distance, not D3 swept-body clearance.",
-    "Complete matched configuration and initial-condition identities still need extraction/review."
-  ]
+    "Archived launch/map/mission/vehicle/sensor files hashed. Initial pose, seed, permitted-map and termination parity remain unconfirmed."
+  ],
+  "archived_configuration_sha256": {
+    "drone_code/team_nav/course_maps/phone_scan_2026-11-06.json": "74a3b67ed942292d880c79cc43eb2d0740466d0c27bfa42cb5045210e05f9ccf",
+    "drone_code/team_nav/missions/dronehacks_2026_side_gap_first.json": "1953355230cb2ccc20b6cbb37061f4901c0174f7d719ed3daa119184bb997bbf",
+    "simulator/gazebo_trial/full_route_in_gazebo.launch.py": "78ed2214b67cc9ad48c8c4c9995231ef4e264f6295af8223a1c8ff506cfc89c0",
+    "simulator/gazebo_trial/models/drone_16_with_oak_d_s2/model.sdf": "12d2b065f4467456f58666c8d05733491859565445937a41603fe02b07e493de",
+    "simulator/gazebo_trial/models/oak_d_s2_camera/model.sdf": "abcfc9977bdc8fe29ec1f7a319d97470ea407a1ce2abf46796022dcffa2cb61c"
+  },
+  "archive_matches_revision": {
+    "drone_code/team_nav/course_maps/phone_scan_2026-11-06.json": false,
+    "drone_code/team_nav/missions/dronehacks_2026_side_gap_first.json": false,
+    "simulator/gazebo_trial/full_route_in_gazebo.launch.py": false,
+    "simulator/gazebo_trial/models/drone_16_with_oak_d_s2/model.sdf": false,
+    "simulator/gazebo_trial/models/oak_d_s2_camera/model.sdf": false
+  },
+  "archive_matches_revision_after_crlf_normalization": {
+    "drone_code/team_nav/course_maps/phone_scan_2026-11-06.json": true,
+    "drone_code/team_nav/missions/dronehacks_2026_side_gap_first.json": true,
+    "simulator/gazebo_trial/full_route_in_gazebo.launch.py": true,
+    "simulator/gazebo_trial/models/drone_16_with_oak_d_s2/model.sdf": true,
+    "simulator/gazebo_trial/models/oak_d_s2_camera/model.sdf": true
+  }
 }

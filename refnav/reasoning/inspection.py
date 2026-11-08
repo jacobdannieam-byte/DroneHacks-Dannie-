@@ -142,7 +142,17 @@ def _viewpoint(context, inputs, entity, failures):
         yaw_delta = math.atan2(math.sin(yaw_delta), math.cos(yaw_delta))
         if abs(yaw_delta) > .45 or not 0 <= v < inputs.calibration.height:
             return None
-        u = cx
+        import numpy as np
+        from onboard.adapters.geometry import rot_z
+        turn = rot_z(yaw_delta)
+        offset = np.asarray(inputs.camera_offset_metres)
+        turned_delta = np.asarray(delta) + offset - turn @ offset
+        turned_optical = (turn @ np.asarray(inputs.rotation_map_optical)).T @ turned_delta
+        if turned_optical[2] <= STANDOFF_METRES:
+            return None
+        u, v = fx * turned_optical[0] / turned_optical[2] + cx, fy * turned_optical[1] / turned_optical[2] + cy
+        if not (0 <= u < inputs.calibration.width and 0 <= v < inputs.calibration.height):
+            return None
     step = min(MAX_STEP_METRES, max(0., distance - STANDOFF_METRES * 2))
     if yaw_delta:
         step = 0.

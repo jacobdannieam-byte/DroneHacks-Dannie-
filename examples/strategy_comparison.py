@@ -7,6 +7,7 @@ import argparse
 from hashlib import sha256
 import json
 import math
+import re
 from pathlib import Path
 
 CONDITIONS = ('course', 'permitted_map', 'initial_pose', 'vehicle', 'sensors',
@@ -33,11 +34,14 @@ def compare(runs):
     for run in runs:
         label = run.get('run_id', 'missing')
         conditions = run.get('conditions', {})
-        missing = [key for key in CONDITIONS if conditions.get(key) is None]
+        missing = [key for key in CONDITIONS if conditions.get(key) in (None, '')]
         if missing:
             errors.append({'run_id': label, 'missing_conditions': missing})
-        if not run.get('revision') or not run.get('configuration_sha256'):
+        if (not re.fullmatch('[0-9a-f]{40}', str(run.get('revision', '')))
+                or not re.fullmatch('[0-9a-f]{64}', str(run.get('configuration_sha256', '')))):
             errors.append({'run_id': label, 'reason': 'missing_source_or_configuration_identity'})
+        if run.get('strategy') not in ('S0', 'S1', 'S2', 'S3', 'S4') or not isinstance(label, str) or label == 'missing':
+            errors.append({'run_id': label, 'reason': 'invalid_run_or_strategy_identity'})
         key = (run.get('strategy'), label)
         if key in keys:
             errors.append({'run_id': label, 'reason': 'duplicate_run'})

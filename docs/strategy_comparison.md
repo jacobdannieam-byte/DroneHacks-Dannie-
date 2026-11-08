@@ -72,6 +72,7 @@ rejected by the D0-only execution gateway. Those promotion gates are retained.
 
 ```sh
 python -m pytest tests -q
+python -m examples.run_strategy_smoke --strategy scenarios/strategies/hybrid_information_gain.json --output s2-smoke.json
 python -m examples.compare_strategy_predictors
 python -m examples.strategy_comparison classical-run.json hybrid-run.json --output paired.json
 bash examples/run_recorded_strategy_inventory.sh
@@ -125,3 +126,45 @@ evidence merely because their checkpoints are reused.
 Rollback: use the unchanged `codex/goal-reasoning-comparison` worktree at the
 starting SHA or select `hybrid_existing` in this worktree. Do not reset or
 switch any Classical worktree. No changes are merged to main or protected refs.
+
+## Final verification and retained native failure
+
+The updated suite passed **451 tests in 26.65 seconds**. The fresh abstract
+held-out rerun reproduced 68/260/259/244/243 useful-evidence acquisitions for
+G0/G1/G2 seeds 11/29/47. The seven-model S2/D5 ablation chose `forward` in every
+positive case and stopped every sensor-loss case. Ten timing samples per case,
+p50/p95/p99/max and a separate real-deadline result are in
+`predictor_decisions.json`; these are host measurements, not target qualification.
+
+The saved Classical bag was deserialized successfully with native ROS messages
+in a network-isolated container, without playback or publishers. Archived map,
+mission, launch and sensor/model files have exact byte hashes in
+`classical_baseline.json`. They match `ad31ae5` after CRLF normalization; raw
+archive hashes differ from Git blob hashes due to Windows line endings.
+
+Fresh native observation used a standalone Hybrid launch copy (`strategy-native`)
+at `aa6c77b76a29e8e6340939e2b02ffaf192c17af7`, because Linux Git cannot resolve
+the Windows linked-worktree metadata. Only that copy's local line-ending setting
+was adjusted. Run `run-MC0GeHVr`, domain 73, built four ROS packages and reached
+all required topics with an advancing clock at approximately 1.0 RTF. It exited
+1 after twelve preflight attempts: simulated-estimator health was false and the
+landed report was older than the 300 ms admission limit. Last report: landed
+sample at 91.444 s, current health receipt at 92.400 s. The received landed value
+was true, but stale; it was correctly not accepted as fresh. No command graph
+issues or command publishers appeared. No flight owner/arming was started.
+The isolated container exited through its launcher cleanup; teammate services
+were never controlled. Full native evidence remains in that launch copy and
+the compact report/hashes are in `native_observe.json`.
+
+This is a measured Hybrid health/freshness integration blocker, not evidence
+against the successful Classical environment. Do not increase age limits or
+invent health to pass it. Qualification needs a reviewed source-timing contract,
+current native H1/course profile, and subsequent separately approved flight.
+No experimental strategy is advertised as closed-loop Gazebo-qualified.
+
+`preservation.json` confirms identical protected tracked-file hashes, worktree
+status and HEADs, and unchanged non-task refs between snapshots. Remote heads
+were also reread unchanged. Prior goal-comparison artifacts were not modified.
+The external evaluator's `external_comparison_status.json` explicitly refuses
+comparison until matching Hybrid course evidence and missing start/seed/map-
+permission/termination conditions are supplied.

@@ -16,3 +16,9 @@ does not imply a safe stationary hold, and no observation completes a checkpoint
 
 See [comparison evidence](../../docs/goal_reasoning_comparison.md) for runnable
 configurations, normalization, failure behavior and unverified native gates.
+
+The [strategy portfolio](../../docs/strategy_comparison.md) adds named, pinned
+configurations and a bounded yaw hypothesis. `inspection-yaw` is reconstructed
+from the validated selection and current observation, with geometric sweep
+checks and angular progress separate from translation. S0 excludes this new
+primitive. Experimental strategies remain shadow-only at the existing owner.

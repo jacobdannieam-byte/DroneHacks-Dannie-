@@ -1,0 +1,248 @@
+{
+  "/clock": {
+    "type": "rosgraph_msgs/msg/Clock",
+    "count": 35159,
+    "rate_sim_hz": 249.9928894450923
+  },
+  "/fmu/in/manual_control_input": {
+    "type": "px4_msgs/msg/ManualControlSetpoint",
+    "count": 2812,
+    "rate_sim_hz": 20.00028460027891
+  },
+  "/fmu/in/offboard_control_mode": {
+    "type": "px4_msgs/msg/OffboardControlMode",
+    "count": 1406,
+    "rate_sim_hz": 10.0
+  },
+  "/fmu/in/trajectory_setpoint": {
+    "type": "px4_msgs/msg/TrajectorySetpoint",
+    "count": 1406,
+    "rate_sim_hz": 10.0
+  },
+  "/fmu/in/vehicle_command": {
+    "type": "px4_msgs/msg/VehicleCommand",
+    "count": 5,
+    "rate_sim_hz": 9.523809523809524
+  },
+  "/fmu/in/vehicle_visual_odometry": {
+    "type": "px4_msgs/msg/VehicleOdometry",
+    "count": 3980,
+    "rate_sim_hz": 29.999396845501977,
+    "after_initial_10_sim_s": {
+      "pose_frame": {
+        "1": 3680
+      },
+      "velocity_frame": {
+        "3": 3680
+      },
+      "reset_counter": {
+        "0": 3680
+      }
+    },
+    "bag_receive_minus_source_ms": [
+      0.0,
+      12.0
+    ]
+  },
+  "/fmu/out/distance_sensor": {
+    "type": "px4_msgs/msg/DistanceSensor",
+    "count": 663,
+    "rate_sim_hz": 5.0,
+    "after_initial_10_sim_s": {
+      "current_distance": {
+        "min": 0.03552006557583809,
+        "max": 0.9699976444244385,
+        "nonfinite": 0
+      },
+      "min_distance": {
+        "min": 0.0,
+        "max": 0.0,
+        "nonfinite": 0
+      },
+      "max_distance": {
+        "min": 4.0,
+        "max": 4.0,
+        "nonfinite": 0
+      },
+      "signal_quality": {
+        "-1": 613
+      },
+      "orientation": {
+        "25": 613
+      }
+    },
+    "bag_receive_minus_source_ms": [
+      0.0,
+      4.0
+    ]
+  },
+  "/simulator_only/touches": {
+    "type": "std_msgs/msg/String",
+    "count": 0,
+    "rate_sim_hz": null
+  },
+  "/skybeta/state": {
+    "type": "std_msgs/msg/String",
+    "count": 703,
+    "rate_sim_hz": 5.0
+  },
+  "/visual_slam/tracking/odometry": {
+    "type": "nav_msgs/msg/Odometry",
+    "count": 3980,
+    "rate_sim_hz": 29.999396845501977
+  },
+  "/visual_slam/status": {
+    "type": "isaac_ros_visual_slam_interfaces/msg/VisualSlamStatus",
+    "count": 1406,
+    "rate_sim_hz": 10.0
+  },
+  "/fmu/out/vehicle_command_ack": {
+    "type": "px4_msgs/msg/VehicleCommandAck",
+    "count": 6,
+    "rate_sim_hz": 0.11319387847505206
+  },
+  "/fmu/out/vehicle_land_detected": {
+    "type": "px4_msgs/msg/VehicleLandDetected",
+    "count": 157,
+    "rate_sim_hz": 1.1613018491498674,
+    "after_initial_10_sim_s": {
+      "landed": {
+        "True": 55,
+        "False": 86
+      }
+    },
+    "bag_receive_minus_source_ms": [
+      0.0,
+      4.0
+    ]
+  },
+  "/fmu/out/failsafe_flags": {
+    "type": "px4_msgs/msg/FailsafeFlags",
+    "count": 254,
+    "rate_sim_hz": 1.874907366236846
+  },
+  "/fmu/out/vehicle_local_position": {
+    "type": "px4_msgs/msg/VehicleLocalPosition",
+    "count": 13521,
+    "rate_sim_hz": 100.0,
+    "after_initial_10_sim_s": {
+      "z": {
+        "min": -0.8407464027404785,
+        "max": 0.022499646991491318,
+        "nonfinite": 0
+      },
+      "dist_bottom": {
+        "min": 0.0973919928073883,
+        "max": 0.9649699926376343,
+        "nonfinite": 0
+      },
+      "dist_bottom_valid": {
+        "False": 12521
+      },
+      "z_valid": {
+        "True": 12521
+      },
+      "xy_valid": {
+        "True": 12521
+      },
+      "heading_good_for_control": {
+        "True": 12521
+      },
+      "z_reset_counter": {
+        "1": 12521
+      },
+      "xy_reset_counter": {
+        "2": 12521
+      },
+      "heading_reset_counter": {
+        "1": 12521
+      }
+    },
+    "bag_receive_minus_source_ms": [
+      0.0,
+      20.0
+    ]
+  },
+  "/fmu/out/vehicle_odometry": {
+    "type": "px4_msgs/msg/VehicleOdometry",
+    "count": 13520,
+    "rate_sim_hz": 100.00443839507633,
+    "after_initial_10_sim_s": {
+      "pose_frame": {
+        "1": 12519
+      },
+      "velocity_frame": {
+        "1": 12519
+      },
+      "reset_counter": {
+        "6": 12519
+      }
+    },
+    "bag_receive_minus_source_ms": [
+      0.0,
+      20.0
+    ]
+  },
+  "/fmu/out/estimator_status_flags": {
+    "type": "px4_msgs/msg/EstimatorStatusFlags",
+    "count": 143,
+    "rate_sim_hz": 1.0578384338031526,
+    "after_initial_10_sim_s": {
+      "cs_rng_hgt": {
+        "True": 126
+      },
+      "cs_rng_fault": {
+        "False": 126
+      },
+      "cs_rng_terrain": {
+        "False": 126
+      },
+      "cs_baro_hgt": {
+        "True": 126
+      },
+      "cs_ev_pos": {
+        "True": 126
+      },
+      "cs_ev_yaw": {
+        "True": 126
+      },
+      "cs_yaw_align": {
+        "True": 126
+      }
+    },
+    "bag_receive_minus_source_ms": [
+      0.0,
+      0.0
+    ]
+  },
+  "/fmu/out/vehicle_status_v1": {
+    "type": "px4_msgs/msg/VehicleStatus",
+    "count": 286,
+    "rate_sim_hz": 2.114494301994302,
+    "after_initial_10_sim_s": {
+      "arming_state": {
+        "1": 77,
+        "2": 178
+      },
+      "nav_state": {
+        "2": 72,
+        "15": 3,
+        "14": 180
+      }
+    },
+    "bag_receive_minus_source_ms": [
+      -4.0,
+      0.0
+    ]
+  },
+  "/skybeta/setpoint/pose": {
+    "type": "geometry_msgs/msg/PoseStamped",
+    "count": 37070,
+    "rate_sim_hz": 456.6947565543071
+  },
+  "/skybeta/setpoint/twist": {
+    "type": "geometry_msgs/msg/TwistStamped",
+    "count": 3769,
+    "rate_sim_hz": 459.73645680819914
+  }
+}
