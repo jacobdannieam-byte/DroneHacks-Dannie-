@@ -94,5 +94,17 @@ def assess(state, snapshot, *, now_ns, alignment, vehicle, objective,
     if map_consumer is not None and _input_reason(
             state, metric, alignment, now_ns, state_received_ns,
             estimator_reset_counter, estimator_healthy, objective) is None:
-        map_reasoning = map_consumer(state, alignment, now_ns)
+        try:
+            map_reasoning = map_consumer(state, alignment, now_ns)
+        except Exception:
+            # Optional diagnostics must not interrupt the existing safety loop.
+            map_reasoning = None
+        if receipt.plan.decision == "candidate_proposed":
+            if cancelled is not None and cancelled():
+                reason = "cancelled"
+            elif monotonic() >= receipt.plan.deadline_monotonic_s:
+                reason = "deadline_exceeded"
+            if reason != "eligible_for_offline_review":
+                receipt = replace(receipt, plan=Plan("safe_stop_requested", reason,
+                    deadline_monotonic_s=receipt.plan.deadline_monotonic_s))
     return HybridAssessment(receipt, reason, objective, goal, vehicle, map_reasoning)

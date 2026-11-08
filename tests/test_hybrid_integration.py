@@ -138,3 +138,21 @@ def test_h2_map_consumer_is_not_called_for_invalid_estimator(inputs):
     result = hybrid_integration.assess(**(inputs | {'estimator_healthy': False}), map_consumer=forbidden)
     assert result.map_reasoning is None
     assert result.receipt.plan.decision == 'safe_stop_requested'
+
+
+def test_map_diagnostics_failure_does_not_interrupt_safety(inputs):
+    def broken(*args):
+        raise ValueError('Unavailable diagnostic input')
+    result = hybrid_integration.assess(**inputs, map_consumer=broken)
+    assert result.map_reasoning is None
+    assert result.validation_reason == 'eligible_for_offline_review'
+
+
+def test_map_diagnostics_cannot_return_expired_candidate(inputs):
+    elapsed = [0.]
+    def slow(*args):
+        elapsed[0] = 1.
+        return None
+    result = hybrid_integration.assess(**(inputs | {'monotonic': lambda: elapsed[0]}), map_consumer=slow)
+    assert result.validation_reason == 'deadline_exceeded'
+    assert result.receipt.plan.decision == 'safe_stop_requested'
