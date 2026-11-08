@@ -46,7 +46,9 @@ def _forward(inputs, weights):
     return hidden1, hidden2, output
 
 
-def fit(train, validation, *, seed=SEED):
+def fit(train, validation, *, seed=SEED, physics_strength=0.):
+    if not np.isfinite(physics_strength) or not 0 <= physics_strength <= 1:
+        raise ValueError('Physics consistency weight must be between zero and one.')
     inputs, activity, targets = train
     valid_inputs, valid_activity, valid_targets = validation
     mean = inputs.mean(axis=0)
@@ -73,7 +75,10 @@ def fit(train, validation, *, seed=SEED):
             batch = order[start:start + BATCH_SIZE]
             x, gate, y = inputs[batch], activity[batch], targets[batch]
             h1, h2, out = _forward(x, weights)
-            grad3 = (2.0 / out.size) * (out * gate - y) * gate * (1 - out ** 2)
+            # Optional closed-loop consistency loss: corrected acceleration should
+            # stay near D0's saturated (desired velocity - velocity) / time constant.
+            # Residual zero is that physical prior. Measured data can override it.
+            grad3 = (2.0 / out.size) * ((out * gate - y) + physics_strength * out * gate) * gate * (1 - out ** 2)
             grad2 = (grad3 @ weights["w3"].T) * (h2 > 0)
             grad1 = (grad2 @ weights["w2"].T) * (h1 > 0)
             gradients = {"w1": x.T @ grad1, "b1": grad1.sum(axis=0),
