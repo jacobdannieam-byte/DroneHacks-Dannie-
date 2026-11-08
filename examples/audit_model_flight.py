@@ -78,7 +78,13 @@ def main():
     rows=[json.loads(line) for line in (root/'model_owner.decisions.jsonl').read_text().splitlines()]
     report=audit(rows,commands,config)
     owner=json.loads((root/'model_owner.json').read_text())
-    report['flight_pass']=report['model_command_proof']=='PASS' and owner['result']=='complete' and owner['waypoints_reached']==len(config['waypoints_ned_m'])
+    recorder=json.loads((root/'calibration_recording.json').read_text())
+    bag_gate=json.loads((root/'recording_final.json').read_text())
+    report['recording_complete']=recorder.get('recording_complete') is True and not recorder.get('recording_faults') and recorder.get('pending_clock_samples')==0 and bag_gate.get('passed') is True
+    report['flight_pass']=(report['model_command_proof']=='PASS' and report['recording_complete']
+        and owner['result']=='complete' and owner['waypoints_reached']==len(config['waypoints_ned_m'])
+        and owner['model_command_count']==report['selected_commands']
+        and owner['max_observed_speed_mps']<=.50 and owner['native_disarm_ns'] is not None)
     with (root/'model-command-audit.json').open('x') as out:json.dump(report,out,indent=2)
     print(json.dumps(report));return int(not report['flight_pass'])
 
