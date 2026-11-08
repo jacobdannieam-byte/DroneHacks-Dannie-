@@ -72,7 +72,8 @@ def main():
     from px4_msgs.msg import TrajectorySetpoint
     root=args.evidence;bag=next((root/'observations').glob('*.db3'))
     connection=sqlite3.connect('file:'+str(bag)+'?mode=ro',uri=True)
-    topic=connection.execute("select id from topics where name='/fmu/in/trajectory_setpoint'").fetchone()[0]
+    found=connection.execute("select id from topics where name='/fmu/in/trajectory_setpoint'").fetchone()
+    topic=-1 if found is None else found[0]
     commands=[]
     for data, in connection.execute('select data from messages where topic_id=? order by timestamp,id',(topic,)):
         msg=deserialize_message(data,TrajectorySetpoint)
@@ -85,9 +86,9 @@ def main():
     bag_gate=json.loads((root/'recording_final.json').read_text())
     report['recording_complete']=recorder.get('recording_complete') is True and not recorder.get('recording_faults') and recorder.get('pending_clock_samples')==0 and bag_gate.get('passed') is True
     report['flight_pass']=(report['model_command_proof']=='PASS' and report['recording_complete']
-        and owner['result']=='complete' and owner['waypoints_reached']==len(config['waypoints_ned_m'])
+        and owner.get('result')=='complete' and owner['waypoints_reached']==len(config['waypoints_ned_m'])
         and owner['model_command_count']==report['selected_commands']
-        and owner['max_observed_speed_mps']<=.50 and owner['native_disarm_ns'] is not None)
+        and owner['max_observed_speed_mps']<=.50 and owner.get('native_disarm_ns') is not None)
     if config.get('full_course'):
         summaries=list((root/'flight_records').glob('*_summary.json'))
         referee=json.loads(summaries[0].read_text()) if len(summaries)==1 else {}

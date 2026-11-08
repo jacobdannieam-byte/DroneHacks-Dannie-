@@ -37,6 +37,7 @@ import argparse
 import math
 import os
 import sys
+import xml.etree.ElementTree as ET
 
 FOLDER_OF_THIS_FILE = os.path.dirname(os.path.abspath(__file__))
 REPOSITORY_FOLDER = os.path.dirname(os.path.dirname(FOLDER_OF_THIS_FILE))
@@ -103,15 +104,22 @@ def make_world_file(map_file_path, include_drone=True, for_full_simulator=False)
     if os.environ.get("FULLCOURSE_VIDEO") == "1":
         # Independent observer only: no changes to collisions or onboard sensors.
         observer = f"""<model name="course_observer"><static>true</static>
-<pose>{-launch_x} {-launch_y} 2.8 0 1.57079632679 0</pose><link name="camera">
-<sensor name="overhead" type="camera"><always_on>true</always_on><update_rate>5</update_rate>
-<topic>/course_observer/image</topic><camera><horizontal_fov>2.05</horizontal_fov>
-<image><width>1024</width><height>768</height><format>R8G8B8</format></image>
+<pose>{-launch_x} {-launch_y} 7.5 0 1.57079632679 0</pose><link name="camera">
+<sensor name="overhead" type="camera"><always_on>true</always_on><update_rate>2</update_rate>
+<topic>/course_observer/image</topic><camera><horizontal_fov>1.2</horizontal_fov><visibility_mask>2</visibility_mask>
+<image><width>512</width><height>384</height><format>R8G8B8</format></image>
 <clip><near>0.05</near><far>20</far></clip></camera></sensor></link></model>"""
         with open(world_file_path, encoding='utf-8') as source:
             contents = source.read()
+        tree=ET.fromstring(contents)
+        # Hide only the roof visual from the observer's mask. All collisions
+        # and the onboard camera's default visibility mask remain unchanged.
+        roof=tree.find(".//visual[@name='net_roof_visual']")
+        if roof is None:raise ValueError('Observer roof visual binding missing')
+        ET.SubElement(roof,'visibility_flags').text='1'
+        tree.find('world').append(ET.fromstring(observer))
         with open(world_file_path, 'w', encoding='utf-8') as out:
-            out.write(contents.replace('</world>', observer + '\n</world>'))
+            out.write(ET.tostring(tree,encoding='unicode'))
     return world_file_path
 
 
