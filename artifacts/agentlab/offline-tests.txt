@@ -1,0 +1,17 @@
+test_independent_review_expiry_cancel (test_jobs.JobTests.test_independent_review_expiry_cancel) ... ok
+test_timeout_budget (test_jobs.JobTests.test_timeout_budget) ... ok
+test_disabled (test_offline.Tests.test_disabled) ... ok
+test_evidence (test_offline.Tests.test_evidence) ... ok
+test_flags (test_offline.Tests.test_flags) ... ok
+test_manifest (test_offline.Tests.test_manifest) ... ok
+test_paths (test_offline.Tests.test_paths) ... ok
+test_perf (test_offline.Tests.test_perf) ... ok
+test_queue_persistence_dedup (test_offline.Tests.test_queue_persistence_dedup) ... ok
+test_repair (test_offline.Tests.test_repair) ... ok
+test_roles (test_offline.Tests.test_roles) ... ok
+test_triage (test_offline.Tests.test_triage) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.190s
+
+OK

@@ -1,0 +1,17 @@
+{
+  "mode": "staged_only",
+  "agents_enabled": false,
+  "moving_sim_enabled": false,
+  "notion_write_enabled": false,
+  "continuous_loop_enabled": false,
+  "allow_merge_or_push": false,
+  "allow_physical_flight": false,
+  "max_agent_workers": 4,
+  "max_sim_workers": 1,
+  "max_retries": 1,
+  "max_trials_per_batch": 20,
+  "max_wall_seconds_per_sim": 180,
+  "max_budget_usd_per_batch": 0,
+  "sim_adapter": "UNCONFIGURED",
+  "protected_strategy": "S1"
+}
