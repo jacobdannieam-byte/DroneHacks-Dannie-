@@ -1,0 +1,72 @@
+{
+  "scope": "read-only calibration dependency source audit; no flight",
+  "compared_head": "2ecbee3281727cff8c3791068f3503e66edf2bcf",
+  "against": "fde3265ee151ce41ebf3fada16a20cc49b2b169e",
+  "paths": {
+    "examples/calibration_trial_owner.py": {
+      "working_bytes_sha256": "67cf534a1771194733390d0177c11ad251f0aace5b4f7d52c0f2b9a8578193e1",
+      "head_blob_sha256": "67cf534a1771194733390d0177c11ad251f0aace5b4f7d52c0f2b9a8578193e1",
+      "same_git_bytes_as_r1": true,
+      "archive_bytes_sha256": "67cf534a1771194733390d0177c11ad251f0aace5b4f7d52c0f2b9a8578193e1"
+    },
+    "refnav/calibration_trial.py": {
+      "working_bytes_sha256": "92d87d642341403ef20c92e3e6166700cca6781dd73ed24f3b86b7c51b09ddc5",
+      "head_blob_sha256": "92d87d642341403ef20c92e3e6166700cca6781dd73ed24f3b86b7c51b09ddc5",
+      "same_git_bytes_as_r1": true,
+      "archive_bytes_sha256": "92d87d642341403ef20c92e3e6166700cca6781dd73ed24f3b86b7c51b09ddc5"
+    },
+    "examples/calibration_bag_audit.py": {
+      "working_bytes_sha256": "ed2122a8cea884e34b3f72bef6798a3561b66d0bf92768ff1ae7b7571767baab",
+      "head_blob_sha256": "ed2122a8cea884e34b3f72bef6798a3561b66d0bf92768ff1ae7b7571767baab",
+      "same_git_bytes_as_r1": true,
+      "archive_bytes_sha256": "ed2122a8cea884e34b3f72bef6798a3561b66d0bf92768ff1ae7b7571767baab"
+    },
+    "examples/calibration_recovery_audit.py": {
+      "working_bytes_sha256": "8f3de572197b71d6137fc379c83a7c608c648d8dbb214645d51da32d1f989c7a",
+      "head_blob_sha256": "8f3de572197b71d6137fc379c83a7c608c648d8dbb214645d51da32d1f989c7a",
+      "same_git_bytes_as_r1": true,
+      "archive_bytes_sha256": "8f3de572197b71d6137fc379c83a7c608c648d8dbb214645d51da32d1f989c7a"
+    },
+    "examples/stopping_trial_analysis.py": {
+      "working_bytes_sha256": "9f55f9239254b0775eb648df0fc01a1c16e4f9cd51c8812615c945c49f7fa1d5",
+      "head_blob_sha256": "ba2794ea0145b4046ef6b38cc830d7afd68feacd2aef9d255a547245b1666941",
+      "same_git_bytes_as_r1": true,
+      "archive_bytes_sha256": "9f55f9239254b0775eb648df0fc01a1c16e4f9cd51c8812615c945c49f7fa1d5"
+    },
+    "examples/calibration_operator_capture.py": {
+      "working_bytes_sha256": "3b35d95ec380c756d23bd169c2f83c1b31e374de1cb75a6dce22b81999e1986f",
+      "head_blob_sha256": "3b35d95ec380c756d23bd169c2f83c1b31e374de1cb75a6dce22b81999e1986f",
+      "same_git_bytes_as_r1": false,
+      "archive_bytes_sha256": "3b35d95ec380c756d23bd169c2f83c1b31e374de1cb75a6dce22b81999e1986f"
+    },
+    "simulator/gazebo_trial/inside_the_box/run_hybrid.sh": {
+      "working_bytes_sha256": "b38867f42ceb7d2a1f99d03f81cffb7d0f3f53daa8def24276fdeeadada50918",
+      "head_blob_sha256": "b38867f42ceb7d2a1f99d03f81cffb7d0f3f53daa8def24276fdeeadada50918",
+      "same_git_bytes_as_r1": true,
+      "archive_bytes_sha256": "b38867f42ceb7d2a1f99d03f81cffb7d0f3f53daa8def24276fdeeadada50918"
+    },
+    "examples/h1_observation.py": {
+      "working_bytes_sha256": "e14655aa7602c25b4d7f72ffe8adbca12a62960bf1833a40b233d8053cb0500c",
+      "head_blob_sha256": "ccacd92bce2e3e01b97bff7a2095cddcc8f8067baeab720c2e7d36c42a8b5eb2",
+      "same_git_bytes_as_r1": false,
+      "archive_bytes_sha256": "e14655aa7602c25b4d7f72ffe8adbca12a62960bf1833a40b233d8053cb0500c"
+    },
+    "examples/gazebo_sensor_contract.py": {
+      "working_bytes_sha256": "74d5401e810a6f203f4f6b3f98cd904d1610d7799675070361a43dbf512b7fa4",
+      "head_blob_sha256": "1754661bc1626420ea00daa9ef31005468a756f84ab62100b079233a7c358fe7",
+      "same_git_bytes_as_r1": false,
+      "archive_bytes_sha256": "74d5401e810a6f203f4f6b3f98cd904d1610d7799675070361a43dbf512b7fa4"
+    },
+    "refnav/core.py": {
+      "working_bytes_sha256": "fd5acf9c80092bf19d6dfe7edce3cca3857ad14dfeee68d758381e688e7b87a2",
+      "head_blob_sha256": "877f19e3ff98c443aa24f3ff8d8058d39dc5568021775d3493af89a15d3136c4",
+      "same_git_bytes_as_r1": false,
+      "archive_bytes_sha256": "fd5acf9c80092bf19d6dfe7edce3cca3857ad14dfeee68d758381e688e7b87a2"
+    }
+  },
+  "archive_sha256": "87e8781e0e26492b0f77e733a0d54cdd6bfc17c7e3016947c9538f5cff350e88",
+  "archive_member_manifest_check": {
+    "passed": true,
+    "file_count": 403
+  }
+}

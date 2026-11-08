@@ -1,0 +1,9 @@
+Frozen runtime: 2ecbee3281727cff8c3791068f3503e66edf2bcf
+Final tracked test suite: 817 passed in 44.01s.
+Command enumerates git ls-files tests, selects test_*.py, runs pytest -q -p no:cacheprovider.
+TEMP/TMP set to sibling taskforce-flight-prep-008/test-temp.
+Unrelated untracked classical comparison tests were excluded.
+Parent focused final startup/runtime/telemetry: 46 passed in 4.36s.
+Independent final launch/binder/stopping: 34 passed in 1.04s.
+Prior 816-pass run preceded final real Mission regression; not the final count.
+No moving or physical trial performed.

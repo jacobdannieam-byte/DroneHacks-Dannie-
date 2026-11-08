@@ -1,0 +1,1 @@
+{"state": "ready", "recorder_pid": 1707, "ros_stamp_ns": 19840000000, "contract_sha256": "2e8211d0c8a498149dd5af4beea8b026e5174fdfd4fe228cde81fb22e4b57bbb", "trial_id": "calibration-r1-expiry-001", "owner_id": "/calibration_trial_owner", "profile_sha256": "d7f17360b5c6e437fd25a406aece54ab3d09534c350f8a66facd266b368cf4cd", "trial_kind": "authority_expiry"}

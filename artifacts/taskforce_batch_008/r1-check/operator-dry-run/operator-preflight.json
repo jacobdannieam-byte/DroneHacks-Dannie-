@@ -1,0 +1,10 @@
+{
+  "fresh_healthy_in_lane": true,
+  "idle_motion_graph": true,
+  "owner_exited": true,
+  "ros_ns": 1200000000,
+  "source": "synthetic clock and Position state",
+  "status_px4_us": 1100000,
+  "synthetic": true,
+  "wall_ns": 17803225338725
+}

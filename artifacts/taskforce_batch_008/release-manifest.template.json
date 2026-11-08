@@ -1,0 +1,62 @@
+{
+  "scope": "release review template only; not accepted as an approval artifact",
+  "motion_authority": false,
+  "s0_authorized": false,
+  "policy_activation": false,
+  "source_selection": "one new frozen source for both trials; parent supplies archive identities after freeze",
+  "operator_helper_path": "examples/calibration_operator_capture.py",
+  "operator_helper_working_bytes_sha256": "3b35d95ec380c756d23bd169c2f83c1b31e374de1cb75a6dce22b81999e1986f",
+  "operator_helper_archive_bytes_sha256": "3b35d95ec380c756d23bd169c2f83c1b31e374de1cb75a6dce22b81999e1986f",
+  "operator_helper_overlay": false,
+  "trials": {
+    "C1": {
+      "image_sha256": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1",
+      "world_sha256": "d64be312bb5479c529acf2dd6ba559f50d4bf2dd224fbb31cd69be1b5f93dd07",
+      "vehicle_sha256": "f8cc362929337eb37e8649632ce3426d86a029a80932cee06a1a80f2d1e169f3",
+      "geometry_evidence_sha256": "6582616dd24cb11488196bfc59bcd4476c685508a8866b410b91d334728fdaf3",
+      "revision": "2ecbee3281727cff8c3791068f3503e66edf2bcf",
+      "archive_sha256": "87e8781e0e26492b0f77e733a0d54cdd6bfc17c7e3016947c9538f5cff350e88",
+      "profile": "scenarios/calibration/c1_stop_020.json",
+      "profile_sha256": "cb0f11b36c8591eacfbdc832b8d080d70c4e6858931d2a7637764be6255ea76c",
+      "recording_contract": "scenarios/calibration/c1_recorder.json",
+      "recording_contract_sha256": "4a3176d59aaba5901a4e835fcf3951d156e0104ccde5791a6d01f1af703dbbc9",
+      "ros_domain_id": 57,
+      "trial_id": "calibration-c1-020-001",
+      "fresh_disarmed_evidence": null,
+      "fresh_disarmed_audit_sha256": null,
+      "approval_status": "NOT_AUTHORIZED",
+      "parameter_overrides": {
+        "MPC_LAND_SPEED": 0.3
+      },
+      "archive": "taskforce-flight-prep-008/candidate.tar"
+    },
+    "R1": {
+      "image_sha256": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1",
+      "world_sha256": "d64be312bb5479c529acf2dd6ba559f50d4bf2dd224fbb31cd69be1b5f93dd07",
+      "vehicle_sha256": "f8cc362929337eb37e8649632ce3426d86a029a80932cee06a1a80f2d1e169f3",
+      "geometry_evidence_sha256": "6582616dd24cb11488196bfc59bcd4476c685508a8866b410b91d334728fdaf3",
+      "revision": "2ecbee3281727cff8c3791068f3503e66edf2bcf",
+      "archive_sha256": "87e8781e0e26492b0f77e733a0d54cdd6bfc17c7e3016947c9538f5cff350e88",
+      "profile": "scenarios/calibration/r1_stationary_expiry.json",
+      "profile_sha256": "d7f17360b5c6e437fd25a406aece54ab3d09534c350f8a66facd266b368cf4cd",
+      "recording_contract": "scenarios/calibration/r1_recorder.json",
+      "recording_contract_sha256": "2e8211d0c8a498149dd5af4beea8b026e5174fdfd4fe228cde81fb22e4b57bbb",
+      "ros_domain_id": 58,
+      "trial_id": "calibration-r1-expiry-001",
+      "fresh_disarmed_evidence": null,
+      "fresh_disarmed_audit_sha256": null,
+      "approval_status": "NOT_AUTHORIZED",
+      "parameter_overrides": {
+        "MPC_LAND_SPEED": 0.3
+      },
+      "archive": "taskforce-flight-prep-008/candidate.tar"
+    }
+  },
+  "required_before_release": [
+    "fill exact frozen revision/archive and verify archive-member hashes",
+    "fresh RTX disarmed checks in separate domains57/58 and full raw audits",
+    "named reviewer and recovery operator; independent packet review",
+    "explicit separate user approvals; C1 reviewed before R1",
+    "only after approval create actual short-expiry approval artifact"
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "scope": "isolated_sitl_calibration_only",
+  "plan": {
+    "trial_kind": "authority_expiry",
+    "origin_ned_m": [0.0, 0.0, 0.0],
+    "minimum_offset_m": [-0.5, -0.5, -1.25],
+    "maximum_offset_m": [0.5, 0.5, 0.02],
+    "origin_tolerance_m": 0.1,
+    "height_m": 1.0,
+    "hover_tolerance_m": 0.2,
+    "north_brake_m": 0.25,
+    "transit_speed_mps": 0.2,
+    "climb_speed_mps": 0.2,
+    "actual_speed_limit_mps": 0.5,
+    "transit_timeout_s": 12.0,
+    "trial_ros_limit_s": 60.0,
+    "trial_wall_limit_s": 120.0,
+    "receipt_wall_limit_s": 3.0,
+    "settle_duration_s": 0.6
+  },
+  "clock_mapping": {
+    "source_clock_id": "px4_sitl_lockstep",
+    "ros_clock_id": "ros_sim_time",
+    "offset_ns": 0,
+    "max_error_ns": 4000000,
+    "valid_from_ns": 0,
+    "valid_until_ns": 600000000000,
+    "evidence_id": "batch003-native-timing-plus-pinned-lockstep-source"
+  },
+  "geometry_evidence_sha256": "6582616dd24cb11488196bfc59bcd4476c685508a8866b410b91d334728fdaf3",
+  "geometry_evidence_file": "artifacts/taskforce_batch_003/native-lane-reviewed-v2/geometry-review.json",
+  "parameter_overrides": {"MPC_LAND_SPEED": 0.3},
+  "recovery_review": "Proposed R1 isolated simulator only. After C1 evidence and separate approval, hold zero horizontal command and intentionally expire one 250 ms stationary owner lease. Require native Position fallback on advancing clocks. The separately approved operator verifies owner exit, idle graph, fresh healthy armed native state and in-lane position before one PX4 console LAND. Verify disarm independently. Failure or unconfirmed recovery ends this attempt and triggers the bounded failed-simulator cancellation. No retry or movement beyond this test."
+}

@@ -1,0 +1,8 @@
+Offline calibration validation, 2026-11-08
+Repository HEAD inspected: c85bcf4d47d77fcea08af97dd356663141eebd33
+Command executed from policy-gates-integration:
+python -m pytest tests/test_calibration_trial.py tests/test_calibration_bag_audit.py tests/test_calibration_recovery_audit.py tests/test_calibration_operator_capture.py tests/test_stopping_trial_analysis.py tests/test_stopping_measurement.py tests/test_qualification_recorder.py -q -p no:cacheprovider --basetemp ../taskforce-approval-008-pytest
+Observed result: 117 passed in 1.09s; process exit code 0.
+This is a concise transcription of the tool result, not a native run log.
+No simulator, ROS owner, parameter mutation, arming or flight was run by this audit.
+Final frozen candidate and fresh native disarmed checks are separate evidence.

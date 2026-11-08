@@ -1,0 +1,25 @@
+{
+  "scope": "raw native disarmed state and absence of control publication; no flight qualification",
+  "runs": [
+    {
+      "run": "c1-check",
+      "raw_bag_sha256": "4a21bff21c9ebaa136db882286c3905368461cd2849486c1a154acf160e22016",
+      "native_status_count": 87,
+      "native_arming_states": [
+        1
+      ],
+      "control_message_counts": {},
+      "result": "PASS"
+    },
+    {
+      "run": "r1-check",
+      "raw_bag_sha256": "be05497b53f14fc6a01ecae39a94b9d18429b8ea1e2ac1e0ce790213d2fa7f00",
+      "native_status_count": 87,
+      "native_arming_states": [
+        1
+      ],
+      "control_message_counts": {},
+      "result": "PASS"
+    }
+  ]
+}

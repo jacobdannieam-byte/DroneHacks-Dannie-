@@ -1,0 +1,146 @@
+{
+  "scope": "Frozen review package with native disarmed evidence; not an approval artifact",
+  "motion_authority": false,
+  "s0_authorized": false,
+  "policy_activation": false,
+  "source_selection": "one new frozen source for both trials; parent supplies archive identities after freeze",
+  "operator_helper_path": "examples/calibration_operator_capture.py",
+  "operator_helper_working_bytes_sha256": "3b35d95ec380c756d23bd169c2f83c1b31e374de1cb75a6dce22b81999e1986f",
+  "operator_helper_archive_bytes_sha256": "3b35d95ec380c756d23bd169c2f83c1b31e374de1cb75a6dce22b81999e1986f",
+  "operator_helper_overlay": false,
+  "trials": {
+    "C1": {
+      "image_sha256": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1",
+      "world_sha256": "d64be312bb5479c529acf2dd6ba559f50d4bf2dd224fbb31cd69be1b5f93dd07",
+      "vehicle_sha256": "f8cc362929337eb37e8649632ce3426d86a029a80932cee06a1a80f2d1e169f3",
+      "geometry_evidence_sha256": "6582616dd24cb11488196bfc59bcd4476c685508a8866b410b91d334728fdaf3",
+      "revision": "2ecbee3281727cff8c3791068f3503e66edf2bcf",
+      "archive_sha256": "87e8781e0e26492b0f77e733a0d54cdd6bfc17c7e3016947c9538f5cff350e88",
+      "profile": "scenarios/calibration/c1_stop_020.json",
+      "profile_sha256": "cb0f11b36c8591eacfbdc832b8d080d70c4e6858931d2a7637764be6255ea76c",
+      "recording_contract": "scenarios/calibration/c1_recorder.json",
+      "recording_contract_sha256": "4a3176d59aaba5901a4e835fcf3951d156e0104ccde5791a6d01f1af703dbbc9",
+      "ros_domain_id": 57,
+      "trial_id": "calibration-c1-020-001",
+      "fresh_disarmed_evidence": "taskforce-flight-prep-008/c1-check",
+      "fresh_disarmed_audit_sha256": "3c064a25099e0698be9219b60791ad7e535896fe11e3d8a67f3a44eec1c23622",
+      "approval_status": "NOT_AUTHORIZED; C1 first, R1 only after independent C1 review and separate approval",
+      "parameter_overrides": {
+        "MPC_LAND_SPEED": 0.3
+      },
+      "archive": "taskforce-flight-prep-008/candidate.tar",
+      "native_disarmed_summary": {
+        "duration_ns": 44032000000,
+        "strict_samples": 3236,
+        "strict_statuses": 64,
+        "faults": [],
+        "pending": 0,
+        "events": 0,
+        "recording_complete": false,
+        "renderer": "D3D12 (NVIDIA GeForce RTX 5070 Laptop GPU)",
+        "evidence_sha256": {
+          "calibration_disarmed_check.json": "18c81ab6223661312d87a1805532a91f48e1aac4c2ed671b08fd1b4834538777",
+          "calibration_profile.json": "cb0f11b36c8591eacfbdc832b8d080d70c4e6858931d2a7637764be6255ea76c",
+          "calibration_recorder_ready.json": "e323a0a50f6f58326c96204d99bc4ae7b0a83c3b8c6cb23353775cb88d48d848",
+          "calibration_recording.json": "c88579cf5817c5b678c76ad4cc5285bbda0700a55e90b4eb26256334bdcc702a",
+          "disarmed-1.json": "139f68285aa8b34211edd6bee54358f7ee1d24e5f75f47b70788b60ae241cd20",
+          "native_recovery_parameters.txt": "ef75c5851da193d0be3f4174bf868121f562882dc2f8bf9fc1736270c92ea493",
+          "ogre2.log": "adcfd495386e1e2141f7928f13961bea3a2aeed7a1aee1c3480d4bffb23ba747",
+          "recorder_contract.json": "4a3176d59aaba5901a4e835fcf3951d156e0104ccde5791a6d01f1af703dbbc9",
+          "recording_final.json": "622f83d11e601db8fdff3d2d08d67dba203c6310e36e44294e9db191abd8d452",
+          "recording_ready.json": "73dd195a6b0aa69e454062608c9b04b3837957581c43623bc5bd495f4308d0da",
+          "versions.txt": "689da13b27db9afd70e7c365021d0394b18e6c33222cfba5547272fcb1dd686a"
+        },
+        "raw_directory": "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-flight-prep-008\\c1-check\\observations"
+      },
+      "raw_bag_sha256": "4a21bff21c9ebaa136db882286c3905368461cd2849486c1a154acf160e22016"
+    },
+    "R1": {
+      "image_sha256": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1",
+      "world_sha256": "d64be312bb5479c529acf2dd6ba559f50d4bf2dd224fbb31cd69be1b5f93dd07",
+      "vehicle_sha256": "f8cc362929337eb37e8649632ce3426d86a029a80932cee06a1a80f2d1e169f3",
+      "geometry_evidence_sha256": "6582616dd24cb11488196bfc59bcd4476c685508a8866b410b91d334728fdaf3",
+      "revision": "2ecbee3281727cff8c3791068f3503e66edf2bcf",
+      "archive_sha256": "87e8781e0e26492b0f77e733a0d54cdd6bfc17c7e3016947c9538f5cff350e88",
+      "profile": "scenarios/calibration/r1_stationary_expiry.json",
+      "profile_sha256": "d7f17360b5c6e437fd25a406aece54ab3d09534c350f8a66facd266b368cf4cd",
+      "recording_contract": "scenarios/calibration/r1_recorder.json",
+      "recording_contract_sha256": "2e8211d0c8a498149dd5af4beea8b026e5174fdfd4fe228cde81fb22e4b57bbb",
+      "ros_domain_id": 58,
+      "trial_id": "calibration-r1-expiry-001",
+      "fresh_disarmed_evidence": "taskforce-flight-prep-008/r1-check",
+      "fresh_disarmed_audit_sha256": "3c064a25099e0698be9219b60791ad7e535896fe11e3d8a67f3a44eec1c23622",
+      "approval_status": "NOT_AUTHORIZED; C1 first, R1 only after independent C1 review and separate approval",
+      "parameter_overrides": {
+        "MPC_LAND_SPEED": 0.3
+      },
+      "archive": "taskforce-flight-prep-008/candidate.tar",
+      "native_disarmed_summary": {
+        "duration_ns": 43944000000,
+        "strict_samples": 3270,
+        "strict_statuses": 65,
+        "faults": [],
+        "pending": 0,
+        "events": 0,
+        "recording_complete": false,
+        "renderer": "D3D12 (NVIDIA GeForce RTX 5070 Laptop GPU)",
+        "evidence_sha256": {
+          "calibration_disarmed_check.json": "7c928eec0c5e1ca8abcb35fa9ea85bdcebd1342fff7d7cf0bd7bc7cda0e622fd",
+          "calibration_profile.json": "d7f17360b5c6e437fd25a406aece54ab3d09534c350f8a66facd266b368cf4cd",
+          "calibration_recorder_ready.json": "c8a959f509bf4c042fca0c088f385996b7ee3bb626fd1c5a9c724f17b2b9b881",
+          "calibration_recording.json": "881547ecf78b97cc5f4a5d7b620b53bb8bc7488d23636f2fb3ac0ababa69038b",
+          "disarmed-1.json": "d62a5ec5514e5b1f72f520ea5b89e088b1258a620345192688bdd30cd8b8149e",
+          "native_recovery_parameters.txt": "ef75c5851da193d0be3f4174bf868121f562882dc2f8bf9fc1736270c92ea493",
+          "ogre2.log": "bac34dd6c80ea4f9c321973514ce483ee075ab2b5c554420333bc87262602006",
+          "operator-dry-run.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "recorder_contract.json": "2e8211d0c8a498149dd5af4beea8b026e5174fdfd4fe228cde81fb22e4b57bbb",
+          "recording_final.json": "6dead990f6fc36cc9f14d0cd23a36684e6e2b3562b1e699f3bb047139bcf0c51",
+          "recording_ready.json": "31b873ef6df0514d7515b36749ef67ac4f2d8ab12a790c6d22c80d2a2bd237ad",
+          "versions.txt": "f16e5550dfda2506e4786606c7d4fca43361cf3ce2fc0d9fb6614484618d1c9f"
+        },
+        "raw_directory": "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-flight-prep-008\\r1-check\\observations"
+      },
+      "raw_bag_sha256": "be05497b53f14fc6a01ecae39a94b9d18429b8ea1e2ac1e0ce790213d2fa7f00"
+    }
+  },
+  "required_before_release": [
+    "independent final packet review",
+    "explicit separate user approvals; C1 reviewed before R1",
+    "only after approval create actual short-expiry approval artifact",
+    "fresh pre-arm telemetry and exact approved deployment must still match"
+  ],
+  "fresh_native_checks_complete": true,
+  "tests": {
+    "tracked_suite_passed": 817,
+    "tracked_suite_seconds": 44.01
+  },
+  "historical_template": "artifacts/taskforce_batch_008/release-manifest.template.json",
+  "operator_helper_sha256": "3b35d95ec380c756d23bd169c2f83c1b31e374de1cb75a6dce22b81999e1986f",
+  "raw_disarmed_audit": {
+    "scope": "raw native disarmed state and absence of control publication; no flight qualification",
+    "runs": [
+      {
+        "run": "c1-check",
+        "raw_bag_sha256": "4a21bff21c9ebaa136db882286c3905368461cd2849486c1a154acf160e22016",
+        "native_status_count": 87,
+        "native_arming_states": [
+          1
+        ],
+        "control_message_counts": {},
+        "result": "PASS"
+      },
+      {
+        "run": "r1-check",
+        "raw_bag_sha256": "be05497b53f14fc6a01ecae39a94b9d18429b8ea1e2ac1e0ce790213d2fa7f00",
+        "native_status_count": 87,
+        "native_arming_states": [
+          1
+        ],
+        "control_message_counts": {},
+        "result": "PASS"
+      }
+    ]
+  },
+  "raw_disarmed_audit_sha256": "3c064a25099e0698be9219b60791ad7e535896fe11e3d8a67f3a44eec1c23622",
+  "independent_review": "artifacts/taskforce_batch_008/independent-review.md"
+}

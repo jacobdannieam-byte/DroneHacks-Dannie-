@@ -1,0 +1,1 @@
+Runner failed before ROS/Gazebo startup because the synthetic helper output directory did not exist. Added mkdir in the external runner; retained failure and used a fresh directory. Frozen runtime/archive unchanged.
