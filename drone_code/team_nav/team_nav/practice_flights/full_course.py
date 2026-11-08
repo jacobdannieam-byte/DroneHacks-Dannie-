@@ -1,12 +1,13 @@
-"""Fly the checked sketch-map route through four checkpoints and land on the pad.
+"""Fly the checked full-course route through four checkpoints and land on the pad.
 
 REAL DRONE CODE, tested in Gazebo. Start it on the drone with:
 
     TEAM_NAV_RUN_MODE=practice ./drone.sh practice_flight full_course
 
-It flies the fixed route in full_course_route.py with the nose pointing north throughout. Each
-leg slides a target along the straight line between two waypoints, never more than
-TARGET_LEAD_METRES ahead of the drone, and the next leg starts only once the drone has arrived.
+It flies the team's fixed route on real_course_2026-11-08.json (full_course_fixed_route.py) with the
+nose pointing north throughout. Each leg feeds PX4 a target that slides along the leg's straight
+line, never more than TARGET_LEAD_METRES ahead of the drone, and the next leg starts only once the
+drone has arrived. --fixed-sketch-route flies Aditya's route for sketch_2026-11-08.json instead.
 It does not change PX4 parameters or use simulator truth.
 
 Four additions, each on unless switched off
@@ -26,7 +27,7 @@ own option to switch it off. --baseline switches off all four, which gives back 
      When switched off, any TEAM_NAV_STOP_AFTER_STAGE is refused, as before.
   4. Arrival rule (--no-new-arrival-rule). A waypoint counts as reached once ARRIVAL_RULE has
      held: close, slow, and staying so. The first checkpoint is the exception: the turn-back
-     point is the middle of the room past the line, and it counts as reached as soon as the
+     point (north 2.515 m) is a target past the line, and it counts as reached as soon as the
      whole drone is past the line, with no pause. When switched off: within 2.5 cm, then a 1 s
      hold, at every waypoint.
 
@@ -49,7 +50,7 @@ from team_nav.practice_flights.full_course_route import (
     check_route, footprint_points, route_waypoints,
 )
 from team_nav.practice_flights.full_course_stops import describe_every_option, plan_stop
-from team_nav.practice_flights.north_facing_astar_route import MISSION_FILE_NAME, load_mission, plan_north_facing_route
+from team_nav.practice_flights.full_course_fixed_route import fixed_route_metres
 from team_nav.practice_flights.steadiness import SteadinessRule, SteadinessWatch
 from team_nav.practice_flights.tracking_start_check import problem_with_tracking_on_the_launch_mark
 from team_nav.run_mode import STOP_AFTER_STAGE_SETTING
@@ -122,10 +123,10 @@ class FlightPlan:
 
 def parse_arguments(words):
     parser = first_maze_leg.make_argument_parser(
-        FLIGHT_NAME, 'Flies an A* route through the four checkpoints, nose north, and lands on the pad.',
+        FLIGHT_NAME, 'Flies the fixed route through the four checkpoints, nose north, and lands on the pad.',
         default_map=DEFAULT_MAP_FILE)
     parser.add_argument('--fixed-sketch-route', action='store_true',
-                        help="Fly Aditya's fixed route for sketch_2026-11-08.json instead of the A* route. "
+                        help="Fly Aditya's fixed route for sketch_2026-11-08.json instead of the real-course route. "
                              "Give --map sketch_2026-11-08.json with it.")
     parser.add_argument('--no-start-check', action='store_true',
                         help='Do not refuse to start when camera tracking is far from where it started.')
@@ -150,10 +151,9 @@ def additions_from_arguments(arguments):
     )
 
 
-def plan_the_flight(course_map, additions, stop_after_stage, fixed_sketch_route=False, mission=None):
-    """The FlightPlan. Raises ValueError, with a sentence saying why, if it can't be flown.
-    mission is the A* goals; without it, missions/real_course_five_goals.json is read."""
-    whole_route = whole_route_for(course_map, additions, fixed_sketch_route, mission)
+def plan_the_flight(course_map, additions, stop_after_stage, fixed_sketch_route=False):
+    """The FlightPlan. Raises ValueError, with a sentence saying why, if it can't be flown."""
+    whole_route = whole_route_for(course_map, additions, fixed_sketch_route)
     if not stop_after_stage:
         return FlightPlan(whole_route, whole_route)
     if not additions.stop_options:
@@ -163,16 +163,14 @@ def plan_the_flight(course_map, additions, stop_after_stage, fixed_sketch_route=
     return FlightPlan(whole_route, stop.route_to_fly_metres, stop)
 
 
-def whole_route_for(course_map, additions, fixed_sketch_route, mission=None):
-    """The A* route (north_facing_astar_route.py), or Aditya's fixed sketch route, checked."""
+def whole_route_for(course_map, additions, fixed_sketch_route):
+    """The real-course route (full_course_fixed_route.py), or Aditya's sketch route, checked."""
     if fixed_sketch_route:
         first_checkpoint_north_metres = BASELINE_FIRST_CHECKPOINT_NORTH_METRES
         if additions.new_arrival_rule:
             first_checkpoint_north_metres = MIDDLE_OF_FIRST_CHECKPOINT_ROOM_NORTH_METRES
         return route_waypoints(course_map, first_checkpoint_north_metres)
-    if mission is None:
-        mission = load_mission(find_package_file(MISSION_FILE_NAME, 'missions'))
-    return check_route(course_map, plan_north_facing_route(course_map, mission))
+    return check_route(course_map, fixed_route_metres())
 
 
 def run(words, run_mode, log):
@@ -206,6 +204,13 @@ def describe_the_plan(log, course_map, additions, plan):
     else:
         log.event('plan', f'Stopping early as asked. {plan.stop.describe()}', stop_option=plan.stop.option,
                   landing_spot_metres=plan.stop.landing_spot_metres.tolist())
+
+
+def is_first_checkpoint_turn_back(point):
+    """True for the turn-back point past the first checkpoint line (either route's)."""
+    north_metres = point[1]
+    return (math.isclose(north_metres, MIDDLE_OF_FIRST_CHECKPOINT_ROOM_NORTH_METRES)
+            or math.isclose(north_metres, BASELINE_FIRST_CHECKPOINT_NORTH_METRES))
 
 
 class FullCourseFlight(first_maze_leg.FirstMazeLegFlight):
@@ -331,11 +336,12 @@ class FullCourseFlight(first_maze_leg.FirstMazeLegFlight):
                 flight_steps.hold_still_for(self.link, self.watch, SETTLE_SECONDS)
 
     def arrival_test_for_leg(self, number, end, is_last_leg):
-        """The function that says when this leg is done. Leg 1 ends past the first checkpoint line;
-        if the flight lands there, the drone must be steady first, like at any landing spot."""
+        """The function that says when this leg is done. The leg to the first checkpoint's
+        turn-back point ends as soon as the whole drone is past the line; if the flight lands
+        there, the drone must be steady first, like at any landing spot."""
         if not self.additions.new_arrival_rule:
             return self.baseline_arrival_at(end)
-        if number == 1 and not is_last_leg:
+        if is_first_checkpoint_turn_back(end) and not is_last_leg:
             return self.whole_drone_past_the_first_line()
         return self.steady_arrival_at(end)
 

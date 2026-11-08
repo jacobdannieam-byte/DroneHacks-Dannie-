@@ -1,4 +1,4 @@
-"""Tests where each full_course stop option lands (full_course_stops.py), on the A* route over
+"""Tests where each full_course stop option lands (full_course_stops.py), on the fixed route over
 real_course_2026-11-08.json, the default map. Plain arithmetic on the map, no ROS.
 
 The expected spots were worked out from the route and the checkpoint lines, then confirmed by the
@@ -23,10 +23,10 @@ ARRIVAL_TOLERANCE_METRES = 0.08
 
 # (option, landing spot east/north, least distance the whole drone must be past the line).
 EXPECTED_LANDINGS = [
-    ('corridor', (-2.515, 2.466), LANDING_DISTANCE_PAST_LINE_METRES),
-    ('gate_a', (0.729, 2.154), LANDING_DISTANCE_PAST_LINE_METRES),
-    ('tunnel', (2.297, -0.750), 0.25),
-    ('chicane', (-0.544, -0.889), LANDING_DISTANCE_PAST_LINE_METRES),
+    ('corridor', (-2.520, 2.467), LANDING_DISTANCE_PAST_LINE_METRES),
+    ('gate_a', (0.705, 2.472), LANDING_DISTANCE_PAST_LINE_METRES),
+    ('tunnel', (2.300, -0.725), 0.25),
+    ('chicane', (-0.857, -1.150), LANDING_DISTANCE_PAST_LINE_METRES),
 ]
 
 
@@ -69,28 +69,28 @@ def test_tunnel_option_lands_a_quarter_metre_beyond_the_tunnel_exit():
 def test_spot_that_is_not_open_floor_carries_on_to_the_next_waypoint():
     course_map, route = real_course_map_and_route()
     # A short object touching the north edge of the chicane option's spot. The next waypoint,
-    # 0.11 m further south, keeps 0.11 m from it.
-    course_map.low_obstacles.append(LowObstacle('test object', np.array([-0.54, -0.70]), 0.02, 0.10, 'test'))
+    # 0.4 m further south-west, is well clear of it.
+    course_map.low_obstacles.append(LowObstacle('test object', np.array([-0.857, -0.96]), 0.02, 0.10, 'test'))
     plan = plan_stop(course_map, route, 'chicane')
     assert plan.how == AT_NEXT_WAYPOINT
-    assert plan.landing_spot_metres[:2] == pytest.approx([-0.6, -1.0])
+    assert plan.landing_spot_metres[:2] == pytest.approx([-1.2, -1.35])
 
 
 def test_refuses_when_neither_spot_is_open_floor():
     course_map, route = real_course_map_and_route()
-    course_map.low_obstacles.append(LowObstacle('test boulder', np.array([-0.57, -0.94]), 0.05, 0.10, 'test'))
+    course_map.low_obstacles.append(LowObstacle('test boulder', np.array([-1.03, -1.25]), 0.30, 0.10, 'test'))
     with pytest.raises(ValueError, match='nowhere safe to land'):
         plan_stop(course_map, route, 'chicane')
 
 
-def test_spot_search_carries_on_into_the_next_leg():
-    """Aditya's fixed sketch route ends its tunnel leg 0.24 m past the line, short of 0.25 m, so the
-    tunnel spot is on the next leg."""
+def test_spot_search_reaches_the_end_of_the_crossing_leg():
+    """Aditya's fixed sketch route ends its tunnel leg just 0.25 m past the line: the search runs to
+    the leg's end (and would carry on into the next leg if it had to)."""
     course_map = load_our_map('sketch_2026-11-08')
     route = route_waypoints(course_map, MIDDLE_OF_FIRST_CHECKPOINT_ROOM_NORTH_METRES)
     plan = plan_stop(course_map, route, 'tunnel')
     assert plan.distance_past_line_metres >= 0.25
-    assert plan.landing_spot_metres[1] < route[7, 1]
+    assert plan.landing_spot_metres[1] <= route[7, 1] + 1e-9
 
 
 def test_unknown_option_is_refused_with_the_known_names():

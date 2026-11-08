@@ -178,11 +178,14 @@ def floor_tiles_sdf(course_map, texture_path):
 
 
 def drone_sdf():
-    """Our drone on Gazebo's (0, 0, 0), which is the launch mark, facing the start heading."""
+    """Our drone on Gazebo's (0, 0, 0), which is the launch mark, facing the start heading, turned
+    by SIMULATOR_LAUNCH_HEADING_ERROR_DEGREES (zero unless a run sets it, positive anticlockwise)
+    to test a drone put down a little crooked. pretend_camera_tracking.py reads the same setting."""
+    heading_error_degrees = float(os.environ.get("SIMULATOR_LAUNCH_HEADING_ERROR_DEGREES", "0"))
     return f"""    <include>
       <uri>model://{DRONE_MODEL_NAME}</uri>
       <name>{DRONE_NAME_IN_WORLD}</name>
-      <pose>0 0 0 0 0 {math.radians(START_HEADING_DEGREES):.5f}</pose>
+      <pose>0 0 0 0 0 {math.radians(START_HEADING_DEGREES + heading_error_degrees):.5f}</pose>
     </include>"""
 
 

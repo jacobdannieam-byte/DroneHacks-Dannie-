@@ -17,6 +17,14 @@
 #                            Default 360.
 #   --stop-after-stage <name>  Given to the flight program as TEAM_NAV_STOP_AFTER_STAGE, as
 #                            drone.sh does on the drone. Practice mode only. Default: none.
+#   --launch-heading-error-degrees D  Put the drone down turned D degrees anticlockwise from the
+#                            heading the flight program assumes. Default 0.
+#   --tracking-drift-per-metre M  The pretend camera tracking's sideways drift per metre flown.
+#                            Default 0.01 (about 10 cm by the tunnel exit on full_course's route).
+#   --tracking-drift-direction-degrees A  Its direction, from the drone's starting forward towards
+#                            its left. Default: chosen from a fixed random seed.
+# After the flight, check_footprint_clearance.py adds to summary.txt the closest the true
+# propellers came to anything in the world map, and FAILS the run within 0.08 m.
 # Everything else, or everything after "--", goes to course_run unchanged. The drone's own map
 # is course_run's --map; without it, course_run uses its default map, whatever --world says.
 #
@@ -38,6 +46,9 @@ run_mode=practice
 # Our own choice: about 6 minutes, longer than any whole-course run so far (under 4 minutes).
 longest_run_seconds=360
 stop_after_stage=""
+launch_heading_error_degrees=0
+tracking_drift_per_metre=0.01
+tracking_drift_direction_degrees=""
 course_run_arguments=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -45,6 +56,9 @@ while [ $# -gt 0 ]; do
         --run-mode) run_mode="$2"; shift 2 ;;
         --longest-run-seconds) longest_run_seconds="$2"; shift 2 ;;
         --stop-after-stage) stop_after_stage="$2"; shift 2 ;;
+        --launch-heading-error-degrees) launch_heading_error_degrees="$2"; shift 2 ;;
+        --tracking-drift-per-metre) tracking_drift_per_metre="$2"; shift 2 ;;
+        --tracking-drift-direction-degrees) tracking_drift_direction_degrees="$2"; shift 2 ;;
         --) shift; course_run_arguments+=("$@"); break ;;
         *) course_run_arguments+=("$1"); shift ;;
     esac
@@ -63,6 +77,7 @@ run_folder="$repository/simulator/generated_files/gazebo_full_runs/$run_name"
 run_folder_in_box="/repository/simulator/generated_files/gazebo_full_runs/$run_name"
 build_folder="$repository/simulator/generated_files/gazebo_full_build"
 mkdir -p "$run_folder/referee" "$run_folder/course_run_records" "$build_folder/ros_build" "$build_folder/ros_install" "$build_folder/ros_logs"
+echo "Launch heading error: $launch_heading_error_degrees degrees. Tracking drift: $tracking_drift_per_metre m per metre, direction ${tracking_drift_direction_degrees:-(from the seed)}."
 echo "World: $world_map. Run mode: $run_mode. Stop after stage: ${stop_after_stage:-(none)}. Extra course_run arguments: ${course_run_arguments[*]:-(none)}."
 echo "This run's folder: simulator/generated_files/gazebo_full_runs/$run_name"
 
@@ -85,6 +100,9 @@ docker run --detach --name "$box_name" \
     --env "GAZEBO_FULL_RUN_FOLDER=$run_folder_in_box" \
     --env "TEAM_NAV_RUN_MODE=$run_mode" \
     --env "TEAM_NAV_RECORDS_FOLDER=$run_folder_in_box/course_run_records" \
+    --env "SIMULATOR_LAUNCH_HEADING_ERROR_DEGREES=$launch_heading_error_degrees" \
+    --env "SIMULATOR_CAMERA_DRIFT_PER_METRE_FLOWN=$tracking_drift_per_metre" \
+    --env "SIMULATOR_CAMERA_DRIFT_DIRECTION_DEGREES=$tracking_drift_direction_degrees" \
     "$image_name" \
     bash -c "bash /repository/simulator/inside_the_box/build_our_packages.sh \
              && touch /tmp/our_packages_are_built \
@@ -97,6 +115,9 @@ stop_the_box_and_draw() {
     echo "Drawing the path and writing the summary..."
     docker run --rm --network none --volume "$repository:/repository" "$image_name" \
         python3 /repository/simulator/gazebo_full/draw_run.py "$run_folder_in_box" "/repository/$world_map" || true
+    docker run --rm --network none --volume "$repository:/repository" --env PYTHONPATH=/repository/drone_code/team_nav \
+        "$image_name" python3 /repository/simulator/gazebo_full/check_footprint_clearance.py \
+        "$run_folder_in_box" "/repository/$world_map" || true
     echo
     cat "$run_folder/summary.txt" 2>/dev/null || echo "No summary was written. Look in $run_folder/simulator_log.txt."
     echo "Everything from this run is in simulator/generated_files/gazebo_full_runs/$run_name"

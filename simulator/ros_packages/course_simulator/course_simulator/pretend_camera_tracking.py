@@ -19,6 +19,13 @@ position and makes it worse in the same ways the real tracking is imperfect:
   - It slowly drifts, by an amount that grows with the distance flown. Normally only
     sideways. A flight can add a height drift too, with run_test_flight.sh's
     --camera-height-drift, which sets SIMULATOR_CAMERA_HEIGHT_DRIFT_PER_METRE_FLOWN.
+    SIMULATOR_CAMERA_DRIFT_PER_METRE_FLOWN and SIMULATOR_CAMERA_DRIFT_DIRECTION_DEGREES set the
+    sideways drift's size and direction (fly_course_in_gazebo.sh's --tracking-drift-per-metre
+    and --tracking-drift-direction-degrees).
+  - If the drone was put down turned a little from the heading the flight program assumes
+    (SIMULATOR_LAUNCH_HEADING_ERROR_DEGREES, fly_course_in_gazebo.sh's
+    --launch-heading-error-degrees), it reports in the drone's real starting directions, as the
+    real program would: it measures from wherever the drone pointed when it started.
 
 It publishes the same message on the same topic, in the same directions, so the
 organizers' code and our flight code cannot tell the difference.
@@ -57,8 +64,15 @@ REPORT_DELAY_SECONDS = 0.060
 # We use a larger value because a moving drone should jitter more than a still one.
 POSITION_JITTER_METRES = 0.005
 
-# Estimated: an error of 1% of the distance flown. We have not measured this yet.
-DRIFT_METRES_PER_METRE_FLOWN = 0.01
+# Estimated: an error of 1% of the distance flown. We have not measured this yet. A flight can
+# change it, for example 0 for no drift.
+DRIFT_METRES_PER_METRE_FLOWN = float(os.environ.get("SIMULATOR_CAMERA_DRIFT_PER_METRE_FLOWN", "0.01"))
+# Empty means a direction chosen from drift_seed, as before. Otherwise degrees from the start
+# frame's forward towards its left.
+DRIFT_DIRECTION_DEGREES_TEXT = os.environ.get("SIMULATOR_CAMERA_DRIFT_DIRECTION_DEGREES", "").strip()
+# Zero unless a flight sets it: how far the drone was put down turned from the assumed heading,
+# in degrees, positive towards the left (anticlockwise seen from above).
+LAUNCH_HEADING_ERROR_DEGREES = float(os.environ.get("SIMULATOR_LAUNCH_HEADING_ERROR_DEGREES", "0"))
 # Normally zero: the reported height doesn't drift. Nobody has measured the real camera
 # tracking's height drift. A flight can set this, to see what a drift would do, for example 0.01
 # for 1 cm higher per metre flown (negative means lower).
@@ -95,7 +109,12 @@ class PretendCameraTracking(Node):
         # The drift grows in one fixed direction. Real drift wanders, but one direction
         # is the worst case for reaching a gap, and it is easy to reason about.
         random_angle = self.random.uniform(0.0, 2.0 * np.pi)
+        if DRIFT_DIRECTION_DEGREES_TEXT:
+            random_angle = np.radians(float(DRIFT_DIRECTION_DEGREES_TEXT))
         self.drift_direction = np.array([np.cos(random_angle), np.sin(random_angle), 0.0])
+        self.get_logger().info(f"Drift {DRIFT_METRES_PER_METRE_FLOWN} m per metre flown, towards "
+                               f"{np.degrees(random_angle):.1f} degrees; launch heading error "
+                               f"{LAUNCH_HEADING_ERROR_DEGREES} degrees.")
         self.distance_flown_metres = 0.0
         self.previous_true_position = None
 
@@ -133,7 +152,8 @@ class PretendCameraTracking(Node):
         drift_metres = self.drift_direction * self.distance_flown_metres * DRIFT_METRES_PER_METRE_FLOWN
         drift_metres[2] += self.distance_flown_metres * HEIGHT_DRIFT_METRES_PER_METRE_FLOWN
         jitter_metres = self.random.normal(0.0, POSITION_JITTER_METRES, 3)
-        reported_position = self.true_state.position_in_start_frame_metres + drift_metres + jitter_metres
+        true_position = turned_into_the_drones_start_directions(self.true_state.position_in_start_frame_metres)
+        reported_position = true_position + drift_metres + jitter_metres
 
         report = Odometry()
         # The time stamp is when the measurement was taken, not when it gets published.
@@ -145,7 +165,7 @@ class PretendCameraTracking(Node):
         report.pose.pose.position.y = float(reported_position[1])
         report.pose.pose.position.z = float(reported_position[2])
 
-        w, x, y, z = self.true_state.body_rotation_in_start_frame
+        w, x, y, z = rotation_turned_into_the_drones_start_directions(self.true_state.body_rotation_in_start_frame)
         report.pose.pose.orientation.w = float(w)
         report.pose.pose.orientation.x = float(x)
         report.pose.pose.orientation.y = float(y)
@@ -188,6 +208,26 @@ class PretendCameraTracking(Node):
         status.header.stamp = self.get_clock().now().to_msg()
         status.vo_state = VISUAL_ODOMETRY_STATE_LOST if self.tracking_is_lost() else VISUAL_ODOMETRY_STATE_TRACKING
         self.status_publisher.publish(status)
+
+
+def turned_into_the_drones_start_directions(position_metres):
+    """The start frame here is the assumed one. If the drone really started turned by
+    LAUNCH_HEADING_ERROR_DEGREES, real tracking would measure along its real directions, so turn
+    the position the other way by that angle."""
+    angle = -np.radians(LAUNCH_HEADING_ERROR_DEGREES)
+    turned = np.array(position_metres, dtype=float)
+    turned[0] = np.cos(angle) * position_metres[0] - np.sin(angle) * position_metres[1]
+    turned[1] = np.sin(angle) * position_metres[0] + np.cos(angle) * position_metres[1]
+    return turned
+
+
+def rotation_turned_into_the_drones_start_directions(rotation_wxyz):
+    """The same turn for the drone's rotation (w, x, y, z): a turn about "up" applied first.
+    The usual formula for multiplying two quaternions."""
+    half_angle = -np.radians(LAUNCH_HEADING_ERROR_DEGREES) / 2.0
+    turn_w, turn_z = np.cos(half_angle), np.sin(half_angle)
+    w, x, y, z = rotation_wxyz
+    return np.array([turn_w * w - turn_z * z, turn_w * x - turn_z * y, turn_w * y + turn_z * x, turn_w * z + turn_z * w])
 
 
 def main():

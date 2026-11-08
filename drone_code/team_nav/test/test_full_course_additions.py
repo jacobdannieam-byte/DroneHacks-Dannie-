@@ -23,7 +23,6 @@ from team_nav.practice_flights.full_course_route import (
     MIDDLE_OF_FIRST_CHECKPOINT_ROOM_NORTH_METRES, footprint_distance_past_line, footprint_points, route_waypoints,
 )
 from team_nav.practice_flights.steadiness import SteadinessRule, SteadinessWatch
-from real_course_route import real_course_mission
 from test_flight_steps import PretendLink
 
 SKETCH_MAP = 'sketch_2026-11-08'
@@ -59,9 +58,8 @@ def test_baseline_flies_the_original_route_and_refuses_stop_options():
 
 def test_new_rule_turns_back_in_the_middle_of_the_first_checkpoint_room():
     course_map = load_our_map('real_course_2026-11-08')
-    plan = plan_the_flight(course_map, additions_from_arguments(parse_arguments([])), '',
-                           mission=real_course_mission())
-    assert plan.route_to_fly_metres[1, 1] == MIDDLE_OF_FIRST_CHECKPOINT_ROOM_NORTH_METRES
+    plan = plan_the_flight(course_map, additions_from_arguments(parse_arguments([])), '')
+    assert plan.route_to_fly_metres[3, 1] == MIDDLE_OF_FIRST_CHECKPOINT_ROOM_NORTH_METRES
     assert plan.stop is None
 
 
