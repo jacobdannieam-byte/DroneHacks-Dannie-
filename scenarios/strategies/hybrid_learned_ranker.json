@@ -1,0 +1,8 @@
+{
+  "identifier": "hybrid_learned_ranker",
+  "ranker_checkpoint": "artifacts/goal_comparison/models/goal_mlp_11.json",
+  "ranker_sha256": "59328afdc2a5c0042b4f4699a52cc7d24ac5af92ca148b8bd9dbc61f6311240f",
+  "predictor_checkpoint": null,
+  "predictor_sha256": null,
+  "schema_version": 1
+}

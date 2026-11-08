@@ -19,6 +19,7 @@ from refnav.reasoning import DeterministicReasoner, WorldReference, build_contex
 from refnav.reasoning.schema import MissionGoal
 from refnav.reasoning.selection import ReasonerConfig, create_reasoner
 from refnav.reasoning.inspection import make_inputs, Attempt, HISTORY_SECONDS
+from refnav.strategies import StrategyConfig
 from refnav.trajectory_evaluation import EvaluationPolicy, FrameAlignment, GoalBinding, MetricGoal, VehicleBounds
 from refnav.world_model.spatial_input import NS, PoseSample, stamp_ok, vector
 
@@ -89,8 +90,12 @@ class HybridBagProfile:
     mission_goal: MissionGoal | None = None
     tracking_source: str = "visual"
     reasoner: ReasonerConfig = ReasonerConfig()
+    strategy_config: StrategyConfig | None = None
 
     def __post_init__(self):
+        if self.strategy_config is not None:
+            if not isinstance(self.strategy_config, StrategyConfig) or self.reasoner != self.strategy_config.reasoner():
+                raise ValueError('Strategy and reasoner configurations disagree')
         if not isinstance(self.reasoner, ReasonerConfig):
             raise ValueError('Supply a validated reasoner configuration.')
         if self.tracking_source not in ("visual", "simulated_estimator"):
@@ -110,6 +115,8 @@ class HybridBagProfile:
 
     @classmethod
     def from_dict(cls, data):
+        strategy = StrategyConfig(**data['strategy']) if 'strategy' in data else None
+        reasoner = ReasonerConfig(**data['reasoner']) if 'reasoner' in data else (strategy.reasoner() if strategy else ReasonerConfig())
         spatial = BagProfile.from_dict(data["spatial"])
         ref = spatial.reference
         alignment = FrameAlignment(LocalNED(data["ned_frame"], ref.epoch, ref.clock_id), ref,
@@ -118,7 +125,7 @@ class HybridBagProfile:
                    MetricGoal(ref, data["objective_m"]), data["px4_topics"], data["ev_reset_counter"],
                    tuple(data["local_reset_counters"]),
                    MissionGoal.from_dict(data["mission_goal"]) if data.get("mission_goal") is not None else None,
-                   data.get("tracking_source", "visual"), ReasonerConfig(**data.get('reasoner', {})))
+                   data.get("tracking_source", "visual"), reasoner, strategy)
 
 
 class HybridBagReplay(RecordedSpatialReplay):
@@ -134,6 +141,8 @@ class HybridBagReplay(RecordedSpatialReplay):
         self._snapshot = self._goal = None
         self.hybrid = profile
         self.reasoner = create_reasoner(profile.reasoner)
+        self.predictor, self.predictor_id, self.predictor_fallback = (profile.strategy_config.load_predictor()
+            if profile.strategy_config else (None, None, None))
         self._inspection_last = None
         self._inspection_scope = None
         self._inspection_attempts = ()
@@ -392,7 +401,7 @@ class HybridBagReplay(RecordedSpatialReplay):
         return None, dict(state=state, snapshot=snapshot, now_ns=now_ns, alignment=alignment,
                           vehicle=self.hybrid.vehicle, objective=self.hybrid.objective, goal=self._goal,
                           state_received_ns=received, estimator_reset_counter=alignment.estimator_reset_counter,
-                          estimator_healthy=True)
+                          estimator_healthy=True, predictor=self.predictor, model_id=self.predictor_id)
 
     def diagnostic(self):
         """Run one H1 replay assessment and summarize its evidence."""
@@ -406,6 +415,8 @@ class HybridBagReplay(RecordedSpatialReplay):
         result = assess(**inputs, budget_s=self.planner_budget_s, timings=self.timings, **clock_arg)
         plan = result.receipt.plan
         return {"reason": result.validation_reason, "decision": plan.decision, "ranked_ids": plan.ranked_ids,
+                "strategy_identity": self.hybrid.strategy_config.identity if self.hybrid.strategy_config else None,
+                "predictor_fallback": self.predictor_fallback,
                 "px4_sample_us": sample_us, "state_capture_ns": capture, "state_received_ns": received,
                 "depth_capture_ns": snapshot.metric.capture_ns,
                 "depth_received_ns": snapshot.metric.received_ns, "assessment_ns": self.now, "px4_variances": variances,

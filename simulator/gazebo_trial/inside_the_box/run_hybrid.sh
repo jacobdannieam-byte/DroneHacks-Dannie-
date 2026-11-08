@@ -4,7 +4,8 @@ mode=$1; world=$2; seconds=$3; revision=$4; profile=$5; approval=$6
 cd /repository
 # Copy only code/assets. Builds and generated files write to this run's evidence tree.
 tar -C /source --exclude=__pycache__ --exclude=simulator/gazebo_trial/generated --exclude=simulator/generated_files \
-    -cf - simulator drone_code examples refnav onboard scenarios | tar --no-same-owner -xf -
+    -cf - simulator drone_code examples refnav onboard scenarios artifacts/goal_comparison/models \
+    artifacts/goal_comparison/predictors | tar --no-same-owner -xf -
 mkdir -p /evidence/ros /evidence/flight_records /evidence/gazebo_generated
 mkdir -p simulator/generated_files
 ln -s /evidence/flight_records simulator/generated_files/flight_records

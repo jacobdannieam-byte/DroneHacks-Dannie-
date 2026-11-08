@@ -10,7 +10,7 @@ from onboard.adapters.geometry import R_ENU_NED, rot_z
 from refnav.dynamics.validation import wrap_yaw
 from refnav.hybrid_integration import HybridAssessment, _input_reason
 from refnav.integration_timing import measure
-from refnav.predictive_planner import MIN_PROGRESS_M, candidate_for_id
+from refnav.predictive_planner import MIN_PROGRESS_M, candidate_for_id, has_progress
 from refnav.sitl_review import review
 from refnav.trajectory_evaluation import (
     CLEARANCE_PROBE_M, VehicleBounds, evaluate_candidates, state_capture_ns,
@@ -111,7 +111,7 @@ class HybridGateway:
         if self.monotonic() >= deadline:
             return GatewayDecision("handoff_deadline_exceeded", fallback)
         if (row.status != "feasible" or row.clearance_lower_bound_m < CLEARANCE_PROBE_M
-                or row.progress_m < MIN_PROGRESS_M):
+                or not has_progress(row)):
             return GatewayDecision("sweep_rejected:" + row.reasons[0], fallback)
 
         target = candidate.schedule[0]

@@ -7,7 +7,7 @@ import numpy as np
 
 from refnav.core import NAV_OFFBOARD, Output, Vehicle
 from refnav.dynamics import DroneState
-from refnav.predictive_planner import MIN_PROGRESS_M, Plan
+from refnav.predictive_planner import MIN_PROGRESS_M, Plan, has_progress
 from refnav.trajectory_evaluation import CLEARANCE_PROBE_M, EvaluationPolicy, FrameAlignment, _shared_reasons
 from refnav.world_model.spatial_input import stamp_ok
 from refnav.world_model.spatial_volume import MetricSnapshot
@@ -77,6 +77,6 @@ def validate_receipt(receipt, *, state, alignment, metric, now_ns):
     first = next((row for row in evaluation.candidates if row.candidate_id == plan.ranked_ids[0]), None)
     if (first is None or first.status != "feasible" or first.evidence != "verified_observed_volume"
             or first.clearance_lower_bound_m is None or first.clearance_lower_bound_m < CLEARANCE_PROBE_M
-            or first.progress_m is None or first.progress_m < MIN_PROGRESS_M or first.candidate_id == "hold"):
+            or not has_progress(first) or first.candidate_id == "hold"):
         return "invalid_proposal"
     return "eligible_for_offline_review"

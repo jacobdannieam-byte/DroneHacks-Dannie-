@@ -132,6 +132,11 @@ class HybridRuntime:
     def status(self):
         stage = self.course.stage
         return {"strategy": self.strategy, "mission_state": self.course.state,
+                "reasoning_strategy": (self.loop.replay.hybrid.strategy_config.identifier
+                                       if self.loop.replay.hybrid.strategy_config else 'legacy_reasoner_config'),
+                "strategy_identity": (self.loop.replay.hybrid.strategy_config.identity
+                                      if self.loop.replay.hybrid.strategy_config else None),
+                "predictor_fallback": self.loop.replay.predictor_fallback,
                 "mission_reason": self.course.reason, "stage_id": stage.stage_id, "stage_kind": stage.kind,
                 "goal_m": self.course.goal.position_m, "goal_slot": self.course.alternative,
                 "landing_request": self.course.land_reason}

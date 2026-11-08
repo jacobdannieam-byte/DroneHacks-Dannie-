@@ -87,6 +87,8 @@ class ConfiguredReasoner:
         from dataclasses import replace
         start = monotonic()
         options = candidates(context, inputs)
+        if self.config.variant == 'G0':
+            options = tuple(option for option in options if option.mode != 'yaw')
         scores, reason = (), 'baseline'
         identity = self.config.variant + ':' + sha256((canonical(self.config) + canonical(UTILITY_WEIGHTS)).encode()).hexdigest()
         proposal = DeterministicReasoner().propose(context)

@@ -50,7 +50,7 @@ def schedule(state, displacement, yaw_delta, identifier):
 
 
 def optimize(state, snapshot, alignment, vehicle, objective, now_ns, *, predictor=None,
-             model_id=None, budget_seconds=.05, monotonic=perf_counter):
+             model_id=None, budget_seconds=.05, monotonic=perf_counter, cancelled=None):
     if not math.isfinite(budget_seconds) or not 0 < budget_seconds <= 1:
         raise ValueError('Use a finite offline optimization budget of at most one second.')
     start = monotonic()
@@ -63,11 +63,14 @@ def optimize(state, snapshot, alignment, vehicle, objective, now_ns, *, predicto
     best, score, evaluations = None, None, 0
 
     def expired():
+        if cancelled is not None and cancelled():
+            return 'cancelled'
         return 'deadline_exceeded' if monotonic() >= deadline else None
 
     for iteration in range(ITERATIONS):
-        if expired():
-            return DiagnosticOptimization('deadline_exceeded', None, None, evaluations, monotonic() - start)
+        reason = expired()
+        if reason:
+            return DiagnosticOptimization(reason, None, None, evaluations, monotonic() - start)
         parameters = [center.copy()]
         for axis in (0, 1, 3):
             for direction in (-1, 1):
@@ -82,8 +85,9 @@ def optimize(state, snapshot, alignment, vehicle, objective, now_ns, *, predicto
         except (ValueError, ArithmeticError):
             return DiagnosticOptimization('invalid_model_or_candidate', None, None, evaluations, monotonic() - start)
         evaluations += len(options)
-        if expired():
-            return DiagnosticOptimization('deadline_exceeded', None, None, evaluations, monotonic() - start)
+        reason = expired()
+        if reason or result.fallback_reason in ('cancelled', 'deadline_exceeded'):
+            return DiagnosticOptimization(reason or result.fallback_reason, None, None, evaluations, monotonic() - start)
         eligible = [(i, row) for i, row in enumerate(result.candidates)
                     if row.status == 'feasible' and row.clearance_lower_bound_m >= CLEARANCE_PROBE_M
                     and row.progress_m >= .015 and math.isfinite(row.score)]

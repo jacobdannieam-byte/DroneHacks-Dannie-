@@ -84,6 +84,7 @@ class InspectionCandidate:
     failed_attempts: int
     switching: float
     relative_geometry_metres: tuple
+    yaw_delta_map_rad: float = 0.
 
 
 def attempt_count(context, inputs, entity_id):
@@ -132,9 +133,19 @@ def _viewpoint(context, inputs, entity, failures):
         return None
     fx, fy, cx, cy = inputs.calibration.K
     u, v = fx * optical[0] / optical[2] + cx, fy * optical[1] / optical[2] + cy
+    yaw_delta = 0.
     if not (0 <= u < inputs.calibration.width and 0 <= v < inputs.calibration.height):
-        return None  # D5 cannot currently express a yaw-only inspection.
+        # A bounded horizontal turn can bring a grounded target into view. This
+        # is a visibility hypothesis; D3 must still check the stationary volume.
+        forward = tuple(row[2] for row in inputs.rotation_map_optical)
+        yaw_delta = math.atan2(delta[1], delta[0]) - math.atan2(forward[1], forward[0])
+        yaw_delta = math.atan2(math.sin(yaw_delta), math.cos(yaw_delta))
+        if abs(yaw_delta) > .45 or not 0 <= v < inputs.calibration.height:
+            return None
+        u = cx
     step = min(MAX_STEP_METRES, max(0., distance - STANDOFF_METRES * 2))
+    if yaw_delta:
+        step = 0.
     point = tuple(a + step * d / distance - offset for a, d, offset in
                   zip(inputs.position_metres, delta, inputs.camera_offset_metres))
     targets = tuple(m for m in entity.missing_evidence if m in
@@ -143,11 +154,11 @@ def _viewpoint(context, inputs, entity, failures):
         return None
     centrality = max(0., 1 - abs(u - cx) / max(cx, 1))
     gain = min(1., len(targets) / 2) * centrality / (1 + entity.geometry.uncertainty_m)
-    return InspectionCandidate(entity.entity_id, point, 'move' if step else 'reobserve', targets,
-                               gain, step / MAX_STEP_METRES,
+    return InspectionCandidate(entity.entity_id, point, 'yaw' if yaw_delta else ('move' if step else 'reobserve'), targets,
+                               gain, max(step / MAX_STEP_METRES, abs(yaw_delta) / .45),
                                min(1., entity.geometry.uncertainty_m + 1 - entity.geometric_confidence),
                                float(entity.entity_id == context.mission_goal.target_entity_id), failures,
-                               float(inputs.previous_entity_id not in (None, entity.entity_id)), delta)
+                               float(inputs.previous_entity_id not in (None, entity.entity_id)), delta, yaw_delta)
 
 
 def make_inputs(context, snapshot, state, alignment, calibration, **history):
