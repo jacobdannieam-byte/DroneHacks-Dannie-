@@ -1,5 +1,7 @@
 # Depth-guided sections and real telemetry review
 
+> **Update, 2026-11-08:** Later result: the PINN commanded a successful known-route simulator flight. It did not detect passages from depth, and no real-telemetry retraining occurred. This review remains the depth/training workstream specification. [Full result and Classical comparison](HYBRID_FULL_COURSE_RESULT.md).
+
 Reviewed 2026-11-08. Classical source: `a641deb50df2cb5a63280a33e82772856819636a`.
 This is an implementation specification and offline data audit, not qualification of a new flight policy.
 

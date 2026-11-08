@@ -1,0 +1,169 @@
+{
+  "scope": "Portable compact evidence; original raw bags and failed videos remain externally preserved.",
+  "files": {
+    "actual-gazebo-flight.mp4": {
+      "sha256": "3d94cc50fc76e37fa0bab9124418909ac19e88e01c51c879c6790f3938a7aebf",
+      "bytes": 726479
+    },
+    "calibration_profile.json": {
+      "sha256": "5f7d7b618074bca182115b4f76c060d5d7457c0ca0668d4d07e75199ebd8e3a4",
+      "bytes": 4426
+    },
+    "campaign-attempts.json": {
+      "sha256": "12f8edee0bdb8ca5b6f9a6ba60bfa949097e74ef2c7e912313f5b43c78a142c7",
+      "bytes": 8445
+    },
+    "candidate.json": {
+      "sha256": "9e4a4313aa728f4144467582bde242bef3979bcfea873d4629fe45318c07e1cd",
+      "bytes": 237
+    },
+    "classical-course-summary.json": {
+      "sha256": "0b198082eb7862a81a9b6cd97010665349c7551b4887e7956d80e5441f323590",
+      "bytes": 1400
+    },
+    "classical-flight.csv": {
+      "sha256": "6afd847d5510add48ae2571ef3dd1d1e8d1e9468a962ab5ae2c219aeedebb1bc",
+      "bytes": 319083
+    },
+    "decision-review.csv": {
+      "sha256": "472eda013aec9e7d8bec009ec03bcf4bdfef3bddfb83a536a6321b1ca3c0aea3",
+      "bytes": 285289
+    },
+    "flight-decision-summary.json": {
+      "sha256": "d99801f98b298a90cd66dca05736c10b76071e46466b93c2a912a0c7bff1acb3",
+      "bytes": 969
+    },
+    "hybrid-flight.csv": {
+      "sha256": "c1e990bb2beafb248c9571f51d63fee58096b0cd33e0df1c6fbe3982e1359dc2",
+      "bytes": 662209
+    },
+    "model-command-audit.json": {
+      "sha256": "bc7f2fcd8c638c163c87bb6a571ec56055334dae315f2d7293242fa918b517a0",
+      "bytes": 1564
+    },
+    "model_owner.decisions.jsonl.gz": {
+      "sha256": "58061d8289fe184ff5abb5d824c1e4a2b9cb43e5951751d3e48f76e67912b0e2",
+      "bytes": 10324126
+    },
+    "model_owner.json": {
+      "sha256": "72b8f44f89fefc135d858851fff9e4af767605df3b59632bbb197d7d4972d16e",
+      "bytes": 6395
+    },
+    "published-pinn-d0-differences.csv": {
+      "sha256": "baa5c0bf0aab09a7cff870a2e796388712169519b23e0b4aae1ed08430920e81",
+      "bytes": 2687
+    },
+    "published-pinn-d0-differences.json": {
+      "sha256": "5721d3534c2d9ba92ad7c822136100b3b5ec87d5b69690cdf6f2c98e0d805f4f",
+      "bytes": 6666
+    },
+    "README.md": {
+      "sha256": "4325a7b99d8c24adca49cb26daa8d98b98df70e7c11fbf8b4f4babd7d6a65b0d",
+      "bytes": 2917
+    },
+    "recording_final.json": {
+      "sha256": "8995128112ef24ed0295633c9977073454f419669c399a5bbf8ca2b5373ab2dc",
+      "bytes": 2949
+    },
+    "REVIEW.json": {
+      "sha256": "a9cdf29950c3a132cc7df3cc1ce0f3273d19c288fd2557eed87a9252fc029bfd",
+      "bytes": 3225
+    },
+    "validation.json": {
+      "sha256": "6da6a2855c7eec9d744b768d29972fa9b63b4e1726a1103f04c76716573e5bee",
+      "bytes": 500
+    },
+    "video-poster.png": {
+      "sha256": "74553e9ad4ce7226613965018d95b5336772f5c9f3bd9f0d4aa30b5623f3832f",
+      "bytes": 114176
+    },
+    "failed-attempts/001/model-command-audit.json": {
+      "sha256": "081f99941726bce03d0e76ca766a5348e766d032c692e4e845a79e4d618a2875",
+      "bytes": 1281
+    },
+    "failed-attempts/001/model_owner.json": {
+      "sha256": "9dbc094af0c37b3337cf7b3eec556c9d38229f4b03be9b87930eeae9e1d5c8ff",
+      "bytes": 4635
+    },
+    "failed-attempts/002/model-command-audit.json": {
+      "sha256": "ba861c32c8d8251e8d2b3574c9f6f9c537858729fd34dc96d82fa72417948a08",
+      "bytes": 1275
+    },
+    "failed-attempts/002/model_owner.json": {
+      "sha256": "a28b22099c6cd7828d6e1bdc05ac4b3b51c3e0a340fc177db82bd37a74c3a69f",
+      "bytes": 4663
+    },
+    "failed-attempts/003/model-command-audit.json": {
+      "sha256": "e83acc9e5cc2e64955871d0d1f4c4e3d890c3f1222c2f9bb55b17e143f9e0004",
+      "bytes": 1260
+    },
+    "failed-attempts/003/model_owner.json": {
+      "sha256": "96a533bf5d7d8d1afa46e3eaf61a0b25cae414e32b9207c2a7ac7f2e4585c777",
+      "bytes": 4851
+    },
+    "failed-attempts/004/model-command-audit.json": {
+      "sha256": "dc665a6be56ffaaa5500f21b94a8e6fa658b8ef6a06e4597ec0d28e14eb3e862",
+      "bytes": 1273
+    },
+    "failed-attempts/004/model_owner.json": {
+      "sha256": "378941a3695a50b82bb5141c9de49aedfe2f3d0d66323aed334291446933f72e",
+      "bytes": 4807
+    },
+    "failed-attempts/005/model-command-audit.json": {
+      "sha256": "ea0f774b497081edd60d44ba96df6b1dc8e6f94e7718a910b3c0e53ce5bf048f",
+      "bytes": 1273
+    },
+    "failed-attempts/005/model_owner.json": {
+      "sha256": "f2d9957071a4f1ca66d504cb30d7dfa8996179130235a0f8791fbe2199df1c44",
+      "bytes": 4317
+    },
+    "failed-attempts/006/model-command-audit.json": {
+      "sha256": "db6c69db954c89da59337ce370f623898b0e7a2132da1f008ec38d795730707b",
+      "bytes": 1595
+    },
+    "failed-attempts/006/model_owner.json": {
+      "sha256": "4f41d667c94c9592a1ae37667cc4915f8a48fdb5e964935750464e54c1bc9d97",
+      "bytes": 5306
+    },
+    "failed-attempts/007/model-command-audit.json": {
+      "sha256": "278e886e6b08db71ef4830ae4a64f2f95cfacf2377192f62f7e1ac09382496d5",
+      "bytes": 1464
+    },
+    "failed-attempts/007/model_owner.json": {
+      "sha256": "5541414a06beed6aa7ea4f0ac6a523649b27eac5ad86966743a5196703d7f081",
+      "bytes": 4695
+    },
+    "failed-attempts/008/model-command-audit.json": {
+      "sha256": "00ef1fc28e760b0550f168efcb8707bd3672ec82f8667f84c861269b1ac1cfa3",
+      "bytes": 1241
+    },
+    "failed-attempts/008/model_owner.json": {
+      "sha256": "6f8306e7381d2d9ccdc3ef7dafe3bb9cfe252155e3c050ad6c4997e18d63515e",
+      "bytes": 5578
+    },
+    "failed-attempts/009/model-command-audit.json": {
+      "sha256": "35ced7f6ff965589b08449f714297224d1dfaa39d89a8f0a80e3fee4ee6e27c7",
+      "bytes": 1456
+    },
+    "failed-attempts/009/model_owner.json": {
+      "sha256": "ecd4f248b0ae11aafa659cfa31719997829e4771ff4a12a0cc3b83236df302d4",
+      "bytes": 5590
+    },
+    "failed-attempts/010/model-command-audit.json": {
+      "sha256": "707e4a69d95bb5a96e1eb33ea162274f5d9e0b8eca8bf46b0e092e1305d63471",
+      "bytes": 1352
+    },
+    "failed-attempts/010/model_owner.json": {
+      "sha256": "3b964ecdd577058d4286a284a71465a535f837d6fec8e2e663ea859a2b4616da",
+      "bytes": 4221
+    },
+    "failed-attempts/011/model-command-audit.json": {
+      "sha256": "2c7082bef027e6c6a33510b680dd811dd1a544a6e09b9dad7468927cd4b5c604",
+      "bytes": 1447
+    },
+    "failed-attempts/011/model_owner.json": {
+      "sha256": "a4a559d336d57e3fe48b1083fda2ed296f2f537de5d6048e986b74c9c231fddc",
+      "bytes": 5826
+    }
+  }
+}

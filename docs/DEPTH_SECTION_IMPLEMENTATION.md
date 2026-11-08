@@ -1,5 +1,7 @@
 # Depth section integration
 
+> **Update, 2026-11-08:** Current status: a separate full-course PINN diagnostic passed. It did not run the depth-section policy below: depth was recorded, assessments were excluded from the command loop, and experimental map/clearance guards were non-blocking. Airborne depth-guided corridor/tunnel qualification remains outstanding. The qualification history below retains its original source and scope. [Full result and Classical comparison](HYBRID_FULL_COURSE_RESULT.md).
+
 Registration remains disabled. The Classical baseline and existing failed runs are untouched.
 
 The full-course native owner now subscribes to calibrated depth, CameraInfo, static TF, PX4 local position and attitude. It binds depth to a capture-time pose within 30 ms, refuses stale captures and latches reference, calibration and reset changes. Disarmed admission requires an actual fresh depth capture through this adapter.

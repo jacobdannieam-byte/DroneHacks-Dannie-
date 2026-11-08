@@ -13,6 +13,7 @@ simulator/gazebo_trial/make_drone_16_model.py -text
 simulator/gazebo_trial/course_world_sdf.py -text
 simulator/gazebo_trial/calibration_lane.py text eol=lf
 scenarios/model_flight/*.json -text
+artifacts/hybrid_full_course_success/** -text
 drone_code/team_nav/course_maps/phone_scan_2026-11-06.json -text
 drone_code/team_nav/missions/dronehacks_2026_side_gap_first.json -text
 drone_code/team_nav/course_maps/organizers_drawing.json -text

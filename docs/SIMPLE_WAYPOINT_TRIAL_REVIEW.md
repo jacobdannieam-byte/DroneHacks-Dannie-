@@ -1,5 +1,7 @@
 # Simpler waypoint integration: bounded trial review
 
+> **Update, 2026-11-08:** Historical bounded-gate snapshot. Later C1 and full-course PINN diagnostic runs passed. The latter used separate explicit authorization and non-blocking experimental guards; it does not close the normal clearance-gated policy requirements below. [Full result and Classical comparison](HYBRID_FULL_COURSE_RESULT.md).
+
 November 8, 2026. **C1 is ready for team approval; no motion is authorized.** R1's disarmed package passes but its moving release depends on C1 and independent review. Full waypoint-policy and PINN flights remain unreleased.
 
 ## Frozen candidate and evidence

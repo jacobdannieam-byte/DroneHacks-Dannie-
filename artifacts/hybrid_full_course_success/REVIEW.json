@@ -1,0 +1,66 @@
+{
+  "flight_revision": "cfdffc79b0cb79dab6abd81d130f1e0f78715067",
+  "classical_revision": "ad31ae55ebf7cd3b2eaf57917537242831e3c752",
+  "classical_run_id": "run-AdMalPxA",
+  "classical_protected_hashes_verified": {
+    "CLASSICAL_COURSE_RESULTS.md": "ae6d03448899308cea91eb5890ac0c24db1e8b0b19d0c29722ed442484544bb2",
+    "classical-course-summary.json": "0b198082eb7862a81a9b6cd97010665349c7551b4887e7956d80e5441f323590",
+    "trial_approval.json": "1e779f358b584e0a77639bd0aceeda3b5f7545c0c2310c77b4eb11e19f17266b",
+    "run.txt": "91c0ea222cdfe15a3e63b9d5007e807abe28858780682ebab89b2e80ddc09a2d",
+    "revision.txt": "2c86a95c23f118025d08b9867e45e6c89014693a7b5977a59a6dd183e1bc3284",
+    "versions.txt": "a34a4d93b7608e6fdcc7e7397e685a1625e9445efbc3d9284c3b98dd0f0d9d41",
+    "observations/metadata.yaml": "6752ae2d40ab2af5f78df61f7ef2d7b90ddeca7013156b25dfffa4bbef046a80",
+    "source.tar": "9f0c79717cceaf29db4fd617ab254a3b6b3bc60ab2bdd8d911819bb6c08a546d"
+  },
+  "source_artifacts_verified": {
+    "model_owner.json": "72b8f44f89fefc135d858851fff9e4af767605df3b59632bbb197d7d4972d16e",
+    "model-command-audit.json": "bc7f2fcd8c638c163c87bb6a571ec56055334dae315f2d7293242fa918b517a0",
+    "recording_final.json": "8995128112ef24ed0295633c9977073454f419669c399a5bbf8ca2b5373ab2dc",
+    "calibration_recording.json": "7f91df787918aa336ac0fa96e3d274053d61ad8ee2043e84cab38fbeeaf977cb",
+    "model_owner.decisions.jsonl": "c23bf63d3a3c1bc025c22677988b434e920086768c3d368ec9c9c5d13e5b60dd",
+    "decision-review.csv": "472eda013aec9e7d8bec009ec03bcf4bdfef3bddfb83a536a6321b1ca3c0aea3",
+    "actual-gazebo-flight.mp4": "3d94cc50fc76e37fa0bab9124418909ac19e88e01c51c879c6790f3938a7aebf",
+    "video-manifest.json": "85f25a41e8a5f861e6d601275337cea9dab9f319bfa947449dc1e2c94053a1a8",
+    "observations/observations_0.db3": "7a9037f61768b5db04804e3ca1e81d67b36204246a9019d2850e426bcd02e348"
+  },
+  "hash_chain_verified": true,
+  "selection_argmin_verified": true,
+  "all_decisions_accounted_for": true,
+  "decisions": 1822,
+  "published": 1617,
+  "discarded": 205,
+  "discard_reasons": {
+    "model_state_expired": 205
+  },
+  "pinn_d0_different_all": 14,
+  "pinn_d0_different_published": 11,
+  "published_difference_fraction": 0.006802721088435374,
+  "published_command_counts": {
+    "3": 1115,
+    "2": 99,
+    "1": 284,
+    "0": 119
+  },
+  "published_normal_guard_rejections": 10,
+  "published_negative_predicted_map_margins": 10,
+  "minimum_predicted_map_margin_m": -0.0019305057196786204,
+  "inference_ms_percentiles": {
+    "p50": 36.50092000316363,
+    "p95": 48.06355390137469,
+    "p99": 56.19832806973133,
+    "max": 106.29249500198057
+  },
+  "metrics": {
+    "classical": {
+      "horizontal_distance_m": 17.973920159467426,
+      "peak_truth_height_m": 0.9084
+    },
+    "hybrid": {
+      "horizontal_distance_m": 17.481327560936986,
+      "peak_truth_height_m": 0.8968
+    }
+  },
+  "comparison_limit": "D0 scores are same-state counterfactuals; not historical Classical follower commands or a closed-loop D0 run. Single unmatched historical runs do not establish predictor superiority.",
+  "raw_evidence_root": "physical-gazebo-evidence/hybrid-diagnostic-full-course-012",
+  "raw_large_files_uploaded": false
+}

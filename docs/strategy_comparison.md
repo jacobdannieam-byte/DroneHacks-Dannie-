@@ -1,5 +1,7 @@
 # Strategy comparison implementation
 
+> **Update, 2026-11-08:** Current separate flight evidence: the experimental full-course model owner successfully executed PINN-selected commands. This does not promote the general S4/G1 gateway described in this historical snapshot. [Full result and Classical comparison](HYBRID_FULL_COURSE_RESULT.md).
+
 This work is isolated on `codex/strategy-comparison`, starting at
 `c8bb4eb2ddcf62ca687ef6a0c75a446a52bf01cf`. The refreshed remote canonical
 Hybrid head is `bfb09c8a44607d0c7efbf3532749207b25500385`. Remote heads were

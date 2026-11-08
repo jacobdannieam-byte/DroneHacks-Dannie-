@@ -1,0 +1,109 @@
+{
+  "mode": "hybrid_model_trial",
+  "revision": "0d9f874e60de7c49d5dbc4c8a20e6d3da98c814d",
+  "image_sha256": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1",
+  "world_sha256": "692793c30408ef1e47e81bfd9f1b1987197cf8fa9bd3cfba7014d8b2fabbd613",
+  "vehicle_sha256": "f8cc362929337eb37e8649632ce3426d86a029a80932cee06a1a80f2d1e169f3",
+  "profile_sha256": "5f7d7b618074bca182115b4f76c060d5d7457c0ca0668d4d07e75199ebd8e3a4",
+  "ros_domain_id": 62,
+  "checkpoint_sha256": "e935d56dfd0a9cf898c15ab2611afe9525fa9507f859f813121a9e181ed23375",
+  "participant_map_sha256": "74a3b67ed942292d880c79cc43eb2d0740466d0c27bfa42cb5045210e05f9ccf",
+  "registration_enabled": false,
+  "command_selection": "physics_informed_residual_model",
+  "fallback_allowed": false,
+  "trial_id": "hybrid-pinn-full-course-diagnostic-001",
+  "simulator_diagnostic": true,
+  "disarmed_check": true,
+  "graph": {
+    "expected_owner": null,
+    "endpoints": {
+      "/fmu/in/actuator_motors": [],
+      "/fmu/in/actuator_servos": [],
+      "/fmu/in/goto_setpoint": [],
+      "/fmu/in/manual_control_input": [],
+      "/fmu/in/offboard_control_mode": [],
+      "/fmu/in/trajectory_setpoint": [],
+      "/fmu/in/vehicle_attitude_setpoint": [],
+      "/fmu/in/vehicle_command": [],
+      "/fmu/in/vehicle_command_mode_executor": [],
+      "/fmu/in/vehicle_rates_setpoint": [],
+      "/fmu/in/vehicle_thrust_setpoint": [],
+      "/fmu/in/vehicle_torque_setpoint": []
+    },
+    "issues": []
+  },
+  "ros_ns": 25060000000,
+  "input_fault": "px4_clock_deferral_expired",
+  "input_clock_failures": [
+    {
+      "role": "flags",
+      "target_ns": 68168000000,
+      "now_ns": 68232000000,
+      "receipt_wall_ns": 39299723820320,
+      "now_wall_ns": 39299788167836,
+      "source_ns": 68168000000
+    },
+    {
+      "role": "landed",
+      "target_ns": 68168000000,
+      "now_ns": 68232000000,
+      "receipt_wall_ns": 39299724105574,
+      "now_wall_ns": 39299788167836,
+      "source_ns": 68168000000
+    }
+  ],
+  "observed_ned_m": [
+    0.00028075190493837,
+    0.0008851525490172207,
+    -0.03792152181267738
+  ],
+  "expected_origin_ned_m": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "topics": {
+    "vehicle_local_position": "/fmu/out/vehicle_local_position",
+    "vehicle_status": "/fmu/out/vehicle_status_v1",
+    "vehicle_land_detected": "/fmu/out/vehicle_land_detected",
+    "estimator_status_flags": "/fmu/out/estimator_status_flags"
+  },
+  "section_depth": {
+    "capture_available": true,
+    "fault": null,
+    "rejected": {
+      "capture_pose_missing": 65,
+      "depth_age": 3
+    }
+  },
+  "publication_failure": {
+    "reason": "native_observation_lost",
+    "elapsed_wall_ns": 62235930,
+    "decision_ros_ns": 68164000000,
+    "issued_ros_ns": 68232000000
+  },
+  "trial_kind": "stopping",
+  "owner_id": "/calibration_trial_owner",
+  "result": "publication_fence_closed",
+  "recovery_reason": null,
+  "events": [],
+  "native_land_ack_ns": null,
+  "native_disarm_ns": null,
+  "max_observed_speed_mps": 0.18208420530272998,
+  "recovery_operator": "Codex isolated Gazebo supervisor",
+  "geometry": {
+    "scope": "Full Classical participant-map route; .30 m body + .05 m margin; no general D3 promotion",
+    "route": "Route on the map 'Phone scan of the real course': 17.3 m long, 23 waypoints.\nThe least room is 0.35 m, next to the M3 maze divider (the drone needs at least 0.35 m).\n  First corridor: cleared through 'end of first corridor' at waypoint 2.\n  Maze: cleared through 'Gate A' at waypoint 11.\n  Tunnel: cleared through 'tunnel exit' at waypoint 14.\n  Chicane: cleared through 'Gate B' at waypoint 21.\n  The drone stops at waypoint 15, 0.38 m from the edge of Boulder 2. No place further away was found.\nWaypoints (metres east, metres north, height above the floor):\n   1: (-2.51, +0.91, 0.80)\n   2: (-2.36, +2.49, 0.80)\n   3: (-1.82, +2.63, 0.80)\n   4: (-1.22, +2.38, 0.80)\n   5: (-1.17, +1.23, 0.80)\n   6: (-0.72, +0.93, 0.80)\n   7: (-0.17, +0.98, 0.80)\n   8: (+0.13, +1.38, 0.80)\n   9: (+0.78, +2.63, 0.80)\n  10: (+1.18, +2.68, 0.80)\n  11: (+1.49, +2.62, 0.80)\n  12: (+1.85, +2.00, 0.80)\n  13: (+1.98, +0.98, 0.80)\n  14: (+2.18, -0.52, 0.80)\n  15: (+2.00, -1.85, 0.80)\n  16: (+1.48, -2.07, 0.80)\n  17: (+1.43, -2.22, 0.80)\n  18: (+0.73, -1.52, 0.80)\n  19: (+0.08, -0.82, 0.80)\n  20: (-0.42, -0.87, 0.80)\n  21: (-0.81, -1.22, 0.80)\n  22: (-1.67, -1.12, 0.80)\n  23: (-2.04, -0.79, 0.80)",
+    "registration_enabled": false,
+    "source_sha256": {
+      "simulator/gazebo_trial/make_drone_16_model.py": "b92d4627991087c1f79896533a01fbd702c0f49a5ba4e1225f3747136442381b",
+      "simulator/gazebo_trial/course_world_sdf.py": "9cf254e6e4fb83fcaa728f086a30299eb96a6a406d52dcbfaa8f7e901cb2d465",
+      "simulator/gazebo_trial/make_gazebo_world.py": "e5f2033d4e3760ba65ee5c80a6025268c6472de7a2ac790bd76ed19cb5a72b99",
+      "simulator/gazebo_trial/models/drone_16_with_oak_d_s2/model.sdf": "12d2b065f4467456f58666c8d05733491859565445937a41603fe02b07e493de",
+      "simulator/gazebo_trial/models/oak_d_s2_camera/model.sdf": "abcfc9977bdc8fe29ec1f7a319d97470ea407a1ce2abf46796022dcffa2cb61c",
+      "simulator/px4_changes/drone_16_settings.sh": "ab875c5b8e1d3f44822c4c0e922675842ade72ec0d7277df7367409dc6e4e525"
+    }
+  },
+  "model_command_count": 340,
+  "waypoints_reached": 3
+}

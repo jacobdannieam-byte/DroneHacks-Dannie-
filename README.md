@@ -1,5 +1,7 @@
 # DroneHacks Autonomous Drone Companion Project
 
+> **Update, 2026-11-08:** Latest simulator result: the map-assisted PINN diagnostic passed all 22 post-launch goals, four checkpoints, pad landing and raw-command replay, with zero contacts. Branch: `codex/hybrid-model-flight`. Normal depth/clearance-gated policy and hardware remain unqualified. [Full result and Classical comparison](docs/HYBRID_FULL_COURSE_RESULT.md).
+
 This is the team's persistent DroneHacks companion project. It runs inside the companion container (Linux / ROS 2 Jazzy) on the NVIDIA Jetson Orin Nano / simulation environment, communicating with the PX4 autopilot via Micro XRCE-DDS in Offboard Mode.
 
 ---

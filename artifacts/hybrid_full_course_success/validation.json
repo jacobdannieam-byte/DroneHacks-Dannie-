@@ -1,0 +1,9 @@
+{
+  "reviewed_utc": "2026-11-08T18:56:58.800607+00:00",
+  "tested_revision": "cfdffc79b0cb79dab6abd81d130f1e0f78715067",
+  "command": "python -m pytest tests -q",
+  "result": "PASS",
+  "passed": 879,
+  "seconds": 64.4,
+  "notes": "Runtime source unchanged during publication review; subsequent edits are documentation and copied/derived evidence. Original native replay and referee reports are included. All eight Classical protected hashes and final raw-artifact hashes independently reverified."
+}

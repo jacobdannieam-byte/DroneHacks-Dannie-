@@ -1,6 +1,6 @@
 # Policy readiness
 
-As of 2026-11-08, the identified ingestion and accounting bugs below have fixes, but **full Hybrid course runs are not ready or flight-qualified**. Waypoint scanning is additional observation behavior, not a clearance certificate. This snapshot separates delivered repairs from work being implemented and evidence still missing.
+As of the latest 2026-11-08 review, the **separate map-assisted PINN simulator diagnostic has passed the full course**: 22 post-launch goals, four checkpoints, zero contacts, pad landing and disarm. See [the result and Classical comparison](HYBRID_FULL_COURSE_RESULT.md). Its depth and experimental clearance gates were non-blocking; it used fixed Classical goals and a separate command owner. **The normal depth/clearance-gated policy and hardware remain unqualified.** The repairs and outstanding normal-policy requirements below retain their scope. Waypoint scanning is observation behavior, not a clearance certificate.
 
 ## Fixed, with bounded evidence
 

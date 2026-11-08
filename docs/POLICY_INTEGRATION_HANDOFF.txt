@@ -1,3 +1,14 @@
+CURRENT ADDENDUM - 2026-11-08
+Branch: codex/hybrid-model-flight.
+Successful frozen flight source: cfdffc79b0cb79dab6abd81d130f1e0f78715067.
+Full-course diagnostic PASS: 22 goals, four checkpoints, 1617 PINN commands,
+zero contacts, pad landing and disarm in 153.57 referee seconds.
+Read docs/HYBRID_FULL_COURSE_RESULT.md and artifacts/hybrid_full_course_success/.
+The Classical route was fixed; the PINN selected local position commands.
+Depth was recorded but not used to gate this diagnostic; registration stayed off.
+Normal clearance/depth-gated policy, generic S4 and hardware remain unqualified.
+The earlier handoff below remains historical; its source is not this flight.
+
 DroneHacks policy integration handoff — 2026-11-07
 
 READ THIS FIRST

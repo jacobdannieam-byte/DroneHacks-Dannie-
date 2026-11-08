@@ -1,5 +1,7 @@
 # Isolated Classical-map comparison
 
+> **Update, 2026-11-08:** Later executed experiment: a separate PINN simulator diagnostic completed the known course. The offline comparison and normal moving-release requirements below retain their historical scope; no generic D3/S4 qualification is implied. [Full result and Classical comparison](HYBRID_FULL_COURSE_RESULT.md).
+
 Prepared 2026-11-08. Offline comparison implemented; **native moving release remains blocked**. This is a separate experiment, not a change to the observed-only default, protected Classical checkout, or native PINN eligibility.
 
 ## Decision and Notion context

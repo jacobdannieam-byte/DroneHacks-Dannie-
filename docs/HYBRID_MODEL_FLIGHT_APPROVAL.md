@@ -1,5 +1,7 @@
 # Hybrid PINN command-controlled Classical-prefix trial
 
+> **Update, 2026-11-08:** Historical prefix proposal. A later separately authorized full-course diagnostic passed, with changed diagnostic limits and its own exact flown source. This old proposal is not the current result or reusable approval. [Full result and Classical comparison](HYBRID_FULL_COURSE_RESULT.md).
+
 Prepared 2026-11-08. **One moving trial proposed; no moving flight authorized or executed.**
 Registration remains off. The protected Classical success and C1 success are unchanged.
 

@@ -1,5 +1,7 @@
 # DroneHacks Lab: context for your coding agent
 
+> **Update, 2026-11-08:** Current Hybrid evidence: `codex/hybrid-model-flight` has a full-course diagnostic success at frozen source `cfdffc79b0cb79dab6abd81d130f1e0f78715067`: 22 goals, four checkpoints, 1,617 PINN commands, zero contacts, pad landing and disarm. Classical supplied fixed waypoints; depth was recorded but did not control navigation. Registration and fallback stayed off. This does not promote the normal safety-gated policy, generic S4/G1 or hardware. Compact evidence is in `artifacts/hybrid_full_course_success/`; preserve all original failures and the Classical baseline. [Full result and Classical comparison](docs/HYBRID_FULL_COURSE_RESULT.md).
+
 Give this file to Claude, ChatGPT, or another coding agent. Work in the current
 project; inspect its source and live interfaces before proposing changes.
 

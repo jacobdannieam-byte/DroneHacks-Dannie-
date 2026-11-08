@@ -1,0 +1,266 @@
+[
+  {
+    "sequence": 188,
+    "decision_ros_s": 60.504,
+    "waypoint_1_based": 2,
+    "pinn_choice": "0",
+    "d0_choice": "1",
+    "pinn_lead_m": 0,
+    "d0_lead_m": 0.08,
+    "actual_target_difference_m": 0.026578048513761967,
+    "pinn_score_selected": 0.011145315129004324,
+    "pinn_score_d0_choice": 0.011714988679541155,
+    "d0_score_pinn_choice": 0.011383787065943268,
+    "d0_score_selected": 0.010600285075056188,
+    "pinn_target": [
+      1.69975745677948,
+      0.6683306694030762,
+      -0.8
+    ],
+    "d0_target": [
+      1.7126000000000006,
+      0.6916000000000002,
+      -0.8
+    ]
+  },
+  {
+    "sequence": 258,
+    "decision_ros_s": 65.884,
+    "waypoint_1_based": 3,
+    "pinn_choice": "0",
+    "d0_choice": "1",
+    "pinn_lead_m": 0,
+    "d0_lead_m": 0.08,
+    "actual_target_difference_m": 0.027891502592568458,
+    "pinn_score_selected": 0.006538891736465749,
+    "pinn_score_d0_choice": 0.008892254916581153,
+    "d0_score_pinn_choice": 0.007938651589414364,
+    "d0_score_selected": 0.00734318792256705,
+    "pinn_target": [
+      1.4697000980377197,
+      1.2646273374557495,
+      -0.8
+    ],
+    "d0_target": [
+      1.4626000000000006,
+      1.2916000000000003,
+      -0.8
+    ]
+  },
+  {
+    "sequence": 428,
+    "decision_ros_s": 79.084,
+    "waypoint_1_based": 5,
+    "pinn_choice": "0",
+    "d0_choice": "1",
+    "pinn_lead_m": 0,
+    "d0_lead_m": 0.08,
+    "actual_target_difference_m": 0.03138796564429902,
+    "pinn_score_selected": 0.009807415670701522,
+    "pinn_score_d0_choice": 0.011021415097099665,
+    "d0_score_pinn_choice": 0.011195711785070062,
+    "d0_score_selected": 0.009733072427221342,
+    "pinn_target": [
+      0.03355753794312477,
+      1.7682336568832397,
+      -0.8
+    ],
+    "d0_target": [
+      0.012600000000000056,
+      1.7916000000000003,
+      -0.8
+    ]
+  },
+  {
+    "sequence": 429,
+    "decision_ros_s": 79.1,
+    "waypoint_1_based": 5,
+    "pinn_choice": "0",
+    "d0_choice": "1",
+    "pinn_lead_m": 0,
+    "d0_lead_m": 0.08,
+    "actual_target_difference_m": 0.029091012307467065,
+    "pinn_score_selected": 0.008892759789669285,
+    "pinn_score_d0_choice": 0.011388641432304194,
+    "d0_score_pinn_choice": 0.010043912979300332,
+    "d0_score_selected": 0.010035537827627374,
+    "pinn_target": [
+      0.03240511938929558,
+      1.7702916860580444,
+      -0.8
+    ],
+    "d0_target": [
+      0.012600000000000056,
+      1.7916000000000003,
+      -0.8
+    ]
+  },
+  {
+    "sequence": 506,
+    "decision_ros_s": 84.364,
+    "waypoint_1_based": 6,
+    "pinn_choice": "0",
+    "d0_choice": "1",
+    "pinn_lead_m": 0,
+    "d0_lead_m": 0.08,
+    "actual_target_difference_m": 0.005895410101996877,
+    "pinn_score_selected": 0.01329716065797622,
+    "pinn_score_d0_choice": 0.013338059167493083,
+    "d0_score_pinn_choice": 0.012825885284962302,
+    "d0_score_selected": 0.012759993258006284,
+    "pinn_target": [
+      0.06837756931781769,
+      2.3404271602630615,
+      -0.8
+    ],
+    "d0_target": [
+      0.06260000000000032,
+      2.3416,
+      -0.8
+    ]
+  },
+  {
+    "sequence": 759,
+    "decision_ros_s": 103.024,
+    "waypoint_1_based": 9,
+    "pinn_choice": "0",
+    "d0_choice": "1",
+    "pinn_lead_m": 0,
+    "d0_lead_m": 0.08,
+    "actual_target_difference_m": 0.01035821402354551,
+    "pinn_score_selected": 0.01225959510863394,
+    "pinn_score_d0_choice": 0.012353683371747495,
+    "d0_score_pinn_choice": 0.01191901952972042,
+    "d0_score_selected": 0.01177938779201235,
+    "pinn_target": [
+      1.7532367706298828,
+      3.6871702671051025,
+      -0.8
+    ],
+    "d0_target": [
+      1.7626000000000004,
+      3.6916000000000007,
+      -0.8
+    ]
+  },
+  {
+    "sequence": 874,
+    "decision_ros_s": 112.052,
+    "waypoint_1_based": 11,
+    "pinn_choice": "0",
+    "d0_choice": "1",
+    "pinn_lead_m": 0,
+    "d0_lead_m": 0.08,
+    "actual_target_difference_m": 0.03210035514161008,
+    "pinn_score_selected": 0.009253984289751695,
+    "pinn_score_d0_choice": 0.009656559196462005,
+    "d0_score_pinn_choice": 0.010696819888439795,
+    "d0_score_selected": 0.007843347686440311,
+    "pinn_target": [
+      1.1118742227554321,
+      4.345595359802246,
+      -0.8
+    ],
+    "d0_target": [
+      1.0875999999999997,
+      4.366600000000001,
+      -0.8
+    ]
+  },
+  {
+    "sequence": 975,
+    "decision_ros_s": 119.552,
+    "waypoint_1_based": 12,
+    "pinn_choice": "0",
+    "d0_choice": "1",
+    "pinn_lead_m": 0,
+    "d0_lead_m": 0.08,
+    "actual_target_difference_m": 0.03620822817723909,
+    "pinn_score_selected": 0.03162310877563567,
+    "pinn_score_d0_choice": 0.03269131243939519,
+    "d0_score_pinn_choice": 0.03172905901248272,
+    "d0_score_selected": 0.03116417668254265,
+    "pinn_target": [
+      0.0984833687543869,
+      4.48676061630249,
+      -0.7944406652450562
+    ],
+    "d0_target": [
+      0.06260000000000032,
+      4.4916,
+      -0.7944406652450562
+    ]
+  },
+  {
+    "sequence": 1293,
+    "decision_ros_s": 144.864,
+    "waypoint_1_based": 15,
+    "pinn_choice": "0",
+    "d0_choice": "1",
+    "pinn_lead_m": 0,
+    "d0_lead_m": 0.08,
+    "actual_target_difference_m": 0.02862582235542475,
+    "pinn_score_selected": 0.010057467832021154,
+    "pinn_score_d0_choice": 0.010183069111872257,
+    "d0_score_pinn_choice": 0.010648788050795945,
+    "d0_score_selected": 0.010402940379405737,
+    "pinn_target": [
+      -2.9702365398406982,
+      4.014509677886963,
+      -0.8
+    ],
+    "d0_target": [
+      -2.9874,
+      3.9916,
+      -0.8
+    ]
+  },
+  {
+    "sequence": 1331,
+    "decision_ros_s": 147.784,
+    "waypoint_1_based": 16,
+    "pinn_choice": "0",
+    "d0_choice": "1",
+    "pinn_lead_m": 0,
+    "d0_lead_m": 0.08,
+    "actual_target_difference_m": 0.017336359288175465,
+    "pinn_score_selected": 0.005308522741201512,
+    "pinn_score_d0_choice": 0.006466975932581838,
+    "d0_score_pinn_choice": 0.006091619645846488,
+    "d0_score_selected": 0.005773679052947705,
+    "pinn_target": [
+      -3.1200759410858154,
+      3.9409470558166504,
+      -0.8
+    ],
+    "d0_target": [
+      -3.1374,
+      3.9416000000000007,
+      -0.8
+    ]
+  },
+  {
+    "sequence": 1749,
+    "decision_ros_s": 178.308,
+    "waypoint_1_based": 21,
+    "pinn_choice": "0",
+    "d0_choice": "1",
+    "pinn_lead_m": 0,
+    "d0_lead_m": 0.08,
+    "actual_target_difference_m": 0.004856352225350297,
+    "pinn_score_selected": 0.013780474532177673,
+    "pinn_score_d0_choice": 0.013794804039781606,
+    "d0_score_pinn_choice": 0.013631551966679863,
+    "d0_score_selected": 0.013597171822081065,
+    "pinn_target": [
+      -2.0327389240264893,
+      0.8429632782936096,
+      -0.8
+    ],
+    "d0_target": [
+      -2.0374,
+      0.8416000000000001,
+      -0.8
+    ]
+  }
+]

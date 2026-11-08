@@ -1,0 +1,45 @@
+{
+  "owner_result": "complete",
+  "waypoints": 22,
+  "published": 1617,
+  "discarded": 205,
+  "selection_counts": {
+    "3": 1115,
+    "2": 99,
+    "1": 284,
+    "0": 119
+  },
+  "published_pinn_d0_differences": 11,
+  "peak_height_m": 0.8968,
+  "max_native_speed_mps": 0.33919114576092924,
+  "recording_complete": true,
+  "recording_faults": [],
+  "coalesced_clock_samples": 2,
+  "scheduler_delays": [
+    {
+      "wall_gap_ns": 581896677,
+      "ros_gap_ns": 544000000,
+      "ros_ns": 54396000000
+    },
+    {
+      "wall_gap_ns": 368379082,
+      "ros_gap_ns": 368000000,
+      "ros_ns": 58972000000
+    },
+    {
+      "wall_gap_ns": 358402948,
+      "ros_gap_ns": 296000000,
+      "ros_ns": 64272000000
+    },
+    {
+      "wall_gap_ns": 575574399,
+      "ros_gap_ns": 536000000,
+      "ros_ns": 69240000000
+    },
+    {
+      "wall_gap_ns": 374929450,
+      "ros_gap_ns": 356000000,
+      "ros_ns": 74456000000
+    }
+  ]
+}

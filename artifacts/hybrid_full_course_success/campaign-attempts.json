@@ -1,0 +1,235 @@
+[
+  {
+    "attempt": 1,
+    "candidate": {
+      "revision": "9af88409f0d6ad6bb409e7ad6bd83719307177b1",
+      "source_sha256": "77cebaaab52d749aba875b2f689cd3dd1113e1aba16cf4f4fad598bd9e0798d1",
+      "image": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1"
+    },
+    "result": "publication_fence_closed",
+    "input_fault": null,
+    "publication_failure": null,
+    "published_model_commands": 0,
+    "waypoints_reached": 0,
+    "checkpoints": {},
+    "independent_full_course_pass": false,
+    "evidence_directory": "hybrid-diagnostic-full-course-001",
+    "video_file": "run/actual-gazebo-flight.mp4"
+  },
+  {
+    "attempt": 2,
+    "candidate": {
+      "revision": "b8c67bc13a8fcdcc80e5f6bf6b2b6bbfba70cd0e",
+      "source_sha256": "1aee1ebf57f1bd29ae4ee16bd659c8f35b9d6e4af294189450a62a8acaed2b6b",
+      "image": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1"
+    },
+    "result": "native_observation_lost",
+    "input_fault": "px4_clock_mapping_outside_review",
+    "publication_failure": null,
+    "published_model_commands": 3,
+    "waypoints_reached": 0,
+    "checkpoints": {},
+    "independent_full_course_pass": false,
+    "evidence_directory": "hybrid-diagnostic-full-course-002",
+    "video_file": "run/actual-gazebo-flight.mp4"
+  },
+  {
+    "attempt": 3,
+    "candidate": {
+      "revision": "09a62ba3c2cdf6625323713e97f70b695e6067a2",
+      "source_sha256": "4d04ea933326aba6fa19ccf0bb622d1e761c7b4a14c92c266c39fa0c07d8b937",
+      "image": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1"
+    },
+    "result": "model_rejected:Model input stale or future",
+    "input_fault": null,
+    "publication_failure": null,
+    "published_model_commands": 36,
+    "waypoints_reached": 0,
+    "checkpoints": {},
+    "independent_full_course_pass": false,
+    "evidence_directory": "hybrid-diagnostic-full-course-003",
+    "video_file": "run/actual-gazebo-flight.mp4"
+  },
+  {
+    "attempt": 4,
+    "candidate": {
+      "revision": "aa8019ab4b1d0a7b61266c61c87ec77b0f3db3dc",
+      "source_sha256": "aaa84ac1de81111fae1acd1b99d67d6296a089c68a0f4777a914ac62b03723f7",
+      "image": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1"
+    },
+    "result": "publication_fence_closed",
+    "input_fault": null,
+    "publication_failure": {
+      "reason": "observation_superseded",
+      "elapsed_wall_ns": 5689999,
+      "decision_ros_ns": 32404000000,
+      "issued_ros_ns": 32412000000
+    },
+    "published_model_commands": 0,
+    "waypoints_reached": 0,
+    "checkpoints": {},
+    "independent_full_course_pass": false,
+    "evidence_directory": "hybrid-diagnostic-full-course-004",
+    "video_file": "run/actual-gazebo-flight.mp4"
+  },
+  {
+    "attempt": 5,
+    "candidate": {
+      "revision": "99022833a93ec3b079b641e49f38a33e171a84ed",
+      "source_sha256": "29c5226181a84531c87d169bb1ad0d1f3426c177e21ded07dc968e64b2d1eb20",
+      "image": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1"
+    },
+    "result": "preflight_not_ready",
+    "input_fault": null,
+    "publication_failure": null,
+    "published_model_commands": 0,
+    "waypoints_reached": 0,
+    "checkpoints": {},
+    "independent_full_course_pass": false,
+    "evidence_directory": "hybrid-diagnostic-full-course-005",
+    "video_file": "run/actual-gazebo-flight.mp4"
+  },
+  {
+    "attempt": 6,
+    "candidate": {
+      "revision": "0d9f874e60de7c49d5dbc4c8a20e6d3da98c814d",
+      "source_sha256": "ca633175441b18d39f42a5cddea3ce92d871bd2992ca1c6cfe836a100d0d0356",
+      "image": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1"
+    },
+    "result": "publication_fence_closed",
+    "input_fault": "px4_clock_deferral_expired",
+    "publication_failure": {
+      "reason": "native_observation_lost",
+      "elapsed_wall_ns": 62235930,
+      "decision_ros_ns": 68164000000,
+      "issued_ros_ns": 68232000000
+    },
+    "published_model_commands": 340,
+    "waypoints_reached": 3,
+    "checkpoints": {
+      "First corridor": 14.4
+    },
+    "independent_full_course_pass": false,
+    "evidence_directory": "hybrid-diagnostic-full-course-006",
+    "video_file": "run/actual-gazebo-flight.mp4"
+  },
+  {
+    "attempt": 7,
+    "candidate": {
+      "revision": "ff287d973d7d6cb092a90f7c0246a8c0dfb5efcb",
+      "source_sha256": "613a636454c4f4a5294da48f11f46e8b9c20debae1e5720c87f287395900d59c",
+      "image": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1"
+    },
+    "result": "native_observation_lost",
+    "input_fault": null,
+    "publication_failure": null,
+    "published_model_commands": 258,
+    "waypoints_reached": 5,
+    "checkpoints": {
+      "First corridor": 14.87
+    },
+    "independent_full_course_pass": false,
+    "evidence_directory": "hybrid-diagnostic-full-course-007",
+    "video_file": "run/actual-gazebo-flight.mp4"
+  },
+  {
+    "attempt": 8,
+    "candidate": {
+      "revision": "2d906ead46bbcd47ce3a39096411d15eec86ce01",
+      "source_sha256": "a5864633b4e697eb5b2c345ed1887acc6f2179a6a9efec7c98fe6cd7502e1d76",
+      "image": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1"
+    },
+    "result": "clock_stalled_or_rewound",
+    "input_fault": null,
+    "publication_failure": null,
+    "published_model_commands": 16,
+    "waypoints_reached": 0,
+    "checkpoints": {},
+    "independent_full_course_pass": false,
+    "evidence_directory": "hybrid-diagnostic-full-course-008",
+    "video_file": "run/actual-gazebo-flight.mp4"
+  },
+  {
+    "attempt": 9,
+    "candidate": {
+      "revision": "9f25c15e5e9b3930018f6a03e5df5cf8f9aa6a0f",
+      "source_sha256": "a3f323da240ca0fb93bb08ba88856fed7f48d73c5da60ce2c8909c5946ced5c7",
+      "image": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1"
+    },
+    "result": "clock_stalled_or_rewound",
+    "input_fault": null,
+    "publication_failure": null,
+    "published_model_commands": 761,
+    "waypoints_reached": 10,
+    "checkpoints": {
+      "First corridor": 14.43,
+      "Maze": 64.9
+    },
+    "independent_full_course_pass": false,
+    "evidence_directory": "hybrid-diagnostic-full-course-009",
+    "video_file": "run/actual-gazebo-flight.mp4"
+  },
+  {
+    "attempt": 10,
+    "candidate": {
+      "revision": "4262cb23042cf3a4333afa3fef4d9c1289c82dfe",
+      "source_sha256": "dcc976f5d58db8475fa053e1e18e48bbb1ad202b9602a8b2d2d41e554ebb9712",
+      "image": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1"
+    },
+    "result": "preflight_not_ready",
+    "input_fault": null,
+    "publication_failure": null,
+    "published_model_commands": 0,
+    "waypoints_reached": 0,
+    "checkpoints": {},
+    "independent_full_course_pass": false,
+    "evidence_directory": "hybrid-diagnostic-full-course-010",
+    "video_file": "run/actual-gazebo-flight.mp4"
+  },
+  {
+    "attempt": 11,
+    "candidate": {
+      "revision": "f680e527c3bfe39a369716347496ed0ee33dffd4",
+      "source_sha256": "cb4f636bf3fe73dd7a43724c531492eece112338fffc34d40cb80d34b1bb0473",
+      "image": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1"
+    },
+    "result": "publication_fence_closed",
+    "input_fault": "overlapping_px4_clock_deferral",
+    "publication_failure": {
+      "reason": "native_observation_lost",
+      "elapsed_wall_ns": 77374395,
+      "decision_ros_ns": 77196000000,
+      "issued_ros_ns": 77272000000
+    },
+    "published_model_commands": 539,
+    "waypoints_reached": 4,
+    "checkpoints": {
+      "First corridor": 14.6
+    },
+    "independent_full_course_pass": false,
+    "evidence_directory": "hybrid-diagnostic-full-course-011",
+    "video_file": "run/actual-gazebo-flight.mp4"
+  },
+  {
+    "attempt": 12,
+    "candidate": {
+      "revision": "cfdffc79b0cb79dab6abd81d130f1e0f78715067",
+      "source_sha256": "84e196d4a5a70354b9042d446fd49bc954ba101f0bac4511fdb4acd744f40b7a",
+      "image": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1"
+    },
+    "result": "complete",
+    "input_fault": null,
+    "publication_failure": null,
+    "published_model_commands": 1617,
+    "waypoints_reached": 22,
+    "checkpoints": {
+      "First corridor": 14.9,
+      "Maze": 65.97,
+      "Tunnel": 90.44,
+      "Chicane": 133.37
+    },
+    "independent_full_course_pass": true,
+    "evidence_directory": "hybrid-diagnostic-full-course-012",
+    "video_file": "run/actual-gazebo-flight.mp4"
+  }
+]

@@ -1,5 +1,7 @@
 # C1 Gazebo run success
 
+> **Update, 2026-11-08:** Later model-controlled full-course success is on `codex/hybrid-model-flight`. This document and `hybrid-run-success` preserve the earlier deterministic C1 result; C1 commands were not selected by a PINN. [Full result and Classical comparison](HYBRID_FULL_COURSE_RESULT.md).
+
 The authorized corrected C1 retry passed on 2026-11-08. This branch preserves the corrected implementation and compact evidence; it does not claim a full Hybrid/PINN course success.
 
 Runtime source: `38a9a36195c5bdc8c3531e0d31908fb89e92a69f`.
