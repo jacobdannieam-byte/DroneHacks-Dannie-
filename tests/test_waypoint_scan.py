@@ -22,7 +22,7 @@ from refnav.world_model.spatial_volume import Cell
 
 
 class ScanReplay:
-    def __init__(self, monkeypatch, *, startup=True, arrival=True, timeout_s=30.):
+    def __init__(self, monkeypatch, *, startup=True, arrival=True, timeout_s=30., scan_mode='full'):
         self.inputs = smoke_inputs()
         self.state, self.alignment = self.inputs['state'], self.inputs['alignment']
         self.snapshot = self.inputs['snapshot']
@@ -37,7 +37,7 @@ class ScanReplay:
         self.course = CourseMission((Stage('observe', 'waypoint', self.goal, timeout_s=timeout_s,
                                            scan_on_arrival=arrival),
                                      Stage('land', 'landing', self.goal, landing_site_review='fixture')),
-                                    startup_scan=self.goal if startup else None)
+                                    startup_scan=self.goal if startup else None, scan_mode=scan_mode)
         # This fixture deliberately injects aligned observations at the H1-to-course seam.
         self.runtime = HybridRuntime(replace(profile, spatial=replace(profile.spatial, reference=self.goal.reference)),
                                      self.course, monotonic=lambda: 0.)
@@ -76,6 +76,47 @@ class ScanReplay:
     @property
     def report(self):
         return self.runtime.status()['waypoint_scan']
+
+
+def test_partial_look_returns_to_heading_with_three_real_captures(monkeypatch):
+    replay = ScanReplay(monkeypatch, startup=True, arrival=False, scan_mode='partial')
+    heading = math.radians(175.)
+    for _ in range(7):
+        replay.tick(heading)
+    assert replay.report['mode'] == 'partial'
+    current = 0.
+    for offset in (-math.pi / 9, math.pi / 9, 0.):
+        steps = int(math.ceil(abs(offset - current) / .025))
+        for angle in np.linspace(current, offset, steps + 1)[1:]:
+            replay.tick(heading + angle, yaw_rate=.2)
+        for _ in range(5):
+            replay.tick(heading + offset)
+            if replay.report['state'] == 'SCAN_COMPLETE':
+                break
+        current = offset
+    assert replay.report['state'] == 'SCAN_COMPLETE'
+    assert replay.report['completed_sectors'] == 3
+    assert replay.report['measured_turn_rad'] == pytest.approx(0.)
+    assert replay.report['measured_travel_rad'] == pytest.approx(math.radians(80.))
+    assert not replay.report['command_authority']
+
+
+@pytest.mark.parametrize('fault', ['rate', 'wrong_direction', 'occupied', 'stale_depth'])
+def test_partial_look_refuses_unsafe_motion_or_evidence(monkeypatch, fault):
+    replay = ScanReplay(monkeypatch, startup=True, arrival=False, scan_mode='partial')
+    for _ in range(7):
+        replay.tick()
+    if fault == 'rate':
+        replay.tick(-.02, yaw_rate=.3)
+    elif fault == 'wrong_direction':
+        replay.tick(.025)
+    elif fault == 'occupied':
+        replay.tick(-.02, cell=Cell.OCCUPIED)
+    else:
+        for _ in range(4):
+            replay.tick(fresh_depth=False)
+    assert replay.report['state'] == 'SCAN_REFUSED'
+    assert replay.course.index == 0
 
 
 def test_startup_and_selected_waypoint_each_gate_progress_through_measured_revolution(monkeypatch):

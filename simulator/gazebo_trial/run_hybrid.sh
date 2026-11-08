@@ -10,7 +10,7 @@ profile=
 approval=
 check=0
 usage() {
-    echo "Usage: bash simulator/gazebo_trial/run_hybrid.sh [--mode observe|classical_observe|classical_smoke|classical|hybrid_shadow|hybrid_sitl] [--profile FILE] [--approval FILE] [--domain 1..99] [--world TRACKED_MAP] [--seconds 4..120] [--check]"
+    echo "Usage: bash simulator/gazebo_trial/run_hybrid.sh [--mode observe|classical_observe|classical_smoke|classical|hybrid_shadow|hybrid_sitl|calibration_check|calibration_trial] [--profile FILE] [--approval FILE] [--domain 1..99] [--world TRACKED_MAP] [--seconds 4..120] [--check]"
 }
 while (($#)); do
     case "$1" in
@@ -26,16 +26,22 @@ while (($#)); do
         *) usage >&2; exit 2 ;;
     esac
 done
-case "$mode" in observe|classical_observe|classical_smoke|classical|hybrid_shadow|hybrid_sitl) ;; *) usage >&2; exit 2 ;; esac
+case "$mode" in observe|classical_observe|classical_smoke|classical|hybrid_shadow|hybrid_sitl|calibration_check|calibration_trial) ;; *) usage >&2; exit 2 ;; esac
 [[ "$domain" =~ ^[1-9][0-9]?$ && "$seconds" =~ ^[1-9][0-9]{0,2}$ && "$seconds" -ge 4 && "$seconds" -le 120 ]] ||
     { echo "Invalid domain or observation duration" >&2; exit 2; }
-[[ "$world" =~ ^drone_code/team_nav/course_maps/[A-Za-z0-9_.-]+\.json$ ]] &&
+if [[ "$mode" == calibration_* ]]; then
+    [[ "$world" == scenarios/calibration/straight_lane_v1.json ]] ||
+        { echo "Calibration requires the isolated lane" >&2; exit 2; }
+else
+    [[ "$world" =~ ^drone_code/team_nav/course_maps/[A-Za-z0-9_.-]+\.json$ ]] ||
+        { echo "World must be a course map" >&2; exit 2; }
+fi
     git -C "$repo" ls-files --error-unmatch -- "$world" >/dev/null 2>&1 ||
     { echo "World must be a tracked course map in this repository" >&2; exit 2; }
-if [[ "$mode" == hybrid_shadow || "$mode" == hybrid_sitl ]]; then
+if [[ "$mode" == hybrid_shadow || "$mode" == hybrid_sitl || "$mode" == calibration_* ]]; then
     [ -f "$profile" ] || { echo "A reviewed Gazebo profile is required" >&2; exit 2; }
 fi
-if [[ "$mode" == hybrid_sitl || "$mode" == classical || "$mode" == classical_smoke ]]; then
+if [[ "$mode" == hybrid_sitl || "$mode" == classical || "$mode" == classical_smoke || "$mode" == calibration_trial ]]; then
     [ -f "$approval" ] || { echo "This flight mode needs the exact team-approved trial record" >&2; exit 2; }
 elif [ -n "$approval" ]; then
     echo "An approval record is used only in flight modes" >&2
@@ -78,11 +84,17 @@ echo "Container: $name; evidence: $out"
 # directory metadata during tar and must not supply untracked runtime code.
 git -C "$repo" archive --format=tar --output="$out/source.tar" "$revision" \
     simulator drone_code examples refnav onboard scenarios \
-    artifacts/goal_comparison/models artifacts/goal_comparison/predictors
+    artifacts/goal_comparison/models artifacts/goal_comparison/predictors \
+    artifacts/taskforce_batch_003/native-lane-reviewed-v2/geometry-review.json
+image_id="$(docker image inspect drone-simulator-gazebo-hybrid --format '{{.Id}}')"
+if [[ "$mode" == calibration_* ]]; then
+    (cd "$repo" && python -m examples.verify_calibration_bundle --archive "$out/source.tar") > "$out/archive-verification.json"
+fi
 docker run --rm --init --network none --cap-drop ALL --security-opt no-new-privileges \
     --name "$name" --env "ROS_DOMAIN_ID=$domain" --env ROS_LOCALHOST_ONLY=1 --env GZ_IP=127.0.0.1 \
+    --env "CALIBRATION_IMAGE_SHA256=$image_id" \
     --mount "type=bind,src=$out/source.tar,dst=/source.tar,readonly" --mount "type=bind,src=$out,dst=/evidence" \
-    "${mounts[@]}" drone-simulator-gazebo-hybrid \
+    "${mounts[@]}" "$image_id" \
     bash -c 'cd /repository && tar --no-same-owner -xmf /source.tar &&
         exec bash simulator/gazebo_trial/inside_the_box/run_hybrid.sh "$@"' _ \
     "$mode" "$world" "$seconds" "$revision" "$profile_container" "$approval_container" 2>&1 | tee "$out/console.txt"

@@ -25,7 +25,13 @@ MAX_SAMPLE_GAP_NS = 350_000_000
 class WaypointScan:
     """A single positive-NED-yaw revolution around one stationary anchor."""
 
-    def __init__(self, scope, goal, arrival_m, now_ns, wall_ns):
+    def __init__(self, scope, goal, arrival_m, now_ns, wall_ns, *, mode='full'):
+        if mode not in ('full', 'partial'):
+            raise ValueError('scan mode must be full or partial')
+        self.mode = mode
+        self.offsets = tuple((i + 1) * SECTOR_RAD for i in range(SECTORS)) if mode == 'full' else (-math.pi / 9, math.pi / 9, 0.)
+        self.rate_limit = MAX_YAW_RATE_RAD_S if mode == 'full' else .25
+        self.travel_rad = 0.
         self.scope, self.goal, self.arrival_m = scope, goal, arrival_m
         self._started = (now_ns, wall_ns)
         self._clock = self._started
@@ -47,7 +53,8 @@ class WaypointScan:
         self.state, self.reason = 'SCAN_REFUSED', reason
 
     def report(self):
-        return dict(scope=self.scope, state=self.state, reason=self.reason, sectors=SECTORS,
+        return dict(scope=self.scope, state=self.state, reason=self.reason, sectors=len(self.offsets), mode=self.mode,
+                    measured_travel_rad=self.travel_rad,
                     completed_sectors=self.completed_sectors, measured_turn_rad=self.measured_turn_rad,
                     target_ned=self.target, observation_id=self.last_observation_id,
                     observation_capture_ns=self.last_observation_ns, command_authority=False)
@@ -61,7 +68,7 @@ class WaypointScan:
             return
         self._clock = (now_ns, wall_ns)
         elapsed = max(now_ns - self._started[0], wall_ns - self._started[1])
-        if elapsed >= SCAN_TIMEOUT_NS or (self._anchor is None and elapsed >= STABILIZE_TIMEOUT_NS):
+        if elapsed >= (SCAN_TIMEOUT_NS if self.mode == 'full' else 15 * NS) or (self._anchor is None and elapsed >= STABILIZE_TIMEOUT_NS):
             self.fail('scan_timeout' if self._anchor is not None else 'scan_stabilization_timeout')
             return
 
@@ -107,8 +114,10 @@ class WaypointScan:
             self._anchor, self._start_yaw = state.position_m, state.yaw_rad
         else:
             delta = wrap_yaw(state.yaw_rad - self._last_yaw)
-            if (sample_gap > MAX_SAMPLE_GAP_NS or yaw_rate > MAX_YAW_RATE_RAD_S
-                    or abs(delta) > MAX_YAW_RATE_RAD_S * sample_gap / NS + .015 or delta < -.03):
+            desired = self.offsets[self.completed_sectors]
+            wrong_direction = delta < -.03 if self.mode == 'full' else delta * (desired - self.measured_turn_rad) < -.003
+            if (sample_gap > MAX_SAMPLE_GAP_NS or yaw_rate > self.rate_limit
+                    or abs(delta) > self.rate_limit * sample_gap / NS + .015 or wrong_direction):
                 self.fail('scan_yaw_rate_or_progress_unverified')
                 return
             if (speed > MAX_SPEED_MPS or math.dist(state.position_m, self._anchor) > MAX_DRIFT_M
@@ -116,12 +125,19 @@ class WaypointScan:
                 self.fail('scan_anchor_drift_or_speed')
                 return
             self.measured_turn_rad += delta
+            self.travel_rad += abs(delta)
+            if self.mode == 'partial' and self.travel_rad > math.radians(80) + .10:
+                self.fail('scan_partial_travel_exceeded')
+                return
             self._last_sample, self._last_yaw = sample, state.yaw_rad
 
-        desired_progress = (self.completed_sectors + 1) * SECTOR_RAD
+        desired_progress = self.offsets[self.completed_sectors]
         target_yaw = wrap_yaw(self._start_yaw + desired_progress)
-        if (self.measured_turn_rad > desired_progress + YAW_TOLERANCE_RAD
-                or abs(wrap_yaw(target_yaw - state.yaw_rad)) > SECTOR_RAD + YAW_TOLERANCE_RAD):
+        previous = 0. if self.completed_sectors == 0 else self.offsets[self.completed_sectors - 1]
+        outside = (self.measured_turn_rad > desired_progress + YAW_TOLERANCE_RAD
+                   or abs(wrap_yaw(target_yaw - state.yaw_rad)) > SECTOR_RAD + YAW_TOLERANCE_RAD) if self.mode == 'full' else (
+                       not min(previous, desired_progress) - YAW_TOLERANCE_RAD <= self.measured_turn_rad <= max(previous, desired_progress) + YAW_TOLERANCE_RAD)
+        if outside:
             self.fail('scan_sector_skipped_or_out_of_range')
             return
         target = (*self._anchor, target_yaw)
@@ -139,6 +155,9 @@ class WaypointScan:
             return
         if self._settled_at is None:
             self._settled_at = sample
+        if self.mode == 'partial' and sample - self._settled_at < 300_000_000:
+            self.reason = 'scan_waiting_for_settled_dwell'
+            return
         # A sector only counts once a fresh frame was actually captured facing it.
         optical_axis = tuple(row[2] for row in depth.calibration.R_body_optical)
         forward = transform @ rot_z(target_yaw) @ R_FRD_FLU @ optical_axis
@@ -155,7 +174,7 @@ class WaypointScan:
         self.completed_sectors += 1
         self._reviewed_at = self._settled_at = None
         self.target = None
-        if self.completed_sectors == SECTORS:
+        if self.completed_sectors == len(self.offsets):
             self.state, self.reason = 'SCAN_COMPLETE', 'scan_complete'
         else:
             self.reason = 'scan_sector_observed'

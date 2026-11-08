@@ -47,6 +47,7 @@ def configured(path):
                             semantic=MissionGoal.from_dict(semantic) if semantic is not None else None, **fields))
     startup_scan = mission.get('startup_scan_position_m')
     course = CourseMission(stages, startup_scan=None if startup_scan is None else MetricGoal(ref, startup_scan),
+                           scan_mode=mission.get('scan_mode', 'full'),
                            **mission.get("recovery", {}))
     adapter = GazeboObservations(profile, doc["sources"], profile_id=doc["profile_id"],
                                  owner_topics=doc.get("owner_topics"))

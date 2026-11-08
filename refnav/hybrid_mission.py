@@ -52,7 +52,10 @@ class Stage:
 class CourseMission:
     """Checkpoint and recovery policy. The existing core Mission owns takeoff and landing."""
 
-    def __init__(self, stages, *, failure_limit=4, no_progress_s=5., observation_s=2., startup_scan=None):
+    def __init__(self, stages, *, failure_limit=4, no_progress_s=5., observation_s=2., startup_scan=None, scan_mode='full'):
+        if scan_mode not in ('full', 'partial'):
+            raise ValueError('scan mode must be full or partial')
+        self.scan_mode = scan_mode
         self.stages = tuple(stages)
         if (not 1 <= len(self.stages) <= 32 or not all(isinstance(s, Stage) for s in self.stages)
                 or len({s.stage_id for s in self.stages}) != len(self.stages)
@@ -226,7 +229,7 @@ class CourseMission:
         if not stamp_ok(now_ns) or not stamp_ok(wall_ns):
             self.abort('scan_clock_unavailable')
             return None
-        self._scan = WaypointScan(scope, goal, arrival_m, now_ns, wall_ns)
+        self._scan = WaypointScan(scope, goal, arrival_m, now_ns, wall_ns, mode=self.scan_mode)
         return self._scan
 
     def update_scan(self, scan, now_ns):
