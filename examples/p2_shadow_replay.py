@@ -287,3 +287,38 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+class AsyncDiagnosticSidecar:
+    """Optional bounded registration beside H2; it does not alter H2 decisions.
+
+    Close and replace this sidecar after any tracking loss or reference reset.
+    The worker exclusively owns the localizer until close finishes.
+    """
+    def __init__(self, replay, localizer):
+        from refnav.world_model.registration_worker import RegistrationWorker
+        self.replay = replay
+        self.worker = RegistrationWorker(localizer)
+        self.map_version = localizer.reference.version
+        self.reference = localizer.vio
+        self.hold_ns = localizer.policy.hold_ns
+        self.closed = False
+
+    def snapshot(self, now_ns):
+        replay = self.replay
+        spatial = replay.world.snapshot(now_ns=now_ns, immutable_semantic=True)
+        if replay.fault is not None or replay.world.last_pose_loss_ns is not None:
+            self.close()
+        frame = replay.aligned_depth
+        valid = (not self.closed and frame is not None and replay.world.observations_available
+                 and replay.hybrid.tracking_source == 'visual'
+                 and replay.visual_pose_available(now_ns, frame.pose.bracket_ns)
+                 and 0 <= now_ns - frame.capture_ns <= self.hold_ns)
+        if not valid:
+            return P2Snapshot(1, spatial, None, None, 'no_fresh_h1_visual_capture')
+        self.worker.submit(frame)
+        fix = self.worker.result(now_ns, map_version=self.map_version, reference=self.reference)
+        return P2Snapshot(1, spatial, fix, None, 'worker_pending' if fix is None else fix.reason)
+
+    def close(self):
+        self.closed = True
+        return self.worker.close()
