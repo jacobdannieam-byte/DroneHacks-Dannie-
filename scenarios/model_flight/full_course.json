@@ -35,10 +35,10 @@
     "source_clock_id": "px4_sitl_lockstep",
     "ros_clock_id": "ros_sim_time",
     "offset_ns": 0,
-    "max_error_ns": 4000000,
+    "max_error_ns": 0,
     "valid_from_ns": 0,
     "valid_until_ns": 1200000000000,
-    "evidence_id": "batch003-native-timing-plus-pinned-lockstep-source"
+    "evidence_id": "pinned-gazebo-px4-shared-clock-v1"
   },
   "parameter_overrides": {
     "MPC_LAND_SPEED": 0.3
@@ -181,5 +181,6 @@
     "other_boulder_map_sha256": "68f7bfc59c985d8399bcd365b1dbcec1a939b8f21c8a0122bb0dfab2895ea29c",
     "depth_sections_enabled": true,
     "depth_policy_version": 1
-  }
+  },
+  "clock_source_contract_sha256": "246e7d5b5e62f494179e1be6bc29fe753d6437728cc65696e51704d3dd98ff1a"
 }

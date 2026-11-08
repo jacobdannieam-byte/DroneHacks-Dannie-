@@ -7,17 +7,18 @@
     "source_clock_id": "px4_sitl_lockstep",
     "ros_clock_id": "ros_sim_time",
     "offset_ns": 0,
-    "max_error_ns": 4000000,
+    "max_error_ns": 0,
     "valid_from_ns": 0,
     "valid_until_ns": 1200000000000,
-    "evidence_id": "batch003-native-timing-plus-pinned-lockstep-source"
+    "evidence_id": "pinned-gazebo-px4-shared-clock-v1"
   },
   "trial_id": "hybrid-pinn-full-course-001",
   "owner_id": "/calibration_trial_owner",
-  "profile_sha256": "bb3d7a7dd4aa0265033460c088aabbb53947a7063ed466ff7514cff46e170612",
+  "profile_sha256": "5b0ce5149b33dd1d6e7ee656db84392d09410459bf41f5d270de7250f0b810a8",
   "topics": {
     "vehicle_local_position": "/fmu/out/vehicle_local_position",
     "vehicle_status": "/fmu/out/vehicle_status_v1",
     "events": "/qualification/events"
-  }
+  },
+  "clock_source_contract_sha256": "246e7d5b5e62f494179e1be6bc29fe753d6437728cc65696e51704d3dd98ff1a"
 }

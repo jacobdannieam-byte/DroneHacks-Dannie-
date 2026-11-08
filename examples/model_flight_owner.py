@@ -113,6 +113,11 @@ def main():
     else:
         plan=CalibrationPlan(**raw['plan']);geometry=geometry_review(raw);selector=ModelSelector(config)
     mapping=ClockMapping(**raw['clock_mapping'])
+    if full:
+        from examples.sitl_clock_contract import verify,EVIDENCE_ID
+        if mapping.evidence_id!=EVIDENCE_ID or mapping.offset_ns!=0 or mapping.max_error_ns!=0:
+            raise ValueError('Full-course clock must bind the shared-clock proof')
+        verify(raw['clock_source_contract_sha256'],args.image_sha256)
     identity=dict(revision=args.revision,image_sha256=args.image_sha256,world_sha256=sha(args.world),
         vehicle_sha256=sha(args.vehicle),profile_sha256=sha(args.profile),ros_domain_id=int(os.environ['ROS_DOMAIN_ID']),
         checkpoint_sha256=config['checkpoint_sha256'],participant_map_sha256=config['participant_map_sha256'],

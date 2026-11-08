@@ -381,6 +381,10 @@ def main():
     if args.output.exists() or args.ready_output.exists() or not 1 <= args.seconds <= 900:
         raise ValueError('new output and bounded duration required')
     record, topics = load_contract(args.contract, args.contract_sha256)
+    if record.mapping.evidence_id=='pinned-gazebo-px4-shared-clock-v1':
+        from examples.sitl_clock_contract import verify
+        contract=json.loads(args.contract.read_text())
+        verify(contract['clock_source_contract_sha256'],os.environ.get('CALIBRATION_IMAGE_SHA256'))
     import rclpy
     from px4_msgs.msg import VehicleLocalPosition, VehicleStatus
     from std_msgs.msg import String

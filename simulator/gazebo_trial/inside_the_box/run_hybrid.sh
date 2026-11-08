@@ -13,6 +13,7 @@ if [[ "$mode" == model_check || "$mode" == model_trial ]]; then
         contract=scenarios/model_flight/full_course_recorder.json
         owner_timeout=610; recorder_seconds=900
         export FULLCOURSE_VIDEO=1
+        export EXACT_SITL_CLOCK_CONTRACT_SHA256="$(python3 -c 'import json; print(json.load(open("scenarios/model_flight/full_course.json"))["clock_source_contract_sha256"])')"
     fi
 fi
 if [[ "$mode" == calibration_check || "$mode" == calibration_trial ]]; then

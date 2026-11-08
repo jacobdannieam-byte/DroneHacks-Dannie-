@@ -1,0 +1,20 @@
+{
+  "evidence_id": "pinned-gazebo-px4-shared-clock-v1",
+  "image_sha256": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1",
+  "source_and_binary_sha256": {
+    "/opt/PX4-Autopilot/src/modules/simulation/gz_bridge/GZBridge.cpp": "b1b79452e091f65d1baa6f6d3ad3869bbb86de0a3d2e6f7f17d1758cefca8e42",
+    "/opt/PX4-Autopilot/platforms/posix/src/px4/common/drv_hrt.cpp": "eb826fde8a1eaae3eef98c8f37c686bc21f62ad061d9cc86c8d2fa2a1ea1ede2",
+    "/opt/PX4-Autopilot/build/px4_sitl_default/bin/px4": "32e350e2696fe80679f12fa10c9d0f8380a5fa2d8f79eb0f9326749383255004"
+  },
+  "proof": [
+    "GZBridge.cpp clockCallback lines 179-194 copies /world clock sim sec/nsec to CLOCK_MONOTONIC.",
+    "drv_hrt.cpp lines 106-110 reads lockstep absolute time; lines 469-494 get/set the same clock.",
+    "build.ninja enables ENABLE_LOCKSTEP_SCHEDULER; binary hash binds the inspected build.",
+    "hybrid_sensor_bridge forwards ros_clock_parts without offset; integral-us ticks are enforced before publishing.",
+    "No hardware clock claim. DDS delivery, capture age and wall-clock stall checks remain separate."
+  ],
+  "offset_ns": 0,
+  "max_error_ns": 0,
+  "required_tick_quantum_ns": 1000,
+  "hardware_qualified": false
+}

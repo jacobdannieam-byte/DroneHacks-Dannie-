@@ -1,6 +1,7 @@
 """Gazebo-only ROS observations. No control, raw truth subscription or synthesized VIO claim."""
 
 import json
+import os
 from pathlib import Path
 import sys
 
@@ -31,6 +32,10 @@ from simulator.gazebo_trial.gazebo_camera_to_ros import GazeboCameraToRos
 
 class HybridSensorBridge(GazeboCameraToRos):
     def __init__(self):
+        self.exact_clock = os.environ.get('EXACT_SITL_CLOCK_CONTRACT_SHA256')
+        if self.exact_clock:
+            from examples.sitl_clock_contract import verify
+            verify(self.exact_clock,os.environ.get('CALIBRATION_IMAGE_SHA256'))
         self.rig = read_camera_rig(Path(__file__).parent / "models")
         if sys.byteorder != "little":
             raise RuntimeError("this Gazebo camera bridge requires a little-endian host")
@@ -81,7 +86,12 @@ class HybridSensorBridge(GazeboCameraToRos):
         result = Clock()
         try:
             result.clock.sec, result.clock.nanosec = ros_clock_parts(clock)
+            if self.exact_clock:
+                from examples.sitl_clock_contract import require_integral_microsecond_clock
+                require_integral_microsecond_clock(result.clock.sec,result.clock.nanosec)
         except ValueError:
+            if self.exact_clock:
+                self.invalidate('invalid_shared_simulator_clock')
             return
         self.clock_pub.publish(result)
 
