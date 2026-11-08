@@ -42,14 +42,55 @@ fi
 
 stack_pid=
 bag_pid=
+bag_root="$(mktemp -d)"
+bag_path="$bag_root/observations"
+required=()
+
+start_recording() {
+    # Delay the recorder and its deadlines until the stack has settled enough for DDS discovery.
+    local attempt
+    for ((attempt=0; attempt<150; attempt++)); do
+        kill -0 "$stack_pid" || return 1
+        if [ -f /evidence/stack.txt ] && grep -q 'Gazebo and PX4 are running' /evidence/stack.txt; then
+            break
+        fi
+        sleep 1
+    done
+    ((attempt < 150)) || { echo "Gazebo startup timed out before recording"; return 1; }
+    python3 -m simulator.gazebo_trial.recording_gate startup 30 /evidence/recording_startup.json "${required[@]}"
+    cat > "$bag_root/storage.yaml" <<'YAML'
+write:
+  pragmas: ["journal_mode = WAL", "synchronous = NORMAL", "busy_timeout = 3000"]
+YAML
+    ros2 bag record --use-sim-time --storage-config-file "$bag_root/storage.yaml" -o "$bag_path" "$@" \
+        > /evidence/rosbag.txt 2>&1 &
+    bag_pid=$!
+    BAG_PID="$bag_pid" python3 -m simulator.gazebo_trial.recording_gate writes "$bag_path" \
+        /evidence/recording_ready.json "${required[@]}"
+}
+
 cleanup() {
-    if [ -n "$bag_pid" ]; then kill -INT "$bag_pid" 2>/dev/null || true; fi
-    if [ -n "$stack_pid" ]; then kill -INT "$stack_pid" 2>/dev/null || true; fi
+    local status=$? bag_status=0 pid
     for pid in "$bag_pid" "$stack_pid"; do
         [ -n "$pid" ] || continue
+        kill -INT "$pid" 2>/dev/null || true
         for _ in {1..50}; do kill -0 "$pid" 2>/dev/null || break; sleep .1; done
         kill -TERM "$pid" 2>/dev/null || true
+        wait "$pid" || true
     done
+    if [ -d "$bag_path" ]; then
+        # A Windows bind mount need not permit preserving Linux file times.
+        cp -R "$bag_path" /evidence/observations || bag_status=1
+        local minimum_duration=0
+        if [[ "$mode" == observe || "$mode" == classical_observe ]]; then
+            minimum_duration="$((seconds * 1000000000))"
+        fi
+        MIN_BAG_DURATION_NS="$minimum_duration" python3 -m simulator.gazebo_trial.recording_gate verify /evidence/observations \
+            /evidence/recording_final.json "${required[@]}" || bag_status=1
+    else
+        bag_status=1
+    fi
+    exit "$((status != 0 ? status : bag_status))"
 }
 trap cleanup EXIT
 trap 'exit 130' INT TERM
@@ -64,14 +105,15 @@ if [[ "$mode" == classical* ]]; then
     ros2 launch /repository/simulator/gazebo_trial/full_route_in_gazebo.launch.py \
         observe_only:="$observe" > /evidence/stack.txt 2>&1 &
     stack_pid=$!
-    ros2 bag record --use-sim-time -o /evidence/observations /clock /skybeta/state \
-        /skybeta/setpoint/pose /skybeta/setpoint/twist /visual_slam/tracking/odometry /visual_slam/status \
-        /fmu/out/vehicle_local_position /fmu/out/vehicle_odometry /fmu/out/vehicle_status_v1 \
-        /fmu/out/vehicle_land_detected /fmu/out/estimator_status_flags /fmu/out/failsafe_flags \
+    required=(/clock /skybeta/state /visual_slam/tracking/odometry /visual_slam/status
+        /fmu/out/vehicle_local_position /fmu/out/vehicle_odometry /fmu/out/vehicle_status_v1
+        /fmu/out/vehicle_land_detected /fmu/out/estimator_status_flags /fmu/out/distance_sensor
+        /simulator_only/oak/depth/image /simulator_only/oak/depth/camera_info)
+    start_recording "${required[@]}" \
+        /skybeta/setpoint/pose /skybeta/setpoint/twist /fmu/out/failsafe_flags \
         /fmu/in/manual_control_input /fmu/in/vehicle_visual_odometry /fmu/in/vehicle_command \
         /fmu/in/offboard_control_mode /fmu/in/trajectory_setpoint /fmu/out/vehicle_command_ack \
-        /fmu/out/distance_sensor /simulator_only/touches > /evidence/rosbag.txt 2>&1 &
-    bag_pid=$!
+        /simulator_only/touches
     python3 -m simulator.gazebo_trial.classical_preflight "$observe" "$seconds" /evidence/classical_preflight.json
     kill -0 "$stack_pid" && kill -0 "$bag_pid" || exit 1
     [ "$observe" = false ] || exit 0
@@ -93,10 +135,9 @@ ros2 launch /repository/simulator/gazebo_trial/hybrid_environment.launch.py > /e
 stack_pid=$!
 topics="$(python3 -m examples.gazebo_container topics)"
 mapfile -t bag_topics <<< "$topics"
-ros2 bag record --use-sim-time -o /evidence/observations "${bag_topics[@]}" \
-    /fmu/in/offboard_control_mode /fmu/in/trajectory_setpoint /fmu/in/vehicle_command /refnav/status \
-    > /evidence/rosbag.txt 2>&1 &
-bag_pid=$!
+required=("${bag_topics[@]}" /gazebo_hybrid/simulated_estimator/health_diagnostics /fmu/out/distance_sensor)
+start_recording "${required[@]}" \
+    /fmu/in/offboard_control_mode /fmu/in/trajectory_setpoint /fmu/in/vehicle_command /refnav/status
 # Give DDS discovery / EKF bootstrap time without creating any owner. Every
 # attempt leaves its report, and the entire startup has a bounded wall budget.
 ready=0

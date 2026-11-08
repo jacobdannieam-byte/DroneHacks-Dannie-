@@ -1,5 +1,6 @@
 """Gazebo-only ROS observations. No control, raw truth subscription or synthesized VIO claim."""
 
+import json
 from pathlib import Path
 import sys
 
@@ -8,17 +9,19 @@ from gz.msgs10.clock_pb2 import Clock as GazeboClock
 from gz.msgs10.image_pb2 import R_FLOAT32
 from isaac_ros_visual_slam_interfaces.msg import VisualSlamStatus
 from nav_msgs.msg import Odometry
-from px4_msgs.msg import EstimatorStatusFlags
+from px4_msgs.msg import EstimatorStatusFlags, VehicleLocalPosition, VehicleOdometry, VehicleStatus
 import rclpy
+from rclpy.clock import JumpThreshold
+from rclpy.duration import Duration
 from rclpy.qos import qos_profile_sensor_data
 from rclpy.utilities import try_shutdown
 from rosgraph_msgs.msg import Clock
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, String
 from geometry_msgs.msg import TransformStamped
 from tf2_ros import StaticTransformBroadcaster
 
 from examples.gazebo_sensor_contract import (
-    OPTICAL_FRAME, OPTICAL_TO_FLU, SIM_ESTIMATOR, SIM_HEALTH, SIM_ODOM, SIM_PROCESSING, SIM_STATUS,
+    OPTICAL_FRAME, OPTICAL_TO_FLU, SIM_ESTIMATOR, SIM_HEALTH, SIM_HEALTH_DIAGNOSTICS, SIM_ODOM, SIM_PROCESSING, SIM_STATUS,
     TRACKING_MAX_AGE_NS, capture_ns, depth_layout, read_camera_rig, ros_clock_parts, simulated_health,
 )
 from onboard.adapters.geometry import mat_to_quat
@@ -32,9 +35,16 @@ class HybridSensorBridge(GazeboCameraToRos):
         if sys.byteorder != "little":
             raise RuntimeError("this Gazebo camera bridge requires a little-endian host")
         super().__init__()
-        self.sample = self.status = self.flags = None
+        self.sample = self.status = self.vehicle_status = self.flags = None
+        self.reset_markers = {}
+        self.epoch = 0
+        self.reset_reason = "startup"
+        self.clock_jump = self.get_clock().create_jump_callback(
+            JumpThreshold(min_forward=None, min_backward=Duration(nanoseconds=-1), on_clock_change=True),
+            post_callback=lambda _: self.invalidate("clock_jump"))
         self.clock_pub = self.create_publisher(Clock, "/clock", qos_profile_sensor_data)
         self.health_pub = self.create_publisher(Bool, SIM_HEALTH, 10)
+        self.health_diagnostics = self.create_publisher(String, SIM_HEALTH_DIAGNOSTICS, qos_profile_sensor_data)
         self.processing = self.create_publisher(DiagnosticArray, SIM_PROCESSING, qos_profile_sensor_data)
         if not self.gazebo_node.subscribe(GazeboClock, "/world/dronehacks_course/clock", self.on_clock):
             raise RuntimeError("Gazebo world clock subscription failed")
@@ -42,6 +52,12 @@ class HybridSensorBridge(GazeboCameraToRos):
         self.create_subscription(VisualSlamStatus, SIM_STATUS, self.on_status, qos_profile_sensor_data)
         self.create_subscription(EstimatorStatusFlags, px4_topic("estimator_status_flags", EstimatorStatusFlags),
                                  self.on_flags, qos_profile_sensor_data)
+        self.create_subscription(VehicleStatus, px4_topic("vehicle_status", VehicleStatus),
+                                 self.on_vehicle_status, qos_profile_sensor_data)
+        self.create_subscription(VehicleLocalPosition, px4_topic("vehicle_local_position", VehicleLocalPosition),
+                                 self.on_local_position, qos_profile_sensor_data)
+        self.create_subscription(VehicleOdometry, px4_topic("vehicle_odometry", VehicleOdometry),
+                                 lambda msg: self.observe_reset("odometry", msg.reset_counter), qos_profile_sensor_data)
         self.create_timer(.05, self.on_health)
         self.tf = StaticTransformBroadcaster(self)
         transform = TransformStamped()
@@ -71,10 +87,38 @@ class HybridSensorBridge(GazeboCameraToRos):
 
     def on_status(self, message):
         self.status = capture_ns(message), message.vo_state == 1
+        if not self.status[1]:
+            self.on_health()
 
     def on_flags(self, message):
         report, = payloads("px4_flags", message)
         self.flags = self.get_clock().now().nanoseconds, report["valid"]
+        if not self.flags[1]:
+            self.on_health()
+
+    def on_vehicle_status(self, message):
+        # PX4 publication timestamps are checked by H1 in their own clock mapping.
+        # This watchdog measures delivery cadence in the bridge's ROS clock.
+        self.vehicle_status = self.get_clock().now().nanoseconds, not message.failsafe
+        if not self.vehicle_status[1]:
+            self.on_health()
+
+    def on_local_position(self, message):
+        self.observe_reset("local_position", (message.xy_reset_counter, message.z_reset_counter,
+                                               message.heading_reset_counter))
+
+    def observe_reset(self, stream, marker):
+        previous = self.reset_markers.get(stream)
+        if previous is not None and previous != marker:
+            self.invalidate(f"{stream}_reset")
+            self.on_health()
+        self.reset_markers[stream] = marker
+
+    def invalidate(self, reason):
+        self.sample = self.status = self.vehicle_status = self.flags = None
+        self.reset_markers.clear()
+        self.epoch += 1
+        self.reset_reason = reason
 
     def on_odometry(self, message):
         now = self.get_clock().now().nanoseconds
@@ -100,8 +144,14 @@ class HybridSensorBridge(GazeboCameraToRos):
         self.processing.publish(result)
 
     def on_health(self):
-        self.health_pub.publish(Bool(data=simulated_health(now_ns=self.get_clock().now().nanoseconds,
-                                                          sample_ns=self.sample, status=self.status, flags=self.flags)))
+        now = self.get_clock().now().nanoseconds
+        ages, reasons = simulated_health(now_ns=now, sample_ns=self.sample, status=self.status,
+                                         vehicle_status=self.vehicle_status, flags=self.flags)
+        self.health_pub.publish(Bool(data=not reasons))
+        self.health_diagnostics.publish(String(data=json.dumps({
+            "sim_ns": now, "ages_ns": ages, "reasons": reasons, "epoch": self.epoch,
+            "epoch_reason": self.reset_reason,
+        })))
 
 
 def main():

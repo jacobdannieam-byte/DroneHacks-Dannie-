@@ -15,6 +15,7 @@ SIM_ODOM = "/gazebo_hybrid/simulated_estimator/odometry"
 SIM_STATUS = "/gazebo_hybrid/simulated_estimator/status"
 SIM_PROCESSING = "/gazebo_hybrid/simulated_estimator/processing_status"
 SIM_HEALTH = "/gazebo_hybrid/simulated_estimator/healthy"
+SIM_HEALTH_DIAGNOSTICS = "/gazebo_hybrid/simulated_estimator/health_diagnostics"
 SIM_DEPTH = "/simulator_only/oak/depth/image"
 SIM_INFO = "/simulator_only/oak/depth/camera_info"
 SIM_BINDINGS = {"/camera/depth/image_raw": SIM_DEPTH, "/camera/depth/camera_info": SIM_INFO,
@@ -23,6 +24,8 @@ SIM_BINDINGS = {"/camera/depth/image_raw": SIM_DEPTH, "/camera/depth/camera_info
 OPTICAL_FRAME = "oak_depth_optical_frame"
 OPTICAL_TO_FLU = ((0., 0., 1.), (-1., 0., 0.), (0., -1., 0.))
 TRACKING_MAX_AGE_NS = 200_000_000
+VEHICLE_STATUS_MAX_AGE_NS = 750_000_000
+ESTIMATOR_FLAGS_MAX_AGE_NS = 1_250_000_000
 
 
 @dataclass(frozen=True)
@@ -57,12 +60,27 @@ def read_camera_rig(models: Path) -> CameraRig:
                      float(lens.findtext("clip/far")))
 
 
-def simulated_health(*, now_ns, sample_ns, status, flags):
-    if sample_ns is None or status is None or flags is None:
-        return False
-    return (0 <= now_ns - sample_ns <= TRACKING_MAX_AGE_NS and
-            0 <= now_ns - status[0] <= TRACKING_MAX_AGE_NS and status[1] and
-            0 <= now_ns - flags[0] <= TRACKING_MAX_AGE_NS and flags[1])
+def simulated_health(*, now_ns, sample_ns, status, vehicle_status, flags):
+    """Return input ages and rejection reasons in the local Gazebo ROS clock."""
+    streams = {
+        "tracking_pose": (None if sample_ns is None else (sample_ns, True), TRACKING_MAX_AGE_NS),
+        "tracking_status": (status, TRACKING_MAX_AGE_NS),
+        "vehicle_status": (vehicle_status, VEHICLE_STATUS_MAX_AGE_NS),
+        "estimator_flags": (flags, ESTIMATOR_FLAGS_MAX_AGE_NS),
+    }
+    ages, reasons = {}, []
+    for name, (report, maximum) in streams.items():
+        ages[name] = None if report is None else now_ns - report[0]
+        if report is None:
+            reasons.append(f"{name}:missing")
+        else:
+            if not report[1]:
+                reasons.append(f"{name}:unhealthy")
+            if ages[name] < 0:
+                reasons.append(f"{name}:future")
+            elif ages[name] > maximum:
+                reasons.append(f"{name}:stale")
+    return ages, reasons
 
 
 def depth_layout(picture, rig, *, float32_enum):
