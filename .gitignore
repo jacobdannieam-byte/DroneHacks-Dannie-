@@ -19,3 +19,7 @@ Thumbs.db
 
 # Files the simulator generates when it runs. They can always be made again.
 simulator/generated_files/
+*.tar.gz
+frames/
+maze_bag/
+sim_bag_1/

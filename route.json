@@ -1,1 +1,7 @@
-{"route": [], "params": {}}
+{
+  "route": [],
+  "params": {
+    "height_m": 1.0,
+    "hover_s": 5.0
+  }
+}

@@ -62,6 +62,7 @@ def load_route(node):
 class RefNav(Node):
     def __init__(self):
         super().__init__("refnav")
+        self.get_logger().info("refnav node construction started")
         route, doc = load_route(self)
         prm = C.Params(route=route)
         for k, v in vars(C.Params()).items():
@@ -119,10 +120,14 @@ class RefNav(Node):
         self.rejects = {}
         self.done_at = None
         self._wait_log_t = None
+        self._tick_count = 0
+        self._status_publish_count = 0
+        self._input_logged = set()
         self.create_timer(0.05, self._tick)            # node clock: pauses with a paused simulator
         self.create_timer(0.5, self._publish_status)
         self.get_logger().info(f"route {len(route)} legs; depth {self.depth_topic}; health {self.health_topic}; "
                                f"sim time {self.get_parameter('use_sim_time').value}")
+        self.get_logger().info("refnav node construction finished; timers and publishers are ready")
 
     # ------------------------------------------------------------------ inputs
     def _now(self):
@@ -132,6 +137,7 @@ class RefNav(Node):
         self._yaw_align = (bool(m.cs_yaw_align), self._now())
 
     def _on_lpos(self, m):
+        self._log_first_input("vehicle_local_position_v1")
         self.v.pos = (m.x, m.y, m.z)
         self.v.heading = m.heading
         # heading: PX4's heading_good_for_control, OR its own yaw alignment. With a COMPASS, PX4 sets
@@ -145,19 +151,24 @@ class RefNav(Node):
                              and all(math.isfinite(c) for c in (m.x, m.y, m.z, m.heading)))
 
     def _on_att(self, m):
+        self._log_first_input("vehicle_attitude")
         self.v.q = tuple(float(c) for c in m.q)
 
     def _on_status(self, m):
+        self._log_first_input("vehicle_status_v1")
         self.v.armed = m.arming_state == 2
         self.v.nav_state = int(m.nav_state)
 
     def _on_land(self, m):
+        self._log_first_input("vehicle_land_detected")
         self.v.landed = bool(m.landed)
 
     def _on_health(self, m):
+        self._log_first_input(self.health_topic)
         self.mission.on_health(self._now(), m.data)
 
     def _on_info(self, m):
+        self._log_first_input(self.info_topic)
         if m.k[0] > 0 and m.k[4] > 0:
             self.K = (m.k[0], m.k[4], m.k[2], m.k[5])
 
@@ -203,6 +214,7 @@ class RefNav(Node):
         return self.extrinsic
 
     def _on_depth(self, m):
+        self._log_first_input(self.depth_topic)
         if self.K is None:
             return self._reject("no_camera_info", f"no camera_info yet on {self.info_topic}")
         cal = self._calibration(m.header.frame_id)
@@ -221,6 +233,12 @@ class RefNav(Node):
         return None
 
     # ------------------------------------------------------------------ outputs
+    def _log_first_input(self, topic):
+        if topic in self._input_logged:
+            return
+        self._input_logged.add(topic)
+        self.get_logger().info(f"first message received on {topic}")
+
     def _sys_us(self):
         return self.sys_clock.now().nanoseconds // 1000
 
@@ -233,6 +251,9 @@ class RefNav(Node):
         self.pub_cmd.publish(c)
 
     def _tick(self):
+        self._tick_count += 1
+        if self._tick_count == 1:
+            self.get_logger().info("first mission timer tick reached")
         now = self._now()
         if now <= 0.0:
             return                                   # sim time before the first /clock
@@ -273,9 +294,14 @@ class RefNav(Node):
             self.get_logger().info(f"mission done: {self.mission.result}")
 
     def _publish_status(self):
+        self._status_publish_count += 1
         st = self.mission.status(self._now())
         st["rejects"] = dict(self.rejects)
         self.pub_status.publish(String(data=json.dumps(st)))
+        if self._status_publish_count == 1 or self._status_publish_count % 20 == 0:
+            self.get_logger().info(
+                f"status published ({self._status_publish_count} messages), phase={st['phase']}"
+            )
         if self.exit_when_done and self.done_at is not None and self._now() - self.done_at > 1.5:
             raise SystemExit(0 if self.mission.result == "complete" else 1)
 
