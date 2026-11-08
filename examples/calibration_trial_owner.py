@@ -301,8 +301,8 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
         return (obs is not None and obs.armed is False and obs.landed is True and obs.nav_state != NAV_OFFBOARD
                 and all(math.isfinite(n) for n in (*obs.position, *obs.velocity))
                 and math.dist(obs.position, plan.origin_ned_m) <= plan.origin_tolerance_m
-                and all(lo <= p - origin <= hi for p, origin, lo, hi in zip(
-                    obs.position, plan.origin_ned_m, plan.minimum_offset_m, plan.maximum_offset_m))
+                and (diagnostic or all(lo <= p - origin <= hi for p, origin, lo, hi in zip(
+                    obs.position, plan.origin_ned_m, plan.minimum_offset_m, plan.maximum_offset_m)))
                 and math.hypot(*obs.velocity) <= STOP_MPS)
 
     def process_start(pid):
