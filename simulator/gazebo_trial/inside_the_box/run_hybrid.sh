@@ -5,6 +5,23 @@ cd /repository
 if [[ "$mode" == calibration_check || "$mode" == calibration_trial ]]; then
     [[ "$world" == scenarios/calibration/straight_lane_v1.json ]] || exit 2
     : "${CALIBRATION_IMAGE_SHA256:?Pinned image identity required}"
+    case "${profile##*/}" in
+        c0_hover_land.json) contract=scenarios/calibration/c0_recorder.json ;;
+        c1_stop_020.json) contract=scenarios/calibration/c1_recorder.json ;;
+        *) echo 'Unknown calibration profile' >&2; exit 2 ;;
+    esac
+    python3 - "$profile" "$contract" <<'PY'
+from hashlib import sha256
+import json, sys
+from pathlib import Path
+
+profile, contract = (Path(path).read_bytes() for path in sys.argv[1:])
+config, recorder = json.loads(profile), json.loads(contract)
+if (recorder.get('profile_sha256') != sha256(profile).hexdigest()
+        or recorder.get('trial_kind') != config['plan']['trial_kind']
+        or recorder.get('clock_mapping') != config['clock_mapping']):
+    raise SystemExit('Calibration profile and recorder contract differ')
+PY
     export CALIBRATION_LANE_RUN=1
 fi
 # The host stages an immutable source archive, including pinned strategy models.
@@ -169,7 +186,6 @@ if [ "$ready" != 1 ]; then echo "Disarmed Gazebo sensor/authority preflight fail
 ps -eo pid,comm,%cpu,rss > /evidence/resources_start.txt
 case "$mode" in
     calibration_check|calibration_trial)
-        contract=scenarios/calibration/c0_recorder.json
         geometry=artifacts/taskforce_batch_003/native-lane-reviewed-v2/geometry-review.json
         contract_sha="$(sha256sum "$contract" | cut -d' ' -f1)"
         cp "$profile" /evidence/calibration_profile.json

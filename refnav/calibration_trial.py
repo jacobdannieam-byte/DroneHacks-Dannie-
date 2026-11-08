@@ -40,6 +40,8 @@ class CalibrationPlan:
     trial_ros_limit_s: float
     trial_wall_limit_s: float
     receipt_wall_limit_s: float
+    settle_duration_s: float = .5
+    brake_timeout_s: float | None = None
 
     def __post_init__(self):
         for name in ('origin_ned_m', 'minimum_offset_m', 'maximum_offset_m'):
@@ -51,7 +53,7 @@ class CalibrationPlan:
         scalars = (self.origin_tolerance_m, self.height_m, self.hover_tolerance_m, self.north_brake_m,
                    self.transit_speed_mps, self.climb_speed_mps, self.actual_speed_limit_mps,
                    self.transit_timeout_s, self.trial_ros_limit_s, self.trial_wall_limit_s,
-                   self.receipt_wall_limit_s)
+                   self.receipt_wall_limit_s, self.settle_duration_s)
         if (self.trial_kind not in ('hover_land', 'stopping') or not _numbers(scalars)
                 or not all(-5 <= lo < 0 < hi <= 5 for lo, hi in zip(low, high))
                 or not 0 < self.origin_tolerance_m <= .10
@@ -62,7 +64,11 @@ class CalibrationPlan:
                 or not 0 < self.climb_speed_mps <= self.transit_speed_mps
                 or not 0 < self.transit_timeout_s < self.trial_ros_limit_s <= 60
                 or not self.trial_ros_limit_s <= self.trial_wall_limit_s <= 120
-                or not .30 <= self.receipt_wall_limit_s <= 3.):
+                or not .30 <= self.receipt_wall_limit_s <= 3.
+                or not .5 <= self.settle_duration_s <= 2.
+                or (self.brake_timeout_s is not None and
+                    (not _numbers((self.brake_timeout_s,)) or
+                     not self.settle_duration_s < self.brake_timeout_s < self.trial_ros_limit_s))):
             raise ValueError('Invalid bounded calibration plan')
 
 
@@ -157,7 +163,7 @@ class CalibrationTrial:
             return False
         if self._settling is None:
             self._settling = stamp
-        return stamp - self._settling >= NS // 2
+        return stamp - self._settling >= round(self.plan.settle_duration_s * NS)
 
     def step(self, ros_ns, wall_ns, observation, *, admitted):
         if self.phase == 'done':
@@ -293,6 +299,9 @@ class CalibrationTrial:
                 self._enter('brake', ros_ns, wall_ns)
                 return self._issue(Intent(ZERO, event='brake_command'), ros_ns)
             return self._issue(Intent((self.plan.transit_speed_mps, 0., 0.)), ros_ns)
+        if (self.plan.brake_timeout_s is not None
+                and max(self._elapsed(ros_ns, wall_ns)) >= self.plan.brake_timeout_s):
+            return self._land('brake_settle_deadline', ros_ns, wall_ns)
         if self._settled(obs, speed):
             return self._land(None, ros_ns, wall_ns)
         return self._issue(Intent(ZERO), ros_ns)

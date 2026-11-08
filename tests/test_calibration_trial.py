@@ -1,10 +1,12 @@
 from dataclasses import replace
 from datetime import datetime, timezone
+from hashlib import sha256
 import json
+from pathlib import Path
 
 import pytest
 
-from examples.calibration_trial_owner import NativeInputs, PARAMETER_OVERRIDES, load_approval
+from examples.calibration_trial_owner import NativeInputs, PARAMETER_OVERRIDES, load_approval, load_profile
 from examples.calibration_trial_probe import Fixture
 from examples.gazebo_container import sha
 from refnav.core import NAV_AUTO_LAND, NAV_OFFBOARD
@@ -19,6 +21,48 @@ def test_exact_trial_stages_and_ordered_receipts():
     assert brake['stamp_ns'] < land['stamp_ns']
     assert brake['px4_issue_us'] == fixture.mapping.source_stamp_us(brake['stamp_ns'])
     assert fixture.step(nav=NAV_OFFBOARD, armed=True, landed=False) is None
+
+
+def test_c1_profile_matches_recorder_and_settles_before_land():
+    folder = Path(__file__).resolve().parents[1] / 'scenarios' / 'calibration'
+    path = folder / 'c1_stop_020.json'
+    _, plan, mapping = load_profile(path)
+    contract = json.loads((folder / 'c1_recorder.json').read_text())
+    # The isolated deployment reads immutable Git archive bytes (LF).
+    assert contract['profile_sha256'] == sha256(path.read_bytes().replace(b'\r\n', b'\n')).hexdigest()
+    assert contract['trial_kind'] == plan.trial_kind == 'stopping'
+    assert contract['clock_mapping'] == vars(mapping)
+    fixture = Fixture()
+    fixture.trial.plan = plan
+    fixture.reach_hover()
+    assert fixture.trial.phase == 'climb'
+    active = dict(nav=NAV_OFFBOARD, armed=True, landed=False)
+    assert fixture.step(position=(0., 0., -1.), **active).velocity_ned_mps == (.2, 0., 0.)
+    assert fixture.step(position=(1.49, 0., -1.), velocity=(.2, 0., 0.), **active).event is None
+    assert fixture.step(position=(1.5, 0., -1.), velocity=(.2, 0., 0.), **active).event == 'brake_command'
+    for _ in range(6):
+        assert fixture.step(position=(1.6, 0., -1.), **active).command is None
+    assert fixture.step(position=(1.6, 0., -1.), **active).command == 'land'
+
+
+@pytest.mark.parametrize('faster_clock', ['ros_ns', 'wall_ns'])
+def test_brake_timeout_uses_normal_landing_and_preserves_trial_failure(faster_clock):
+    fixture = Fixture()
+    fixture.trial.plan = replace(fixture.trial.plan, brake_timeout_s=4.)
+    fixture.start_transit()
+    active = dict(position=(1.5, 0., -1.), velocity=(.2, 0., 0.), nav=NAV_OFFBOARD, armed=True, landed=False)
+    assert fixture.step(**active).event == 'brake_command'
+    for _ in range(19):
+        setattr(fixture, faster_clock, getattr(fixture, faster_clock) + 100_000_000)
+        out = fixture.step(**active)
+        assert out.command is None and out.event is None
+    setattr(fixture, faster_clock, getattr(fixture, faster_clock) + 100_000_000)
+    out = fixture.step(**active)
+    assert out.command == 'land' and out.velocity_ned_mps is None
+    fixture.step(position=(1.6, 0., -.5), nav=NAV_AUTO_LAND, armed=True, landed=False)
+    assert fixture.step(position=(1.6, 0., 0.), nav=NAV_AUTO_LAND) is None
+    assert fixture.trial.result == 'brake_settle_deadline'
+    assert [event['event'] for event in fixture.trial.events] == ['brake_command', 'land_command']
 
 
 def test_hover_land_has_no_horizontal_targets_and_no_braking_claim():

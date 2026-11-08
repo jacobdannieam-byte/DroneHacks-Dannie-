@@ -49,6 +49,13 @@ class ShadowTick:
         if self.depth_receipt_wall_ns is not None:
             row["depth_receipt_to_decision_wall_ns"] = self.completion_wall_ns - self.depth_receipt_wall_ns
         if plan.evaluation is not None:
+            # Observed cells are useful sensing evidence even when the vehicle's
+            # own swept volume remains unknown and motion is correctly refused.
+            import numpy as np
+            from refnav.world_model.spatial_volume import Cell
+            cells = receipt.metric.cells_at(self.now_ns, receipt.metric.reference)
+            row['metric_cell_counts'] = {name: int(np.count_nonzero(cells == value))
+                for name, value in (('unknown', Cell.UNKNOWN), ('observed_free', Cell.FREE), ('occupied', Cell.OCCUPIED))}
             row["goal_id"] = plan.evaluation.goal_proposal_id
             row["candidates"] = [
                 {"id": entry.candidate_id, "status": entry.status, "reasons": entry.reasons,

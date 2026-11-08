@@ -10,6 +10,24 @@ from examples.h1_observation import TF
 from onboard.diagnostics.sitl_graph import inspect
 
 
+def transport_metadata(info, *, callback_system_ns):
+    """Preserve optional RMW evidence; Humble may provide only the message."""
+    def field(name):
+        return info.get(name) if isinstance(info, dict) else getattr(info, name, None)
+    return {"callback_system_ns": callback_system_ns,
+            "message_info": "unavailable" if info is None else "provided",
+            "rmw_received_ns": field("received_timestamp"),
+            "rmw_source_ns": field("source_timestamp"),
+            "publication_sequence": field("publication_sequence_number")}
+
+
+def optional_message_info(callback):
+    """Accept both one-argument Humble delivery and two-argument RMW delivery."""
+    def observe(message, info=None):
+        return callback(message, info)
+    return observe
+
+
 def _gpu_snapshot():
     executable = which("nvidia-smi")
     if executable is None:
@@ -57,10 +75,7 @@ def run(loop, *, seconds, report_tick):
         def observe(topic):
             def callback(message, info):
                 nonlocal clock_seen
-                transport[topic].append({"callback_system_ns": time_ns(),
-                                         "rmw_received_ns": info.get("received_timestamp"),
-                                         "rmw_source_ns": info.get("source_timestamp"),
-                                         "publication_sequence": info.get("publication_sequence_number")})
+                transport[topic].append(transport_metadata(info, callback_system_ns=time_ns()))
                 now = node.get_clock().now().nanoseconds
                 counts[topic] += 1
                 if topic != TF and (now <= 0 or (not clock_seen and topic != "/clock")):
@@ -69,7 +84,7 @@ def run(loop, *, seconds, report_tick):
                 if topic == "/clock":
                     clock_seen = True
                 loop.feed(topic, message, now, perf_counter_ns())
-            return callback
+            return optional_message_info(callback)
 
         def on_lost(topic):
             def callback(event):
