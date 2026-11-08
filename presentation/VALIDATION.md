@@ -24,3 +24,7 @@ The 600-second pacing is a planned allocation. A human delivery rehearsal, proje
 - reveal.js 6.0.2: locally vendored, MIT license retained at `vendor/LICENSE`.
 - No 3Blue1Brown logo, character, screenshot or video is used. Visual inspiration is cited in the Q&A bibliography.
 - Paper sources and project-specific evidence: `RESEARCH.md`.
+
+## Simplified narrative revision
+
+Kept 11 main slides / 600 seconds and six Q&A slides. Slide 6 now has three responsibilities. Slides 7–8 cover DATT/PINNs motivation and source-verified Classical algorithms. Added only two manual reveals per new scene; the continuous slide is unchanged. Re-ran navigation, reduced-motion, two-viewport bounds, offline asset and PDF export checks.

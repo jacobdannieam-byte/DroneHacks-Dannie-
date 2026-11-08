@@ -17,26 +17,26 @@
   const titles = [
     "The course is visible.<br>The next action is uncertain.",
     "Build what the drone <em>remembers.</em>",
-    "Combine ideas at the interfaces.",
+    "Give the map meaning.",
     "From seeing to <em>understanding.</em>",
     "Sometimes the next action is <em>to look.</em>",
-    "Each layer answers a different question.",
-    "Complexity has to earn its place.",
-    "A better map was not yet a better decision.",
-    "The assumptions failed between layers.",
+    "Remember. Decide. Fly.",
+    "Why DATT and physics-informed learning?",
+    "Our Classical baseline: plan, then follow.",
+    "What failed — and what we changed.",
     "What we built. What we still need to prove.",
     "From observations to <em>justified actions.</em>",
   ];
   const subtitles = [
     "Indoor navigation, incomplete observations, and a mission beyond the field of view.",
-    "Persistent identity. Evidence. Uncertainty. A reason to observe again.",
+    "Remember openings, keep uncertainty, and look again when needed.",
     "Research gave us the structure; our constraints shaped the implementation.",
     "Observations become geometry, then meaning, then a grounded decision.",
-    "A bounded reasoning layer turns missing information into an explicit goal.",
-    "Our target architecture separates memory, intent, motion and execution.",
-    "Active perception earned priority in a synthetic evidence-acquisition task.",
-    "An integration lesson: better estimates must reach the decisions they are meant to change.",
-    "Native experiments exposed altitude, frame, timing and scheduling contracts.",
+    "If we do not know whether the drone fits, take another look.",
+    "Three jobs, with a safety check before movement.",
+    "A good route still needs a drone that can follow it when conditions change.",
+    "Established algorithms give us a clear starting point to measure against.",
+    "Simulation exposed problems with height, coordinates and timing.",
     "Evidence is specific to a component, an experiment and an environment.",
     "The next milestone is a measurable mission benefit from each layer.",
   ];
@@ -47,8 +47,8 @@
     "Illustrative entity · offline contract",
     "Non-executable proposal",
     "Target architecture",
-    "Synthetic benchmark · not flight success",
-    "Historical offline fixture",
+    "Research motivation · DATT proposed",
+    "Classical branch · source inspection",
     "Native simulation · preserved failures",
     "Research cutoff · 08 Nov 2026",
     "Planned evaluation",
@@ -59,9 +59,9 @@
     "Here is what that synthesis means for a single opening.",
     "The missing evidence now becomes input to the reasoning layer.",
     "This decision sits inside a larger chain with separate responsibilities.",
-    "With those interfaces in place, we could compare reasoning choices.",
-    "Another experiment taught us that a stronger component is not enough.",
-    "Moving from fixtures to the native runtime exposed another class of assumptions.",
+    "Now consider the flying part: what happens when the motion model is wrong?",
+    "Before adding learning, we need a classical baseline we can understand.",
+    "Integration showed us which assumptions were still wrong.",
     "Those outcomes define our evidence boundary today.",
     "The next experiments are designed to close that gap one layer at a time.",
     "Thank you. We can now go deeper into the architecture or the evidence.",
@@ -85,11 +85,17 @@
       .replaceAll("<", "&lt;")
       .replaceAll(">", "&gt;");
   }
+  const externalSources = {
+    DATT: "https://proceedings.mlr.press/v229/huang23a.html",
+    PINNs: "https://arxiv.org/abs/1711.10561",
+    Classical:
+      "https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/tree/f4264a216eb00a6f3522dba15951f420b61469c6/drone_code/team_nav",
+  };
   function sourceLinks(ids) {
     return ids
       .map(
         (id) =>
-          `<a href="https://app.notion.com/p/${sourceIds[id]}" target="_blank" rel="noopener">${id}</a>`,
+          `<a href="${externalSources[id] || `https://app.notion.com/p/${sourceIds[id]}`}" target="_blank" rel="noopener">${id}</a>`,
       )
       .join(" · ");
   }

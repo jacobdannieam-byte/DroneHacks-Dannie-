@@ -1,4 +1,4 @@
-/* Narrative, pacing and source references. The player renders this content; no live data is read. */
+/* Slide narrative and speaker notes; no live flight data is read. */
 window.slides = [
   {
     title: "The course is visible. The next action is uncertain.",
@@ -69,7 +69,8 @@ window.slides = [
     time: 55,
     kicker: "From state to intent",
     body: "WorldState → bounded context → goal proposal → independent validation",
-    takeaway: "“Observe this opening again” is a useful decision.",
+    takeaway:
+      "When important information is missing, look again before committing.",
     visual: "reasoning",
     sources: ["N4", "N6"],
     notes:
@@ -80,60 +81,53 @@ window.slides = [
     ],
   },
   {
-    title: "Each layer answers a different question.",
+    title: "Remember. Decide. Fly.",
     time: 60,
     kicker: "Architecture",
-    body: "Observe → retain belief → choose a goal → evaluate motion → validate execution → PX4",
-    takeaway:
-      "Persistent belief and fresh collision evidence have different jobs.",
+    body: "World memory → next goal → motion and safety",
+    takeaway: "Reasoning chooses the goal. Control turns it into movement.",
     visual: "architecture",
     sources: ["N1", "N3", "N5", "N7"],
     notes:
-      "Starting at the sensors, we align observations with their capture-time pose, retain geometric belief and semantic memory, choose a goal, evaluate predictive candidates, and pass through one command owner. Four concepts stay separate: a permitted reference map, current-run geometric belief, fresh local collision evidence, and semantic topology. An old map can support localization or route hypotheses, but it does not become a fresh sensor observation. This is the target decomposition. Implementation and native qualification differ by component.",
+      "There are three jobs. First, remember what the cameras have shown: openings, obstacles and what is still unknown. Second, choose the next goal, such as getting a better view of an opening. Third, plan and follow a movement, checking current obstacle information before sending commands. New observations update the memory. This is our target architecture; the components have different levels of validation.",
+    builds: ["Reveal the next goal", "Reveal motion and safety"],
+  },
+  {
+    title: "Why DATT and physics-informed learning?",
+    time: 55,
+    kicker: "Research motivation",
+    body: "Adapt the tracking. Improve the prediction.",
+    takeaway:
+      "Use learning to handle motion mismatch; keep world understanding separate.",
+    visual: "learning",
+    sources: ["DATT", "PINNs", "N6"],
+    notes:
+      "Even with the right route, the drone may respond differently than expected because of wind, delay or imperfect dynamics. DATT, Deep Adaptive Trajectory Tracking, combines a reinforcement-learned feedforward and feedback controller with disturbance adaptation. It motivates looking ahead along the desired trajectory and compensating for disturbances. Physics-informed neural networks address a different question: can a learned prediction fit measurements while respecting physical equations? Our research direction is to improve motion prediction using physics-informed residual learning. DATT remains proposed here, not an integrated model. The tracker reports an offline-tested physics-informed predictor, not flight qualification. Adding a neural residual alone does not make it a PINN.",
     builds: [
-      "Follow retained evidence through goal selection and motion evaluation",
-      "Reveal the fresh-evidence veto and execution feedback",
+      "Reveal the DATT tracking idea",
+      "Reveal the physics-informed prediction idea",
     ],
   },
   {
-    title: "The simplest stronger reasoner earned priority.",
+    title: "Our Classical baseline: plan, then follow.",
     time: 55,
-    kicker: "Pivot 1 · choose evidence over complexity",
-    body: "Evidence acquisitions across 420 synthetic episodes per variant.",
+    kicker: "What the Classical branch implements",
+    body: "Grid search → sliding target → PX4",
     takeaway:
-      "Active perception improved this task; learned ranking showed no clear advantage.",
-    visual: "bars",
-    sources: ["N6", "N7"],
+      "An understandable baseline lets us measure whether learning adds value.",
+    visual: "classical",
+    sources: ["Classical", "N6"],
     notes:
-      "G0 acquired 68 evidence items. Active-perception G1 acquired 260. Three learned G2 seeds acquired 259, 244 and 243. This supported prioritizing G1 for further shadow evaluation. These are abstract synthetic information-acquisition results, not flight completion rates. The separate adaptive-dynamics work also retained the physics baseline when alternatives failed delay, heading or runtime gates. Complexity needs to earn its place through the relevant experiment.",
-    builds: [
-      "Show G0 68",
-      "Show G1 260",
-      "Show G2 seeds 259, 244, 243 with scope label",
-    ],
-  },
-  {
-    title: "A better map was not yet a better decision.",
-    time: 55,
-    kicker: "Pivot 2 · connect and bound the computation",
-    body: "Improved pose estimate → missing planner consumption → unchanged decisions.",
-    takeaway:
-      "We shifted toward explicit consumer contracts and bounded asynchronous registration.",
-    visual: "disconnect",
-    sources: ["N5", "N8"],
-    notes:
-      "The P2 fixture improved localization error, but the planner initially did not consume the correction and stopped on all forty fixture cases. Registration was also expensive on the measured Windows host. This motivated a bounded asynchronous worker and explicit map-consumer contracts. Later offline work connected diagnostic consumption, with map-based control still disabled in that lineage. The bottleneck was real, but resolving a diagnostic connection did not yet demonstrate better routes.",
-    builds: [
-      "Expose the missing consumer connection",
-      "Reveal the later diagnostic connection and its remaining limitation",
-    ],
+      "The Classical branch contains a clearance grid and Dijkstra shortest-path search through the required checkpoints. It penalizes tight spaces and proximity to boulders, then straightens the route while preserving clearance. A separate live-planner module uses A-star; these are distinct planners, not two names for the same algorithm. The route follower moves a target ahead of the drone, limits its lead, and waits at corners to prevent cutting them. It sends position targets to PX4, which handles low-level flight control. Height disagreement and suspected contact can trigger landing. This is source inspection at revision f4264a2, not a new flight test.",
+    builds: ["Reveal the sliding target follower", "Reveal PX4 and monitoring"],
   },
   {
     title: "Native execution exposed the assumptions between layers.",
     time: 65,
-    kicker: "Pivot 3 · integration is an experiment",
+    kicker: "Failures and pivots",
     body: "Altitude retention. Frame origins. Timestamp alignment. Observation throughput.",
-    takeaway: "Preserved failures became specific engineering work.",
+    takeaway:
+      "Fix height, shared coordinates and timing before adding more intelligence.",
     visual: "failures",
     sources: ["N7"],
     notes:
@@ -165,7 +159,7 @@ window.slides = [
     kicker: "Plan and closing",
     body: "Reliable native segment → matched baseline → memory / topology / semantics ablations → learned extensions if justified",
     takeaway:
-      "Our contribution is a testable path from observations to justified actions.",
+      "Prove reliable flight, then measure what memory and reasoning add.",
     visual: "roadmap",
     sources: ["N1", "N6", "N7", "N8"],
     notes:

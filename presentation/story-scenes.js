@@ -46,9 +46,9 @@ window.StoryScenes = (() => {
   function papers() {
     return svg(
       `${text(40, 42, "RESEARCH → ADAPTATION", "tiny")}
-    ${text(40, 110, "Hydra", "big blue")}${text(40, 148, "incremental spatial hierarchy", "small")}${aperture(170, 215, 0.9)}
-    ${text(430, 110, "Kimera", "big violet")}${text(430, 148, "metric + semantic structure", "small")}${graph(550, 233, 0.62)}
-    ${reveal(0, `${path("M285 220H330V340H815V220H865", "blue")}${path("M550 295V340", "violet")}${graph(1010, 220, 1.1)}${text(900, 115, "Compact WorldState", "green")}${text(890, 340, "geometry + identity + evidence", "small")}`)}
+    ${text(40, 110, "Hydra", "big blue")}${text(40, 148, "build the map as we move", "small")}${aperture(170, 215, 0.9)}
+    ${text(430, 110, "Kimera", "big violet")}${text(430, 148, "connect geometry to meaning", "small")}${graph(550, 233, 0.62)}
+    ${reveal(0, `${path("M285 220H330V340H815V220H865", "blue")}${path("M550 295V340", "violet")}${graph(1010, 220, 1.1)}${text(900, 115, "A useful world memory", "green")}${text(890, 340, "geometry + idopening + observations", "small")}`)}
     ${reveal(1, `${text(40, 402, "CSIRO: recovery in partial observation", "small")}${text(610, 402, "ModalAI: separate perception, planning and autopilot interfaces", "small")}`)}`,
       "Hydra geometry and Kimera graph structure combine into compact evidence-grounded world state; deployment lessons constrain the adaptation.",
     );
@@ -56,29 +56,34 @@ window.StoryScenes = (() => {
   function reasoning() {
     return svg(
       `${graph(165, 170, 1.1)}${text(55, 305, "opening_0003", "math violet")}${text(55, 350, "height remains unknown", "small amber")}
-    ${arrow(290, 170, 385, "violet")}${text(420, 90, "Bound the context", "blue")}${path("M430 120H680M430 250H680", "line")}${text(440, 155, "entity + evidence", "small")}${text(440, 195, "frame + time + missing facts", "small")}${text(440, 235, "no invented connectivity", "small amber")}
-    ${reveal(0, `${arrow(710, 170, 810, "violet")}${text(845, 90, "Choose the next question", "violet")}${text(845, 165, "observe_more", "big green")}${text(845, 215, "target: opening_0003", "small violet")}${text(845, 253, "because: height is unknown", "small amber")}`)}
-    ${reveal(1, `${path("M1080 278V330H650", "green")}${circle(620, 330, 19, "green")}${path("M610 330l7 7 14-15", "green")}${text(665, 372, "Grounding + freshness validated", "green")}${text(665, 410, "Motion still needs its own feasibility check.", "small")}`)}`,
+    ${arrow(290, 170, 385, "violet")}${text(420, 90, "Read the memory", "blue")}${path("M430 120H680M430 250H680", "line")}${text(440, 155, "opening + observations", "small")}${text(440, 195, "what we know + what is missing", "small")}${text(440, 235, "do not assume a way through", "small amber")}
+    ${reveal(0, `${arrow(710, 170, 810, "violet")}${text(845, 90, "Choose a useful action", "violet")}${text(845, 165, "observe_more", "big green")}${text(845, 215, "target: opening_0003", "small violet")}${text(845, 253, "because: height is unknown", "small amber")}`)}
+    ${reveal(1, `${path("M1080 278V330H650", "green")}${circle(620, 330, 19, "green")}${path("M610 330l7 7 14-15", "green")}${text(665, 372, "Check the evidence is current", "green")}${text(665, 410, "Motion still needs its own feasibility check.", "small")}`)}`,
       "The same opening graph becomes a bounded context, observe-more proposal and separate validation.",
     );
   }
   function architecture() {
     return svg(
-      `${text(25, 33, "THE SAME EVIDENCE, THROUGH DIFFERENT RESPONSIBILITIES", "tiny")}
-    ${drone(85, 140, 0.7)}${aperture(190, 130, 0.55)}${text(25, 225, "Observe", "blue")}${text(25, 262, "depth · pose · capture time", "small")}
-    ${arrow(250, 145, 315, "blue")}${graph(420, 140, 0.72)}${text(330, 225, "Retain belief", "violet")}${text(330, 262, "opening_0003 + evidence", "small")}${text(330, 295, "prior map ≠ current belief", "tiny")}
-    ${reveal(
-      0,
-      `${arrow(510, 145, 580, "violet")}${text(605, 135, "observe_more", "math green")}${text(605, 175, "height unknown", "small amber")}${text(605, 225, "Choose intent", "violet")}${text(605, 262, "bounded context + validator", "small")}
-      ${arrow(840, 145, 895, "violet")}${path("M925 175Q960 95 1045 120", "violet")}${path("M925 175Q990 170 1045 120", "amber", 'stroke-dasharray="5 6"')}${path("M925 175Q955 200 1045 120", "muted")}${circle(1045, 120, 13, "amber", 'stroke-dasharray="4 4"')}${text(900, 225, "Evaluate motion", "violet")}${text(900, 262, "prediction + swept body", "small")}`,
-    )}
-    ${reveal(
-      1,
-      `${arrow(1070, 145, 1140, "green")}${path("M1175 95H1320V175H1175Z", "green")}${text(1200, 128, "ONE", "tiny green")}${text(1198, 155, "OWNER", "tiny green")}${text(1160, 225, "Validate + execute", "green")}${text(1160, 262, "fresh inputs → PX4", "small")}
-      ${path("M190 285V337H1380V145H1330", "green", 'stroke-dasharray="5 6"')}${text(455, 326, "Fresh local collision evidence can veto movement.", "small green")}
-      ${path("M1365 185V390H5V145H40", "muted")}${text(550, 422, "Execution → new observations", "small")}`,
-    )}`,
-      "Observations become belief, intent and motion candidates. Fresh collision evidence independently reaches one execution owner; execution feeds new observations.",
+      `${graph(180, 150, 1)}${text(65, 280, "1. Remember", "big blue")}${text(65, 325, "What is here?", "small")}
+    ${reveal(0, `${arrow(325, 150, 490, "violet")}${aperture(650, 150)}${text(530, 280, "2. Decide", "big violet")}${text(530, 325, "What should we do next?", "small")}`)}
+    ${reveal(1, `${arrow(800, 150, 960, "green")}${drone(1130, 150)}${text(1010, 280, "3. Fly safely", "big green")}${text(1010, 325, "Can we make this move?", "small")}${path("M1130 355V395H180V355", "muted")}${text(500, 425, "New observations update memory", "small")}`)}`,
+      "Memory informs a goal; checked motion produces new observations.",
+    );
+  }
+  function learning() {
+    return svg(
+      `${path("M25 185Q100 65 190 140T335 135", "muted", 'stroke-dasharray="6 6"')}${path("M25 200Q100 110 190 190T335 180", "blue")}${drone(180, 190, 0.55)}${text(30, 290, "Planned ≠ actual", "blue")}${text(30, 330, "wind · delay · model error", "small")}
+    ${reveal(0, `${text(475, 65, "DATT · follow the route", "violet")}${path("M475 160Q580 80 750 160", "violet")}${drone(525, 138, 0.45)}${arrow(565, 205, 740, "green")}${text(475, 265, "Look ahead + adapt", "green")}${text(475, 305, "Correct for disturbances", "small")}${text(475, 355, "Proposed tracking experiment", "tiny amber")}`)}
+    ${reveal(1, `${text(925, 65, "PINNs · predict motion", "blue")}${text(925, 145, "Measurements", "blue")}${text(925, 190, "+ physical equations", "violet")}${path("M925 215H1320", "muted")}${text(925, 265, "A physics-guided prediction", "green")}${text(925, 305, "Learn without ignoring physics", "small")}${text(925, 355, "Our predictor: offline-tested", "tiny amber")}`)}`,
+      "Motion mismatch motivates adaptive tracking and physics-informed prediction; DATT is proposed, the predictor is offline-tested.",
+    );
+  }
+  function classical() {
+    return svg(
+      `${text(30, 55, "Plan a clear route", "blue")}${path("M35 200H100V105H240V200H330", "blue")}${path("M130 150V260H270", "muted")}${text(30, 300, "Dijkstra grid search", "blue")}${text(30, 340, "Live planner: A* alternative", "small")}
+    ${reveal(0, `${arrow(350, 180, 440)}${text(475, 55, "Follow a sliding target", "violet")}${path("M475 180H800V100", "violet")}${drone(540, 180, 0.5)}${circle(680, 180, 12, "green")}${text(645, 140, "target", "small green")}${text(475, 300, "Look ahead; wait at corners", "violet")}${text(475, 340, "Limit lead to avoid cutting turns", "small")}`)}
+    ${reveal(1, `${arrow(820, 180, 915)}${text(950, 55, "Send position targets", "green")}${drone(1120, 165, 0.85)}${text(950, 300, "PX4 flight control", "green")}${text(950, 340, "Monitor height and contact", "small")}`)}`,
+      "Dijkstra plans the route, a sliding target guides it and PX4 controls flight; live A-star is a separate planner module.",
     );
   }
   function disconnect() {
@@ -92,7 +97,7 @@ window.StoryScenes = (() => {
   }
   function failures() {
     return svg(
-      `${text(25, 35, "C1 · THE BRAKING MEASUREMENT FAILED", "tiny")}
+      `${text(25, 35, "HEIGHT DROPPED BEFORE THE BRAKING TEST", "tiny")}
     <rect x="45" y="90" width="590" height="125" fill="#6ebce8" fill-opacity=".035"/>
     ${path("M45 90H635M45 215H635", "line", 'stroke-dasharray="5 7"')}${text(45, 76, "navigation height band", "small")}
     ${drone(130, 143, 0.52)}${text(63, 189, "translation began", "small blue")}${arrow(180, 143, 292, "blue")}
@@ -101,10 +106,10 @@ window.StoryScenes = (() => {
     ${path("M715 40V410", "line")}
     ${reveal(
       1,
-      `${text(775, 35, "S0 · FOUR DISARMED ATTEMPTS", "tiny")}
-      ${path("M800 155V85M790 145H875", "blue")}${path("M812 155V105M802 155H887", "amber", 'stroke-dasharray="4 4"')}${text(915, 115, "01  Frame origins", "blue")}${text(915, 149, "bind the same physical position", "small")}
+      `${text(775, 35, "FOUR ATTEMPTS COULD NOT START", "tiny")}
+      ${path("M800 155V85M790 145H875", "blue")}${path("M812 155V105M802 155H887", "amber", 'stroke-dasharray="4 4"')}${text(915, 115, "01  Coordinates disagreed", "blue")}${text(915, 149, "use the same position reference", "small")}
       ${path("M790 210H895", "blue")}${path("M790 228H895", "amber")}${path("M825 200V220M840 218V238", "muted")}${text(915, 210, "02  Clock alignment", "amber")}${text(915, 244, "preserve capture-time identity", "small")}
-      ${circle(808, 300, 8, "violet")}${circle(838, 300, 8, "violet")}${circle(868, 300, 8, "violet")}${path("M880 300H900", "violet")}${text(915, 305, "03–04  Readiness + scheduling", "violet")}${text(915, 339, "bound the work on the owner path", "small")}
+      ${circle(808, 300, 8, "violet")}${circle(838, 300, 8, "violet")}${circle(868, 300, 8, "violet")}${path("M880 300H900", "violet")}${text(915, 305, "03–04  Data arrived too slowly", "violet")}${text(915, 339, "keep the command loop responsive", "small")}
       ${text(775, 393, "No course-flight success claimed.", "small amber")}`,
     )}
     ${text(25, 434, "Schematic states and event order · not a measured trajectory", "tiny")}`,
@@ -115,7 +120,7 @@ window.StoryScenes = (() => {
     return svg(
       `${text(25, 35, "EVIDENCE IS LOCAL TO THE CLAIM", "tiny")}
     ${graph(160, 135, 0.6)}${text(25, 250, "Offline components", "blue")}${text(25, 290, "entities · reasoning · mapping", "small")}${text(25, 325, "synthetic comparison evidence", "small")}
-    ${reveal(0, `${drone(635, 135, 0.8)}${path("M590 195H680", "green")}${text(500, 250, "Native calibration", "green")}${text(500, 290, "C0: completed", "small")}${text(500, 325, "C1: recovered; measurement failed", "small")}`)}
+    ${reveal(0, `${drone(635, 135, 0.8)}${path("M590 195H680", "green")}${text(500, 250, "Simulation checks", "green")}${text(500, 290, "Hover check: completed", "small")}${text(500, 325, "Braking test: landed; test failed", "small")}`)}
     ${reveal(1, `${circle(1115, 135, 52, "amber", 'stroke-dasharray="5 7"')}${text(1102, 149, "?", "math amber")}${text(975, 250, "Mission-level benefit", "amber")}${text(975, 290, "hybrid course + matched trials", "small")}${text(975, 325, "hardware qualification remains", "small")}`)}
     ${path("M25 365H1360", "line")}${text(25, 415, "Separate baseline: Classical S1 has one successful Gazebo course run.", "small green")}`,
       "Offline graph evidence, native calibration and still-unproven mission benefit are distinguished; Classical S1 remains a separate baseline.",
@@ -123,7 +128,7 @@ window.StoryScenes = (() => {
   }
   function roadmap() {
     return svg(
-      `${drone(125, 130, 0.65)}${path("M175 130H270", "blue")}${text(25, 235, "01  Reliable native segment", "blue")}${text(25, 275, "frames · timing · height control", "small")}
+      `${drone(125, 130, 0.65)}${path("M175 130H270", "blue")}${text(25, 235, "01  Fly one reliable segment", "blue")}${text(25, 275, "coordinates · timing · height", "small")}
     ${reveal(
       0,
       `${path("M465 110H755M465 150H755", "muted")}${circle(510, 110, 10, "blue")}${circle(510, 150, 10, "green")}${text(465, 235, "02  Matched comparison", "green")}${text(465, 275, "same map, start and scoring", "small")}
@@ -137,6 +142,8 @@ window.StoryScenes = (() => {
     papers,
     reasoning,
     architecture,
+    learning,
+    classical,
     disconnect,
     failures,
     status,

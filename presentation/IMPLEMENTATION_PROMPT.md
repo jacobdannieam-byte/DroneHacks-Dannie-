@@ -116,3 +116,7 @@ Suggested judge answer: the novel project contribution is the integration and ev
 - Chart values and scope labels match the source exactly.
 - Rehearse the talk for the allotted 10 minutes and shorten visible material before speeding up narration.
 - Preserve source changes narrowly within presentation files and report honestly if browser or export verification cannot be completed.
+
+## Current editorial direction
+
+Keep the seeing-to-understanding centerpiece. Use plain language throughout. Architecture has three audience-facing jobs: Remember, Decide, Fly safely. Follow with DATT and PINNs motivation, then Classical Dijkstra/A-star planning, sliding target tracking and PX4 control. Separate proposed DATT from offline predictor work. Keep benchmark numbers in Q&A. Preserve failures and pivots, but explain height, coordinates and timing before internal experiment IDs. At most two manual reveals in each supporting diagram.

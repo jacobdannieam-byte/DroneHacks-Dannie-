@@ -44,3 +44,12 @@ Hydra, Kimera and CSIRO abstracts and ModalAI documentation were checked directl
 N4 opens with a historical 'not implemented' banner but ends with implemented offline I0–I3 results. N5 progresses from missing planner consumption to opt-in diagnostic H2 consumption; neither establishes map-driven route improvement. N7 supersedes earlier 'map-assisted mode is design only' entries with implementation and experimental attempts, while preserving ordinary qualification limits. Its latest fetched attempt still did not arm. Historical test counts are milestone evidence, never an aggregated current pass count.
 
 The talk's motivation is a synthesis of recorded research, not a verbatim personal anecdote. Do not invent team emotions, dates, causal order, or failed flights. Explicitly identify conceptual animations as illustrations. Recheck N7 and the strategy tracker before final presentation because work is ongoing.
+
+
+## Simplified control story — 8 November 2026
+
+Slides 7–8 replace the main-talk benchmark and mapping-integration detail. The benchmark remains in Q&A.
+
+- DATT: Huang et al., CoRL 2023, https://proceedings.mlr.press/v229/huang23a.html. RL-trained feedforward/feedback tracking plus disturbance adaptation. Project tracker N6 explicitly marks DATT-inspired tracking as proposed, not integrated.
+- PINNs: Raissi et al., https://arxiv.org/abs/1711.10561. Physics equations constrain learning. N6 reports an offline-tested physics-informed residual predictor; this is separate from DATT and does not establish flight qualification. A residual network alone is not a PINN.
+- Classical source snapshot: `origin/classical` at `f4264a216eb00a6f3522dba15951f420b61469c6`. Inspected `drone_code/team_nav/README.md` and `team_nav/{route_planner,route_follower,live_planner}.py`. Main route planner uses Dijkstra on a clearance grid and route straightening. Separate live planner uses A*. Follower advances a bounded-lead position target and waits at corners; PX4 receives position targets. Do not label this custom PID or pure pursuit without additional evidence.
