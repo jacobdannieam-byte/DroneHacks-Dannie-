@@ -356,11 +356,12 @@ class HybridRuntime:
             raise ValueError('Waypoint scans have no native command authority')
         now = now_ns / NS
         clock_reason = self.loop.observation_reason(now_ns, wall_ns)
-        reason, inputs = ((clock_reason, None) if clock_reason else self.loop.replay.prepare(now_ns))
+        observation_reason, inputs = ((clock_reason, None) if clock_reason else self.loop.replay.prepare(now_ns))
         map_reason, inputs = self._map_inputs(inputs, now_ns)
-        reason = reason or map_reason
+        reason = observation_reason or map_reason
         self._publication_inputs, self._publication_phase = inputs, mission.phase
         sensors_ready = admission and owner_ready and inputs is not None
+        launch_reason = None
         if self.launch_guard is not None and mission.phase in ('wait','arm','climb','hover'):
             launch_reason = self.launch_guard.check_owner(mission, vehicle, inputs, now_ns=now_ns, wall_ns=wall_ns)
             if launch_reason is not None:
@@ -368,6 +369,9 @@ class HybridRuntime:
                 sensors_ready = False
                 self.invalidate()
         priming_ready = sensors_ready and vehicle.landed is True
+        self._owner_readiness(now_ns, observation_reason=observation_reason, map_reason=map_reason,
+                              launch_reason=launch_reason, owner_ready=owner_ready, admission=admission,
+                              priming_ready=priming_ready)
         # After the first arming request, losing a verified source stops startup.
         # The core always handles authority loss before landing or streaming.
         lost_startup = mission.phase == "arm" and mission.t_cmd is not None and not sensors_ready
@@ -425,3 +429,6 @@ class HybridRuntime:
         self._record("landing_request", now_ns)
         mission.request_land(self.course.land_reason)
         return mission.step(now, vehicle)
+
+    def _owner_readiness(self, now_ns, **checks):
+        """Optional composition diagnostics. The standard owner gates stay local."""

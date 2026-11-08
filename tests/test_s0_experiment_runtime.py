@@ -7,6 +7,8 @@ import pytest
 
 from examples.build_s0_course_ablation import build
 from examples.h0_hybrid_smoke import smoke_inputs
+from examples.h1_fixture import DEPTH, HEALTH, MS, TRACKING, clock, depth, profile as h1_profile, setup as h1_setup, tick
+from examples.h1_observation import HybridBagReplay
 from examples.s0_course_experiment import experimental_assess, load_experiment, main
 from examples.s0_experiment_geometry import EXPERIMENT_EVIDENCE
 from refnav.core import Output, Vehicle
@@ -110,3 +112,35 @@ def test_paired_translation_repairs_support_pose_and_refuses_a_shifted_estimate(
     vehicle.pos = refused_ned
     assert runtime.publication_reason(mission, vehicle, output, now, wall_ns=now) == (
         'experimental_ground_alignment_disagrees')
+
+
+def test_pending_depth_retains_only_the_original_fresh_synchronized_snapshot(monkeypatch):
+    profile = replace(h1_profile(offset_rig=True), tracking_source='simulated_estimator')
+    replay = HybridBagReplay(profile, continuous=True, retain_aligned_depth=True)
+    original_feed = replay.feed
+
+    def simulated_feed(topic, message, received_ns):
+        if topic == TRACKING:
+            message.status[0].message = 'simulated_estimator'
+        original_feed(topic, message, received_ns)
+
+    monkeypatch.setattr(replay, 'feed', simulated_feed)
+    h1_setup(replay)
+    tick(replay, 100, 0.)
+    reason, original = replay.prepare(103 * MS)
+    assert reason is None
+    original_depth = replay.aligned_depth
+    replay.feed('/clock', clock(120), 120 * MS)
+    replay.feed(DEPTH, depth(120, 0., cal=profile.spatial.calibration), 122 * MS)
+    assert replay.prepare(122 * MS) == ('awaiting_capture_pose', None)
+    replay.keep_fresh_snapshot_while_pending = True
+    reason, retained = replay.prepare(122 * MS)
+    assert reason is None and retained['snapshot'] is original['snapshot']
+    assert replay.aligned_depth is original_depth and retained['snapshot'].metric.capture_ns == 100 * MS
+    # A replacement pending frame also cannot freshen the previous geometry.
+    replay.feed('/clock', clock(140), 140 * MS)
+    replay.feed(DEPTH, depth(140, 0., cal=profile.spatial.calibration), 142 * MS)
+    assert replay.prepare(142 * MS)[1]['snapshot'] is original['snapshot']
+    assert replay.prepare(351 * MS) == ('stale_geometry', None)
+    replay.feed(HEALTH, SimpleNamespace(data=False), 143 * MS)
+    assert replay.prepare(143 * MS)[1] is None

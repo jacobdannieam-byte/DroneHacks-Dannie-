@@ -16,6 +16,7 @@ from examples.gazebo_hybrid_adapter import IsolationApproval, OWNER_ROLES
 from examples.hybrid_launch import configured
 from examples.hybrid_runtime import HybridRuntime
 from examples.s0_experiment_geometry import AuthoredObstacles, EXPERIMENT_EVIDENCE
+from examples.s0_owner_clock import ExperimentalOwnerClockMixin
 from onboard.adapters.geometry import R_ENU_NED, rot_z
 from refnav.dynamics import DynamicsModel, PositionSetpoint
 from refnav.dynamics.history import STEP_SECONDS
@@ -202,8 +203,20 @@ class ExperimentalRuntime(HybridRuntime):
                                            monotonic=self.executor.clock, timings=self.timings)
         self.loop.assessor = lambda **inputs: experimental_assess(geometry, identity, **inputs)
         self.loop.replay._retain_aligned_depth = True
+        self.loop.replay.keep_fresh_snapshot_while_pending = True
         self.launch_guard = _GroundAlignmentGuard(self.loop.replay)
         self._checking_publication_wall_ns = None
+        self.native_readiness = None
+        self._readiness = None
+
+    def _owner_readiness(self, now_ns, **checks):
+        row = {**checks, 'native': self.native_readiness}
+        if row != self._readiness:
+            self._readiness = row
+            self._record('experimental_owner_readiness', now_ns)
+
+    def status(self):
+        return {**super().status(), 'experimental_owner_readiness': self._readiness}
 
     def publication_reason(self, mission, vehicle, output, now_ns, *, wall_ns=None):
         inputs = self._publication_inputs
@@ -315,7 +328,7 @@ def run(runtime, output, ros_args):
     from onboard.diagnostics.sitl_graph import inspect
     from refnav.node import RefNav
 
-    class ExperimentalOwner(RefNav):
+    class ExperimentalOwner(ExperimentalOwnerClockMixin, RefNav):
         def _validate_native_qualification(self, current):
             if current is not runtime or type(current) is not ExperimentalRuntime or not isolated():
                 raise ValueError('isolated experiment owner context changed')
@@ -351,11 +364,15 @@ def run(runtime, output, ros_args):
         if node is not None:
             node.destroy_node()
         try_shutdown()
+        callback_clock = (None if node is None else dict(fault=node._owner_clock_fault,
+                         pending=len(node._owner_clock_pending), retained_releases=node._owner_clock_audit))
         with Path(output).open('x', encoding='utf-8') as stream:
             json.dump(dict(scope=SCOPE, qualification=False, obstacle_backend=EXPERIMENT_EVIDENCE,
                            identity=runtime.identity, records=list(runtime.records), total_records=runtime.record_count,
                            status=runtime.status(),
-                           last_issue=runtime.last_issued, timing=runtime.timings.summary(), exit_code=code),
+                           last_issue=runtime.last_issued, timing=runtime.timings.summary(), exit_code=code,
+                           callback_clock=callback_clock,
+                           h1_clock=runtime.clock_fence.report() if runtime.clock_fence else None),
                       stream, indent=2, allow_nan=False)
     return code
 

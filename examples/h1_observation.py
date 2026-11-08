@@ -165,6 +165,12 @@ class HybridBagReplay(RecordedSpatialReplay):
         self._health_history = deque(maxlen=64)
         self._state_reason = "missing_px4_state"
         self.fault = None
+        self.keep_fresh_snapshot_while_pending = False
+
+    @property
+    def _keep_pending_snapshot(self):
+        return (self.keep_fresh_snapshot_while_pending is True and self.continuous
+                and self.hybrid.tracking_source == 'simulated_estimator')
 
     def feed(self, topic, msg, received_ns):
         if self.fault is not None:
@@ -187,7 +193,9 @@ class HybridBagReplay(RecordedSpatialReplay):
                     if self._pending is not None:
                         if not self.continuous:
                             raise ValueError("depth_queue_overload")
-                        self._pending = self._snapshot = None
+                        self._pending = None
+                        if not self._keep_pending_snapshot:
+                            self._snapshot = None
                         self.dropped_depth += 1
                 super().feed(topic, msg, received_ns)
             else:
@@ -388,7 +396,7 @@ class HybridBagReplay(RecordedSpatialReplay):
             return self.fault, None
         if not stamp_ok(now_ns) or self.now is None or now_ns < self.now:
             return "unbound_assessment_time", None
-        if self._pending is not None:
+        if self._pending is not None and (not self._keep_pending_snapshot or self._snapshot is None):
             return "awaiting_capture_pose", None
         snapshot = self._snapshot
         if snapshot is None:

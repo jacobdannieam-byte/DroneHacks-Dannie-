@@ -333,26 +333,44 @@ class RefNav(Node):
 
         runtime = self._hybrid_runtime
         try:
-            admission = (self.get_parameter("use_sim_time").value is True
-                         and self._hybrid_approval.permits(runtime.adapter, os.environ.get("ROS_DOMAIN_ID"))
-                         and not inspect_command_graph(self, self.get_fully_qualified_name(),
-                                                       strict_motion=runtime.adapter.simulated_estimator)["issues"])
+            admission_reason = None
+            if self.get_parameter('use_sim_time').value is not True:
+                admission_reason = 'native_sim_clock_disabled'
+            elif not self._hybrid_approval.permits(runtime.adapter, os.environ.get('ROS_DOMAIN_ID')):
+                admission_reason = 'native_isolation_lost'
+            elif inspect_command_graph(self, self.get_fully_qualified_name(),
+                                       strict_motion=runtime.adapter.simulated_estimator)['issues']:
+                admission_reason = 'native_motion_graph_refused'
+            admission = admission_reason is None
             if admission and runtime.adapter.simulated_estimator:
                 try:
                     runtime.loop.replay.hybrid.clock.source_stamp_us(now_ns)
                 except ValueError:
-                    admission = False
+                    admission_reason = 'native_clock_mapping_unavailable'
             authority = self._hybrid_reports.get("authority")
-            if self.mission.t_cmd is not None or self.mission.phase in C.AIRBORNE + ("land",):
-                admission = admission and authority is not None and self._owner_timing.fresh('authority', authority[0], now_ns)
+            if admission_reason is None and (self.mission.t_cmd is not None or self.mission.phase in C.AIRBORNE + ('land',)):
+                if authority is None or not self._owner_timing.fresh('authority', authority[0], now_ns):
+                    admission_reason = 'native_authority_stale_or_missing'
+            admission = admission_reason is None
             now = now_ns * 1e-9
             health = self.mission.health
-            ready = (len(self._hybrid_reports) == 3 and
-                      all(self._owner_timing.fresh(key, stamp, now_ns) for key, (stamp, _) in self._hybrid_reports.items())
-                     and health.last_ok is True and health.last_t is not None
-                     and 0 <= now - health.last_t <= health.stale_s and self.mission.depth_fresh(now)
-                     and self.mission.depth_t <= now
-                     and self._hybrid_reports["position"][1] == runtime.loop.replay.hybrid.local_reset_counters)
+            ready_reasons = []
+            for key in ('authority', 'landed', 'position'):
+                report = self._hybrid_reports.get(key)
+                if report is None:
+                    ready_reasons.append('native_' + key + '_missing')
+                elif not self._owner_timing.fresh(key, report[0], now_ns):
+                    ready_reasons.append('native_' + key + '_stale')
+            if health.last_ok is not True or health.last_t is None or not 0 <= now - health.last_t <= health.stale_s:
+                ready_reasons.append('native_health_stale_or_unhealthy')
+            if not self.mission.depth_fresh(now) or self.mission.depth_t > now:
+                ready_reasons.append('native_usable_depth_stale_or_missing')
+            position = self._hybrid_reports.get('position')
+            if position is not None and position[1] != runtime.loop.replay.hybrid.local_reset_counters:
+                ready_reasons.append('native_position_reset_mismatch')
+            ready = not ready_reasons
+            if hasattr(runtime, 'native_readiness'):
+                runtime.native_readiness = dict(admission_reason=admission_reason, ready_reasons=ready_reasons)
             return runtime.owner_step(self.mission, self.v, now_ns=now_ns, wall_ns=perf_counter_ns(),
                                       generation=self._hybrid_generation, admission=admission, owner_ready=ready)
         except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, ArithmeticError) as error:
