@@ -1,0 +1,30 @@
+{
+  "host": {
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+    "python": "3.11.9",
+    "numpy": "2.3.5",
+    "scipy": "1.17.0"
+  },
+  "fixture": "seeded analytic three-plane scan, partial dynamic returns, mismatched scan and single plane",
+  "outcomes": {
+    "full/accepted": 10,
+    "partial/accepted": 10,
+    "plane/degenerate_geometry": 10,
+    "wrong_map/high_residual": 8,
+    "wrong_map/insufficient_overlap_or_coverage": 2
+  },
+  "false_accepts": 0,
+  "accepted_in_tolerance": 20,
+  "max_translation_error_m": 0.0006931593483190469,
+  "max_rotation_error_deg": 0.047829684286659666,
+  "timing": {
+    "local_registration": {
+      "p50_ms": 135.39229999999998,
+      "p95_ms": 273.330305,
+      "p99_ms": 275.632086,
+      "samples": 40,
+      "max_ms": 276.6627
+    }
+  }
+}

@@ -115,3 +115,43 @@ selection or demonstrated route improvement. No runtime enables the consumer.
 The first-segment function validates geometry only; existing mission ownership,
 health and command gates remain required. Physical body dimensions, calibration,
 real synchronized replay and concurrent Orin timing remain acceptance gates.
+
+## Additional offline qualification and remaining simulation gate
+
+Existing Ubuntu Docker images were discovered without starting a simulator.
+Focused classical ROS unit tests now pass: 63 in 2.52s, using the existing
+network-isolated, read-only drone-simulator image
+sha256:a94b59df2e4aa268a107a56d9087c4645f6819680e4c17ab4db74cbc81c66795.
+The exact command is preserved on the classical branch in
+ docs/PHYSICAL_INTEGRATION_EVIDENCE.md. This supersedes missing-rclpy as a blocker
+for those tests, not native or flight qualification.
+
+Added worker regressions prove caller mutation cannot alter submitted captures
+and shutdown during registration discards late results and pending work.
+
+Commands from this checkout:
+
+```powershell
+python -m pytest tests/test_registration_worker.py tests/test_gazebo_hybrid_integration.py tests/test_unified_qualification.py -q
+python -m examples.p2_registration_benchmark --repeats 40 --output artifacts/physical_offline_registration_review
+python -m examples.p2_shadow_replay fixture --repeats 10 --output artifacts/physical_offline_shadow_review
+```
+
+18 focused tests passed in 5.53s. The output files were subsequently renamed
+with .json extensions and are committed. Registration benchmark: 20/20 positive
+fixtures within tolerance, all 20 degenerate/wrong-map negatives rejected;
+p95 273.33 ms, maximum 276.66 ms on this Windows laptop. Concurrent host load was
+not controlled, so this is not a performance regression diagnosis or Orin budget.
+
+Four-arm replay: all 160 decisions requested safe stop; map arms each accepted
+40 fixes and reduced synthetic position RMSE from 0.0675 m to 0.01625 m.
+This is the existing synchronous diagnostic replay benchmark. Asynchronous H2
+integration is covered separately by behavioral tests; these timing figures must
+not be presented as asynchronous or native throughput evidence. H3 stayed false.
+
+Next simulation gate: reviewed isolated Gazebo run with the exact intended
+revision and adapter configuration, demonstrating nonzero launch origins,
+climb/first-segment behavior and fault response. Existing historical Gazebo
+success does not qualify this revision. No flight program was run in this work.
+Map-based control remains disabled. Physical identity, anchoring, calibration,
+body dimensions, raw capture/reset evidence and Orin timing remain unverified.

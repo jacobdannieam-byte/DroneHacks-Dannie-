@@ -49,3 +49,50 @@ def test_worker_failure_withholds_result_and_can_close():
         assert worker.result(1, map_version='map1', reference='epoch1') is None
     finally:
         assert worker.close(2)
+
+
+def test_close_during_registration_discards_late_result_and_pending_capture():
+    started, release = Event(), Event()
+    captures = []
+    def update(frame):
+        captures.append(frame.capture_ns)
+        started.set()
+        assert release.wait(2)
+        return SimpleNamespace(vio='epoch1', map_version='map1', capture_ns=frame.capture_ns)
+    worker = RegistrationWorker(SimpleNamespace(vio='epoch1', policy=SimpleNamespace(hold_ns=10), update=update))
+    try:
+        assert worker.submit(SimpleNamespace(reference='epoch1', capture_ns=1))
+        assert started.wait(2)
+        assert worker.submit(SimpleNamespace(reference='epoch1', capture_ns=2))
+        assert worker.close(0) is False
+        assert not worker.submit(SimpleNamespace(reference='epoch1', capture_ns=3))
+        release.set()
+        assert worker.close(2)
+        assert captures == [1]
+        assert worker.result(2, map_version='map1', reference='epoch1') is None
+    finally:
+        release.set()
+        worker.close(2)
+
+
+def test_submitted_capture_is_detached_from_caller_mutation():
+    started, release = Event(), Event()
+    values = []
+    def update(frame):
+        started.set()
+        assert release.wait(2)
+        values.append(frame.values[0])
+        return SimpleNamespace(vio='epoch1', map_version='map1', capture_ns=frame.capture_ns)
+    worker = RegistrationWorker(SimpleNamespace(vio='epoch1', policy=SimpleNamespace(hold_ns=10), update=update))
+    try:
+        frame = SimpleNamespace(reference='epoch1', capture_ns=1, values=[1.])
+        assert worker.submit(frame)
+        assert started.wait(2)
+        frame.values[0] = 99.
+        release.set()
+        with worker._condition:
+            assert worker._condition.wait_for(lambda: worker._result is not None, 2)
+        assert values == [1.]
+    finally:
+        release.set()
+        assert worker.close(2)
