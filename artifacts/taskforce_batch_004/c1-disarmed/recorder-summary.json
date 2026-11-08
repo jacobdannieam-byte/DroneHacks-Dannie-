@@ -1,0 +1,30 @@
+{
+  "clock_id": "ros_sim_time",
+  "frame_id": "px4_local_ned",
+  "trial_kind": "stopping",
+  "events": [],
+  "provenance_scope": "reviewed_calibration",
+  "clock_mapping": {
+    "source_clock_id": "px4_sitl_lockstep",
+    "ros_clock_id": "ros_sim_time",
+    "offset_ns": 0,
+    "max_error_ns": 4000000,
+    "valid_from_ns": 0,
+    "valid_until_ns": 600000000000,
+    "evidence_id": "batch003-native-timing-plus-pinned-lockstep-source"
+  },
+  "trial_id": "calibration-c1-020-001",
+  "owner_id": "/calibration_trial_owner",
+  "profile_sha256": "cb0f11b36c8591eacfbdc832b8d080d70c4e6858931d2a7637764be6255ea76c",
+  "contract_sha256": "4a3176d59aaba5901a4e835fcf3951d156e0104ccde5791a6d01f1af703dbbc9",
+  "topics": {
+    "vehicle_local_position": "/fmu/out/vehicle_local_position",
+    "vehicle_status": "/fmu/out/vehicle_status_v1",
+    "events": "/qualification/events"
+  },
+  "recording_faults": [],
+  "pending_clock_samples": 0,
+  "recording_complete": false,
+  "sample_count": 3232,
+  "status_count": 65
+}

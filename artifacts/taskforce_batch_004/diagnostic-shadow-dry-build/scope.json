@@ -1,0 +1,13 @@
+{
+  "probe_sha256": "b09e88d835b0384e5e3224cfd7f7a74ab7f27e9e426975fce5b54c341d786fd0",
+  "scope": "DISARMED_SIMULATOR_DIAGNOSTIC_ONLY_NOT_MOTION_REVIEWED",
+  "positive_motion_expected": false,
+  "map_control": false,
+  "background_registration": false,
+  "profiles": [
+    "artifacts\\taskforce_batch_004\\diagnostic-shadow-dry-build\\hybrid_existing.json",
+    "artifacts\\taskforce_batch_004\\diagnostic-shadow-dry-build\\hybrid_information_gain.json",
+    "artifacts\\taskforce_batch_004\\diagnostic-shadow-dry-build\\hybrid_learned_ranker.json",
+    "artifacts\\taskforce_batch_004\\diagnostic-shadow-dry-build\\hybrid_physics_informed.json"
+  ]
+}

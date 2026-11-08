@@ -1,0 +1,4 @@
+hybrid_existing 2
+hybrid_information_gain 2
+hybrid_learned_ranker 2
+hybrid_physics_informed 2

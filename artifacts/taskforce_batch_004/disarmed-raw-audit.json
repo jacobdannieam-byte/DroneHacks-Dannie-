@@ -1,0 +1,55 @@
+{
+  "scope": "raw native disarmed state and absence of control publication; no flight qualification",
+  "runs": [
+    {
+      "run": "shadow",
+      "raw_bag_sha256": "e94fbbd51e80be72fc7a7fd7aae80f228cdb83c1c8a7d5899306a0a2b7426703",
+      "native_status_count": 250,
+      "native_arming_states": [
+        1
+      ],
+      "control_message_counts": {},
+      "result": "PASS"
+    },
+    {
+      "run": "shadow-diagnostics",
+      "raw_bag_sha256": "7b42e23b9f4fd51bfe385c171d66302b55fbc9ed9eeb2f38e9d6a215d6d875a0",
+      "native_status_count": 198,
+      "native_arming_states": [
+        1
+      ],
+      "control_message_counts": {},
+      "result": "PASS"
+    },
+    {
+      "run": "shadow-clock-service",
+      "raw_bag_sha256": "5bfc1364cf9147acb2551ee2f8c242b9acf55cfb28ec45001189ebade8e01792",
+      "native_status_count": 200,
+      "native_arming_states": [
+        1
+      ],
+      "control_message_counts": {},
+      "result": "PASS"
+    },
+    {
+      "run": "c1-check",
+      "raw_bag_sha256": "3a6e0051569c53d619a28a291a1cf8949990304c98be2188b7f9e2fbde24877b",
+      "native_status_count": 86,
+      "native_arming_states": [
+        1
+      ],
+      "control_message_counts": {},
+      "result": "PASS"
+    },
+    {
+      "run": "r1-check",
+      "raw_bag_sha256": "33f3d4c0245ecbee0a9b54ce82b3e99f1f8171abe5d2c60d1a91c126a154e1df",
+      "native_status_count": 89,
+      "native_arming_states": [
+        1
+      ],
+      "control_message_counts": {},
+      "result": "PASS"
+    }
+  ]
+}

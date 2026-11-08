@@ -1,0 +1,1092 @@
+{
+  "strategy": "hybrid_shadow",
+  "native_qualification": "review_required",
+  "observations": {
+    "topic_types": {
+      "/clock": [
+        "rosgraph_msgs/msg/Clock"
+      ],
+      "/events/write_split": [
+        "rosbag2_interfaces/msg/WriteSplitEvent"
+      ],
+      "/fmu/in/actuator_motors": [
+        "px4_msgs/msg/ActuatorMotors"
+      ],
+      "/fmu/in/actuator_servos": [
+        "px4_msgs/msg/ActuatorServos"
+      ],
+      "/fmu/in/arming_check_reply": [
+        "px4_msgs/msg/ArmingCheckReply"
+      ],
+      "/fmu/in/aux_global_position": [
+        "px4_msgs/msg/VehicleGlobalPosition"
+      ],
+      "/fmu/in/config_control_setpoints": [
+        "px4_msgs/msg/VehicleControlMode"
+      ],
+      "/fmu/in/config_overrides_request": [
+        "px4_msgs/msg/ConfigOverrides"
+      ],
+      "/fmu/in/distance_sensor": [
+        "px4_msgs/msg/DistanceSensor"
+      ],
+      "/fmu/in/goto_setpoint": [
+        "px4_msgs/msg/GotoSetpoint"
+      ],
+      "/fmu/in/manual_control_input": [
+        "px4_msgs/msg/ManualControlSetpoint"
+      ],
+      "/fmu/in/message_format_request": [
+        "px4_msgs/msg/MessageFormatRequest"
+      ],
+      "/fmu/in/mode_completed": [
+        "px4_msgs/msg/ModeCompleted"
+      ],
+      "/fmu/in/obstacle_distance": [
+        "px4_msgs/msg/ObstacleDistance"
+      ],
+      "/fmu/in/offboard_control_mode": [
+        "px4_msgs/msg/OffboardControlMode"
+      ],
+      "/fmu/in/onboard_computer_status": [
+        "px4_msgs/msg/OnboardComputerStatus"
+      ],
+      "/fmu/in/register_ext_component_request": [
+        "px4_msgs/msg/RegisterExtComponentRequest"
+      ],
+      "/fmu/in/sensor_optical_flow": [
+        "px4_msgs/msg/SensorOpticalFlow"
+      ],
+      "/fmu/in/telemetry_status": [
+        "px4_msgs/msg/TelemetryStatus"
+      ],
+      "/fmu/in/trajectory_setpoint": [
+        "px4_msgs/msg/TrajectorySetpoint"
+      ],
+      "/fmu/in/unregister_ext_component": [
+        "px4_msgs/msg/UnregisterExtComponent"
+      ],
+      "/fmu/in/vehicle_attitude_setpoint": [
+        "px4_msgs/msg/VehicleAttitudeSetpoint"
+      ],
+      "/fmu/in/vehicle_command": [
+        "px4_msgs/msg/VehicleCommand"
+      ],
+      "/fmu/in/vehicle_command_mode_executor": [
+        "px4_msgs/msg/VehicleCommand"
+      ],
+      "/fmu/in/vehicle_mocap_odometry": [
+        "px4_msgs/msg/VehicleOdometry"
+      ],
+      "/fmu/in/vehicle_rates_setpoint": [
+        "px4_msgs/msg/VehicleRatesSetpoint"
+      ],
+      "/fmu/in/vehicle_thrust_setpoint": [
+        "px4_msgs/msg/VehicleThrustSetpoint"
+      ],
+      "/fmu/in/vehicle_torque_setpoint": [
+        "px4_msgs/msg/VehicleTorqueSetpoint"
+      ],
+      "/fmu/in/vehicle_visual_odometry": [
+        "px4_msgs/msg/VehicleOdometry"
+      ],
+      "/fmu/out/airspeed_validated": [
+        "px4_msgs/msg/AirspeedValidated"
+      ],
+      "/fmu/out/arming_check_request": [
+        "px4_msgs/msg/ArmingCheckRequest"
+      ],
+      "/fmu/out/battery_status": [
+        "px4_msgs/msg/BatteryStatus"
+      ],
+      "/fmu/out/collision_constraints": [
+        "px4_msgs/msg/CollisionConstraints"
+      ],
+      "/fmu/out/distance_sensor": [
+        "px4_msgs/msg/DistanceSensor"
+      ],
+      "/fmu/out/estimator_status_flags": [
+        "px4_msgs/msg/EstimatorStatusFlags"
+      ],
+      "/fmu/out/failsafe_flags": [
+        "px4_msgs/msg/FailsafeFlags"
+      ],
+      "/fmu/out/home_position": [
+        "px4_msgs/msg/HomePosition"
+      ],
+      "/fmu/out/manual_control_setpoint": [
+        "px4_msgs/msg/ManualControlSetpoint"
+      ],
+      "/fmu/out/message_format_response": [
+        "px4_msgs/msg/MessageFormatResponse"
+      ],
+      "/fmu/out/mode_completed": [
+        "px4_msgs/msg/ModeCompleted"
+      ],
+      "/fmu/out/position_setpoint_triplet": [
+        "px4_msgs/msg/PositionSetpointTriplet"
+      ],
+      "/fmu/out/register_ext_component_reply": [
+        "px4_msgs/msg/RegisterExtComponentReply"
+      ],
+      "/fmu/out/sensor_combined": [
+        "px4_msgs/msg/SensorCombined"
+      ],
+      "/fmu/out/timesync_status": [
+        "px4_msgs/msg/TimesyncStatus"
+      ],
+      "/fmu/out/vehicle_attitude": [
+        "px4_msgs/msg/VehicleAttitude"
+      ],
+      "/fmu/out/vehicle_attitude_groundtruth": [
+        "px4_msgs/msg/VehicleAttitude"
+      ],
+      "/fmu/out/vehicle_command_ack": [
+        "px4_msgs/msg/VehicleCommandAck"
+      ],
+      "/fmu/out/vehicle_control_mode": [
+        "px4_msgs/msg/VehicleControlMode"
+      ],
+      "/fmu/out/vehicle_global_position": [
+        "px4_msgs/msg/VehicleGlobalPosition"
+      ],
+      "/fmu/out/vehicle_gps_position": [
+        "px4_msgs/msg/SensorGps"
+      ],
+      "/fmu/out/vehicle_land_detected": [
+        "px4_msgs/msg/VehicleLandDetected"
+      ],
+      "/fmu/out/vehicle_local_position": [
+        "px4_msgs/msg/VehicleLocalPosition"
+      ],
+      "/fmu/out/vehicle_local_position_groundtruth": [
+        "px4_msgs/msg/VehicleLocalPosition"
+      ],
+      "/fmu/out/vehicle_odometry": [
+        "px4_msgs/msg/VehicleOdometry"
+      ],
+      "/fmu/out/vehicle_status_v1": [
+        "px4_msgs/msg/VehicleStatus"
+      ],
+      "/fmu/out/vtol_vehicle_status": [
+        "px4_msgs/msg/VtolVehicleStatus"
+      ],
+      "/gazebo_hybrid/simulated_estimator/health_diagnostics": [
+        "std_msgs/msg/String"
+      ],
+      "/gazebo_hybrid/simulated_estimator/healthy": [
+        "std_msgs/msg/Bool"
+      ],
+      "/gazebo_hybrid/simulated_estimator/odometry": [
+        "nav_msgs/msg/Odometry"
+      ],
+      "/gazebo_hybrid/simulated_estimator/processing_status": [
+        "diagnostic_msgs/msg/DiagnosticArray"
+      ],
+      "/gazebo_hybrid/simulated_estimator/status": [
+        "isaac_ros_visual_slam_interfaces/msg/VisualSlamStatus"
+      ],
+      "/parameter_events": [
+        "rcl_interfaces/msg/ParameterEvent"
+      ],
+      "/rosout": [
+        "rcl_interfaces/msg/Log"
+      ],
+      "/simulator_only/oak/depth/camera_info": [
+        "sensor_msgs/msg/CameraInfo"
+      ],
+      "/simulator_only/oak/depth/image": [
+        "sensor_msgs/msg/Image"
+      ],
+      "/simulator_only/touches": [
+        "std_msgs/msg/String"
+      ],
+      "/skybeta/state": [
+        "std_msgs/msg/String"
+      ],
+      "/tf_static": [
+        "tf2_msgs/msg/TFMessage"
+      ]
+    },
+    "offered_qos": {
+      "/clock": [
+        {
+          "node": "/simulator_only_gazebo_camera_to_ros",
+          "type": "rosgraph_msgs/msg/Clock",
+          "reliability": "BEST_EFFORT",
+          "durability": "VOLATILE",
+          "depth": 0,
+          "history": "UNKNOWN"
+        }
+      ],
+      "/simulator_only/oak/depth/camera_info": [
+        {
+          "node": "/simulator_only_gazebo_camera_to_ros",
+          "type": "sensor_msgs/msg/CameraInfo",
+          "reliability": "RELIABLE",
+          "durability": "VOLATILE",
+          "depth": 0,
+          "history": "UNKNOWN"
+        }
+      ],
+      "/simulator_only/oak/depth/image": [
+        {
+          "node": "/simulator_only_gazebo_camera_to_ros",
+          "type": "sensor_msgs/msg/Image",
+          "reliability": "RELIABLE",
+          "durability": "VOLATILE",
+          "depth": 0,
+          "history": "UNKNOWN"
+        }
+      ],
+      "/gazebo_hybrid/simulated_estimator/odometry": [
+        {
+          "node": "/pretend_camera_tracking",
+          "type": "nav_msgs/msg/Odometry",
+          "reliability": "RELIABLE",
+          "durability": "VOLATILE",
+          "depth": 0,
+          "history": "UNKNOWN"
+        }
+      ],
+      "/gazebo_hybrid/simulated_estimator/healthy": [
+        {
+          "node": "/simulator_only_gazebo_camera_to_ros",
+          "type": "std_msgs/msg/Bool",
+          "reliability": "RELIABLE",
+          "durability": "VOLATILE",
+          "depth": 0,
+          "history": "UNKNOWN"
+        }
+      ],
+      "/fmu/in/vehicle_visual_odometry": [
+        {
+          "node": "/px4_odom_bridge",
+          "type": "px4_msgs/msg/VehicleOdometry",
+          "reliability": "BEST_EFFORT",
+          "durability": "VOLATILE",
+          "depth": 0,
+          "history": "UNKNOWN"
+        }
+      ],
+      "/tf_static": [
+        {
+          "node": "/simulator_only_gazebo_camera_to_ros",
+          "type": "tf2_msgs/msg/TFMessage",
+          "reliability": "RELIABLE",
+          "durability": "TRANSIENT_LOCAL",
+          "depth": 0,
+          "history": "UNKNOWN"
+        }
+      ],
+      "/gazebo_hybrid/simulated_estimator/processing_status": [
+        {
+          "node": "/simulator_only_gazebo_camera_to_ros",
+          "type": "diagnostic_msgs/msg/DiagnosticArray",
+          "reliability": "BEST_EFFORT",
+          "durability": "VOLATILE",
+          "depth": 0,
+          "history": "UNKNOWN"
+        }
+      ],
+      "/fmu/out/vehicle_odometry": [
+        {
+          "node": "_CREATED_BY_BARE_DDS_APP_/_CREATED_BY_BARE_DDS_APP_",
+          "type": "px4_msgs/msg/VehicleOdometry",
+          "reliability": "BEST_EFFORT",
+          "durability": "TRANSIENT_LOCAL",
+          "depth": 0,
+          "history": "UNKNOWN"
+        }
+      ],
+      "/fmu/out/vehicle_local_position": [
+        {
+          "node": "_CREATED_BY_BARE_DDS_APP_/_CREATED_BY_BARE_DDS_APP_",
+          "type": "px4_msgs/msg/VehicleLocalPosition",
+          "reliability": "BEST_EFFORT",
+          "durability": "TRANSIENT_LOCAL",
+          "depth": 0,
+          "history": "UNKNOWN"
+        }
+      ],
+      "/fmu/out/estimator_status_flags": [
+        {
+          "node": "_CREATED_BY_BARE_DDS_APP_/_CREATED_BY_BARE_DDS_APP_",
+          "type": "px4_msgs/msg/EstimatorStatusFlags",
+          "reliability": "BEST_EFFORT",
+          "durability": "TRANSIENT_LOCAL",
+          "depth": 0,
+          "history": "UNKNOWN"
+        }
+      ]
+    },
+    "requested_qos": {
+      "sensor": "best_effort/volatile/keep_last=1",
+      "tf_static": "reliable/transient_local/keep_last=16"
+    },
+    "command_graph": [
+      {
+        "expected_owner": null,
+        "endpoints": {
+          "/fmu/in/actuator_motors": [],
+          "/fmu/in/actuator_servos": [],
+          "/fmu/in/goto_setpoint": [],
+          "/fmu/in/manual_control_input": [],
+          "/fmu/in/offboard_control_mode": [],
+          "/fmu/in/trajectory_setpoint": [],
+          "/fmu/in/vehicle_attitude_setpoint": [],
+          "/fmu/in/vehicle_command": [],
+          "/fmu/in/vehicle_command_mode_executor": [],
+          "/fmu/in/vehicle_rates_setpoint": [],
+          "/fmu/in/vehicle_thrust_setpoint": [],
+          "/fmu/in/vehicle_torque_setpoint": []
+        },
+        "issues": []
+      }
+    ],
+    "received_callbacks": {
+      "/clock": 33,
+      "/simulator_only/oak/depth/camera_info": 2,
+      "/gazebo_hybrid/simulated_estimator/odometry": 5,
+      "/gazebo_hybrid/simulated_estimator/healthy": 4,
+      "/fmu/in/vehicle_visual_odometry": 4,
+      "/gazebo_hybrid/simulated_estimator/processing_status": 4,
+      "/fmu/out/vehicle_odometry": 14,
+      "/fmu/out/vehicle_local_position": 13,
+      "/tf_static": 1,
+      "/simulator_only/oak/depth/image": 1
+    },
+    "dds_reported_loss": {},
+    "loss_event_unavailable": [],
+    "observed_rtf": 0.6148241292936333,
+    "transport_clock_evidence": {
+      "/clock": [
+        {
+          "callback_system_ns": 1794132425193486541,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425197205225,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425201250329,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425205178207,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425209432909,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425213447373,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425217526844,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425221157311,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425225149723,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425229483517,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425233081275,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425237390650,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425241394007,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425245172676,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425249137875,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425253516947,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425257389206,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425261991244,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425265916895,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425271681991,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425273538902,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425277469385,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425281316202,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425285074189,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425289321773,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425293244554,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425297194316,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425301159616,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425305254983,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425309664884,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425314053632,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425317548981,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425321409977,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        }
+      ],
+      "/simulator_only/oak/depth/camera_info": [
+        {
+          "callback_system_ns": 1794132425194389660,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425255667482,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        }
+      ],
+      "/gazebo_hybrid/simulated_estimator/odometry": [
+        {
+          "callback_system_ns": 1794132425194818769,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425222752435,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425253995824,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425289911526,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425321992739,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        }
+      ],
+      "/gazebo_hybrid/simulated_estimator/healthy": [
+        {
+          "callback_system_ns": 1794132425195097631,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425205494767,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425254154752,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425305830939,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        }
+      ],
+      "/fmu/in/vehicle_visual_odometry": [
+        {
+          "callback_system_ns": 1794132425195236827,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425222906987,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425254825105,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425290695007,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        }
+      ],
+      "/gazebo_hybrid/simulated_estimator/processing_status": [
+        {
+          "callback_system_ns": 1794132425195419907,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425223124536,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425254496679,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425290854882,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        }
+      ],
+      "/fmu/out/vehicle_odometry": [
+        {
+          "callback_system_ns": 1794132425195786415,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425201728526,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425213964948,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425221902503,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425234007868,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425241996307,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425254908529,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425263620573,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425274382722,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425281915147,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425294611615,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425301793514,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425314572667,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425401975850,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        }
+      ],
+      "/fmu/out/vehicle_local_position": [
+        {
+          "callback_system_ns": 1794132425196318362,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425202064173,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425214352874,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425222298441,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425234414088,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425242399089,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425255287713,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425264079952,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425273985387,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425282339230,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425294254505,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425302236751,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        },
+        {
+          "callback_system_ns": 1794132425315043641,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        }
+      ],
+      "/tf_static": [
+        {
+          "callback_system_ns": 1794132425198636870,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        }
+      ],
+      "/simulator_only/oak/depth/image": [
+        {
+          "callback_system_ns": 1794132425270515461,
+          "message_info": "unavailable",
+          "rmw_received_ns": null,
+          "rmw_source_ns": null,
+          "publication_sequence": null
+        }
+      ]
+    },
+    "process_cpu_percent": 720.2723798233374,
+    "peak_rss_kib": 92848,
+    "gpu": {
+      "status": "unavailable"
+    },
+    "ros_distro": "humble",
+    "rmw": null,
+    "interrupted": false,
+    "fault": "sim_clock_future_or_overload",
+    "observation_error": {
+      "type": "ValueError",
+      "reason": "sim_clock_future_or_overload"
+    },
+    "clock_ingestion": {
+      "deferred": 0,
+      "released": 0,
+      "pending": 0,
+      "audit_complete": true,
+      "audit": [],
+      "failure": {
+        "reason": "sim_clock_future_or_overload",
+        "cause": "source_ahead_of_callback_limit",
+        "topic": "/fmu/out/vehicle_odometry",
+        "source_publish_us": 24024000,
+        "source_sample_us": 24012000,
+        "callback_ros_ns": 23968000000,
+        "callback_wall_ns": 10102389812096,
+        "last_delivered_clock_ns": 23968000000,
+        "mapped_capture_upper_ns": 24024000000,
+        "future_delta_ns": 56000000,
+        "max_wait_ns": 50000000,
+        "capacity": 32,
+        "pending_before_rejection": 0,
+        "pending": []
+      }
+    },
+    "clock_observed": true
+  },
+  "records": [
+    {
+      "sequence": 1,
+      "event": "plan",
+      "strategy": "hybrid_shadow",
+      "mission_state": "PREFLIGHT",
+      "reasoning_strategy": "hybrid_information_gain",
+      "strategy_identity": "bf71c8e7eb20e06ec8e8ff92d7aecaee891fe2ddf93bf4c4f86142d9082daab5",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "diagnostic",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.4,
+        0.0,
+        0.8
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "time_ns": 23840000000,
+      "tick_ns": 23840000000,
+      "reason": "missing_synchronized_depth",
+      "completion_wall_ns": null
+    },
+    {
+      "sequence": 2,
+      "event": "plan",
+      "strategy": "hybrid_shadow",
+      "mission_state": "PREFLIGHT",
+      "reasoning_strategy": "hybrid_information_gain",
+      "strategy_identity": "bf71c8e7eb20e06ec8e8ff92d7aecaee891fe2ddf93bf4c4f86142d9082daab5",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "diagnostic",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.4,
+        0.0,
+        0.8
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "time_ns": 23968000000,
+      "tick_ns": 23968000000,
+      "reason": "awaiting_capture_pose",
+      "completion_wall_ns": null
+    }
+  ],
+  "timing": {
+    "depth_normalization": {
+      "p50_ms": 0.558398,
+      "p95_ms": 0.558398,
+      "p99_ms": 0.558398,
+      "samples": 1,
+      "max_ms": 0.558398
+    },
+    "metric_apply": {
+      "p50_ms": 0.434171,
+      "p95_ms": 0.434171,
+      "p99_ms": 0.434171,
+      "samples": 1,
+      "max_ms": 0.434171
+    },
+    "metric_prepare": {
+      "p50_ms": 68.213808,
+      "p95_ms": 68.213808,
+      "p99_ms": 68.213808,
+      "samples": 1,
+      "max_ms": 68.213808
+    },
+    "pose_alignment": {
+      "p50_ms": 0.017687,
+      "p95_ms": 0.017687,
+      "p99_ms": 0.017687,
+      "samples": 1,
+      "max_ms": 0.017687
+    },
+    "worldstate_update": {
+      "p50_ms": 9.585695,
+      "p95_ms": 9.585695,
+      "p99_ms": 9.585695,
+      "samples": 1,
+      "max_ms": 9.585695
+    }
+  },
+  "status": {
+    "strategy": "hybrid_shadow",
+    "mission_state": "PREFLIGHT",
+    "reasoning_strategy": "hybrid_information_gain",
+    "strategy_identity": "bf71c8e7eb20e06ec8e8ff92d7aecaee891fe2ddf93bf4c4f86142d9082daab5",
+    "predictor_fallback": null,
+    "mission_reason": "existing_mission_owner",
+    "stage_id": "diagnostic",
+    "stage_kind": "waypoint",
+    "goal_m": [
+      0.4,
+      0.0,
+      0.8
+    ],
+    "goal_slot": 0,
+    "landing_request": null
+  },
+  "total_records": 2
+}

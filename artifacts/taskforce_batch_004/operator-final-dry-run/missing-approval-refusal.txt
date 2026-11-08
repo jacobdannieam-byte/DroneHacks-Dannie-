@@ -1,0 +1,1 @@
+calibration_operator_capture: Exact owner, approval, authorization, profile, contract and operator required

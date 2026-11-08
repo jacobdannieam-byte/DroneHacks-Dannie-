@@ -1,0 +1,119 @@
+{
+  "scope": "DISARMED_SIMULATOR_DIAGNOSTIC_ONLY_NOT_MOTION_REVIEWED",
+  "spatial": {
+    "record_clock": "ros_sim",
+    "rectified": true,
+    "reference": {
+      "frame_id": "odom",
+      "clock_id": "gazebo_sim",
+      "epoch": 0,
+      "body_frame": "base_link"
+    },
+    "position_error_m": 0.03,
+    "angle_error_rad": 0.02,
+    "calibration": {
+      "camera_frame": "oak_depth_optical_frame",
+      "body_frame": "base_link",
+      "width": 512,
+      "height": 320,
+      "K": [
+        317.25329318784304,
+        317.25329318784304,
+        256.0,
+        160.0
+      ],
+      "R_body_optical": [
+        [
+          0.0,
+          0.0,
+          1.0
+        ],
+        [
+          -1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0
+        ]
+      ],
+      "t_body_optical_m": [
+        0.131,
+        0.0,
+        0.0
+      ],
+      "depth_error_m": 0.015,
+      "calibration_id": "native-probe-b09e88d835b0384e",
+      "validated_pixel_footprint": true,
+      "extrinsic_position_error_m": 0.0,
+      "extrinsic_angle_error_rad": 0.0
+    }
+  },
+  "clock": {
+    "source_clock_id": "px4_sim",
+    "ros_clock_id": "gazebo_sim",
+    "offset_ns": 0,
+    "max_error_ns": 0,
+    "valid_from_ns": 8216000000,
+    "valid_until_ns": 198216000000,
+    "evidence_id": "sim-identity-clock-probe-b09e88d835b0384e"
+  },
+  "ned_frame": "local_ned",
+  "alignment": {
+    "time_origin_ns": 0,
+    "map_from_enu_yaw_rad": -1.5707963267948966,
+    "ned_origin_in_map_m": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "position_error_m": 0.1,
+    "angle_error_rad": 0.03,
+    "provenance": "diagnostic-authored-simulator-axes",
+    "estimator_reset_counter": 6
+  },
+  "vehicle": {
+    "radius_m": 0.35,
+    "state_position_error_m": 0.5246497003106825,
+    "tracking_error_m": 0.1
+  },
+  "objective_m": [
+    0.4,
+    0.0,
+    0.8
+  ],
+  "px4_topics": {
+    "vehicle_odometry": "/fmu/out/vehicle_odometry",
+    "vehicle_local_position": "/fmu/out/vehicle_local_position",
+    "estimator_status_flags": "/fmu/out/estimator_status_flags"
+  },
+  "ev_reset_counter": 0,
+  "local_reset_counters": [
+    2,
+    1,
+    1,
+    1,
+    1
+  ],
+  "tracking_source": "simulated_estimator",
+  "mission_goal": {
+    "intent": "investigate_candidate_passage",
+    "target_entity_id": null
+  },
+  "diagnostic_assumptions": [
+    "Pose/depth/TF uncertainty and identity clock are sensitivity assumptions.",
+    "Observed covariance is not a worst-case physical error bound.",
+    "No free-space bubble; reference-map control and background registration disabled.",
+    "Use only for current captured reset epoch; changed reset markers must refuse."
+  ],
+  "strategy": {
+    "identifier": "hybrid_learned_ranker",
+    "ranker_checkpoint": "artifacts/goal_comparison/models/goal_mlp_11.json",
+    "ranker_sha256": "59328afdc2a5c0042b4f4699a52cc7d24ac5af92ca148b8bd9dbc61f6311240f",
+    "predictor_checkpoint": null,
+    "predictor_sha256": null,
+    "schema_version": 1
+  }
+}

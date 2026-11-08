@@ -1,0 +1,89 @@
+{
+  "passed": true,
+  "missing_or_not_advancing": [],
+  "clock_duration_ns": 126280000000,
+  "minimum_duration_ns": 120000000000,
+  "integrity": "ok",
+  "topics": {
+    "/clock": {
+      "count": 31572,
+      "first_ns": 7556000000,
+      "last_ns": 133836000000
+    },
+    "/gazebo_hybrid/simulated_estimator/odometry": {
+      "count": 3789,
+      "first_ns": 7568000000,
+      "last_ns": 133836000000
+    },
+    "/fmu/in/vehicle_visual_odometry": {
+      "count": 3788,
+      "first_ns": 7600000000,
+      "last_ns": 133836000000
+    },
+    "/fmu/out/distance_sensor": {
+      "count": 631,
+      "first_ns": 7652000000,
+      "last_ns": 133652000000
+    },
+    "/gazebo_hybrid/simulated_estimator/health_diagnostics": {
+      "count": 2525,
+      "first_ns": 7600000000,
+      "last_ns": 133800000000
+    },
+    "/tf_static": {
+      "count": 1,
+      "first_ns": 7588000000,
+      "last_ns": 7588000000
+    },
+    "/gazebo_hybrid/simulated_estimator/healthy": {
+      "count": 2525,
+      "first_ns": 7600000000,
+      "last_ns": 133800000000
+    },
+    "/gazebo_hybrid/simulated_estimator/processing_status": {
+      "count": 3788,
+      "first_ns": 7600000000,
+      "last_ns": 133836000000
+    },
+    "/simulator_only/oak/depth/camera_info": {
+      "count": 1263,
+      "first_ns": 7600000000,
+      "last_ns": 133800000000
+    },
+    "/simulator_only/oak/depth/image": {
+      "count": 1263,
+      "first_ns": 7624000000,
+      "last_ns": 133828000000
+    },
+    "/fmu/out/vehicle_odometry": {
+      "count": 12595,
+      "first_ns": 7696000000,
+      "last_ns": 133836000000
+    },
+    "/fmu/out/vehicle_local_position": {
+      "count": 12597,
+      "first_ns": 7696000000,
+      "last_ns": 133836000000
+    },
+    "/fmu/out/vehicle_land_detected": {
+      "count": 126,
+      "first_ns": 8420000000,
+      "last_ns": 133476000000
+    },
+    "/fmu/out/vehicle_status_v1": {
+      "count": 250,
+      "first_ns": 8160000000,
+      "last_ns": 133700000000
+    },
+    "/fmu/out/vehicle_attitude": {
+      "count": 12604,
+      "first_ns": 7708000000,
+      "last_ns": 133836000000
+    },
+    "/fmu/out/estimator_status_flags": {
+      "count": 126,
+      "first_ns": 8068000000,
+      "last_ns": 133532000000
+    }
+  }
+}

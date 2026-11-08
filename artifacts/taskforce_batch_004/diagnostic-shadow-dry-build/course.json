@@ -1,0 +1,34 @@
+{
+  "reference": {
+    "frame_id": "odom",
+    "epoch": 0,
+    "clock_id": "gazebo_sim"
+  },
+  "route_review": "Disarmed hypothetical objective only; no flight approval",
+  "stages": [
+    {
+      "stage_id": "diagnostic",
+      "kind": "waypoint",
+      "position_m": [
+        0.4,
+        0.0,
+        0.8
+      ],
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true,
+      "timeout_s": 30
+    },
+    {
+      "stage_id": "unused_landing",
+      "kind": "landing",
+      "position_m": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    }
+  ]
+}

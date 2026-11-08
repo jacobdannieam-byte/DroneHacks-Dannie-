@@ -1,0 +1,113 @@
+{
+  "scope": "Review package only; no authorization artifact and no moving trial",
+  "final_repository_source": "f992f008ac20a7ab05555539ab60c42316b061cf",
+  "tests": {
+    "passed": 751,
+    "seconds": 35.91
+  },
+  "trials": {
+    "C1": {
+      "revision": "8a3d3f3ed0df1408e1665d45cb0d553b9a162ec5",
+      "image_sha256": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1",
+      "world_sha256": "d64be312bb5479c529acf2dd6ba559f50d4bf2dd224fbb31cd69be1b5f93dd07",
+      "vehicle_sha256": "f8cc362929337eb37e8649632ce3426d86a029a80932cee06a1a80f2d1e169f3",
+      "profile_sha256": "cb0f11b36c8591eacfbdc832b8d080d70c4e6858931d2a7637764be6255ea76c",
+      "geometry_evidence_sha256": "6582616dd24cb11488196bfc59bcd4476c685508a8866b410b91d334728fdaf3",
+      "ros_domain_id": 54,
+      "archive": "taskforce-native-004/inputs/shadow-diagnostics.tar",
+      "archive_sha256": "32083fbeb699b8b74687ca1ffb8f6889fd6e5c63d82bf71c65085d1bdb594106",
+      "recording_contract_sha256": "4a3176d59aaba5901a4e835fcf3951d156e0104ccde5791a6d01f1af703dbbc9",
+      "native_disarmed_evidence": "taskforce-native-004/c1-check",
+      "approval_status": "not_authorized; ready for separate user review",
+      "operator": "Codex supervised by requesting user in this chat; isolated simulator only"
+    },
+    "R1": {
+      "revision": "fde3265ee151ce41ebf3fada16a20cc49b2b169e",
+      "image_sha256": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1",
+      "world_sha256": "d64be312bb5479c529acf2dd6ba559f50d4bf2dd224fbb31cd69be1b5f93dd07",
+      "vehicle_sha256": "f8cc362929337eb37e8649632ce3426d86a029a80932cee06a1a80f2d1e169f3",
+      "profile_sha256": "d7f17360b5c6e437fd25a406aece54ab3d09534c350f8a66facd266b368cf4cd",
+      "geometry_evidence_sha256": "6582616dd24cb11488196bfc59bcd4476c685508a8866b410b91d334728fdaf3",
+      "ros_domain_id": 55,
+      "archive": "taskforce-native-004/inputs/recovery-candidate.tar",
+      "archive_sha256": "55bf99fc2fcbb4a539995e9ef92ab69721709d0431c4a4c2db1f655c913b036d",
+      "recording_contract_sha256": "2e8211d0c8a498149dd5af4beea8b026e5174fdfd4fe228cde81fb22e4b57bbb",
+      "native_disarmed_evidence": "taskforce-native-004/r1-check",
+      "approval_status": "not_authorized; ready for separate user review",
+      "operator": "Codex supervised by requesting user in this chat; isolated simulator only",
+      "prerequisite": "C1 execution and independent result review; separate R1 approval",
+      "helper_source_revision": "f992f008ac20a7ab05555539ab60c42316b061cf",
+      "helper_overlay": "taskforce-native-004/inputs/reviewed_operator_capture.py",
+      "helper_sha256": "3b35d95ec380c756d23bd169c2f83c1b31e374de1cb75a6dce22b81999e1986f"
+    }
+  },
+  "native_shadow_source": "497dacd9602b74442f63f0e5223e1af29cb40d26",
+  "policy_activation": false,
+  "map_control": false,
+  "background_registration": false,
+  "raw_disarmed_audit": {
+    "scope": "raw native disarmed state and absence of control publication; no flight qualification",
+    "runs": [
+      {
+        "run": "shadow",
+        "raw_bag_sha256": "e94fbbd51e80be72fc7a7fd7aae80f228cdb83c1c8a7d5899306a0a2b7426703",
+        "native_status_count": 250,
+        "native_arming_states": [
+          1
+        ],
+        "control_message_counts": {},
+        "result": "PASS"
+      },
+      {
+        "run": "shadow-diagnostics",
+        "raw_bag_sha256": "7b42e23b9f4fd51bfe385c171d66302b55fbc9ed9eeb2f38e9d6a215d6d875a0",
+        "native_status_count": 198,
+        "native_arming_states": [
+          1
+        ],
+        "control_message_counts": {},
+        "result": "PASS"
+      },
+      {
+        "run": "shadow-clock-service",
+        "raw_bag_sha256": "5bfc1364cf9147acb2551ee2f8c242b9acf55cfb28ec45001189ebade8e01792",
+        "native_status_count": 200,
+        "native_arming_states": [
+          1
+        ],
+        "control_message_counts": {},
+        "result": "PASS"
+      },
+      {
+        "run": "c1-check",
+        "raw_bag_sha256": "3a6e0051569c53d619a28a291a1cf8949990304c98be2188b7f9e2fbde24877b",
+        "native_status_count": 86,
+        "native_arming_states": [
+          1
+        ],
+        "control_message_counts": {},
+        "result": "PASS"
+      },
+      {
+        "run": "r1-check",
+        "raw_bag_sha256": "33f3d4c0245ecbee0a9b54ce82b3e99f1f8171abe5d2c60d1a91c126a154e1df",
+        "native_status_count": 89,
+        "native_arming_states": [
+          1
+        ],
+        "control_message_counts": {},
+        "result": "PASS"
+      }
+    ]
+  },
+  "independent_review": "artifacts/taskforce_batch_004/independent-review.md",
+  "flight_plan": "docs/C1_BRAKING_RECOVERY_PLAN.md",
+  "remaining_policy_gates": [
+    "native whole-body observed clearance",
+    "reviewed uncertainty bounds",
+    "measured stopping and repeatability",
+    "actual native expiry/recovery",
+    "exact active-deployment stopping-evidence binding",
+    "H3 owner timing under spatial load"
+  ]
+}
