@@ -61,13 +61,15 @@ class ShadowLoop:
     """Single-consumer observation loop. Missed ticks are skipped, never queued."""
 
     def __init__(self, profile, *, rate_hz=5, budget_s=.025, monotonic=perf_counter,
-                 completion_clock=perf_counter_ns, timings=None, measure_receipt_wall=False):
+                 completion_clock=perf_counter_ns, timings=None, measure_receipt_wall=False,
+                 retain_aligned_depth=False):
         if type(rate_hz) not in (int, float) or not 1 <= rate_hz <= 20:
             raise ValueError("shadow rate must be between 1 and 20 Hz")
         if type(budget_s) not in (int, float) or not 0 < budget_s <= .05:
             raise ValueError("invalid shadow planner budget")
         self.timings = timings if timings is not None else Timings()
-        self.replay = HybridBagReplay(profile, continuous=True, timings=self.timings)
+        self.replay = HybridBagReplay(profile, continuous=True, timings=self.timings,
+                                      retain_aligned_depth=retain_aligned_depth)
         self.period_ns = round(NS / rate_hz)
         self.budget_s = budget_s
         self.monotonic = monotonic

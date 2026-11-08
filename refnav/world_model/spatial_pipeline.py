@@ -194,6 +194,11 @@ class SpatialWorld:
         with self._lock:
             return self._ready
 
+    @property
+    def last_pose_loss_ns(self):
+        with self._lock:
+            return self._last_loss
+
     def snapshot(self, *, now_ns, immutable_semantic=False):
         with self._lock:
             if not stamp_ok(now_ns) or (self._now is not None and now_ns < self._now):

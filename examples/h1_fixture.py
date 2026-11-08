@@ -99,7 +99,7 @@ def setup(replay):
                 p=(fx, 0, cx, 0, 0, fy, cy, 0, 0, 0, 1, 0)), 90 * MS)
 
 
-def tick(replay, t, x, *, with_depth=True, blocked=False):
+def tick(replay, t, x, *, with_depth=True, blocked=False, depth_factory=depth):
     replay.feed("/clock", clock(t), t * MS)
     replay.feed(HEALTH, Msg(data=True), t * MS)
     replay.feed("/fmu/in/vehicle_visual_odometry", Msg(reset_counter=7), t * MS)
@@ -114,7 +114,7 @@ def tick(replay, t, x, *, with_depth=True, blocked=False):
     replay.feed(PX4_TOPICS["vehicle_odometry"], odometry(t, x), received)
     replay.feed(TRACKING, tracking(t), received)
     if with_depth:
-        replay.feed(DEPTH, depth(t, x, cal=replay.profile.calibration, blocked=blocked), received)
+        replay.feed(DEPTH, depth_factory(t, x, cal=replay.profile.calibration, blocked=blocked), received)
     replay.feed(VIO, pose(t, x), (t + 3) * MS)
 
 

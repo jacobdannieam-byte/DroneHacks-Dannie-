@@ -85,10 +85,12 @@ class RecordedSpatialReplay:
 
     topics = TOPICS
 
-    def __init__(self, profile, *, timings=None):
+    def __init__(self, profile, *, timings=None, retain_aligned_depth=False):
         self.profile = profile
         self.timings = timings
         self.world = SpatialWorld(profile.reference, profile.calibration, timings=timings)
+        self._retain_aligned_depth = retain_aligned_depth
+        self.aligned_depth = None
         self.rows = []
         self.now = self._clock = self._health = self._ev_reset = self._ev_received = None
         self._pose_capture = self._pending = None
@@ -169,7 +171,8 @@ class RecordedSpatialReplay:
         if len(self.rows) >= 2048:
             raise ValueError("bag exceeds the 2048-depth-frame replay budget")
         self._pending = None
-        result = self.world.process(frame, now_ns=self.now)
+        result = self.world.process(frame, now_ns=self.now, retain_aligned_depth=self._retain_aligned_depth)
+        self.aligned_depth = result.aligned_depth
         self.rows.append({"capture_ns": frame.capture_ns, "received_ns": frame.received_ns,
                           "processed_ns": self.now, "accepted": result.accepted, "reason": result.reason,
                           "pose_bracket_ns": result.pose_bracket_ns, "semantic_events": result.semantic_events})
