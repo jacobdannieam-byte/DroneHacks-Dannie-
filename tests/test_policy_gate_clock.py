@@ -40,3 +40,36 @@ def test_publication_stamp_also_waits_and_audit_is_explicit():
     assert f.accept('/fmu/out/vehicle_odometry',msg,100000000,0)==[]
     assert len(f.accept('/clock',clock(104000000),104000000,4000000))==2
     assert f.report()['audit_complete'] and f.report()['released']==1
+
+
+def test_failed_native_future_stamp_is_retained_after_close_without_recovery():
+    f = fence()
+    f.accept('/clock', clock(100_000_000), 100_000_000, 900_000_000)
+    msg = NS(timestamp_sample=149_000, timestamp=151_000)
+    with pytest.raises(ValueError, match='sim_clock_future_or_overload'):
+        f.accept('/fmu/out/vehicle_odometry', msg, 100_000_000, 901_000_000)
+    f.close()
+    failure = f.report()['failure']
+    assert failure['cause'] == 'source_ahead_of_callback_limit'
+    assert failure['source_sample_us'] == 149_000
+    assert failure['source_publish_us'] == 151_000
+    assert failure['mapped_capture_upper_ns'] == 151_000_000
+    assert failure['callback_ros_ns'] == failure['last_delivered_clock_ns'] == 100_000_000
+    assert failure['callback_wall_ns'] == 901_000_000
+    assert failure['future_delta_ns'] == 51_000_000
+    with pytest.raises(ValueError):
+        f.accept('/clock', clock(151_000_000), 151_000_000, 902_000_000)
+    assert f.report()['failure'] == failure
+
+
+def test_overload_report_retains_pending_evidence_and_distinguishes_cause():
+    f = fence()
+    for _ in range(32):
+        f.accept('/fmu/out/vehicle_odometry', NS(timestamp_sample=104000), 100_000_000, 0)
+    with pytest.raises(ValueError):
+        f.accept('/fmu/out/vehicle_odometry', NS(timestamp_sample=104000), 100_000_000, 1)
+    failure = f.report()['failure']
+    assert failure['cause'] == 'pending_capacity_exceeded'
+    assert failure['pending_before_rejection'] == len(failure['pending']) == 32
+    assert failure['future_delta_ns'] == 4_000_000
+    assert not f.pending

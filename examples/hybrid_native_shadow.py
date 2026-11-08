@@ -106,6 +106,7 @@ def run(loop, *, seconds, report_tick):
         last_graph = 0
         graphs = []
         interrupted = False
+        observation_error = None
         try:
             while rclpy.ok() and perf_counter_ns() - start < seconds * 1e9:
                 rclpy.spin_once(node, timeout_sec=.01)
@@ -127,6 +128,10 @@ def run(loop, *, seconds, report_tick):
                     break
         except (KeyboardInterrupt, ExternalShutdownException):
             interrupted = True
+        except ValueError as error:
+            # Preserve a measured input rejection instead of losing the entire
+            # native report. Never resume this observation epoch after a fault.
+            observation_error = {'type': type(error).__name__, 'reason': str(error)}
         finally:
             loop.close()
 
@@ -152,7 +157,10 @@ def run(loop, *, seconds, report_tick):
                 "peak_rss_kib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
                 "gpu": _gpu_snapshot(), "ros_distro": os.environ.get("ROS_DISTRO"),
                 "rmw": os.environ.get("RMW_IMPLEMENTATION"), "interrupted": interrupted,
-                "fault": loop.fault, "clock_observed": clock_seen}
+                "fault": loop.fault or (observation_error['reason'] if observation_error else None),
+                "observation_error": observation_error,
+                "clock_ingestion": loop.clock_fence.report() if getattr(loop, 'clock_fence', None) else None,
+                "clock_observed": clock_seen}
     finally:
         loop.close()
         if node is not None:

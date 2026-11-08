@@ -63,7 +63,8 @@ class HybridRuntime:
 
     @property
     def fault(self):
-        return self.loop.fault
+        failure = self.clock_fence.failure if self.clock_fence else None
+        return self.loop.fault or (failure['reason'] if failure else None)
 
     def feed(self, topic, message, received_ns, wall_ns, *, receipt_wall_ns=None):
         canonical = topic if self.adapter is None else self.adapter.canonical(topic)
