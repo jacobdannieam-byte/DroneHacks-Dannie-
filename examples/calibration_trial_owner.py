@@ -388,6 +388,13 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
             now_ns, wall_ns = clocks()
             if wall_ns < next_tick:
                 continue
+            if getattr(driver, '_diagnostic_motion_unbounded', False):
+                # Drain the depth-one native subscriptions after inference. A
+                # single spin can select a camera/clock callback and leave a
+                # newer position queued while the next rollout starts.
+                for _ in range(16):
+                    rclpy.spin_once(node, timeout_sec=0.)
+                now_ns, wall_ns = clocks()
             next_tick = wall_ns + 50_000_000
             observation = observe(now_ns, wall_ns)
             if observation is not None and hasattr(driver,'prepare_section'):

@@ -157,6 +157,13 @@ class ModelFlight(CalibrationTrial):
                 rate = math.atan2(math.sin(obs.heading_rad-heading), math.cos(obs.heading_rad-heading)) / ((obs.position_stamp_ns-stamp)/NS)
         self.prior_heading = obs.heading_rad, obs.position_stamp_ns
         state = DroneState(REFERENCE, obs.position_stamp_ns / NS, obs.position, obs.velocity, obs.heading_rad, rate)
+        if (getattr(self, '_diagnostic_motion_unbounded', False)
+                and ros_ns - obs.position_stamp_ns > 100_000_000):
+            # No command based on an old state. The native input watchdog still
+            # stops the owner at 300 ms; a short callback delay permits replanning.
+            self.log.write(dict(kind='input_wait', reason='await_fresh_model_state',
+                ros_ns=ros_ns, position_stamp_ns=obs.position_stamp_ns, waypoint=self.waypoint))
+            return None
         try:
             command, decision = self.selector.choose(state, goal, ros_ns)
             self.log.write(dict(decision, waypoint=self.waypoint, phase='model_transit'))
