@@ -1,0 +1,13 @@
+{
+  "raw_bag_local_path": "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-s0-experiment-009\\attempt-002\\observations\\observations_0.db3",
+  "raw_bag_sha256": "473d50e74a15b574de34ffda83b0dc3a23215e7a8e75c4acc47daf42c3a1e877",
+  "result": "profile construction failed; no owner started",
+  "files": {
+    "disarmed-1.json": "ffbb8fa25b48795e8f694915537bcb3c0b006dbf5a3fdec3d08ef4d52ab62a32",
+    "ogre2.log": "622703107df4477c537368d0054dc339bdd2d9031c17501966c9b50084537312",
+    "profile-build.txt": "330a9c82ce0f9b42134eb8b94203691ff7e31019ff5a73fa57399edde43cf7b8",
+    "recording_final.json": "c33a9ce9c4473e44795199dab127102fb141e7f191fd292abb3a5b068acdbd4b",
+    "settled-native.json": "d1c0b453791104213447b48bb4618ea412a42adb846c2575208f24fe6245e54e",
+    "source-manifest.json": "518fbd3a00c4d5447b9f68baca68cf99f8ebbeb89770f6b86fe22c76b80259b3"
+  }
+}

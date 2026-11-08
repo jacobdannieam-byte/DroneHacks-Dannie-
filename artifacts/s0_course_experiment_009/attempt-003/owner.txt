@@ -1,0 +1,37 @@
+[INFO] [1794164786.192140879] [refnav]: route 0 legs; depth /simulator_only/oak/depth/image; health /gazebo_hybrid/simulated_estimator/healthy; sim time True
+[INFO] [1794164786.912760010] [refnav]: calibration from TF: base_link <- oak_depth_optical_frame t=(0.131,0.000,0.000) optical axis 0.0 deg off forward
+[WARN] [1794164786.913877819] [refnav]: depth frame not used (1x): no PX4 attitude yet
+[WARN] [1794164791.909639428] [refnav]: depth frame not used (10x): no PX4 attitude yet
+[INFO] [1794164796.200979061] [refnav]: not ready after 10 s (gives up at 300 s): waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794164806.252200648] [refnav]: not ready after 20 s (gives up at 300 s): waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794164816.252031457] [refnav]: not ready after 30 s (gives up at 300 s): waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794164826.426804045] [refnav]: not ready after 40 s (gives up at 300 s): waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794164836.494355280] [refnav]: not ready after 50 s (gives up at 300 s): waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794164843.243155964] [refnav]: wait -> arm
+[INFO] [1794164843.294214385] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794164843.342961479] [refnav]: wait -> arm
+[INFO] [1794164843.394898596] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794164843.443028021] [refnav]: wait -> arm
+[INFO] [1794164843.542346356] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794164843.743118983] [refnav]: wait -> arm
+[INFO] [1794164843.794829301] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794164843.842393710] [refnav]: wait -> arm
+[INFO] [1794164843.894931234] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794164843.942856611] [refnav]: wait -> arm
+[INFO] [1794164844.043739951] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794164844.242956804] [refnav]: wait -> arm
+[INFO] [1794164844.342756454] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794164846.494240332] [refnav]: not ready after 2 s (gives up at 300 s): waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794164848.042899282] [refnav]: wait -> arm
+[INFO] [1794164848.142749294] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794164848.342411882] [refnav]: wait -> arm
+[INFO] [1794164848.394212488] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794164848.443285569] [refnav]: wait -> arm
+[INFO] [1794164848.542876986] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794164848.743069548] [refnav]: wait -> arm
+[INFO] [1794164848.794074363] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794164848.842361194] [refnav]: wait -> arm
+[INFO] [1794164848.942104006] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794164849.042698562] [refnav]: wait -> arm
+[INFO] [1794164849.142334542] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794164856.492646729] [refnav]: not ready after 7 s (gives up at 300 s): waiting for 3 s of continuously usable depth

@@ -1,0 +1,145 @@
+{
+  "scope": "s0_participant_map_unqualified_sitl",
+  "qualification": false,
+  "obstacle_backend": "nominal_participant_map_with_live_occupied_veto",
+  "identity": [
+    "s0_participant_map_unqualified_sitl",
+    "74a3b67ed942292d880c79cc43eb2d0740466d0c27bfa42cb5045210e05f9ccf",
+    "4df26a935d8f39a1ff40d8c8f03eb839814a5051f6dcabe400bc3bd70b7defb7",
+    "1c4800182a0bb9014ada9a22df7b22eeb2c0493d391f10f4ff7119a721a23d38"
+  ],
+  "records": [
+    {
+      "sequence": 1,
+      "event": "owner_phase",
+      "strategy": "hybrid_sitl",
+      "mission_state": "PREFLIGHT",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "time_ns": 24076000000,
+      "owner_phase": "wait",
+      "result": null,
+      "armed": null,
+      "nav_state": null,
+      "landed": null
+    },
+    {
+      "sequence": 2,
+      "event": "owner_phase",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "time_ns": 27500000000,
+      "owner_phase": "arm",
+      "result": null,
+      "armed": false,
+      "nav_state": 4,
+      "landed": true
+    },
+    {
+      "sequence": 3,
+      "event": "owner_phase",
+      "strategy": "hybrid_sitl",
+      "mission_state": "AUTHORITY_LOST",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "owner_yielded",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": "participant_enclosure_intersection",
+      "time_ns": 27552000000,
+      "owner_phase": "done",
+      "result": "yielded: participant_enclosure_intersection",
+      "armed": false,
+      "nav_state": 4,
+      "landed": true
+    }
+  ],
+  "total_records": 3,
+  "status": {
+    "strategy": "hybrid_sitl",
+    "mission_state": "AUTHORITY_LOST",
+    "reasoning_strategy": "hybrid_existing",
+    "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+    "predictor_fallback": null,
+    "mission_reason": "owner_yielded",
+    "stage_id": "course_00",
+    "stage_kind": "waypoint",
+    "goal_m": [
+      0.0,
+      0.0,
+      0.76
+    ],
+    "goal_slot": 0,
+    "landing_request": "participant_enclosure_intersection"
+  },
+  "last_issue": null,
+  "timing": {
+    "depth_normalization": {
+      "p50_ms": 0.164586,
+      "p95_ms": 0.3149702499999999,
+      "p99_ms": 0.5963572099999997,
+      "samples": 22,
+      "max_ms": 0.66971
+    },
+    "metric_apply": {
+      "p50_ms": 0.2303875,
+      "p95_ms": 0.68677235,
+      "p99_ms": 1.3344259399999994,
+      "samples": 22,
+      "max_ms": 1.506266
+    },
+    "metric_prepare": {
+      "p50_ms": 19.027245,
+      "p95_ms": 26.20838645,
+      "p99_ms": 28.77324997,
+      "samples": 22,
+      "max_ms": 29.418652
+    },
+    "pose_alignment": {
+      "p50_ms": 0.032778,
+      "p95_ms": 0.06525615,
+      "p99_ms": 0.06740775,
+      "samples": 22,
+      "max_ms": 0.067959
+    },
+    "worldstate_update": {
+      "p50_ms": 5.335974,
+      "p95_ms": 10.029681499999999,
+      "p99_ms": 12.482965069999997,
+      "samples": 22,
+      "max_ms": 13.120784
+    }
+  },
+  "exit_code": 1
+}

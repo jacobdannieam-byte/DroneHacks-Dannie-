@@ -1,0 +1,134 @@
+{
+  "scope": "independent pre-arm S0 priming oscillation audit; no flight qualification",
+  "raw_sha256": "aa46d38e5b1078880bbb9b7f0591ab2dd21085c7e17ec86512bfedb5ab510fee",
+  "status_count": 284,
+  "arming_states": [
+    1
+  ],
+  "control_topic_counts": {
+    "/fmu/in/vehicle_command": 0,
+    "/fmu/in/trajectory_setpoint": 20,
+    "/fmu/in/offboard_control_mode": 20
+  },
+  "native_near_failure": {
+    "receipt_ns": 115004000000,
+    "source_us": 115000000,
+    "position_ned_m": [
+      0.0004164187703281641,
+      -0.0011324150254949927,
+      0.016469884663820267
+    ],
+    "velocity_ned_mps": [
+      0.0006127211963757873,
+      0.00019579118816182017,
+      0.0035440525971353054
+    ]
+  },
+  "odom_near_failure": {
+    "receipt_ns": 115000000000,
+    "source_ns": 114936000000,
+    "position_m": [
+      0.00023029945985546265,
+      -0.0059715669126108074,
+      -0.0009549964619697828
+    ]
+  },
+  "assumed_ned_to_odom_m": [
+    0.0004164187703281641,
+    0.0011324150254949927,
+    -0.016469884663820267
+  ],
+  "measured_odom_minus_assumed_m": [
+    -0.00018611931047270145,
+    -0.0071039819381058,
+    0.015514888201850483
+  ],
+  "all_native_position_ranges": {
+    "x": [
+      -0.003393713152036071,
+      0.004095703363418579
+    ],
+    "y": [
+      -0.004467954393476248,
+      0.004821212030947208
+    ],
+    "z": [
+      -0.09146983176469803,
+      0.027274832129478455
+    ]
+  },
+  "all_odom_position_ranges": {
+    "x": [
+      -0.019189310703645733,
+      0.019658889411832033
+    ],
+    "y": [
+      -0.018321248005391578,
+      0.01875817483633183
+    ],
+    "z": [
+      -0.0177440256988535,
+      0.019667773543788545
+    ]
+  },
+  "source_receipt_timing": {
+    "/fmu/out/vehicle_local_position": {
+      "source_minus_bag_receipt_ns": [
+        -20000000,
+        32000000
+      ],
+      "future_count": 200,
+      "source_gap_us": [
+        4000,
+        44000
+      ]
+    },
+    "/fmu/out/vehicle_status_v1": {
+      "source_minus_bag_receipt_ns": [
+        0,
+        4000000
+      ],
+      "future_count": 12,
+      "source_gap_us": [
+        24000,
+        508000
+      ]
+    },
+    "/fmu/in/trajectory_setpoint": {
+      "source_minus_bag_receipt_ns": [
+        -4000000,
+        -4000000
+      ],
+      "future_count": 0,
+      "source_gap_us": [
+        52000,
+        3748000
+      ]
+    },
+    "/fmu/in/offboard_control_mode": {
+      "source_minus_bag_receipt_ns": [
+        -4000000,
+        -4000000
+      ],
+      "future_count": 0,
+      "source_gap_us": [
+        52000,
+        3748000
+      ]
+    }
+  },
+  "external_position_ranges": {
+    "course_x_metres": [
+      -2.5146,
+      -2.5146
+    ],
+    "course_y_metres": [
+      0.9144,
+      0.9144
+    ],
+    "height_metres": [
+      -0.0,
+      -0.0
+    ]
+  }
+}

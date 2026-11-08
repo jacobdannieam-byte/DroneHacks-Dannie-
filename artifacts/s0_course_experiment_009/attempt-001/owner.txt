@@ -1,0 +1,5 @@
+[INFO] [1794164207.961481395] [refnav]: route 0 legs; depth /simulator_only/oak/depth/image; health /gazebo_hybrid/simulated_estimator/healthy; sim time True
+[INFO] [1794164208.093682873] [refnav]: calibration from TF: base_link <- oak_depth_optical_frame t=(0.131,0.000,0.000) optical axis 0.0 deg off forward
+[INFO] [1794164211.385704671] [refnav]: wait -> arm
+[WARN] [1794164211.387277574] [refnav]: publication refused: participant_enclosure_intersection
+[INFO] [1794164211.437886619] [refnav]: mission done: yielded: participant_enclosure_intersection

@@ -5,3 +5,4 @@ artifacts/strategy_comparison/** -text
 artifacts/taskforce_batch_008/** -text
 artifacts/calibration_c1_020_001/** -text
 examples/run_recorded_strategy_inventory.sh text eol=lf
+artifacts/s0_course_experiment_009/** -text

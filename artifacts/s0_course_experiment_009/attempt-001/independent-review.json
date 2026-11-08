@@ -1,0 +1,89 @@
+{
+  "scope": "independent pre-arm S0 refusal audit; no flight qualification",
+  "raw_sha256": "d27e5c9193565470b342849a9495a9be67627448e78383c66a241562d7566e26",
+  "status_count": 99,
+  "arming_states": [
+    1
+  ],
+  "control_topic_counts": {
+    "/fmu/in/vehicle_command": 0,
+    "/fmu/in/trajectory_setpoint": 0,
+    "/fmu/in/offboard_control_mode": 0
+  },
+  "native_near_failure": {
+    "receipt_ns": 27504000000,
+    "source_us": 27504000,
+    "position_ned_m": [
+      0.0029903363902121782,
+      -0.0005033724592067301,
+      0.12364085018634796
+    ],
+    "velocity_ned_mps": [
+      0.0016850987449288368,
+      -0.0005907061859034002,
+      0.10243084281682968
+    ]
+  },
+  "odom_near_failure": {
+    "receipt_ns": 27500000000,
+    "source_ns": 27436000000,
+    "position_m": [
+      0.0014514029688124021,
+      -0.00291183652963908,
+      -0.0007587107938857187
+    ]
+  },
+  "assumed_ned_to_odom_m": [
+    0.0029903363902121782,
+    0.0005033724592067301,
+    -0.12364085018634796
+  ],
+  "measured_odom_minus_assumed_m": [
+    -0.0015389334213997761,
+    -0.0034152089888458102,
+    0.12288213939246224
+  ],
+  "all_native_position_ranges": {
+    "x": [
+      -0.0029811386484652758,
+      0.003842360805720091
+    ],
+    "y": [
+      -0.0039527262561023235,
+      0.004241372924298048
+    ],
+    "z": [
+      -0.40476977825164795,
+      0.18824930489063263
+    ]
+  },
+  "all_odom_position_ranges": {
+    "x": [
+      -0.01624099326561288,
+      0.016835878389537137
+    ],
+    "y": [
+      -0.015860837958504886,
+      0.01875817483633183
+    ],
+    "z": [
+      -0.0177440256988535,
+      0.01650358681675929
+    ]
+  },
+  "external_referee_samples": 2493,
+  "external_position_ranges": {
+    "course_x_metres": [
+      -2.5146,
+      -2.5146
+    ],
+    "course_y_metres": [
+      0.9144,
+      0.9144
+    ],
+    "height_metres": [
+      -0.0,
+      -0.0
+    ]
+  }
+}

@@ -1,0 +1,415 @@
+{
+  "reference": {
+    "frame_id": "odom",
+    "clock_id": "gazebo_sim",
+    "epoch": 0
+  },
+  "route_review": "User-requested isolated simulation ablation; participant route prior, not observed clearance",
+  "recovery": {
+    "failure_limit": 4,
+    "no_progress_s": 20.0,
+    "observation_s": 2.0
+  },
+  "stages": [
+    {
+      "stage_id": "course_00",
+      "kind": "waypoint",
+      "position_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_01",
+      "kind": "waypoint",
+      "position_m": [
+        1.5767999999999995,
+        -0.15579999999999927,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_02",
+      "kind": "waypoint",
+      "position_m": [
+        1.7126000000000006,
+        -0.6916000000000002,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_03",
+      "kind": "waypoint",
+      "position_m": [
+        1.4626000000000006,
+        -1.2916000000000003,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_04",
+      "kind": "waypoint",
+      "position_m": [
+        0.3126000000000003,
+        -1.3416000000000001,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_05",
+      "kind": "waypoint",
+      "position_m": [
+        0.012600000000000056,
+        -1.7916000000000003,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_06",
+      "kind": "waypoint",
+      "position_m": [
+        0.06260000000000032,
+        -2.3416,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_07",
+      "kind": "waypoint",
+      "position_m": [
+        0.4625999999999998,
+        -2.6416000000000004,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_08",
+      "kind": "waypoint",
+      "position_m": [
+        1.7126000000000006,
+        -3.2916000000000003,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_09",
+      "kind": "waypoint",
+      "position_m": [
+        1.7626000000000004,
+        -3.6916000000000007,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_10",
+      "kind": "waypoint",
+      "position_m": [
+        1.7037000000000009,
+        -4.000500000000001,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_11",
+      "kind": "waypoint",
+      "position_m": [
+        1.0875999999999997,
+        -4.366600000000001,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_12",
+      "kind": "waypoint",
+      "position_m": [
+        0.06260000000000032,
+        -4.4916,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_13",
+      "kind": "waypoint",
+      "position_m": [
+        -1.4361655451258042,
+        -4.690365545125806,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_14",
+      "kind": "waypoint",
+      "position_m": [
+        -2.7624,
+        -4.5166,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_15",
+      "kind": "waypoint",
+      "position_m": [
+        -2.9874,
+        -3.9916,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_16",
+      "kind": "waypoint",
+      "position_m": [
+        -3.1374,
+        -3.9416000000000007,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_17",
+      "kind": "waypoint",
+      "position_m": [
+        -2.4374,
+        -3.2416000000000005,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_18",
+      "kind": "waypoint",
+      "position_m": [
+        -1.7374,
+        -2.5916,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_19",
+      "kind": "waypoint",
+      "position_m": [
+        -1.7873999999999999,
+        -2.0916,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_20",
+      "kind": "waypoint",
+      "position_m": [
+        -2.1374,
+        -1.7017467594403268,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_21",
+      "kind": "waypoint",
+      "position_m": [
+        -2.0374,
+        -0.8416000000000001,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true
+    },
+    {
+      "stage_id": "course_22",
+      "kind": "landing",
+      "position_m": [
+        -1.7069,
+        -0.4724000000000004,
+        0.76
+      ],
+      "arrival_m": 0.15,
+      "timeout_s": 120.0,
+      "semantic": {
+        "intent": "investigate_candidate_passage",
+        "target_entity_id": null
+      },
+      "metric_fallback": true,
+      "landing_site_review": "experimental-participant-pad-not-qualified"
+    }
+  ],
+  "participant_route": {
+    "map_sha256": "74a3b67ed942292d880c79cc43eb2d0740466d0c27bfa42cb5045210e05f9ccf",
+    "mission_sha256": "1953355230cb2ccc20b6cbb37061f4901c0174f7d719ed3daa119184bb997bbf",
+    "checkpoint_waypoints": [
+      [
+        "First corridor",
+        "end of first corridor",
+        1
+      ],
+      [
+        "Maze",
+        "Gate A",
+        10
+      ],
+      [
+        "Tunnel",
+        "tunnel exit",
+        13
+      ],
+      [
+        "Chicane",
+        "Gate B",
+        20
+      ]
+    ],
+    "length_m": 17.318963526023822,
+    "minimum_center_room_m": 0.352446099799689,
+    "minimum_room_near": "M3 maze divider",
+    "policy_scope": "route objectives + real G0 observation suggestions + D5/D0 selection; no Classic follower",
+    "referee_credit": "Only independent native referee crossings count; local arrival is not referee credit"
+  }
+}

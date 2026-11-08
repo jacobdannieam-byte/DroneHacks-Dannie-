@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/usr/lib/python3.10/runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "/repository/examples/build_s0_course_ablation.py", line 169, in <module>
+    main()
+  File "/repository/examples/build_s0_course_ablation.py", line 165, in main
+    print(build(args.probe, args.output, map_path=args.map, mission_path=args.mission))
+  File "/repository/examples/build_s0_course_ablation.py", line 122, in build
+    aligned = ground_alignment(probe, sha256(raw).hexdigest())
+  File "/repository/examples/build_s0_course_ablation.py", line 49, in ground_alignment
+    raise ValueError('invalid native ground alignment sample')
+ValueError: invalid native ground alignment sample

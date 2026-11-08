@@ -1,0 +1,125 @@
+{
+  "strategy": "hybrid_shadow",
+  "profile_id": "s0-course-ablation-5f540974c8f1",
+  "review_status": "reviewed",
+  "h1_profile": "h1.json",
+  "mission_profile": "course.json",
+  "owner_topics": {
+    "vehicle_attitude": "/fmu/out/vehicle_attitude",
+    "vehicle_status": "/fmu/out/vehicle_status_v1",
+    "vehicle_land_detected": "/fmu/out/vehicle_land_detected"
+  },
+  "sources": {
+    "/clock": {
+      "topic": "/clock",
+      "type": "rosgraph_msgs/msg/Clock",
+      "provenance": "Gazebo/Humble isolated test graph; see H1 evidence"
+    },
+    "/camera/depth/camera_info": {
+      "topic": "/simulator_only/oak/depth/camera_info",
+      "type": "sensor_msgs/msg/CameraInfo",
+      "provenance": "Gazebo/Humble isolated test graph; see H1 evidence"
+    },
+    "/camera/depth/image_raw": {
+      "topic": "/simulator_only/oak/depth/image",
+      "type": "sensor_msgs/msg/Image",
+      "provenance": "Gazebo/Humble isolated test graph; see H1 evidence"
+    },
+    "/visual_slam/tracking/odometry": {
+      "topic": "/gazebo_hybrid/simulated_estimator/odometry",
+      "type": "nav_msgs/msg/Odometry",
+      "provenance": "Gazebo/Humble isolated test graph; see H1 evidence"
+    },
+    "/estimator/healthy": {
+      "topic": "/gazebo_hybrid/simulated_estimator/healthy",
+      "type": "std_msgs/msg/Bool",
+      "provenance": "Gazebo/Humble isolated test graph; see H1 evidence"
+    },
+    "/fmu/in/vehicle_visual_odometry": {
+      "topic": "/fmu/in/vehicle_visual_odometry",
+      "type": "px4_msgs/msg/VehicleOdometry",
+      "provenance": "Gazebo/Humble isolated test graph; see H1 evidence"
+    },
+    "/tf_static": {
+      "topic": "/tf_static",
+      "type": "tf2_msgs/msg/TFMessage",
+      "provenance": "Gazebo/Humble isolated test graph; see H1 evidence"
+    },
+    "/visual_slam/processing_status": {
+      "topic": "/gazebo_hybrid/simulated_estimator/processing_status",
+      "type": "diagnostic_msgs/msg/DiagnosticArray",
+      "provenance": "Gazebo/Humble isolated test graph; see H1 evidence"
+    },
+    "/fmu/out/vehicle_odometry": {
+      "topic": "/fmu/out/vehicle_odometry",
+      "type": "px4_msgs/msg/VehicleOdometry",
+      "provenance": "Gazebo/Humble isolated test graph; see H1 evidence"
+    },
+    "/fmu/out/vehicle_local_position": {
+      "topic": "/fmu/out/vehicle_local_position",
+      "type": "px4_msgs/msg/VehicleLocalPosition",
+      "provenance": "Gazebo/Humble isolated test graph; see H1 evidence"
+    },
+    "/fmu/out/estimator_status_flags": {
+      "topic": "/fmu/out/estimator_status_flags",
+      "type": "px4_msgs/msg/EstimatorStatusFlags",
+      "provenance": "Gazebo/Humble isolated test graph; see H1 evidence"
+    }
+  },
+  "experiment_scope": "s0_participant_map_unqualified_sitl",
+  "participant_map_file": "/repository/drone_code/team_nav/course_maps/phone_scan_2026-11-06.json",
+  "participant_map_sha256": "74a3b67ed942292d880c79cc43eb2d0740466d0c27bfa42cb5045210e05f9ccf",
+  "nominal_obstacle_reserve_m": 0.02,
+  "course_from_odom_yaw_rad": 1.5707963267948966,
+  "course_from_odom_translation_m": [
+    -2.5146,
+    0.9144,
+    0.04
+  ],
+  "ground_alignment": {
+    "method": "stationary-native-to-visual-translation-v1",
+    "probe_sha256": "5f540974c8f1cc5a3be46a5eb592e7ebea91c512e864f854033de3af96d25dbb",
+    "visual_capture_ns": 47068000000,
+    "native_bracket_ns": [
+      47056000000,
+      47072000000
+    ],
+    "native_reset_counter": 6,
+    "native_position_ned_m": [
+      -0.001850304688559845,
+      0.00022343559976434335,
+      0.011218431172892451
+    ],
+    "visual_position_odom_m": [
+      -0.0004910943075722173,
+      0.012211511490579939,
+      -0.002203236198273359
+    ],
+    "ned_origin_in_map_m": [
+      0.0013592103809876277,
+      0.012434947090344282,
+      0.009015194974619093
+    ],
+    "stationary_span_ns": 488000000,
+    "native_position_range_m": [
+      0.0017092853522626683,
+      0.0013236961676739156,
+      0.0004347488284111023
+    ],
+    "source": "paired native estimated poses, not simulator truth or altered sensor data"
+  },
+  "runtime": {
+    "plan_hz": 5.0,
+    "semantic_hz": 2.0,
+    "budget_s": 0.05,
+    "lease_s": 0.25
+  },
+  "experiment_assumptions": {
+    "qualification": "not measured; simulator-only experiment",
+    "route_geometry": "participant static map, not fresh sensor FREE",
+    "native_origin": "source-authored NED origin; verify fresh preflight/reset alignment",
+    "obstacle_reserve_m": ".02 is a nominal design assumption, not a braking bound",
+    "g0": "live observations only; log influence, fallback and no-event explicitly",
+    "scans_enabled": false
+  }
+}

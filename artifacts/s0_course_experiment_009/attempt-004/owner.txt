@@ -1,0 +1,50 @@
+[INFO] [1794165330.908103415] [refnav]: route 0 legs; depth /simulator_only/oak/depth/image; health /gazebo_hybrid/simulated_estimator/healthy; sim time True
+[INFO] [1794165333.319174557] [refnav]: calibration from TF: base_link <- oak_depth_optical_frame t=(0.131,0.000,0.000) optical axis 0.0 deg off forward
+[WARN] [1794165333.319911190] [refnav]: depth frame not used (1x): no PX4 attitude yet
+[INFO] [1794165340.206714358] [refnav]: wait -> arm
+[INFO] [1794165340.307279293] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794165343.206372598] [refnav]: not ready after 3 s (gives up at 300 s): waiting for 3 s of continuously usable depth
+[INFO] [1794165344.207062815] [refnav]: wait -> arm
+[INFO] [1794165344.406327556] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794165344.707509294] [refnav]: wait -> arm
+[INFO] [1794165345.106419190] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794165352.106611359] [refnav]: wait -> arm
+[INFO] [1794165352.306694625] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794165352.506730144] [refnav]: wait -> arm
+[INFO] [1794165352.606594654] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794165352.906396026] [refnav]: wait -> arm
+[INFO] [1794165353.006453833] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794165353.206799965] [refnav]: not ready after 0 s (gives up at 300 s): waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794165355.724753710] [refnav]: wait -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165355.725730537] [refnav]: mission done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165355.772843847] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165355.824303991] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165355.887136064] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165355.947183237] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165355.993714210] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.045371506] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.093489812] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.145232922] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.193599770] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.244583071] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.293018458] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.344885559] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.393049496] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.444884772] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.493267473] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.545330840] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.593218739] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.645303664] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.692710691] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.744594159] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.793400696] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.845032573] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.893297808] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.944736080] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165356.993091472] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165357.044469202] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165357.093379651] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165357.144538583] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165357.193405482] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165357.244975736] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
+[INFO] [1794165357.293355047] [refnav]: done -> done: yielded: experimental_owner_clock_wait_expired
