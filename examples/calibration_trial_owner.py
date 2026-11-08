@@ -320,7 +320,7 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
         node.create_subscription(Bool, SIM_HEALTH, lambda m: inputs.health(m.data, *clocks()), 10)
         if getattr(driver, 'config', {}).get('full_course') and not getattr(driver,'_diagnostic_motion_unbounded',False):
             node.create_subscription(String, '/simulator_only/touches', lambda _: driver.request_land(), 10)
-        if hasattr(driver, 'section_policy'):
+        if hasattr(driver, 'section_policy') and not getattr(driver, '_diagnostic_motion_unbounded', False):
             from examples.section_depth_input import attach
             from examples.gazebo_sensor_contract import SIM_DEPTH, SIM_INFO
             from px4_msgs.msg import VehicleAttitude
@@ -431,7 +431,7 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
                     continue
             next_tick = wall_ns + 50_000_000
             observation = observe(now_ns, wall_ns)
-            if observation is not None and hasattr(driver,'prepare_section'):
+            if observation is not None and hasattr(driver,'prepare_section') and not diagnostic:
                 driver.prepare_section(observation,now_ns)
                 # Perception has no command authority. Re-read time and validate
                 # native inputs before starting the unchanged publication fence.
@@ -489,6 +489,11 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
                       native_land_ack_ns=driver.native_land_ack_ns, native_disarm_ns=driver.native_disarm_ns,
                       max_observed_speed_mps=driver.max_observed_speed_mps,
                       recovery_operator=approval['recovery_operator'], input_fault=inputs.fault)
+        if diagnostic:
+            now_ns, wall_ns = clocks()
+            report['native_input_snapshot'] = dict(now_ros_ns=now_ns, now_wall_ns=wall_ns,
+                samples={role:dict(ros_age_ns=now_ns-row[0],wall_age_ns=wall_ns-row[1],value=row[2])
+                         for role,row in inputs.samples.items()},pending_roles=list(inputs.pending))
         if plan.trial_kind == 'authority_expiry':
             report['recovery_lease'] = driver.recovery_lease
         return report, int(driver.result != 'complete')
