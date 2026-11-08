@@ -56,8 +56,8 @@ window.ContinuousScene = (() => {
         <desc id="continuity-description">Blue sensor samples resolve into two wall segments. The same samples gather into semantic nodes around opening_0003. Unknown height remains amber. Evidence reaches a non-executable observe-more proposal.</desc>
         <defs><pattern id="continuity-grid" width="35" height="35" patternUnits="userSpaceOnUse"><path d="M35 0H0V35" fill="none" stroke="#283440" stroke-width=".7"/></pattern></defs>
         <g class="phase-rail">
-          ${label(40, 26, "01  OBSERVATIONS", "tiny blue")}${label(380, 26, "02  GEOMETRY", "tiny blue")}
-          ${label(720, 26, "03  SEMANTIC GRAPH", "tiny violet")}${label(1080, 26, "04  REASONING", "tiny green")}
+          ${label(40, 26, "01  DEPTH OBSERVATIONS", "tiny blue")}${label(380, 26, "02  WALLS + OPENING", "tiny blue")}
+          ${label(720, 26, "03  WORLDSTATE", "tiny violet")}${label(1080, 26, "04  REASONING", "tiny green")}
           <path d="M40 47H1350" stroke="#34414d"/>
           <path id="continuity-progress" d="M40 47H1350" stroke="${colors.blue}" stroke-width="2" pathLength="1" stroke-dasharray="1"/>
         </g>
@@ -90,16 +90,16 @@ window.ContinuousScene = (() => {
           <circle id="unknown-node" r="18" fill="#101318" stroke="${colors.amber}" stroke-width="2" stroke-dasharray="4 4"/>
         </g>
         <g id="graph-labels">
-          <text id="left-label" class="small blue">wall_left</text><text id="right-label" class="small blue">wall_right</text>
+          <text id="left-label" class="small blue">left wall</text><text id="right-label" class="small blue">right wall</text>
           <text id="entity-label" class="math violet">opening_0003</text>
           <text id="evidence-label" class="small green">observation · t₀</text>
           <text id="unknown-label" class="small amber">height unknown</text>
           <text id="unknown-mark" class="amber">?</text>
         </g>
         ${drone()}
-        <g id="observation-caption">${label(850, 130, "A view is an observation.", "math")}${label(850, 180, "Samples arrive with a pose and a time.", "small")}${label(850, 225, "Unobserved space remains unknown.", "small amber")}</g>
-        <g id="geometry-caption">${label(870, 130, "Structure emerges.", "math")}${label(870, 180, "Fit surfaces. Retain the gap.", "small")}${label(870, 225, "A width does not establish safe passage.", "small amber")}</g>
-        <g id="graph-caption">${label(980, 115, "Meaning keeps its evidence.", "small")}${label(980, 153, "Solid: observed relationship", "small green")}${label(980, 187, "Dashed: missing information", "small amber")}</g>
+        <g id="observation-caption">${label(850, 130, "Depth measures distance.", "math")}${label(850, 180, "Match each view to the drone’s pose.", "small")}${label(850, 225, "Unobserved space remains unknown.", "small amber")}</g>
+        <g id="geometry-caption">${label(870, 130, "Find walls and a possible opening.", "math")}${label(870, 180, "Group points into wall segments.", "small")}${label(870, 225, "A width does not establish safe passage.", "small amber")}</g>
+        <g id="graph-caption">${label(980, 115, "WorldState remembers this opening.", "small")}${label(980, 153, "Known: walls, width, last observation", "small green")}${label(980, 187, "Unknown: height and where it leads", "small amber")}</g>
         <path id="decision-connection" fill="none" stroke="${colors.violet}" stroke-width="2.5" pathLength="1" stroke-dasharray="1"/>
         <circle id="evidence-pulse" r="5" fill="${colors.violet}"/>
         <g id="decision-output">
@@ -119,7 +119,7 @@ window.ContinuousScene = (() => {
         <button class="continuity-replay" aria-label="Replay continuous animation">↺ Replay</button>
         <input class="continuity-scrub" type="range" min="0" max="20" step="0.01" value="0" aria-label="Animation time in seconds">
         <output class="continuity-time">0.0 / 20 s</output>
-        <div class="continuity-stages" aria-label="Jump to animation stage"><button data-stage="0">Observe</button><button data-stage="1">Geometry</button><button data-stage="2">Graph</button><button data-stage="3">Reason</button></div>
+        <div class="continuity-stages" aria-label="Jump to animation stage"><button data-stage="0">Observe</button><button data-stage="1">Geometry</button><button data-stage="2">WorldState</button><button data-stage="3">Reason</button></div>
       </div>
     </div>`;
   }

@@ -31,7 +31,7 @@
     "Indoor navigation, incomplete observations, and a mission beyond the field of view.",
     "Remember openings, keep uncertainty, and look again when needed.",
     "Research gave us the structure; our constraints shaped the implementation.",
-    "Observations become geometry, then meaning, then a grounded decision.",
+    "Depth → walls and openings → WorldState → what to inspect next.",
     "If we do not know whether the drone fits, take another look.",
     "Three jobs, with a safety check before movement.",
     "A good route still needs a drone that can follow it when conditions change.",

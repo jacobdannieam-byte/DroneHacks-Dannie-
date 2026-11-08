@@ -53,11 +53,11 @@ window.slides = [
     time: 55,
     kicker: "World semantics",
     body: "opening_0003 · observed width · unknown height · observation age · supporting frames",
-    takeaway: "Missing evidence becomes a reason to look again.",
+    takeaway: "WorldState remembers what we saw—and what we still do not know.",
     visual: "opening",
     sources: ["N3", "N4"],
     notes:
-      "Watch the same samples move through the entire chain. First, the drone receives a partial observation. Those samples settle into two surfaces with a gap. We preserve the measured geometry and give the opening a stable identity. The same evidence becomes a small graph: walls support a candidate opening, an observation records its provenance, and height remains unknown. The reasoning decision follows from that missing fact: observe this opening again. It is a grounded proposal, not a command to fly. This is an illustrative explanation of our representation and reasoning contracts, not recorded sensor data.",
+      "SAY: “We start with depth: how far away surfaces are. We match each depth image to the drone’s position and orientation when that image was captured, then place the points into a shared coordinate system. The geometry extractor groups those points into wall segments and identifies supported gaps as possible openings. WorldState gives each structure an identity and remembers the evidence behind it. Here, opening_0003 has an observed width and a last-seen time. Its full height and where it leads are still unknown. So the useful next decision is to get another view, not assume we can fly through.” PAUSE at WorldState to point to the known and unknown facts. PRESENTER BACKGROUND: WorldState is a bounded collection of Python entity records in memory, with optional JSON persistence. Each entity stores its ID, type, geometry, coordinate frame, observation times, confidence, status, supporting evidence, contradictions, missing evidence and supported relationships. It contains no learned model weights. A remembered entity survives the camera turning away, but its freshness ages. Reobservation updates the existing identity; actual blocking evidence can invalidate it. This animation is illustrative, not recorded sensor data. Reference geometry, remembered entities and fresh collision evidence are separate: memory alone never certifies clearance. The depth/VIO interface and mapping components have different validation levels; do not describe the diagram as proof of completed autonomous mapping in flight.",
     builds: [
       "Play the continuous observation → geometry → graph → decision scene once",
       "Pause or scrub to explain an intermediate state",
@@ -74,7 +74,7 @@ window.slides = [
     visual: "reasoning",
     sources: ["N4", "N6"],
     notes:
-      "The first reasoning interface was deliberately bounded and inspectable. It consumes a compact context, references existing entity IDs, and emits a non-executable goal proposal. A missing measurement can lead to observe-more; blocking evidence can reject a candidate. The validator checks grounding and freshness. Later active-perception and learned rankers use the comparison architecture, but a proposal still does not directly become a motor command.",
+      "SAY: “Take that same opening. Our memory says where it is, how wide it appears, and which observation supports it. But we have not measured the full height or established where the passage leads. The reasoner turns that missing information into a useful goal: look at this opening again. A separate motion layer still has to check how to reach that view safely.” IF ASKED: Confidence is a heuristic, not a calibrated probability. Supported entity relationships do not imply a complete navigable region graph. No observation is not the same as evidence that space is free. The reasoner reads a compact snapshot; it does not directly command the motors.",
     builds: [
       "Use the same opening graph to explain context and observe_more",
       "Reveal independent validation",
