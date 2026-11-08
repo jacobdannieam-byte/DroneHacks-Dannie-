@@ -13,6 +13,8 @@ import socket
 import sys
 from time import monotonic
 
+import numpy as np
+
 from examples.gazebo_sensor_contract import OPTICAL_TO_FLU, SIM_BINDINGS, SIM_ESTIMATOR, read_camera_rig
 from examples.h1_observation import PX4_TYPES, TF, TRACKING
 from examples.hybrid_launch import configured, run_reviewed_sitl
@@ -41,6 +43,8 @@ def isolated():
 
 
 def _json_value(value):
+    if isinstance(value, np.generic):
+        value = value.item()
     if isinstance(value, float) and not math.isfinite(value):
         return None
     if isinstance(value, dict):

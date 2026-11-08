@@ -7,7 +7,7 @@ from types import SimpleNamespace as Msg
 import numpy as np
 import pytest
 
-from examples.gazebo_container import load_approval, sha
+from examples.gazebo_container import _json_value, load_approval, sha
 from examples.gazebo_hybrid_adapter import GazeboObservations
 from examples.gazebo_sensor_contract import (
     OPTICAL_TO_FLU, SIM_BINDINGS, SIM_DEPTH, SIM_ESTIMATOR,
@@ -21,6 +21,13 @@ from onboard.diagnostics.sitl_graph import inspect
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_probe_serializes_px4_numpy_fields_as_strict_json():
+    samples = {"position": list(np.array([.25, np.nan, np.inf], dtype=np.float32)),
+               "reset": np.uint8(6)}
+    wire = json.dumps(_json_value(samples), allow_nan=False)
+    assert json.loads(wire) == {"position": [.25, None, None], "reset": 6}
 
 
 def test_rig_uses_authored_mount_and_optical_axes():
