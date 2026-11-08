@@ -166,11 +166,17 @@ class HybridBagReplay(RecordedSpatialReplay):
         self._state_reason = "missing_px4_state"
         self.fault = None
         self.keep_fresh_snapshot_while_pending = False
+        self.defer_depth_processing = False
+        self._older_pending = None
 
     @property
     def _keep_pending_snapshot(self):
         return (self.keep_fresh_snapshot_while_pending is True and self.continuous
                 and self.hybrid.tracking_source == 'simulated_estimator')
+
+    @property
+    def _explicit_depth_processing(self):
+        return self.defer_depth_processing is True and self._keep_pending_snapshot
 
     def feed(self, topic, msg, received_ns):
         if self.fault is not None:
@@ -193,10 +199,15 @@ class HybridBagReplay(RecordedSpatialReplay):
                     if self._pending is not None:
                         if not self.continuous:
                             raise ValueError("depth_queue_overload")
+                        if self._explicit_depth_processing:
+                            if self._older_pending is not None:
+                                self.dropped_depth += 1
+                            self._older_pending = self._pending
+                        else:
+                            self.dropped_depth += 1
                         self._pending = None
                         if not self._keep_pending_snapshot:
                             self._snapshot = None
-                        self.dropped_depth += 1
                 super().feed(topic, msg, received_ns)
             else:
                 self._advance(topic, received_ns)
@@ -319,17 +330,44 @@ class HybridBagReplay(RecordedSpatialReplay):
         self._state = (state, capture, self.now, msg.timestamp_sample, variances)
         self._state_reason = None
 
-    def _flush(self, force=False):
+    def process_pending_depth(self, now_ns):
+        """Consume at most the freshest bracketed frame outside sensor callbacks."""
+        if not self._explicit_depth_processing or self.fault is not None or self._pose_capture is None:
+            return None
+        newest, older = self._pending, self._older_pending
+        if newest is None:
+            return None
+        waiting = None
+        if self._pose_capture >= newest.capture_ns:
+            if older is not None:
+                self.dropped_depth += 1
+        elif older is not None and self._pose_capture >= older.capture_ns:
+            self._pending, waiting = older, newest
+        else:
+            return None
+        self._older_pending = None
+        try:
+            self._flush(processed_ns=now_ns)
+        except ValueError as error:
+            self.fault = str(error)
+            self._pending = self._state = None
+            return None
+        self._pending = waiting
+        return self.rows[-1]
+
+    def _flush(self, force=False, *, processed_ns=None):
+        if self._explicit_depth_processing and processed_ns is None:
+            return
         prior = self.rows[-1] if self.rows else None
         start = perf_counter_ns()
-        super()._flush(force)
+        super()._flush(force, processed_ns=processed_ns)
         if not self.rows or self.rows[-1] is prior:
             return
         row = self.rows[-1]
         row["map_update_ms"] = (perf_counter_ns() - start) / 1e6
         if row["reason"] == "reference_reset_required":
             raise ValueError("vio_pose_reset_requires_new_epoch")
-        self._snapshot = (self.world.snapshot(now_ns=self.now, immutable_semantic=self.continuous)
+        self._snapshot = (self.world.snapshot(now_ns=row['processed_ns'], immutable_semantic=self.continuous)
                           if row["accepted"] else None)
         self._goal = None
         if not self.continuous:

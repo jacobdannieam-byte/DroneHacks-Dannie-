@@ -35,6 +35,7 @@ class Base:
     def _on_est_flags(self,m): self._yaw_align=(m.cs_yaw_align,self.now); self.delivered.append(m)
     def _runtime_owner(self,now): return 'owner'
     def _hybrid_watchdog_tick(self): return 'watchdog'
+    def _check_hybrid_watchdog(self,now,wall,*,control_pending=False): return True
 
 
 class Owner(ExperimentalOwnerClockMixin,Base):
@@ -133,3 +134,37 @@ def test_airborne_future_mode_loss_never_uses_startup_wait_exception():
     owner._on_status(N(timestamp=1_004_000,arming_state=2,nav_state=3))
     assert owner._runtime_owner(owner.now)=='owner'  # Real RefNav now observes revoked authority.
     assert owner.v.armed is None and 'authority' not in owner._hybrid_reports
+
+
+def test_external_delivered_clock_does_not_use_starved_node_clock_or_source_stamp():
+    owner=Owner()
+    delivered=N(value=1_020_000_000)
+    service=N(clock=N(now=lambda:N(nanoseconds=delivered.value)),failure=None)
+    owner.attach_receipt_clock_service(service)
+    # Private node clock stays at1s; independently delivered clock is1.020s.
+    owner._on_lpos(position(1_016_000))
+    assert owner.delivered and not owner._owner_clock_pending
+    assert owner.now==1_000_000_000 and owner.get_clock().now().nanoseconds==1_020_000_000
+    owner._on_att(N(timestamp=1_024_000,timestamp_sample=1_024_000,q=[1.,0.,0.,0.],quat_reset_counter=0))
+    assert owner.v.q is None
+    delivered.value=1_024_000_000; owner.wall+=4_000_000
+    owner._owner_clock_drain()
+    assert owner.v.q==[1.,0.,0.,0.]
+
+
+def test_external_clock_failure_blocks_final_publication_and_keeps_diagnostic():
+    owner=Owner(); service=N(clock=owner.get_clock(),failure=None)
+    owner.attach_receipt_clock_service(service)
+    owner._on_lpos(position(1_000_000))
+    service.failure={'type':'RuntimeError','reason':'executor stopped'}
+    assert not owner._check_hybrid_watchdog(owner.now,owner.wall,control_pending=True)
+    assert owner._owner_clock_fault_detail==service.failure and not owner.v.pos_ok
+
+
+def test_expired_queue_reports_exact_original_and_current_clocks():
+    owner=Owner(); owner._on_lpos(position()); owner.wall+=WAIT_NS+1
+    owner._owner_clock_drain()
+    detail=owner._owner_clock_fault_detail
+    assert detail['source_ready_ns']==1_004_000_000
+    assert detail['original_receipt_ns']==1_000_000_000
+    assert detail['wall_wait_ns']==WAIT_NS+1 and detail['ros_wait_ns']==0

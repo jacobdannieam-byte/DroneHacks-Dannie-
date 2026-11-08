@@ -244,12 +244,32 @@ class Mission:
             self.depth_refused("too_little_depth", f"depth on {f.valid_frac:.0%} of the pixels, this mission needs "
                                                    f"{self.p.min_valid_frac:.0%} (min_valid_frac)")
             return False
+        self.frame, self.depth_pts = f, f.points(0.3, 6.0)
+        self._note_depth_capture(stamp)
+        return True
+
+    def _note_depth_capture(self, stamp):
         if (self.depth_ready_since is None or self.depth_t is None
                 or stamp - self.depth_t > self.p.depth_stale_s):
             self.depth_ready_since = stamp
-        self.frame, self.depth_t, self.depth_pts = f, stamp, f.points(0.3, 6.0)
+        self.depth_t = stamp
         self.depth_reject = None                             # a refusal is only reported until a frame is used
         self.counts["depth_frames"] += 1
+
+    def note_aligned_hybrid_depth(self, stamp, valid_fraction, *, now):
+        """Use a processed H1 frame for the existing Hybrid camera-readiness gate."""
+        if not self.hybrid_navigation or not all(math.isfinite(v) for v in (stamp, valid_fraction, now)):
+            raise ValueError('valid aligned Hybrid depth required')
+        if not 0 <= now - stamp <= self.p.depth_stale_s:
+            self.depth_refused('stale', 'aligned Hybrid depth is stale or future')
+            return False
+        if self.depth_t is not None and stamp <= self.depth_t:
+            return False
+        self.last_valid_frac = valid_fraction
+        if not self.p.min_valid_frac <= valid_fraction <= 1.:
+            self.depth_refused('too_little_depth', f'aligned Hybrid depth on {valid_fraction:.0%} of samples')
+            return False
+        self._note_depth_capture(stamp)
         return True
 
     def depth_fresh(self, now):

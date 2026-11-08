@@ -17,8 +17,31 @@ class ExperimentalOwnerClockMixin:
         self._owner_clock_seen = {}
         self._owner_clock_last = None
         self._owner_clock_fault = None
+        self._owner_clock_fault_detail = None
         self._owner_clock_audit = []
+        self._owner_receipt_clock_service = None
         super().__init__(*args, **kwargs)
+
+    def attach_receipt_clock_service(self, service):
+        """Attach after Node construction so its private TimeSource stays private.
+
+        The separate service owns only delivered /clock callbacks; no vehicle,
+        mission or H1 mutation is allowed on its executor thread.
+        """
+        if self._owner_receipt_clock_service is not None or self._owner_clock_seen:
+            raise ValueError('receipt clock must attach once before owner callbacks')
+        self._owner_receipt_clock_service = service
+
+    def get_clock(self):
+        service = getattr(self, '_owner_receipt_clock_service', None)
+        return service.clock if service is not None else super().get_clock()
+
+    def _receipt_service_ok(self):
+        service = self._owner_receipt_clock_service
+        if service is not None and service.failure is not None:
+            self._owner_clock_fail('experimental_receipt_clock_service_failed', dict(service.failure))
+            return False
+        return True
 
     def _owner_clock_wall(self):
         return perf_counter_ns()
@@ -35,9 +58,10 @@ class ExperimentalOwnerClockMixin:
         elif kind == 'flags': self._yaw_align = (False, None)
         self._invalidate_hybrid()
 
-    def _owner_clock_fail(self, reason):
+    def _owner_clock_fail(self, reason, detail=None):
         if self._owner_clock_fault is None:
             self._owner_clock_fault = reason
+            self._owner_clock_fault_detail = detail
         self._owner_clock_pending.clear()
         for kind in ('lpos','status','land','att','flags'):
             self._owner_clock_clear(kind)
@@ -58,6 +82,8 @@ class ExperimentalOwnerClockMixin:
         return bool(message.cs_yaw_align)
 
     def _owner_clock_drain(self):
+        if not self._receipt_service_ok():
+            return
         now, wall = self.get_clock().now().nanoseconds, self._owner_clock_wall()
         if self._owner_clock_fault:
             return
@@ -71,7 +97,10 @@ class ExperimentalOwnerClockMixin:
         for row in pending:
             kind, message, callback, received, received_wall, target = row
             if wall-received_wall > WAIT_NS or now-received > WAIT_NS:
-                self._owner_clock_fail('experimental_owner_clock_wait_expired')
+                self._owner_clock_fail('experimental_owner_clock_wait_expired', dict(kind=kind,
+                    source_ready_ns=target, original_receipt_ns=received, original_wall_ns=received_wall,
+                    current_ros_ns=now, current_wall_ns=wall, ros_wait_ns=now-received,
+                    wall_wait_ns=wall-received_wall))
                 return
             if target > now or kind in blocked:
                 self._owner_clock_pending.append(row)
@@ -151,3 +180,12 @@ class ExperimentalOwnerClockMixin:
     def _hybrid_watchdog_tick(self):
         self._owner_clock_drain()
         return super()._hybrid_watchdog_tick()
+
+    def _check_hybrid_watchdog(self, now_ns, wall_ns, *, control_pending=False):
+        if not self._receipt_service_ok() or self._owner_clock_fault:
+            self.mission.yield_hybrid_authority(now_ns/1e9, self._owner_clock_fault)
+            self.done_at = now_ns/1e9
+            if getattr(self, 'exit_when_done', False):
+                raise SystemExit(1)
+            return False
+        return super()._check_hybrid_watchdog(now_ns, wall_ns, control_pending=control_pending)

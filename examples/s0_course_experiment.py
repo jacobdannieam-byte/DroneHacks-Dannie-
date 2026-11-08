@@ -6,7 +6,7 @@ import json
 import math
 import os
 from pathlib import Path
-from time import perf_counter, perf_counter_ns
+from time import perf_counter, perf_counter_ns, sleep
 
 import numpy as np
 
@@ -14,6 +14,7 @@ from examples.build_s0_course_ablation import SCOPE, participant_geometry
 from examples.gazebo_container import _ports, isolated, verify_profile
 from examples.gazebo_hybrid_adapter import IsolationApproval, OWNER_ROLES
 from examples.hybrid_launch import configured
+from examples.hybrid_native_shadow import ClockExecutorService
 from examples.hybrid_runtime import HybridRuntime
 from examples.s0_experiment_geometry import AuthoredObstacles, EXPERIMENT_EVIDENCE
 from examples.s0_owner_clock import ExperimentalOwnerClockMixin
@@ -25,11 +26,14 @@ from refnav.hybrid_execution import Held, HeldExecutor
 from refnav.hybrid_gateway import GatewayDecision
 from refnav.hybrid_integration import HybridAssessment, _input_reason
 from refnav.hybrid_mission import CourseMission
+from refnav.integration_timing import measure
 from refnav.predictive_planner import (
     STEPS, Plan, _generate, candidate_for_id, has_progress, inspection_objective, inspection_yaw,
 )
 from refnav.sitl_review import ProposalReceipt
-from refnav.trajectory_evaluation import Candidate, CandidateDiagnostic, Evaluation, _forecast, _resolve_goal, state_capture_ns
+from refnav.trajectory_evaluation import (
+    Candidate, CandidateDiagnostic, Evaluation, EvaluationPolicy, _forecast, _resolve_goal, state_capture_ns,
+)
 from refnav.world_model.spatial_input import NS, stamp_ok
 
 
@@ -182,10 +186,17 @@ class _GroundAlignmentGuard:
         state, alignment, metric = inputs['state'], inputs['alignment'], inputs['snapshot'].metric
         depth = self.replay.aligned_depth
         if (depth is None or depth.reference != metric.reference or depth.observation_id != metric.observation_id
-                or depth.capture_ns != metric.capture_ns
-                or abs(state_capture_ns(state, alignment) - depth.capture_ns) > 150_000_000
-                or math.hypot(*state.velocity_mps) > .05):
-            return 'experimental_ground_alignment_unsettled'
+                or depth.capture_ns != metric.capture_ns):
+            return 'experimental_ground_aligned_depth_unavailable'
+        # At the verified stationary pad, compare the accepted synchronized
+        # capture within the existing H1 age window. The native/visual spatial
+        # agreement and stationary speed checks remain separate.
+        maximum_age = EvaluationPolicy().map_age_ns
+        if (not 0 <= now_ns - depth.capture_ns <= maximum_age
+                or abs(state_capture_ns(state, alignment) - depth.capture_ns) > maximum_age):
+            return 'experimental_ground_pair_skew'
+        if math.hypot(*state.velocity_mps) > .05:
+            return 'experimental_ground_native_speed_unsettled'
         transform = rot_z(alignment.map_from_enu_yaw_rad) @ R_ENU_NED
         native = transform @ np.asarray(state.position_m) + alignment.ned_origin_in_map_m
         if (math.dist(native, depth.pose.position_m) > .03 or math.hypot(*native) > .04
@@ -204,6 +215,7 @@ class ExperimentalRuntime(HybridRuntime):
         self.loop.assessor = lambda **inputs: experimental_assess(geometry, identity, **inputs)
         self.loop.replay._retain_aligned_depth = True
         self.loop.replay.keep_fresh_snapshot_while_pending = True
+        self.loop.replay.defer_depth_processing = True
         self.launch_guard = _GroundAlignmentGuard(self.loop.replay)
         self._checking_publication_wall_ns = None
         self.native_readiness = None
@@ -217,6 +229,25 @@ class ExperimentalRuntime(HybridRuntime):
 
     def status(self):
         return {**super().status(), 'experimental_owner_readiness': self._readiness}
+
+    def feed(self, topic, message, received_ns, wall_ns, *, receipt_wall_ns=None):
+        return measure(self.timings, 'experimental_h1_callback', super().feed, topic, message,
+                       received_ns, wall_ns, receipt_wall_ns=receipt_wall_ns)
+
+    def service_owner_depth(self, mission, now_ns):
+        replay = self.loop.replay
+        row = measure(self.timings, 'experimental_pending_depth', replay.process_pending_depth, now_ns)
+        if row is None:
+            return
+        depth = replay.aligned_depth
+        if not row['accepted'] or depth is None:
+            mission.depth_refused('hybrid_depth_rejected', row['reason'])
+            return
+        stride, border = mission.p.depth_stride, mission.p.depth_border_px
+        cropped = depth.depth_m if not border else depth.depth_m[border:-border, border:-border]
+        sampled = cropped[::stride, ::stride]
+        valid_fraction = float((np.isfinite(sampled) & (sampled > 0.)).mean()) if sampled.size else 0.
+        mission.note_aligned_hybrid_depth(depth.capture_ns / NS, valid_fraction, now=now_ns / NS)
 
     def publication_reason(self, mission, vehicle, output, now_ns, *, wall_ns=None):
         inputs = self._publication_inputs
@@ -324,14 +355,23 @@ def run(runtime, output, ros_args):
         raise ValueError('choose a new experiment log')
     import rclpy
     from rclpy.executors import ExternalShutdownException, SingleThreadedExecutor
+    from rclpy.parameter import Parameter
     from rclpy.utilities import try_shutdown
     from onboard.diagnostics.sitl_graph import inspect
     from refnav.node import RefNav
 
     class ExperimentalOwner(ExperimentalOwnerClockMixin, RefNav):
+        legacy_depth_subscription = False
+
         def _validate_native_qualification(self, current):
             if current is not runtime or type(current) is not ExperimentalRuntime or not isolated():
                 raise ValueError('isolated experiment owner context changed')
+
+        def _control_timer_clock(self):
+            return clock_service.clock
+
+        def _service_owner_observations(self, now_ns):
+            runtime.service_owner_depth(self.mission, now_ns)
 
     permit = IsolationApproval(runtime.adapter.profile_id, int(os.environ['ROS_DOMAIN_ID']), SCOPE,
                                lambda *_: isolated())
@@ -340,6 +380,8 @@ def run(runtime, output, ros_args):
                      '-p', f'height_m:={height}', '-p', 'hover_s:=1.0',
                      '-p', 'control_topic:=/gazebo_hybrid/control', '-p', f'run_id:={SCOPE}', *ros_args])
     node, code = None, 1
+    clock_node = clock_executor = clock_service = None
+    clock_cleanup_failure = None
     executor = SingleThreadedExecutor()
     try:
         probe = rclpy.create_node('s0_experiment_graph_probe', enable_rosout=False, start_parameter_services=False)
@@ -351,7 +393,20 @@ def run(runtime, output, ros_args):
                 raise ValueError('motion graph is not idle')
         finally:
             probe.destroy_node()
+        clock_node = rclpy.create_node('s0_experiment_receipt_clock', enable_rosout=False,
+                                       start_parameter_services=False,
+                                       parameter_overrides=[Parameter('use_sim_time', value=True)])
+        clock_executor = SingleThreadedExecutor()
+        clock_executor.add_node(clock_node)
+        clock_service = ClockExecutorService(clock_executor, clock_node.get_clock(), okay=rclpy.ok)
+        clock_service.start()
+        until = perf_counter() + 3.
+        while clock_service.now_ns() <= 0 and perf_counter() < until:
+            sleep(.01)
+        if clock_service.now_ns() <= 0:
+            raise ValueError('independent experimental /clock did not arrive')
         node = ExperimentalOwner(hybrid_runtime=runtime, hybrid_approval=permit)
+        node.attach_receipt_clock_service(clock_service)
         executor.add_node(node)
         executor.spin()
     except SystemExit as stop:
@@ -363,8 +418,19 @@ def run(runtime, output, ros_args):
         executor.shutdown()
         if node is not None:
             node.destroy_node()
+        if clock_service is not None:
+            try:
+                clock_service.close()
+            except RuntimeError as error:
+                clock_cleanup_failure = str(error)
+                code = 1
+        if clock_executor is not None:
+            clock_executor.shutdown()
+        if clock_node is not None:
+            clock_node.destroy_node()
         try_shutdown()
         callback_clock = (None if node is None else dict(fault=node._owner_clock_fault,
+                         fault_detail=node._owner_clock_fault_detail,
                          pending=len(node._owner_clock_pending), retained_releases=node._owner_clock_audit))
         with Path(output).open('x', encoding='utf-8') as stream:
             json.dump(dict(scope=SCOPE, qualification=False, obstacle_backend=EXPERIMENT_EVIDENCE,
@@ -372,6 +438,11 @@ def run(runtime, output, ros_args):
                            status=runtime.status(),
                            last_issue=runtime.last_issued, timing=runtime.timings.summary(), exit_code=code,
                            callback_clock=callback_clock,
+                           receipt_clock=dict(mode='independent_ros_timesource_executor',
+                                              failure=clock_service.failure if clock_service is not None else None,
+                                              cleanup_failure=clock_cleanup_failure),
+                           deferred_depth=dict(dropped=runtime.loop.replay.dropped_depth,
+                                               retained_rows=len(runtime.loop.replay.rows)),
                            h1_clock=runtime.clock_fence.report() if runtime.clock_fence else None),
                       stream, indent=2, allow_nan=False)
     return code

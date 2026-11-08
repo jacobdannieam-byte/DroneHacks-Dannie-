@@ -7,11 +7,14 @@ import pytest
 
 from examples.build_s0_course_ablation import build
 from examples.h0_hybrid_smoke import smoke_inputs
-from examples.h1_fixture import DEPTH, HEALTH, MS, TRACKING, clock, depth, profile as h1_profile, setup as h1_setup, tick
+from examples.h1_fixture import (
+    DEPTH, HEALTH, MS, TRACKING, VIO, clock, depth, pose, profile as h1_profile, setup as h1_setup, tick, tracking,
+)
 from examples.h1_observation import HybridBagReplay
-from examples.s0_course_experiment import experimental_assess, load_experiment, main
+from examples.s0_course_experiment import ExperimentalRuntime, experimental_assess, load_experiment, main
 from examples.s0_experiment_geometry import EXPERIMENT_EVIDENCE
-from refnav.core import Output, Vehicle
+from refnav.core import Mission, Output, Params, Vehicle
+from refnav.integration_timing import Timings
 from refnav.sitl_review import validate_receipt
 from refnav.world_model.spatial_volume import Cell
 from test_s0_course_ablation import MAP, MISSION, stable_probe
@@ -113,8 +116,14 @@ def test_paired_translation_repairs_support_pose_and_refuses_a_shifted_estimate(
     assert runtime.publication_reason(mission, vehicle, output, now, wall_ns=now) == (
         'experimental_ground_alignment_disagrees')
 
+    inputs['state'] = replace(state, timestamp_s=.30)
+    vehicle.pos = position
+    assert runtime.launch_guard.check_owner(mission, vehicle, inputs, now_ns=300 * MS, wall_ns=300 * MS) is None
+    assert runtime.launch_guard.check_owner(mission, vehicle, inputs, now_ns=351 * MS, wall_ns=351 * MS) == (
+        'experimental_ground_pair_skew')
 
-def test_pending_depth_retains_only_the_original_fresh_synchronized_snapshot(monkeypatch):
+
+def simulated_replay(monkeypatch):
     profile = replace(h1_profile(offset_rig=True), tracking_source='simulated_estimator')
     replay = HybridBagReplay(profile, continuous=True, retain_aligned_depth=True)
     original_feed = replay.feed
@@ -126,6 +135,12 @@ def test_pending_depth_retains_only_the_original_fresh_synchronized_snapshot(mon
 
     monkeypatch.setattr(replay, 'feed', simulated_feed)
     h1_setup(replay)
+    return replay
+
+
+def test_pending_depth_retains_only_the_original_fresh_synchronized_snapshot(monkeypatch):
+    replay = simulated_replay(monkeypatch)
+    profile = replay.hybrid
     tick(replay, 100, 0.)
     reason, original = replay.prepare(103 * MS)
     assert reason is None
@@ -144,3 +159,43 @@ def test_pending_depth_retains_only_the_original_fresh_synchronized_snapshot(mon
     assert replay.prepare(351 * MS) == ('stale_geometry', None)
     replay.feed(HEALTH, SimpleNamespace(data=False), 143 * MS)
     assert replay.prepare(143 * MS)[1] is None
+
+
+def test_explicit_depth_queue_processes_the_latest_bracketed_frame_once(monkeypatch):
+    replay = simulated_replay(monkeypatch)
+    replay.keep_fresh_snapshot_while_pending = replay.defer_depth_processing = True
+    tick(replay, 100, 0.)
+    assert not replay.rows and replay.aligned_depth is None
+    row = replay.process_pending_depth(105 * MS)
+    assert row['accepted'] and (row['capture_ns'], row['received_ns'], row['processed_ns']) == tuple(
+        value * MS for value in (100, 102, 105))
+    for stamp in (120, 140):
+        replay.feed('/clock', clock(stamp), stamp * MS)
+        replay.feed(DEPTH, depth(stamp, 0., cal=replay.profile.calibration), (stamp + 2) * MS)
+    assert replay.process_pending_depth(143 * MS) is None and len(replay.rows) == 1
+    replay.feed(TRACKING, tracking(120), 143 * MS)
+    replay.feed(VIO, pose(120, 0.), 143 * MS)
+    assert replay.process_pending_depth(145 * MS)['capture_ns'] == 120 * MS
+    replay.feed(TRACKING, tracking(140), 146 * MS)
+    replay.feed(VIO, pose(140, 0.), 146 * MS)
+    row = replay.process_pending_depth(148 * MS)
+    assert (row['capture_ns'], row['received_ns'], row['processed_ns']) == tuple(value * MS for value in (140, 142, 148))
+    assert replay.process_pending_depth(149 * MS) is None
+    assert replay.prepare(391 * MS) == ('stale_geometry', None)
+
+
+def test_experimental_camera_quiet_gate_uses_only_accepted_positive_depth():
+    replay = SimpleNamespace(aligned_depth=None, process_pending_depth=lambda _: None)
+    runtime = SimpleNamespace(loop=SimpleNamespace(replay=replay), timings=Timings())
+    mission = Mission(Params(depth_border_px=0, depth_stride=1, min_valid_frac=.4), hybrid_navigation=True)
+    ExperimentalRuntime.service_owner_depth(runtime, mission, 105 * MS)
+    assert mission.depth_ready_since is None
+    replay.aligned_depth = SimpleNamespace(capture_ns=100 * MS, depth_m=np.array([[1., 0., np.inf, np.nan]]))
+    replay.process_pending_depth = lambda _: {'accepted': True}
+    ExperimentalRuntime.service_owner_depth(runtime, mission, 105 * MS)
+    assert mission.depth_ready_since is None and mission.last_valid_frac == .25
+    replay.aligned_depth.depth_m = np.array([[1., 1., 0., np.nan]])
+    ExperimentalRuntime.service_owner_depth(runtime, mission, 105 * MS)
+    assert mission.depth_ready_since == .1 and mission.depth_t == .1
+    ExperimentalRuntime.service_owner_depth(runtime, mission, 120 * MS)
+    assert mission.depth_t == .1 and mission.counts['depth_frames'] == 1

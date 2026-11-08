@@ -165,17 +165,18 @@ class RecordedSpatialReplay:
         self.world.push_pose(sample)
         self._pose_capture = max(stamp, self._pose_capture or 0)
 
-    def _flush(self, force=False):
+    def _flush(self, force=False, *, processed_ns=None):
         frame = self._pending
         if frame is None or (not force and (self._pose_capture is None or self._pose_capture < frame.capture_ns)):
             return
         if len(self.rows) >= 2048:
             raise ValueError("bag exceeds the 2048-depth-frame replay budget")
         self._pending = None
-        result = self.world.process(frame, now_ns=self.now, retain_aligned_depth=self._retain_aligned_depth)
+        processed_ns = self.now if processed_ns is None else processed_ns
+        result = self.world.process(frame, now_ns=processed_ns, retain_aligned_depth=self._retain_aligned_depth)
         self.aligned_depth = result.aligned_depth
         self.rows.append({"capture_ns": frame.capture_ns, "received_ns": frame.received_ns,
-                          "processed_ns": self.now, "accepted": result.accepted, "reason": result.reason,
+                          "processed_ns": processed_ns, "accepted": result.accepted, "reason": result.reason,
                           "pose_bracket_ns": result.pose_bracket_ns, "semantic_events": result.semantic_events})
 
     def finish(self):

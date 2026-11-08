@@ -62,6 +62,8 @@ def load_route(node):
 
 
 class RefNav(Node):
+    legacy_depth_subscription = True
+
     def __init__(self, *, hybrid_runtime=None, hybrid_approval=None):
         super().__init__("refnav")
         self._hybrid_runtime, self._hybrid_approval = hybrid_runtime, hybrid_approval
@@ -132,8 +134,9 @@ class RefNav(Node):
             self.create_subscription(message, name, callback, PX4_QOS)
         self._yaw_align = (False, None)
         self.create_subscription(Bool, self.health_topic, self._on_health, 10)
-        self.create_subscription(CameraInfo, self.info_topic, self._on_info, qos_profile_sensor_data)
-        self.create_subscription(Image, self.depth_topic, self._on_depth, qos_profile_sensor_data)
+        if self.legacy_depth_subscription:
+            self.create_subscription(CameraInfo, self.info_topic, self._on_info, qos_profile_sensor_data)
+            self.create_subscription(Image, self.depth_topic, self._on_depth, qos_profile_sensor_data)
         if control:
             # transient-local: a request made a moment before this node subscribed still arrives
             ctl_qos = QoSProfile(reliability=ReliabilityPolicy.RELIABLE, durability=DurabilityPolicy.TRANSIENT_LOCAL,
@@ -154,8 +157,9 @@ class RefNav(Node):
             # A paused ROS clock suppresses the control timer, so supervise
             # clock progress and held leases on the same executor's steady clock.
             self.create_timer(0.05, self._hybrid_watchdog_tick, clock=Clock(clock_type=ClockType.STEADY_TIME))
-        self.create_timer(0.05, self._tick)            # node clock: pauses with a paused simulator
-        self.create_timer(0.5, self._publish_status)
+        control_clock = self._control_timer_clock()
+        self.create_timer(0.05, self._tick, clock=control_clock)  # ROS time pauses with the simulator
+        self.create_timer(0.5, self._publish_status, clock=control_clock)
         self.get_logger().info(f"route {len(route)} legs; depth {self.depth_topic}; health {self.health_topic}; "
                                f"sim time {self.get_parameter('use_sim_time').value}")
 
@@ -167,6 +171,12 @@ class RefNav(Node):
             raise ValueError('native Hybrid owner requires bound simulator launch geometry')
         if runtime.map_certificate is not None and (runtime.map_clearance is None or runtime.recovery_guard is None):
             raise ValueError('map-assisted owner requires live clearance and qualified recovery')
+
+    def _control_timer_clock(self):
+        return None  # Default to this node's clock.
+
+    def _service_owner_observations(self, now_ns):
+        """Optional owner-specific processing before readiness gates."""
 
     # ------------------------------------------------------------------ inputs
     def _now(self):
@@ -330,16 +340,19 @@ class RefNav(Node):
 
     def _runtime_owner(self, now_ns):
         from onboard.diagnostics.sitl_graph import inspect as inspect_command_graph
+        from refnav.integration_timing import measure
 
         runtime = self._hybrid_runtime
         try:
+            self._service_owner_observations(now_ns)
             admission_reason = None
             if self.get_parameter('use_sim_time').value is not True:
                 admission_reason = 'native_sim_clock_disabled'
             elif not self._hybrid_approval.permits(runtime.adapter, os.environ.get('ROS_DOMAIN_ID')):
                 admission_reason = 'native_isolation_lost'
-            elif inspect_command_graph(self, self.get_fully_qualified_name(),
-                                       strict_motion=runtime.adapter.simulated_estimator)['issues']:
+            elif measure(runtime.timings if hasattr(runtime, 'native_readiness') else None, 'experimental_owner_graph',
+                         inspect_command_graph, self, self.get_fully_qualified_name(),
+                         strict_motion=runtime.adapter.simulated_estimator)['issues']:
                 admission_reason = 'native_motion_graph_refused'
             admission = admission_reason is None
             if admission and runtime.adapter.simulated_estimator:
@@ -409,7 +422,13 @@ class RefNav(Node):
             self._hybrid_clock_ns = now_ns
         if now <= 0.0:
             return                                   # sim time before the first /clock
-        out = (self.mission.step(now, self.v) if self._hybrid_runtime is None else self._runtime_owner(now_ns))
+        if self._hybrid_runtime is None:
+            out = self.mission.step(now, self.v)
+        elif hasattr(self._hybrid_runtime, 'native_readiness'):
+            from refnav.integration_timing import measure
+            out = measure(self._hybrid_runtime.timings, 'experimental_owner_callback', self._runtime_owner, now_ns)
+        else:
+            out = self._runtime_owner(now_ns)
         for e in out.events:
             self.get_logger().info(e)
         if self.mission.phase == "wait" and self.mission.t_phase is not None:
