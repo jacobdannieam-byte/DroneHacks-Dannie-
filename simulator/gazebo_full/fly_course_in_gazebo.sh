@@ -15,6 +15,8 @@
 #                            TEAM_NAV_RUN_MODE, as on the drone.
 #   --longest-run-seconds N  Stop course_run (as with Ctrl+C, so it lands) after N seconds.
 #                            Default 360.
+#   --stop-after-stage <name>  Given to the flight program as TEAM_NAV_STOP_AFTER_STAGE, as
+#                            drone.sh does on the drone. Practice mode only. Default: none.
 # Everything else, or everything after "--", goes to course_run unchanged. The drone's own map
 # is course_run's --map; without it, course_run uses its default map, whatever --world says.
 #
@@ -35,12 +37,14 @@ world_map="drone_code/team_nav/course_maps/organizers_drawing.json"
 run_mode=practice
 # Our own choice: about 6 minutes, longer than any whole-course run so far (under 4 minutes).
 longest_run_seconds=360
+stop_after_stage=""
 course_run_arguments=()
 while [ $# -gt 0 ]; do
     case "$1" in
         --world) world_map="$2"; shift 2 ;;
         --run-mode) run_mode="$2"; shift 2 ;;
         --longest-run-seconds) longest_run_seconds="$2"; shift 2 ;;
+        --stop-after-stage) stop_after_stage="$2"; shift 2 ;;
         --) shift; course_run_arguments+=("$@"); break ;;
         *) course_run_arguments+=("$1"); shift ;;
     esac
@@ -59,7 +63,7 @@ run_folder="$repository/simulator/generated_files/gazebo_full_runs/$run_name"
 run_folder_in_box="/repository/simulator/generated_files/gazebo_full_runs/$run_name"
 build_folder="$repository/simulator/generated_files/gazebo_full_build"
 mkdir -p "$run_folder/referee" "$run_folder/course_run_records" "$build_folder/ros_build" "$build_folder/ros_install" "$build_folder/ros_logs"
-echo "World: $world_map. Run mode: $run_mode. Extra course_run arguments: ${course_run_arguments[*]:-(none)}."
+echo "World: $world_map. Run mode: $run_mode. Stop after stage: ${stop_after_stage:-(none)}. Extra course_run arguments: ${course_run_arguments[*]:-(none)}."
 echo "This run's folder: simulator/generated_files/gazebo_full_runs/$run_name"
 
 docker rm --force "$box_name" > /dev/null 2>&1 || true
@@ -110,6 +114,7 @@ docker exec "$box_name" bash -c "
     until [ -f /tmp/our_packages_are_built ]; do sleep 1; done
     source /repository/simulator/inside_the_box/load_ros_environment.sh
     export TEAM_NAV_RUN_MODE=$run_mode
+    export TEAM_NAV_STOP_AFTER_STAGE=$(printf '%q' "$stop_after_stage")
     export TEAM_NAV_RECORDS_FOLDER=$run_folder_in_box/course_run_records
     bash /repository/simulator/gazebo_full/inside_the_box/check_cameras_then_fly.sh $longest_run_seconds $quoted_course_run_arguments
 " 2>&1 | tee "$run_folder/flight_program_output.txt"

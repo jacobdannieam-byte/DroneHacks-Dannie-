@@ -93,7 +93,7 @@ Put a setting before the command. Example:
 | Setting | Values | Meaning |
 |---|---|---|
 | `TEAM_NAV_RUN_MODE` | `competition` (default) or `practice` | Practice mode records more data and can stop early. |
-| `TEAM_NAV_STOP_AFTER_STAGE` | the name of a stage | Practice mode only. The drone lands after that stage. |
+| `TEAM_NAV_STOP_AFTER_STAGE` | the name of a stage | Practice mode only. The drone lands after that stage. For `practice_flight full_course`: `corridor`, `gate_a`, `tunnel` or `chicane`. |
 | `TEAM_NAV_RECORDS_FOLDER` | a folder | Where the records go. The default is `~/team_ws/flight_records`. |
 
 ## The files in this folder

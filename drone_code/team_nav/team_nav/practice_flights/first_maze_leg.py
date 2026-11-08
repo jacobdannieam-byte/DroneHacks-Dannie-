@@ -67,9 +67,13 @@ SETTLE_PAUSE_SECONDS = 2.0
 
 
 def parse_arguments(command_line_words):
-    parser = argparse.ArgumentParser(
-        prog=f"practice_flight {FLIGHT_NAME}",
-        description="Flies Corridor 1, turns 90 degrees East into the maze, advances past divider M1, and lands.")
+    return make_argument_parser().parse_args(command_line_words)
+
+
+def make_argument_parser(flight_name=FLIGHT_NAME,
+                         description="Flies Corridor 1, turns 90 degrees East into the maze, advances past divider M1, and lands."):
+    """The options shared by the flights built on this one. full_course.py adds its own."""
+    parser = argparse.ArgumentParser(prog=f"practice_flight {flight_name}", description=description)
     parser.add_argument("--map", default=DEFAULT_MAP_FILE,
                         help="The map of where the drone flies: a path, or a file name in team_nav's course_maps folder.")
     parser.add_argument("--start-heading-degrees", type=float, default=DEFAULT_START_HEADING_DEGREES,
@@ -78,7 +82,7 @@ def parse_arguments(command_line_words):
                         help="Behave as if the bottom laser's raw reading did not exist, as on the real drone.")
     parser.add_argument("--bare-bones-safety", action="store_true",
                         help="Disables touch detection and height divergence aborts, relying on the safety pilot's kill switch.")
-    return parser.parse_args(command_line_words)
+    return parser
 
 
 def problems_with_the_settings(arguments, run_mode):

@@ -357,6 +357,17 @@ class DroneLink:
             return None
         return self.reports.px4_downward_speed_metres_per_second()
 
+    def px4_speed_metres_per_second(self):
+        """How fast PX4 estimates the drone is moving, in any direction, or None if PX4's position
+        report is missing, old, or says its speed estimate is not valid. PX4 blends camera
+        tracking with its motion sensors, so this is much smoother than differencing positions."""
+        if self.reports.seconds_since("px4_position") > PX4_POSITION_LONGEST_AGE_SECONDS:
+            return None
+        report = self.reports.latest["px4_position"]
+        if not (report.v_xy_valid and report.v_z_valid):
+            return None
+        return math.sqrt(report.vx ** 2 + report.vy ** 2 + report.vz ** 2)
+
     def tilt_degrees(self):
         return self.reports.tilt_degrees() if self.reports.has_attitude() else None
 

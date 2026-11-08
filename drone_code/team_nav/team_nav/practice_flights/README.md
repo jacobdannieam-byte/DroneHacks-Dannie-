@@ -75,6 +75,59 @@ The new flight is named `full_course`; `first_maze_leg` remains the shorter orig
 The fixed route assumes the sketch-map geometry and a north-facing aircraft throughout.
 For the WSL clock conflict observed during testing, see `simulator/gazebo_full/README.md`.
 
+### full_course: four additions (2026-11-08)
+
+Each addition is on unless switched off by its own option. `--baseline` switches off all four
+and gives back the version flown in Gazebo run `20261108_122536`.
+
+| Addition | What it does | Switch it off with |
+|---|---|---|
+| Start check | Before anything is sent, refuses to start (exit code 2) if camera tracking reads more than 0.30 m sideways or 0.10 m in height from where it started, and says to restart the drone software with the drone on the mark (`tracking_start_check.py`). | `--no-start-check` |
+| Takeoff settle | Climbs with the launch mark as the target, then waits until the drone stays within 0.10 m of the hover point and slower than 0.05 m/s for 1 s before leg 1. Lands if that takes more than 8 s. Records the largest sideways distance from the mark during the climb (`climb` event). | `--no-takeoff-settle` |
+| Stop options | `TEAM_NAV_STOP_AFTER_STAGE` = `corridor`, `gate_a`, `tunnel` or `chicane` lands after that checkpoint: straight down just past the line if that is open floor on the map, otherwise at the next waypoint (`full_course_stops.py`). Every start prints where each option lands. | `--no-stop-options` |
+| Arrival rule | A waypoint counts as reached when the drone is within 0.08 m sideways and 0.08 m in height, slower than 0.05 m/s, for 0.5 s. This replaces the 2.5 cm tolerance and the 1 s hold. At the first checkpoint the turn-back point is north 2.515 m, the middle of the room between "whole drone past the line" and "touching the top wall". It counts as reached as soon as the whole drone is past the line, and the drone heads back at once. | `--no-new-arrival-rule` |
+
+Where each stop option lands on `sketch_2026-11-08.json` (from `full_course_stops.py`, checked by
+`test/test_full_course_stops.py`). "Past the line" is how far the whole footprint is past the
+checkpoint line; "clearance" is the gap from the propellers to the nearest thing on the map.
+
+| Option | Line | Lands | East, north (m) | Past the line | Clearance |
+|---|---|---|---:|---:|---:|
+| `corridor` | end of first corridor | straight down | -2.510, 2.515 | 0.085 m | 0.086 m, top wall |
+| `gate_a` | Gate A | straight down | 1.550, 2.120 | 0.115 m | 0.646 m, north-east boulder |
+| `tunnel` | tunnel exit | straight down | 2.060, -0.500 | 0.107 m | 0.105 m, tunnel |
+| `chicane` | Gate B | straight down | -1.030, -1.153 | 0.111 m | 0.311 m, A1 approach wall |
+
+The first corridor is tight: at the 0.08 m arrival tolerance, about 5 mm remains on each side.
+
+Tested in Gazebo on 2026-11-08, sketch world, practice mode, all four additions on (one run each,
+not a reliability study):
+
+| Run | Result |
+|---|---|
+| `20261108_124659` (full) | All 4 checkpoints, landed on the pad, 0 touches, motors off 126.8 s after takeoff. Largest PX4 height error 10.4 cm. |
+| `20261108_125038` (full) | All 4 checkpoints, landed on the pad, 0 touches, motors off 127.2 s after takeoff. Largest PX4 height error 13.7 cm. |
+| `20261108_125416` (`tunnel`) | First corridor, Maze and Tunnel counted, 0 touches, motors off 80.4 s after takeoff. The true centre landed at north -0.369 m, 0.15 m past the tunnel exit line, but the propellers' north edge was 2 cm short of being wholly past it. Camera tracking (here the simulator's pretend tracking, which drifts 1 cm per metre flown) put the drone 0.12 to 0.15 m further south than it truly was. A spot 0.107 m past the line does not cover that much drift. |
+
+Total time barely changed from Aditya's 127.1 s. The settle saves about 1.3 s and the first
+checkpoint 1 to 1.6 s, but most other waypoints take 0.1 to 0.5 s longer, because "slower than
+0.05 m/s for 0.5 s" takes about as long as "within 2.5 cm, then 1 s".
+
+In Gazebo, add `--stop-after-stage <option>` to `fly_course_in_gazebo.sh`, for example:
+
+```bash
+bash simulator/gazebo_full/fly_course_in_gazebo.sh \
+  --world drone_code/team_nav/course_maps/sketch_2026-11-08.json \
+  --run-mode practice --longest-run-seconds 300 --stop-after-stage tunnel -- practice_flight full_course
+```
+
+On the drone:
+
+```bash
+TEAM_NAV_RUN_MODE=practice ./drone.sh practice_flight full_course
+TEAM_NAV_RUN_MODE=practice TEAM_NAV_STOP_AFTER_STAGE=tunnel ./drone.sh practice_flight full_course
+```
+
 Short real-drone flights for the practice steps in `docs/ARCHITECTURE.md`, section 11 ("Test order"): flying 1 m out and back to measure how quickly the drone follows its target, and flying a mock gap and a mock window built in the net. They run on drone 16 exactly as written. So far they have flown only in our simulator (the 3D rendered sim, `simulator/`).
 
 The hover-and-land flight is not here. It is in `drone_code/smoke_flights/`.
@@ -87,6 +140,11 @@ The hover-and-land flight is not here. It is in `drone_code/smoke_flights/`.
 | `out_and_back.py` | From a low hover, 1 m forward as a step and back as a slide, then land. Measures the response delay and how far the drone trails its target. |
 | `response_measurements.py` | The arithmetic behind those two measurements, kept apart so it can be tested on its own. |
 | `mock_gap_and_window.py` | The competition program, `course_run.py`, with the practice course's map and mission. |
+| `full_course.py` | The checked full-course route on the sketch map, and its four switchable additions. |
+| `full_course_route.py` | The fixed route, its checks against the map, and when the whole drone is past a checkpoint line. |
+| `full_course_stops.py` | Where a full-course practice run lands for each `TEAM_NAV_STOP_AFTER_STAGE` option. |
+| `steadiness.py` | The "close, slow and staying so" rule for the takeoff settle and for arriving at a waypoint. |
+| `tracking_start_check.py` | The start check: camera tracking must read close to where it started. |
 
 The practice course itself is two files outside this folder: `course_maps/practice_mock_gap_and_window.json` and `missions/practice_mock_gap_and_window.json`. The tests are `test/test_practice_flights.py` and `test/test_practice_flights_measurements.py`.
 

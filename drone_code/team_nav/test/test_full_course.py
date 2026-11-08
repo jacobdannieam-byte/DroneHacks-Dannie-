@@ -63,7 +63,8 @@ def test_leg_waits_for_measured_arrival_and_keeps_target_lead_short():
     flight.link = link
     flight.watch = SimpleNamespace(drone_on_course=lambda: position.copy(), check=lambda: False,
                                    send_target_on_course=send)
-    flight.fly_leg(position.copy(), np.array([1., 0., .75]))
+    end = np.array([1., 0., .75])
+    flight.fly_leg(position.copy(), end, flight.baseline_arrival_at(end))
     assert link.seconds > 7
     assert np.linalg.norm(position - [1., 0., .75]) < .025
     assert max(np.linalg.norm(t - p) for _, t, p in sends) <= .276

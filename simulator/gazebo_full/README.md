@@ -17,6 +17,7 @@ simulator/gazebo_full/fly_course_in_gazebo.sh --world drone_code/team_nav/course
 - `--world <map file>` is what is really there: the course Gazebo builds, the referee judges and the picture shows. Without it, the organizers' drawing.
 - `--run-mode practice` (the default) or `competition` is given to `course_run` as `TEAM_NAV_RUN_MODE`, as on the drone.
 - `--longest-run-seconds N` stops `course_run` with Ctrl+C after N seconds (default 360), so it lands.
+- `--stop-after-stage <name>` is given to the flight program as `TEAM_NAV_STOP_AFTER_STAGE`, as `drone.sh` does on the drone (practice mode only). For `practice_flight full_course` the names are `corridor`, `gate_a`, `tunnel` and `chicane`.
 - Everything else, or everything after `--`, goes to `course_run` unchanged. The drone's own map is `course_run`'s `--map`; without it, `course_run` uses its own default map, whatever `--world` says. For example, to fly a drone whose map is wrong:
 
 ```bash
