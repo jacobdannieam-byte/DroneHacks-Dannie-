@@ -46,7 +46,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from team_nav.course_map import distance_to_shapes_metres, shapes_blocking_between_heights
-from team_nav.drone_dimensions import DRONE_RADIUS_METRES
+from team_nav.drone_dimensions import DRONE_RADIUS_METRES, REQUIRED_ROOM_METRES
 from team_nav.fallback_routes import FallbackRouteError, rounded_corners, shortest_high_path
 from team_nav.high_path_rules import _distances_to_everything, check_high_path, open_floor_clearances
 
@@ -93,6 +93,34 @@ def s_north_from_environment():
 
 
 S_METRES = (S_EAST_METRES, DEFAULT_S_NORTH_METRES)
+
+# The team's choice (2026-11-08): after the descent at S, before the LOOK, the drone backs straight
+# north (nose still south, no turn) by this much, so the camera is about 1 m from the tunnel's
+# mouth and both inside edges fit in the picture. At S (north 2.14) the camera is 0.70 m from the
+# phone scan's mouth and 0.80 m from the drawing's; 0.26 m back makes it 0.96 m and 1.06 m. The turn
+# stays at S, 0.91 m from the north net.
+LOOK_BACKUP_SETTING = "TEAM_NAV_LOOK_BACKUP_METRES"
+DEFAULT_LOOK_BACKUP_METRES = 0.26
+LARGEST_LOOK_BACKUP_METRES = 0.5
+LOOK_BACKUP_SPEED_METRES_PER_SECOND = 0.10
+LOOK_BACKUP_SETTLE_SECONDS = 1.0
+# The team's choice: the backup is refused if the drone's centre would come closer than this to the
+# north net (at 0.62 m its propeller tips are 0.32 m from the net).
+LEAST_LOOK_POINT_NET_METRES = 0.62
+
+
+def look_backup_from_environment():
+    text = os.environ.get(LOOK_BACKUP_SETTING, "").strip()
+    if not text:
+        return DEFAULT_LOOK_BACKUP_METRES
+    try:
+        backup_metres = float(text)
+    except ValueError:
+        raise TunnelFirstRouteError(f"{LOOK_BACKUP_SETTING} is '{text}', not a number of metres. Leave it out for "
+                                    f"{DEFAULT_LOOK_BACKUP_METRES} m.")
+    if not 0.0 <= backup_metres <= LARGEST_LOOK_BACKUP_METRES:
+        raise TunnelFirstRouteError(f"{LOOK_BACKUP_SETTING} is {backup_metres} m, outside 0 to {LARGEST_LOOK_BACKUP_METRES} m.")
+    return backup_metres
 GO_LINE_EAST_METRES = 2.17
 GO_END_NORTH_METRES = -0.95
 # The team's choices for the descent at S: the target slides at the fast speed until it is this
@@ -130,6 +158,7 @@ class TunnelFirstRoute:
     high_leg_metres: list                     # (east, north) points, S last.
     s_metres: np.ndarray
     go_end_metres: np.ndarray
+    look_point_metres: np.ndarray = None      # Where the LOOK happens: S moved north by the backup.
     high_leg_breaks: list = field(default_factory=list)
     high_leg_cautions: list = field(default_factory=list)
     notes: list = field(default_factory=list)  # Sentences for the records: the checks' results.
@@ -141,6 +170,8 @@ class TunnelFirstRoute:
                  f"climb to {CRUISE_HEIGHT_METRES:.1f} m;",
                  f"  high leg of {len(self.high_leg_metres)} points to S ({self.s_metres[0]:+.2f}, {self.s_metres[1]:+.2f});",
                  f"  turn 180 degrees left, descend to {TUNNEL_HEIGHT_METRES:.2f} m;",
+                 f"  back {self.look_point_metres[1] - self.s_metres[1]:.2f} m north to "
+                 f"({self.look_point_metres[0]:+.2f}, {self.look_point_metres[1]:+.2f}) and LOOK;",
                  f"  GO south at {TUNNEL_SPEED_METRES_PER_SECOND:.2f} m/s to ({self.go_end_metres[0]:+.2f}, {self.go_end_metres[1]:+.2f})."]
         lines += [f"  Allowed rule break: {text}" for text in self.high_leg_breaks]
         lines += [f"  Caution: {text}" for text in self.high_leg_cautions]
@@ -159,6 +190,7 @@ def plan_tunnel_first_route(course_map):
     check_open_floor(course_map, route, "the climb at the launch mark", launch, [CLIMB_HEIGHT_METRES], refuse=False)
     check_open_floor(course_map, route, "the high climb point", high_climb_point, [CLIMB_HEIGHT_METRES, CRUISE_HEIGHT_METRES])
     check_s(course_map, route)
+    plan_the_look_backup(course_map, route)
     plan_the_high_leg(course_map, route)
     check_the_go_line(course_map, route)
     return route
@@ -202,6 +234,32 @@ def _refuse_or_note_at_s(course_map, route, name, what):
         return
     raise TunnelFirstRouteError(f"On this map, {name} is {what}, at S ({route.s_metres[0]:+.2f}, {route.s_metres[1]:+.2f}). "
                                 f"The drone turns and descends there. Check the map file, or fly another mission.")
+
+
+def plan_the_look_backup(course_map, route):
+    """The LOOK point, north of S by the backup. Refuses the start if its centre would be closer than
+    LEAST_LOOK_POINT_NET_METRES to the north net, or if anything solid at the tunnel height comes within
+    the drone's needed room on the way."""
+    backup_metres = look_backup_from_environment()
+    look_point = route.s_metres + np.array([0.0, backup_metres])
+    north_net_metres = float(course_map.highest_corner_metres[1] - look_point[1])
+    if north_net_metres < LEAST_LOOK_POINT_NET_METRES:
+        raise TunnelFirstRouteError(
+            f"Backing {backup_metres:.2f} m north from S for the LOOK would put the drone's centre {north_net_metres:.2f} m from "
+            f"the north net on this map, closer than {LEAST_LOOK_POINT_NET_METRES:.2f} m. Use a smaller "
+            f"{LOOK_BACKUP_SETTING}, or 0 to look from S.")
+    north_values = np.linspace(route.s_metres[1], look_point[1], 20)
+    points = np.c_[np.full_like(north_values, look_point[0]), north_values]
+    shapes = [shape for shape in shapes_blocking_between_heights(course_map, TUNNEL_HEIGHT_METRES - 0.10, TUNNEL_HEIGHT_METRES + 0.10)
+              if shape.name != "the safety net"]
+    distances, names = distance_to_shapes_metres(points, shapes)
+    closest = int(np.argmin(distances))
+    if distances[closest] < REQUIRED_ROOM_METRES:
+        raise TunnelFirstRouteError(f"Backing north for the LOOK would bring the drone within {distances[closest]:.2f} m of "
+                                    f"{names[closest]}. Use a smaller {LOOK_BACKUP_SETTING}.")
+    route.look_point_metres = look_point
+    route.notes.append(f"LOOK point {backup_metres:.2f} m north of S: {north_net_metres:.2f} m from the north net; nearest "
+                       f"thing at the tunnel height {names[closest]}, {distances[closest]:.2f} m.")
 
 
 def plan_the_high_leg(course_map, route):

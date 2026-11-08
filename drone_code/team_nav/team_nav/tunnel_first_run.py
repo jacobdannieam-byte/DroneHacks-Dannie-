@@ -26,7 +26,8 @@ The flight, stage by stage (the team's design, 2026-11-08)
   turn       180 degrees to the left, slowly (heading_turn.py), holding position at S.
   descent    down to 0.90 m at S, the nose locked; then a 1 s hold, recording whether PX4 is
              using the bottom laser again.
-  look       the camera finds the tunnel's centre and the drone corrects sideways
+  look       backs 0.26 m north (TEAM_NAV_LOOK_BACKUP_METRES, nose still south) at 0.10 m/s, settles
+             1 s, then the camera finds the tunnel's centre and the drone corrects sideways
              (tunnel_first_look.py); if unsure, it flies the map's line (TEAM_NAV_TUNNEL_IF_UNSURE).
   tunnel     GO: south at 0.25 m/s along the tunnel's axis at 0.90 m, the nose locked, to past the exit.
   Then the normal landing there (TEAM_NAV_AFTER_TUNNEL=land, the default), or with
@@ -73,6 +74,7 @@ from team_nav.tunnel_first_route import (CLIMB_HEIGHT_METRES, CLIMB_SPEED_METRES
                                          DESCENT_FAST_METRES_PER_SECOND, DESCENT_SLOW_METRES_PER_SECOND,
                                          DESCENT_SLOW_PART_METRES, DESCENT_STAGE, FORWARD_STAGE, HIGH_LEG_STAGE,
                                          HIGH_SPEED_METRES_PER_SECOND, SETTLE_STAGE, TUNNEL_HEIGHT_METRES,
+                                         LOOK_BACKUP_SETTLE_SECONDS, LOOK_BACKUP_SPEED_METRES_PER_SECOND,
                                          TUNNEL_SPEED_METRES_PER_SECOND, TUNNEL_STAGE, TURN_STAGE,
                                          TunnelFirstRouteError, plan_tunnel_first_route)
 
@@ -285,7 +287,7 @@ class TunnelFirstRun(FallbackRun):
         self.watch.height_hold = self.height_hold
         self.locked_heading_on_course = None
         self.tunnel_camera = self.start_listening_to_the_camera()
-        self.go_start_metres = np.asarray(self.plan.route.s_metres, dtype=float)
+        self.go_start_metres = np.asarray(self.plan.route.look_point_metres, dtype=float)
         self.watch.start_the_heading_guard(heading_split_degrees(self.link))
         route = self.plan.route
         launch, climb_point, s_point, end = route.launch_metres, route.high_climb_point_metres, route.s_metres, route.go_end_metres
@@ -324,19 +326,28 @@ class TunnelFirstRun(FallbackRun):
         return TunnelLookCamera(self.link.node)
 
     def look(self):
-        """The LOOK step (tunnel_first_look.py): sets where GO starts."""
+        """Backs north to the LOOK point (nose still south), settles, then the LOOK step
+        (tunnel_first_look.py), which sets where GO starts."""
+        route = self.plan.route
+        backup_metres = float(route.look_point_metres[1] - route.s_metres[1])
+        if backup_metres > 0.0:
+            self.log.event("look", f"Backing {backup_metres:.2f} m north (nose still south) to the LOOK point "
+                                   f"({route.look_point_metres[0]:+.2f}, {route.look_point_metres[1]:+.2f}).")
+            self.follow_with_speeds([_at(route.s_metres, TUNNEL_HEIGHT_METRES), _at(route.look_point_metres, TUNNEL_HEIGHT_METRES)],
+                                    [0.0, LOOK_BACKUP_SPEED_METRES_PER_SECOND], LOW_TARGET_LEAD_METRES)
+            flight_steps.hold_still_for(self.link, self.watch, LOOK_BACKUP_SETTLE_SECONDS)
         self.go_start_metres = LookStep(self, self.tunnel_camera).run_look()
 
     def go_through_the_tunnel(self):
         """GO: from where the LOOK left the drone, along the tunnel's axis on the map, as far as the
-        planned GO line goes. Unchanged from Phase 1 when GO starts at S."""
+        planned GO line goes. The map's GO line (as in Phase 1) when GO starts at the LOOK point."""
         route = self.plan.route
         start = np.asarray(self.go_start_metres, dtype=float)
         end = np.asarray(route.go_end_metres, dtype=float)
-        if np.linalg.norm(start - route.s_metres) > 1e-6:
+        if np.linalg.norm(start - route.look_point_metres) > 1e-6:
             tube = self.plan.course_map.tubes[0]
             axis = (tube.exit_centre_metres - tube.entrance_centre_metres) / tube.length_metres()
-            end = start + axis * float(np.linalg.norm(route.go_end_metres - route.s_metres))
+            end = start + axis * float(np.linalg.norm(route.go_end_metres - route.look_point_metres))
         self.log.event("go", f"GO from ({start[0]:+.3f}, {start[1]:+.3f}) to ({end[0]:+.3f}, {end[1]:+.3f}).",
                        go_start_metres=start.tolist(), go_end_metres=end.tolist())
         self.follow([_at(start, TUNNEL_HEIGHT_METRES), _at(end, TUNNEL_HEIGHT_METRES)], TUNNEL_SPEED_METRES_PER_SECOND,

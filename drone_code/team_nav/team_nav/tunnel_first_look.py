@@ -17,7 +17,9 @@ What it does (the team's design, 2026-11-08)
      most CORRECTION_STEP_METRES at CORRECTION_SPEED, looks again, and repeats until what is left
      is at most GOOD_ENOUGH_METRES.
   5. GO then starts from the corrected point and flies along the tunnel's axis from the map.
-When unsure: with TEAM_NAV_TUNNEL_IF_UNSURE=map (the default) the drone goes back to S and flies
+It happens at the LOOK point, north of S by TEAM_NAV_LOOK_BACKUP_METRES (tunnel_first_route.py).
+When unsure: with TEAM_NAV_TUNNEL_IF_UNSURE=map (the default) the drone goes back to the LOOK point
+(on the map's line) and flies
 Phase 1's map line, so the camera can only improve on Phase 1; with =land it lands where it is.
 It never waits for depth pictures beyond the look's deadline.
 
@@ -75,9 +77,10 @@ class LookStep:
         self.records_folder = getattr(self.log, "folder", None)
 
     def run_look(self):
-        """Returns the point (east, north) GO starts from: corrected, or S if unsure (with =map).
+        """Returns the point (east, north) GO starts from: corrected, or the LOOK point (on the map's line,
+        north of S) if unsure (with =map).
         Raises flight_steps.RunMustStop if unsure with =land."""
-        s_point = np.asarray(self.run.plan.route.s_metres, dtype=float)
+        s_point = np.asarray(self.run.plan.route.look_point_metres, dtype=float)
         try:
             corrected = self.look_and_correct(s_point.copy())
         except LookUnsure as unsure:
@@ -94,14 +97,14 @@ class LookStep:
             if not verdict.accepted and verdict.clipped_side and slides < LARGEST_SLIDES:
                 slides += 1
                 point = self.slide_toward(point, verdict.clipped_side)
-                total_correction = point - np.asarray(self.run.plan.route.s_metres)
+                total_correction = point - np.asarray(self.run.plan.route.look_point_metres)
                 continue
             self.refuse_if_unsure(verdict, depth_offset, total_correction)
             if abs(verdict.left_offset_metres) <= GOOD_ENOUGH_METRES:
                 return point
             step = float(np.clip(verdict.left_offset_metres, -CORRECTION_STEP_METRES, CORRECTION_STEP_METRES))
             point = self.move_left_by(point, step)
-            total_correction = point - np.asarray(self.run.plan.route.s_metres)
+            total_correction = point - np.asarray(self.run.plan.route.look_point_metres)
         raise LookUnsure("the correction did not settle within 0.05 m after the allowed steps")
 
     def refuse_if_unsure(self, verdict, depth_offset, total_correction):
@@ -167,7 +170,7 @@ class LookStep:
         return px4_speed_metres_per_second(self.link) < STILL_SPEED_METRES_PER_SECOND and abs(rotation) < STILL_ROTATION_DEGREES_PER_SECOND
 
     def current_target(self):
-        target = getattr(self, "target_point", self.run.plan.route.s_metres)
+        target = getattr(self, "target_point", self.run.plan.route.look_point_metres)
         return self.run.height_hold_correction_target([target[0], target[1], self.run.tunnel_height_metres()],
                                                       flight_steps.CYCLE_SECONDS)
 

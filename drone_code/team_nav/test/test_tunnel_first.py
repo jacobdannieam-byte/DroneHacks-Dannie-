@@ -272,3 +272,18 @@ def test_with_depth_points_the_widest_pair_at_the_right_distance_is_the_tunnel_m
     true_offset = -1.47 * ((60 + 500) / 2.0 - cx) / 440.0
     assert look.found_both() and look.left_offset_metres == pytest.approx(true_offset, abs=0.03)
     assert look.distance_metres == pytest.approx(rim_distance, rel=0.05)
+
+
+@pytest.mark.parametrize("map_name", [DRAWING_MAP, SCAN_MAP])
+def test_the_look_backs_0_26_m_north_of_s_and_keeps_0_62_m_from_the_net(map_name, monkeypatch):
+    from team_nav.tunnel_first_route import TunnelFirstRouteError
+    monkeypatch.delenv("TEAM_NAV_LOOK_BACKUP_METRES", raising=False)
+    monkeypatch.delenv("TEAM_NAV_S_NORTH_METRES", raising=False)
+    course_map = load_our_map(map_name)
+    route = plan_tunnel_first_route(course_map)
+    assert np.allclose(route.s_metres, S_METRES)
+    assert np.allclose(route.look_point_metres, [S_METRES[0], S_METRES[1] + 0.26])
+    assert course_map.highest_corner_metres[1] - route.look_point_metres[1] >= 0.62
+    monkeypatch.setenv("TEAM_NAV_LOOK_BACKUP_METRES", "0.40")
+    with pytest.raises(TunnelFirstRouteError, match="north net"):
+        plan_tunnel_first_route(course_map)

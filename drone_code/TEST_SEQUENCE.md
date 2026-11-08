@@ -345,11 +345,13 @@ it stage by stage:
 - 0.8 m north, climb to 2.4 m, fly at 2.4 m to S = (2.17, 2.14), above open floor before the tunnel;
 - turn 180 degrees to the left, slowly (10 degrees a second, pausing if PX4 lags);
 - descend at S to 0.90 m;
+- back 0.26 m straight north (nose still south) at 0.10 m/s and settle 1 s, so the camera is about 1 m
+  from the tunnel's mouth (`TEAM_NAV_LOOK_BACKUP_METRES`; refused if the drone would come closer than
+  0.62 m to the north net);
 - LOOK: the camera finds the tunnel's centre and the drone corrects sideways by at most 0.35 m. If the
   look is unsure, it flies the map's line instead (`TEAM_NAV_TUNNEL_IF_UNSURE=map`, the default; `=land`
-  lands instead). At S's default north 2.14 the tunnel's mouth is wider than the camera's picture, so
-  the look is normally unsure. `TEAM_NAV_S_NORTH_METRES=2.40` puts S where the camera sees both edges,
-  but only 0.65 m from the north net;
+  lands instead). Without the backup (at S, north 2.14) the tunnel's mouth is wider than the camera's
+  picture;
 - fly south at 0.25 m/s along the tunnel through it, to north -0.95;
 - land there (the default, `TEAM_NAV_AFTER_TUNNEL=land`), or with `TEAM_NAV_AFTER_TUNNEL=pad` climb
   back to 2.4 m and fly to the pad.
