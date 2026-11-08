@@ -22,6 +22,29 @@ RECEIPT_WALL_SILENCE_NS = 3_000_000_000  # Maximum calibration owner receipt all
 CLOCK_STALL_NS = 300_000_000  # Same steady-clock stall limit as the native owner.
 
 
+def initial_clock_ready(read_clock, spin, wall=monotonic, *, timeout_s=5.):
+    """Initialize ROS time before subscribing to PX4; never relax sample age checks.
+
+    This is a pre-readiness phase only. No sample/event subscription or owner
+    readiness exists yet; the independent raw bag is already recording.
+    """
+    deadline = wall() + timeout_s
+    previous = None
+    while wall() < deadline:
+        spin()
+        now = read_clock()
+        if type(now) is not int or now < 0:
+            return False
+        if now > 0:
+            if previous is not None:
+                if now < previous:
+                    return False
+                if now > previous:
+                    return True
+            previous = now
+    return False
+
+
 def event_publisher_identity(node, topic, owner_id):
     """Inspect Humble's singleton graph endpoint; this is not message authentication.
 
@@ -349,6 +372,14 @@ def main():
     from refnav.node import PX4_QOS
     rclpy.init(args=['--ros-args','-p','use_sim_time:=true'])
     node=rclpy.create_node('qualification_recorder')
+    if not initial_clock_ready(lambda: node.get_clock().now().nanoseconds,
+                               lambda: rclpy.spin_once(node, timeout_sec=.01)):
+        record.faults.append('recorder_initial_clock_unavailable')
+        with args.output.open('x') as stream:
+            json.dump(record.result(), stream, indent=2, allow_nan=False)
+        node.destroy_node()
+        try_shutdown()
+        return 2
     node.create_subscription(VehicleLocalPosition,topics['vehicle_local_position'],
         lambda m: record.sample(m,node.get_clock().now().nanoseconds),PX4_QOS)
     def owner_event(message):
