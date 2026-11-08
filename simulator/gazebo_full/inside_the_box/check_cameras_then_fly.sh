@@ -52,12 +52,28 @@ echo "[gazebo_full] Checking stereo depth once, on the launch mark."
 python3 /repository/simulator/gazebo_full/check_stereo_depth.py "$run_folder/stereo_check" \
     || echo "[gazebo_full] The stereo check failed. Its message above says why. The flight goes on."
 
-echo "[gazebo_full] Starting course_run, as on the drone: ros2 run team_nav course_run $*"
-python3 /repository/simulator/test_flights/real_program_test.py \
-    --longest-run-seconds "$longest_run_seconds" \
-    --env "TEAM_NAV_RUN_MODE=$TEAM_NAV_RUN_MODE" \
-    --env "TEAM_NAV_RECORDS_FOLDER=$TEAM_NAV_RECORDS_FOLDER" \
-    -- ros2 run team_nav course_run "$@"
+if [ $# -gt 0 ] && [ "$1" = "ros2" ]; then
+    echo "[gazebo_full] Starting flight command: $*"
+    python3 /repository/simulator/test_flights/real_program_test.py \
+        --longest-run-seconds "$longest_run_seconds" \
+        --env "TEAM_NAV_RUN_MODE=$TEAM_NAV_RUN_MODE" \
+        --env "TEAM_NAV_RECORDS_FOLDER=$TEAM_NAV_RECORDS_FOLDER" \
+        -- "$@"
+elif [ $# -gt 0 ] && [ "$1" = "practice_flight" ]; then
+    echo "[gazebo_full] Starting practice flight: ros2 run team_nav practice_flight ${*:2}"
+    python3 /repository/simulator/test_flights/real_program_test.py \
+        --longest-run-seconds "$longest_run_seconds" \
+        --env "TEAM_NAV_RUN_MODE=$TEAM_NAV_RUN_MODE" \
+        --env "TEAM_NAV_RECORDS_FOLDER=$TEAM_NAV_RECORDS_FOLDER" \
+        -- ros2 run team_nav practice_flight "${@:2}"
+else
+    echo "[gazebo_full] Starting course_run, as on the drone: ros2 run team_nav course_run $*"
+    python3 /repository/simulator/test_flights/real_program_test.py \
+        --longest-run-seconds "$longest_run_seconds" \
+        --env "TEAM_NAV_RUN_MODE=$TEAM_NAV_RUN_MODE" \
+        --env "TEAM_NAV_RECORDS_FOLDER=$TEAM_NAV_RECORDS_FOLDER" \
+        -- ros2 run team_nav course_run "$@"
+fi
 flight_exit_code=$?
 
 echo "[gazebo_full] Stopping the flight recorder, the stamp recorder and the team's depth program."

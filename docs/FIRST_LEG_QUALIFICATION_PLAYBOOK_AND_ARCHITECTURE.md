@@ -497,8 +497,30 @@ Wait until the terminal prints:
 
 ## 9. Simulation & Verification Playbook
 
-### Running in Full Gazebo 3D Simulation
-To test the complete flight in 3D Gazebo with full stereo matching and physics:
+The flight software on this branch is qualified to run identically across three simulation tiers: full 3D Gazebo with stereo camera simulation, the fast lightweight 2D simulator, and the comprehensive unit test suite.
+
+### Tier 1: Full Gazebo 3D Simulation (Camera Eyes & True Physics)
+The full Gazebo simulator runs PX4 SITL (Software-in-the-Loop) using Drone 16's exact physical parameters, launches the MicroXRCEAgent message bridge, renders dual-eye stereo camera streams ($512 \times 320$ at $10\text{ Hz}$), executes `depth_camera` block matching, and runs our deterministic flight code.
+
+#### 1. System Requirements & Docker Setup
+* **Mac (Colima):**
+  ```bash
+  # Ensure Colima has sufficient CPU cores and memory for 3D physics:
+  colima start --cpu 6 --memory 10 --mount "$PWD:w"
+  ```
+* **Linux / WSL2 (Native Docker Engine):**
+  Ensure Docker service is running:
+  ```bash
+  sudo service docker start
+  ```
+
+#### 2. Build the Gazebo Simulator Box (One-Time Setup)
+```bash
+simulator/gazebo_full/build_gazebo_full_image.sh
+```
+
+#### 3. Execute the First Maze Leg Qualification Flight in Gazebo
+To simulate `first_maze_leg` on the scanned competition world:
 ```bash
 simulator/gazebo_full/fly_course_in_gazebo.sh \
     --world drone_code/team_nav/course_maps/phone_scan_2026-11-06.json \
@@ -507,8 +529,40 @@ simulator/gazebo_full/fly_course_in_gazebo.sh \
     -- ros2 run team_nav practice_flight first_maze_leg
 ```
 
-### Running in Fast Lightweight Simulator
-To test logic and trajectory geometry in seconds:
+Or with **bare-bones safety** (recommended for simulation to prevent false tilt aborts from ground turbulence):
+```bash
+simulator/gazebo_full/fly_course_in_gazebo.sh \
+    --world drone_code/team_nav/course_maps/phone_scan_2026-11-06.json \
+    --run-mode practice \
+    --longest-run-seconds 120 \
+    -- ros2 run team_nav practice_flight first_maze_leg --bare-bones-safety
+```
+
+#### 4. How the Simulated Teammate Operates
+1. Gazebo builds the world mesh from `phone_scan_2026-11-06.json` and textures the arena walls.
+2. The simulation spawns PX4, `flight_interface`, and `flight_recorder`.
+3. `check_stereo_depth.py` performs a ground truth stereo camera accuracy check on the launch pad.
+4. `first_maze_leg` starts and streams takeoff setpoints at $+0.75\text{ m}$.
+5. `real_program_test.py` detects the steady target stream and calls `/simulator_only/start_run` (simulating the teammate arming and flipping to Position mode).
+6. The drone climbs vertically, flies Corridor 1, turns $90^\circ$ East at $15^\circ/\text{s}$, advances past Divider M1, lands, and disarms.
+
+#### 5. Inspecting Gazebo Flight Outputs
+After the simulation finishes, inspect the output directory:
+`simulator/generated_files/gazebo_full_runs/<run_timestamp>/`:
+* **`summary.txt`:** Execution status, referee checkpoint verdicts, touches, simulation clock speed, and stereo depth metrics.
+* **`path_from_above.png`:** Top-down plot rendering true Gazebo path, cuVSLAM tracked path, obstacle clearance buffers, and waypoint targets.
+* **`stereo_check/stereo_depth_check.png`:** StereoSGBM disparity point cloud matched against Gazebo ground-truth 3D model.
+* **`referee/flight_*.csv`:** True physical ground position sampled at $30\text{ Hz}$.
+* **3D Interactive Playback:**
+  ```bash
+  python3 simulator/flight_viewer/make_flight_viewer.py
+  # Generates viewer_page.html and opens interactive 3D flight trajectory in your web browser
+  ```
+
+---
+
+### Tier 2: Fast Lightweight Simulator (Rapid Arithmetic Qualification)
+If you want to verify trajectory coordinates, stage pacing, and safety boundaries in seconds without launching 3D Gazebo graphics:
 ```bash
 simulator/run_test_flight.sh \
     --world drone_code/team_nav/course_maps/phone_scan_2026-11-06.json \
@@ -516,8 +570,10 @@ simulator/run_test_flight.sh \
     -- ros2 run team_nav practice_flight first_maze_leg
 ```
 
-### Running the Non-ROS Test Suite
-Verify that all 263 unit tests pass cleanly:
+---
+
+### Tier 3: Non-ROS Unit Test Suite Verification
+Verify all 263 mathematical, sensor, and state machine tests across the repository:
 ```bash
 wsl bash -c "export LD_LIBRARY_PATH=/opt/ros/humble/lib:\$LD_LIBRARY_PATH && export PYTHONPATH=/mnt/c/Users/jacob/.gemini/antigravity/worktrees/Dronehacks_stuff/untitled-worktree/drone_code/team_nav:/opt/ros/humble/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:\$PYTHONPATH && cd /mnt/c/Users/jacob/.gemini/antigravity/worktrees/Dronehacks_stuff/untitled-worktree && python3 -m pytest drone_code/team_nav/test -q -p no:cacheprovider"
 # Expected Result: 263 passed, 1 skipped in ~100s
@@ -525,7 +581,7 @@ wsl bash -c "export LD_LIBRARY_PATH=/opt/ros/humble/lib:\$LD_LIBRARY_PATH && exp
 
 ---
 
-## 10. Summary of Files on the `first_leg` Branch
+## 10. Summary of Files on the `classical-dannielastday` Branch
 
 | File Path | Status | Key Modification / Responsibility |
 |---|---|---|
@@ -534,4 +590,6 @@ wsl bash -c "export LD_LIBRARY_PATH=/opt/ros/humble/lib:\$LD_LIBRARY_PATH && exp
 | [`drone_code/team_nav/test/test_run_safety.py`](file:///C:/Users/jacob/.gemini/antigravity/worktrees/Dronehacks_stuff/untitled-worktree/drone_code/team_nav/test/test_run_safety.py) | **Modified** | Added unit test coverage for `bare_bones_safety` mode. |
 | [`drone_code/team_nav/team_nav/practice_flights/run_practice_flight.py`](file:///C:/Users/jacob/.gemini/antigravity/worktrees/Dronehacks_stuff/untitled-worktree/drone_code/team_nav/team_nav/practice_flights/run_practice_flight.py) | **Modified** | Registered `first_maze_leg` into CLI dispatch table. |
 | [`drone_code/team_nav/team_nav/depth_to_map.py`](file:///C:/Users/jacob/.gemini/antigravity/worktrees/Dronehacks_stuff/untitled-worktree/drone_code/team_nav/team_nav/depth_to_map.py) | **Modified** | Initialized `last_picture_monotonic_seconds` to eliminate cycle-0 false freeze bug. |
-| [`docs/FIRST_LEG_QUALIFICATION_PLAYBOOK_AND_ARCHITECTURE.md`](file:///C:/Users/jacob/.gemini/antigravity/worktrees/Dronehacks_stuff/untitled-worktree/docs/FIRST_LEG_QUALIFICATION_PLAYBOOK_AND_ARCHITECTURE.md) | **Created** | Master architectural, operational, and forensic qualification manual. |
+| [`simulator/gazebo_full/inside_the_box/check_cameras_then_fly.sh`](file:///C:/Users/jacob/.gemini/antigravity/worktrees/Dronehacks_stuff/untitled-worktree/simulator/gazebo_full/inside_the_box/check_cameras_then_fly.sh) | **Modified** | Enabled dynamic dispatch so Gazebo can simulate practice flights (`first_maze_leg`) as well as `course_run`. |
+| [`simulator/gazebo_full/draw_run.py`](file:///C:/Users/jacob/.gemini/antigravity/worktrees/Dronehacks_stuff/untitled-worktree/simulator/gazebo_full/draw_run.py) | **Modified** | Enhanced flight records discovery to parse practice flight folders and render paths. |
+| [`docs/FIRST_LEG_QUALIFICATION_PLAYBOOK_AND_ARCHITECTURE.md`](file:///C:/Users/jacob/.gemini/antigravity/worktrees/Dronehacks_stuff/untitled-worktree/docs/FIRST_LEG_QUALIFICATION_PLAYBOOK_AND_ARCHITECTURE.md) | **Created** | Master architectural, operational, simulation, and forensic qualification manual. |

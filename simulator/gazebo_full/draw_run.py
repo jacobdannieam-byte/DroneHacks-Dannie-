@@ -98,7 +98,17 @@ def read_text_or(path, missing_text):
 
 
 def course_run_folder(run_folder):
-    return newest_file(os.path.join(run_folder, "course_run_records", "*_course_run"))
+    folder = newest_file(os.path.join(run_folder, "course_run_records", "*_course_run"))
+    if folder is None:
+        records_dir = os.path.join(run_folder, "course_run_records")
+        if os.path.exists(records_dir):
+            candidates = [os.path.join(records_dir, f) for f in os.listdir(records_dir)
+                          if os.path.isdir(os.path.join(records_dir, f))
+                          and not f.endswith("_flight_recorder")
+                          and not f.endswith("_depth_camera")]
+            if candidates:
+                folder = sorted(candidates)[-1]
+    return folder
 
 
 def course_run_events(folder):
