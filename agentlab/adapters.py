@@ -1,8 +1,5 @@
-"""Fail-closed activation boundaries. No external process or network execution."""
-class DisabledAdapter:
+"""Production transports are gated; default construction remains disabled."""
+from .integrations import CodexWorker, GazeboRunner, NotionPublisher
+class PhysicalFlight:
     def execute(self,*args,**kwargs):
-        raise PermissionError('Not activated or live qualified; execution unavailable in this build')
-CodexWorker = DisabledAdapter
-GazeboRunner = DisabledAdapter
-NotionPublisher = DisabledAdapter
-PhysicalFlight = DisabledAdapter
+        raise PermissionError('Physical flight is not supported by the lab')

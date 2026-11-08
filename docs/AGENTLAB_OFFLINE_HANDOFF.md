@@ -1,48 +1,48 @@
-# Agent lab: reconstructed offline staging
+# Agent lab integration handoff
 
-Built from the supplied handoff, not recovered from the unavailable 41-file package.
-All execution is disabled. No agents, autonomous loops, simulations or flights were started.
+## Implemented transport code; disabled deployment
 
-## Capability matrix
+All checked-in execution flags remain false. No agents, autonomous loops, simulations, Notion writes or physical flights ran during implementation. Classical and existing flight/safety/grader sources are unchanged.
 
-| Capability | Status |
-|---|---|
-| Eleven role contracts | TOML audited; read-only; not runtime-qualified |
-| Experiment and repair queues | SQLite persistence, deduplication, rejection |
-| Offline job lifecycle | Separate reviewer, atomic claims, token fencing, bounded retry, cancellation, expiry recovery |
-| Manifest and policy-path checks | Offline validation only; not OS-level isolation |
-| Failure triage | Deterministic evidence classification |
-| Scoring | Validated engineering metrics; official score always null |
-| Performance summaries | Finite input validation and interpolated percentiles |
-| Codex/Gazebo/Notion/physical execution | Explicitly disabled adapters; not implemented live connectors |
-| Worktree execution and permission enforcement | Not implemented |
-| ROS bag/referee ingestion and official scoring | Not implemented |
-| Live integration and Orin performance | Not qualified |
+| Component | Implemented | Offline validation |
+|---|---|---|
+| Codex worker | Real `codex exec --json --sandbox read-only` transport, role contract, source verification, terminal-event validation | Fake process transcripts; no Codex invocation |
+| Worktrees | Git detached worktree creation at immutable SHA; identifier checks; preserve existing worktrees | Command contract tested with fake Git runner |
+| Job lifecycle | Durable review, atomic lease, expiry recovery, bounded retries, cancellation, stale-token rejection | SQLite tests |
+| One-shot pipeline | Approval before worktree/claim, source binding, immutable result file, completion fencing | Source inspected; full live workflow unqualified |
+| Gazebo | Existing examples/gazebo_container.py fly adapter; source/world hash checks; existing harness approval retained | Default execution denial; native runtime not invoked |
+| Referee | Independent summary hash, required fields and conservative completion predicate | Fixture ingestion |
+| ROS bags | Read-only SQLite topic/count/time ingestion and artifact hash | Synthetic SQLite bag; explicitly does not verify CDR telemetry |
+| Notion | Bounded append-block request, page UUID, report-bound approval, external token, no automatic retries | Fake HTTP transport; no publication |
+| Physical flight | Unconditionally unavailable | Denial test |
 
-The SQLite reviewer identity is caller-supplied. This is a workflow contract, not authenticated human approval. Offline leases do not launch processes. There is no worker service, background watchdog or production scheduler. The example JavaScript deliberately exits 2. Do not enable execution by changing JSON flags: the adapters still refuse.
+## Scope and limitations
+
+Workers are real CLI integrations rather than an SDK scheduler. Every worker remains read-only and returns patch proposals as data, including implementer and repairer roles. Applying those patches requires a separately reviewed implementation; no write-capable agent or automatic patch executor is provided. There is no autonomous dispatch loop.
+
+The approval object is an operator-supplied record bound to a payload hash and expiry, not an authenticated identity service. It must only be constructed by a trusted controller; do not expose it to worker output or untrusted API callers. Checked-in staged config cannot authorize it. Runtime configuration requires mode=reviewed_execution plus a capability flag and matching approval; none were enabled here.
+
+Process execution is Linux-only with a bounded timeout and process-group kill. Windows live execution refuses. Durable cancellation fences completion, but does not currently signal an already running process; timeout terminates it. Git worktrees isolate changes, not host security. Production use requires OS isolation and host-level credential separation. Do not give workers simulator credentials or Notion tokens. The current runner inherits its environment, so deployment must provide a sanitized environment.
+
+Referee hashes identify artifacts but do not authenticate the producer. Trust requires an independently controlled artifact directory. Bag metadata is not a substitute for deserializing fresh landed/disarmed/estimator messages. Official competition scoring is not implemented; official_score remains null.
 
 ## Validation
 
-- Python 3.11.9; Node v24.11.0.
-- 12 new unittest cases passed (including parameterized adverse inputs).
-- Existing repository regression suite: 452 passed in 30.93 seconds.
-- Python compileall passed.
-- Doctor: STAGING_READY_OFFLINE_ONLY; 11 roles; execution_available=false.
-- Disabled JavaScript example refused execution.
+18 lab tests passed. These exercise fake process/HTTP transports, SQLite lifecycle, config denials, immutable identities, referee and bag fixtures. Existing repository regression suite is run separately. Python compilation and Git whitespace checks are included. No live qualification is claimed.
 
-These are offline tests, not simulated or physical flights. Existing flight, estimator, safety and grader files were not edited. The handoff's protected S1 run is run-AdMalPxA at ad31ae55ebf7cd3b2eaf57917537242831e3c752: 84.3 seconds, four checkpoints, zero recorded touches, landed/disarmed. This is supplied historical evidence, not remeasured here. The user's physically tested Classical baseline remains protected separately.
+## Activation procedure (not performed)
 
-## Use
+1. Review source and frozen job manifest, exact input artifacts and role output; supply authenticated approvals outside worker-controlled files.
+2. Qualify Codex CLI version/authentication and flags on a dedicated Linux runner. Use a sanitized environment and OS isolation. Test cancellation/process cleanup before granting any live capability.
+3. Qualify worktree creation and cleanup on a disposable repository; preserve failed trees and immutable outputs. Never share a mutable source checkout across workers.
+4. Qualify the Gazebo adapter inside the existing isolated container; do not start extra PX4/XRCE processes. Bind profile and existing harness approval to the source/world and separate mission authorization.
+5. Add ROS message deserialization and validate independent referee provenance before accepting a run as successful.
+6. Configure a narrowly scoped Notion token outside Git. Review the destination and exact report. On uncertain publication, reconcile remote blocks before retrying.
+7. Authorize only a bounded one-shot operation. Continuous loops and hardware stay disabled. Physical flight is outside this lab adapter.
 
-Run `python -m agentlab doctor` or `python -m unittest discover -s agentlab/tests -v` from the repository root. CLI help lists staging commands. Use an explicit local --db path for queue operations. Do not commit local SQLite files or credentials.
+## References
 
-## Separate activation procedure (not authorized or performed)
+- https://developers.openai.com/codex/noninteractive (JSONL events, read-only sandbox, stdin prompt)
+- https://developers.notion.com/reference/patch-block-children (append-block API)
 
-1. Implement and independently review real Codex SDK, immutable worktree, OS sandbox, executable allowlist and authenticated approval adapters. Pin and verify supported SDK/config versions before installing runtime configuration.
-2. Bind approvals to exact source, manifest, permitted paths, budgets and evidence digests. Enforce reviewer separation outside caller-supplied strings.
-3. Connect the existing Gazebo harness without introducing a second autopilot/command owner. Add independent referee and bag ingestion; keep truth out of policy inputs.
-4. Implement official scoring against the approved rule revision and test reference cases. Authenticate Notion separately and review publication destinations.
-5. Qualify cancellation, process termination, crash recovery, concurrent isolation and immutable artifacts using non-moving integration tests.
-6. Obtain separate authorization for a bounded simulator trial. Verify current readiness and record all outcomes. Hardware authorization and qualification remain separate.
-
-No .codex/config.toml was installed: the handoff's claimed agents.enabled setting has not been verified as a supported runtime switch. The package's own configuration and non-executable adapters enforce offline mode; role files alone grant no execution authority.
+This document supersedes the earlier placeholder-only capability matrix. It describes executable integration code and its remaining deployment/qualification boundaries, not production readiness.

@@ -1,1 +1,1 @@
-452 passed in 30.93s; python -m pytest tests -q; base 26724362b685b63287a937c25e96143a3f44ddcf
+452 passed in 24.49s; python -m pytest tests -q; offline integration adapter change
