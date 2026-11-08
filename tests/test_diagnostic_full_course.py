@@ -95,3 +95,23 @@ def test_native_diagnostic_fence_accepts_fresh_position_but_not_authority_change
     assert publication_reason(obs,fresh,60_000_000,NS,NS+60_000_000,diagnostic_model=True) is None
     assert publication_reason(obs,fresh,101_000_000,NS,NS+101_000_000,diagnostic_model=True)=='model_state_expired'
     assert publication_reason(obs,replace(fresh,armed=False),60_000_000,NS,NS+60_000_000,diagnostic_model=True)=='observation_superseded'
+
+
+def test_diagnostic_clock_coalesces_newest_sample_without_extending_wait():
+    from examples.calibration_trial_owner import ConcurrentNativeInputs,NativeInputs
+    from examples.calibration_trial_probe import Fixture
+    from refnav.calibration_trial import NS
+    for cls in (ConcurrentNativeInputs,NativeInputs):
+        inputs=cls(Fixture().mapping,1.)
+        inputs.offer('position',1_004_000,1_004_000,'first',NS,NS)
+        inputs.offer('position',1_008_000,1_008_000,'second',NS,NS+5_000_000)
+        if cls is NativeInputs:
+            assert inputs.fault=='overlapping_px4_clock_deferral'
+        else:
+            assert inputs.fault is None and inputs.coalesced_deferred==1
+            assert inputs.pending['position'][1][1]==NS
+            inputs.advance(NS+20_000_000,NS+20_000_000)
+            assert inputs.samples['position'][2]=='second'
+            inputs.offer('position',1_024_000,1_024_000,'third',NS+20_000_000,NS+20_000_000)
+            inputs.advance(NS+30_000_000,NS+321_000_000)
+            assert inputs.fault=='px4_clock_deferral_expired'

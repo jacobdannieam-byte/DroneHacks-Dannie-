@@ -44,13 +44,15 @@ def render(root):
                 receipt=publications[count-1];decision=decisions[receipt['sequence']]
                 lines += [f"Last command waypoint: {decision['waypoint']+1}/22",
                           f"PINN choice: {decision['selected']}",f"D0 comparison: {decision['d0_selected']}",
+                          'PINN scores (lower wins):',
+                          '  '.join(f"{r['candidate_id']}:{r['pinn']['score']:.3f}" for r in decision['candidates']),
                           'Command NED metres:',str([round(x,3) for x in receipt['position_ned_m']])]
             else:lines += ['No PINN command published yet','Native startup / climb / recovery']
             lines += ['', 'FINAL OUTCOME (whole run):',result,'Not a safety qualification']
             for line,y in zip(lines,range(24,620,29)):
                 draw.text((785,y),line,font=font,fill='#d9e5f2')
             writer.append_data(np.asarray(canvas))
-            if i==min(35,len(frames)-1):canvas.save(root/'video-poster.png')
+            if i==min(max(35,len(frames)//2),len(frames)-1):canvas.save(root/'video-poster.png')
     reader=imageio.get_reader(str(path));decoded=sum(1 for _ in reader);reader.close()
     if decoded!=len(frames):raise ValueError('Video frame count mismatch')
     metadata=dict(video=str(path.resolve()),frames=decoded,fps=1,

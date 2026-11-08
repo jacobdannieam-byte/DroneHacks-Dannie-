@@ -124,6 +124,9 @@ class NativeInputs:
         self.reset_identity = None
         self.fault = None
         self.clock_failures = []
+        self.defer_limit_ns = MAX_DEFER_NS
+        self.coalesce_deferred = False
+        self.coalesced_deferred = 0
 
     def offer(self, role, source_us, publish_us, value, ros_ns, wall_ns):
         if ros_ns < self.mapping.valid_from_ns or ros_ns <= 0:
@@ -142,13 +145,19 @@ class NativeInputs:
         stamp = source_us * 1000 + self.mapping.offset_ns
         upper = publish_us * 1000 + self.mapping.offset_ns + self.mapping.max_error_ns
         if (stamp - self.mapping.max_error_ns < self.mapping.valid_from_ns
-                or max(upper, ros_ns) > self.mapping.valid_until_ns or upper - ros_ns > MAX_DEFER_NS):
+                or max(upper, ros_ns) > self.mapping.valid_until_ns or upper - ros_ns > self.defer_limit_ns):
             self.fault = 'px4_clock_mapping_outside_review'
             return
         self.advance(ros_ns, wall_ns)
         if role in self.pending:
-            self.fault = 'overlapping_px4_clock_deferral'
-            return
+            if not self.coalesce_deferred:
+                self.fault = 'overlapping_px4_clock_deferral'
+                return
+            # DDS already uses KEEP_LAST(1). Keep the newest monotonic sample,
+            # but retain the original wait's receipt time so it cannot renew
+            # its own clock-deferral lease by sending more data.
+            wall_ns = min(wall_ns,self.pending[role][1][1])
+            self.coalesced_deferred += 1
         row = (stamp, wall_ns, value)
         if upper > ros_ns:
             self.pending[role] = (upper, row)
@@ -157,7 +166,7 @@ class NativeInputs:
 
     def advance(self, ros_ns, wall_ns):
         for role, (upper, row) in tuple(self.pending.items()):
-            if wall_ns - row[1] > MAX_DEFER_NS:
+            if wall_ns - row[1] > self.defer_limit_ns:
                 self.clock_failures.append(dict(role=role,target_ns=upper,now_ns=ros_ns,
                     receipt_wall_ns=row[1],now_wall_ns=wall_ns,source_ns=row[0]))
                 self.fault = 'px4_clock_deferral_expired'
@@ -216,6 +225,8 @@ class ConcurrentNativeInputs(NativeInputs):
         from threading import RLock
         self.lock=RLock()
         super().__init__(*args)
+        self.defer_limit_ns=300_000_000
+        self.coalesce_deferred=True
 
     def offer(self,*args):
         with self.lock:return super().offer(*args)
@@ -530,6 +541,7 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
         if diagnostic:
             now_ns, wall_ns = clocks()
             report['scheduler_delays'] = getattr(driver,'scheduler_delays',[])
+            report['coalesced_clock_samples'] = inputs.coalesced_deferred
             with inputs.lock:
                 report['native_input_snapshot'] = dict(now_ros_ns=now_ns, now_wall_ns=wall_ns,
                     samples={role:dict(ros_age_ns=now_ns-row[0],wall_age_ns=wall_ns-row[1],value=row[2])
