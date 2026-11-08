@@ -16,8 +16,10 @@ test_queue_persistence_dedup (test_offline.Tests.test_queue_persistence_dedup) .
 test_repair (test_offline.Tests.test_repair) ... ok
 test_roles (test_offline.Tests.test_roles) ... ok
 test_triage (test_offline.Tests.test_triage) ... ok
+test_existing_first (test_strategy_workflow.StrategyTests.test_existing_first) ... ok
+test_new_requires_existing_and_research (test_strategy_workflow.StrategyTests.test_new_requires_existing_and_research) ... ok
 
 ----------------------------------------------------------------------
-Ran 18 tests in 0.135s
+Ran 20 tests in 0.231s
 
 OK

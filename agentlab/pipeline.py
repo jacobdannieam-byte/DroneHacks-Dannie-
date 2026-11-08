@@ -10,6 +10,9 @@ class Pipeline:
         row=self.jobs.db.execute('SELECT payload FROM jobs WHERE id=?',(key,)).fetchone()
         import json
         if row is None or json.loads(row[0])['source_sha']!=plan['source_sha']: raise ValueError('Job/source mismatch')
+        from .strategy_workflow import validate_proposal
+        payload=json.loads(row[0])
+        validate_proposal(payload, payload.get('strategy_reviews', {}), payload.get('notion_context', {}))
         token=self.jobs.claim_offline(key,now=now,seconds=180)
         try:
             tree=self.worktrees.create(plan['source_sha'],key[:32]+'-'+token[:8])

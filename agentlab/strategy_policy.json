@@ -1,0 +1,29 @@
+{
+  "notion_pages": {
+    "hub": "40cf393aa76881578e27ce0bca9b6f4d",
+    "strategies": "411f393aa768816abd1bd8651fbb4a90",
+    "implementation": "411f393aa76881c79ae2fb7f6d7d96f7",
+    "p2": "412f393aa768816ea9c1f05ab405503c",
+    "research": "410f393aa76881c0a464eaf3d7fd750f",
+    "future": "411f393aa768814f89efe69b70aa88a9",
+    "rules": "40cf393aa7688184bee8f92aacdcdf74",
+    "environment": "410f393aa768815494c2fa9e307ed73a"
+  },
+  "existing_strategies": [
+    "S0",
+    "S1",
+    "S2",
+    "S3",
+    "S4"
+  ],
+  "priority": [
+    "S1",
+    "S0",
+    "S2",
+    "S3",
+    "S4"
+  ],
+  "protected_baseline": "S1",
+  "new_strategy_gate": "existing portfolio reviewed with evidence-backed disposition",
+  "publication_enabled": false
+}
