@@ -8,6 +8,8 @@ import os
 from pathlib import Path
 from time import perf_counter, perf_counter_ns
 
+import numpy as np
+
 from examples.build_s0_course_ablation import SCOPE, participant_geometry
 from examples.gazebo_container import _ports, isolated, verify_profile
 from examples.gazebo_hybrid_adapter import IsolationApproval, OWNER_ROLES
@@ -27,7 +29,7 @@ from refnav.predictive_planner import (
 )
 from refnav.sitl_review import ProposalReceipt
 from refnav.trajectory_evaluation import Candidate, CandidateDiagnostic, Evaluation, _forecast, _resolve_goal, state_capture_ns
-from refnav.world_model.spatial_input import NS
+from refnav.world_model.spatial_input import NS, stamp_ok
 
 
 # From the pinned simulator model's reviewed body, camera and rotating propeller
@@ -165,6 +167,32 @@ class ExperimentExecutor(HeldExecutor):
                 else GatewayDecision('experimental_obstacle_refused:' + reason, None))
 
 
+class _GroundAlignmentGuard:
+    """Verify that the frozen paired translation still fits the landed vehicle."""
+
+    def __init__(self, replay):
+        self.replay = replay
+
+    def check_owner(self, mission, vehicle, inputs, *, now_ns, wall_ns):
+        if mission.phase not in ('wait', 'arm') or vehicle.armed is not False:
+            return None
+        if inputs is None or vehicle.landed is not True or vehicle.pos is None:
+            return 'experimental_ground_state_unavailable'
+        state, alignment, metric = inputs['state'], inputs['alignment'], inputs['snapshot'].metric
+        depth = self.replay.aligned_depth
+        if (depth is None or depth.reference != metric.reference or depth.observation_id != metric.observation_id
+                or depth.capture_ns != metric.capture_ns
+                or abs(state_capture_ns(state, alignment) - depth.capture_ns) > 150_000_000
+                or math.hypot(*state.velocity_mps) > .05):
+            return 'experimental_ground_alignment_unsettled'
+        transform = rot_z(alignment.map_from_enu_yaw_rad) @ R_ENU_NED
+        native = transform @ np.asarray(state.position_m) + alignment.ned_origin_in_map_m
+        if (math.dist(native, depth.pose.position_m) > .03 or math.hypot(*native) > .04
+                or math.dist(state.position_m, vehicle.pos) > .03):
+            return 'experimental_ground_alignment_disagrees'
+        return None
+
+
 class ExperimentalRuntime(HybridRuntime):
     def __init__(self, profile, course, adapter, geometry, identity, **settings):
         settings.setdefault('record_limit', 8192)
@@ -173,6 +201,8 @@ class ExperimentalRuntime(HybridRuntime):
         self.executor = ExperimentExecutor(geometry, identity, lease_s=self.executor.lease_s,
                                            monotonic=self.executor.clock, timings=self.timings)
         self.loop.assessor = lambda **inputs: experimental_assess(geometry, identity, **inputs)
+        self.loop.replay._retain_aligned_depth = True
+        self.launch_guard = _GroundAlignmentGuard(self.loop.replay)
         self._checking_publication_wall_ns = None
 
     def publication_reason(self, mission, vehicle, output, now_ns, *, wall_ns=None):
@@ -191,11 +221,15 @@ class ExperimentalRuntime(HybridRuntime):
         sweep = self.geometry.sweep(snapshot.metric, now_ns)
         if 'land' in output.commands:
             # PX4 owns descent; check the intended vertical descent column.
-            target = (*state.position_m[:2], self.geometry.course_from_odom_translation_m[2] - .04)
+            ground_down = alignment.ned_origin_in_map_m[2] + self.geometry.course_from_odom_translation_m[2] - .04
+            target = (*state.position_m[:2], ground_down)
             return sweep.check((state.position_m, target), alignment, support_center_ned=target)
         if not output.stream or output.setpoint is None:
             return 'experimental_setpoint_unavailable'
         if self._publication_phase in ('wait', 'arm', 'climb', 'hover'):
+            ground_reason = self.launch_guard.check_owner(mission, vehicle, inputs, now_ns=now_ns, wall_ns=wall_ns)
+            if ground_reason:
+                return ground_reason
             if mission.home is None or tuple(output.setpoint[:2]) != mission.home[:2] or output.setpoint[2] > mission.home[2]:
                 return 'experimental_launch_outside_home_column'
             climb = (*mission.home[:2], mission.home[2] - mission.p.height_m)
@@ -238,9 +272,23 @@ def load_experiment(profile_path, world_path, *, verify_native=False):
         map_source = participant_geometry(world_path)
         yaw = settings['course_from_odom_yaw_rad']
         origin = tuple(settings['course_from_odom_translation_m'])
-        if (profile.alignment.map_from_enu_yaw_rad != -math.pi / 2 or profile.alignment.ned_origin_in_map_m != (0., 0., 0.)
+        if (profile.alignment.map_from_enu_yaw_rad != -math.pi / 2
                 or yaw != math.pi / 2 or origin != (*map(float, map_source.launch_mark_centre_metres), .04)):
             raise ValueError('experimental odom/course axes or origin mismatch')
+        pairing = settings['ground_alignment']
+        transform = rot_z(profile.alignment.map_from_enu_yaw_rad) @ R_ENU_NED
+        native = np.asarray(pairing['native_position_ned_m'], dtype=float)
+        visual = np.asarray(pairing['visual_position_odom_m'], dtype=float)
+        stamp, bracket = pairing['visual_capture_ns'], pairing['native_bracket_ns']
+        offset = tuple(pairing['ned_origin_in_map_m'])
+        if (pairing['method'] != 'stationary-native-to-visual-translation-v1'
+                or pairing['native_reset_counter'] != profile.alignment.estimator_reset_counter
+                or native.shape != (3,) or visual.shape != (3,) or not np.isfinite((native, visual)).all()
+                or not stamp_ok(stamp) or len(bracket) != 2 or not all(stamp_ok(v) for v in bracket)
+                or not bracket[0] <= stamp <= bracket[1] or bracket[1] - bracket[0] > 40_000_000
+                or offset != profile.alignment.ned_origin_in_map_m
+                or not np.allclose(visual - transform @ native, offset, atol=1e-10, rtol=0.)):
+            raise ValueError('experimental profile lacks the matching stationary native/visual alignment')
         reserve = settings['nominal_obstacle_reserve_m']
         geometry = AuthoredObstacles.from_course(map_source, NOMINAL_BODY_RADIUS_M, reserve,
                     course_from_odom_yaw_rad=yaw, course_from_odom_translation_m=origin)

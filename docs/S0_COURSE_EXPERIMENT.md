@@ -16,7 +16,7 @@ Obstacle avoidance remains active: participant static obstacle geometry plus fre
 
 ## Frames and profile
 
-The native visual pose stays in `odom`, north/left/up relative to the authored spawn. H1 retains its native NED-to-odom yaw of -pi/2 and zero translation. Static participant geometry uses a separate transform:
+The native visual pose stays in `odom`, north/left/up relative to the authored spawn. H1 retains its native NED-to-odom yaw of -pi/2. Its translation is derived from paired native PX4 and visual-estimator poses after settling, rather than assuming both estimated origins coincide. Static participant geometry uses a separate transform:
 
 `course_point = Rz(pi/2) * odom_point + [launch_x, launch_y, 0.04]`.
 
@@ -43,3 +43,12 @@ python3 -m examples.s0_course_rollout \
   --map drone_code/team_nav/course_maps/phone_scan_2026-11-06.json \
   --output /evidence/synthetic-route-rollout.json
 ```
+
+
+## Attempt 001 frame correction
+
+Attempt 001 refused before arming because the initial PX4 estimate was still settling; its down coordinate placed the nominal mapped center below the authored floor. This was preserved as a refusal, not repaired by moving the floor or widening its tolerance. The new builder fits translation only: `visual_position_odom - R_ned_to_odom * native_position_ned`, at the visual capture timestamp using an exact native sample or a bracket no wider than 20 ms. It records both original positions, source timestamps, reset counter and probe hash. Native calibration and covariance remain unchanged.
+
+The calibration window requires at least 0.4 s of advancing native samples within the latest 0.5 s, position-range norm at most 0.02 m, fresh local speed at most 0.05 m/s, and coherent native frame/reset identity. These are stationary-pair acceptance criteria, not measured flight-error bounds. The runner waits for settling and captures a fresh probe; a late measurement is not applied retroactively to the earlier drifting estimate. Runtime additionally checks the live initial consistency of the bound pair.
+
+Offline use of attempt 001's late probe at visual capture 45.900 s produced translation approximately `[0.0032840484, 0.0037049508, 0.043725514]` m in odom. The authored course transform stayed unchanged. Six route/profile/frame tests passed in 9.13 s, including rejection of moving/unpaired probes and a full D0 route rollout with nonzero alignment. The paired late-probe diagnostic still completed 23 stages in 202 iterations / 40.2 model seconds; this remains synthetic route-fallback evidence, not a new flight.

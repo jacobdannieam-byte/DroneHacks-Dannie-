@@ -14,12 +14,15 @@ from refnav.reasoning.baseline import DeterministicReasoner
 from refnav.reasoning.context import build_context
 from refnav.reasoning.schema import MissionGoal, WorldReference
 from refnav.world_model.spatial_pipeline import SpatialWorld
+from onboard.adapters.geometry import R_ENU_NED, rot_z
 
 
 def run(profile_path, map_path, *, max_steps=2000):
     runtime = load_experiment(Path(profile_path), Path(map_path), verify_native=False)
     profile, course = runtime.loop.replay.hybrid, runtime.course
-    state = DroneState(profile.alignment.ned, 1., (0., 0., -.76), (0., 0., 0.), 0., 0.)
+    rotation = rot_z(profile.alignment.map_from_enu_yaw_rad) @ R_ENU_NED
+    initial_ned = rotation.T @ (np.asarray(course.stage.goal.position_m)-profile.alignment.ned_origin_in_map_m)
+    state = DroneState(profile.alignment.ned, 1., tuple(initial_ned), (0., 0., 0.), 0., 0.)
     world = SpatialWorld(profile.spatial.reference, profile.spatial.calibration)
     model, counts, changes = DynamicsModel(), Counter(), []
     try:

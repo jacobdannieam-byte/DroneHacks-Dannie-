@@ -1,4 +1,6 @@
 from dataclasses import replace
+import json
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -7,15 +9,15 @@ from examples.build_s0_course_ablation import build
 from examples.h0_hybrid_smoke import smoke_inputs
 from examples.s0_course_experiment import experimental_assess, load_experiment, main
 from examples.s0_experiment_geometry import EXPERIMENT_EVIDENCE
-from refnav.core import Output
+from refnav.core import Output, Vehicle
 from refnav.sitl_review import validate_receipt
 from refnav.world_model.spatial_volume import Cell
-from test_s0_course_ablation import MAP, MISSION, PROBE
+from test_s0_course_ablation import MAP, MISSION, stable_probe
 
 
 @pytest.fixture
 def setup(tmp_path):
-    profile = build(PROBE, tmp_path / 'profile', map_path=MAP, mission_path=MISSION)
+    profile = build(stable_probe(tmp_path), tmp_path / 'profile', map_path=MAP, mission_path=MISSION)
     runtime = load_experiment(profile, MAP)
     inputs = smoke_inputs()
     now = inputs['now_ns']
@@ -80,3 +82,31 @@ def test_post_geometry_publication_freshness_and_isolation(setup, monkeypatch):
         main(['--profile', str(profile), '--world', str(MAP), '--output', str(profile.parent / 'never.json'),
               '--execute-isolated-sitl'])
     assert not (profile.parent / 'never.json').exists()
+
+
+def test_paired_translation_repairs_support_pose_and_refuses_a_shifted_estimate(setup):
+    profile, runtime, inputs = setup
+    proof = json.loads(profile.read_text())['ground_alignment']
+    position = tuple(proof['native_position_ned_m'])
+    state = replace(inputs['state'], position_m=position)
+    inputs['state'] = state
+    alignment, metric, now = inputs['alignment'], inputs['snapshot'].metric, inputs['now_ns']
+    runtime.loop.replay.aligned_depth = SimpleNamespace(reference=metric.reference, observation_id=metric.observation_id,
+        capture_ns=metric.capture_ns, pose=SimpleNamespace(position_m=proof['visual_position_odom_m']))
+    vehicle = Vehicle(pos=position, armed=False, landed=True)
+    home = (*position, 0.)
+    mission = SimpleNamespace(phase='arm', home=home, p=SimpleNamespace(height_m=.76))
+    runtime._publication_inputs, runtime._publication_phase = inputs, 'wait'
+    output = Output('arm', home, stream=True)
+    assert runtime.publication_reason(mission, vehicle, output, now, wall_ns=now) is None
+
+    # The actual refused 27.488 s NED sample mapped below floor with zero translation.
+    refused_ned = (.0030098233837634325, -.0005565436440519989, .12436293065547943)
+    unpaired = replace(alignment, ned_origin_in_map_m=(0., 0., 0.))
+    assert runtime.geometry.sweep(metric, now).check((refused_ned,), unpaired, support_center_ned=refused_ned) == (
+        'participant_enclosure_intersection')
+    # The same late probe's pairing cannot be reused if the current PX4 estimate drifts.
+    inputs['state'] = replace(state, position_m=refused_ned)
+    vehicle.pos = refused_ned
+    assert runtime.publication_reason(mission, vehicle, output, now, wall_ns=now) == (
+        'experimental_ground_alignment_disagrees')
