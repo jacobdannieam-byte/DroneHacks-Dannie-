@@ -1,0 +1,194 @@
+[
+  {
+    "number": 24,
+    "title": "P2-C/D: conservative spatial queries and offline Hybrid shadow diagnostics",
+    "state": "open",
+    "head": "e42746762def387825ceffced50d881cfb40d713",
+    "branch": "feature/p2-cd-spatial-shadow",
+    "base": "feature/p2-b-map-localization"
+  },
+  {
+    "number": 23,
+    "title": "P2-B: diagnostic map localization from capture-time depth",
+    "state": "open",
+    "head": "90505e22eeb3524a324a3d1ad4dc2678aaadb61c",
+    "branch": "feature/p2-b-map-localization",
+    "base": "feature/p2-a-reference-map"
+  },
+  {
+    "number": 22,
+    "title": "P2-A: offline reference point-cloud preprocessing",
+    "state": "open",
+    "head": "e2425802dd70902c02b6bf14d978a01280c00a85",
+    "branch": "feature/p2-a-reference-map",
+    "base": "integration/unified-sitl-readiness"
+  },
+  {
+    "number": 21,
+    "title": "Add continuous Hybrid shadow planning and a disabled SITL handoff",
+    "state": "closed",
+    "head": "aa215e26947d5463318e1860c70eaf7c2b291e02",
+    "branch": "integration/hybrid-shadow-to-sitl",
+    "base": "feature/h1-native-observation"
+  },
+  {
+    "number": 20,
+    "title": "Add read-only H1 ROS 2 and PX4 observation replay",
+    "state": "closed",
+    "head": "1cb9c80dd6868a2d160769a0a919d32d75fb6c55",
+    "branch": "feature/h1-native-observation",
+    "base": "feature/h0-hybrid-contract"
+  },
+  {
+    "number": 19,
+    "title": "Add the read-only H0 hybrid integration contract",
+    "state": "closed",
+    "head": "d49cbb3e2b8a8517d8bc18e06c1c4206ed3b3178",
+    "branch": "feature/h0-hybrid-contract",
+    "base": "integration/unified-sitl-readiness"
+  },
+  {
+    "number": 18,
+    "title": "Bring the staged mission into the classical emulator branch",
+    "state": "open",
+    "head": "3351c87d6e627232be81f3ce6030173146705ebf",
+    "branch": "soham-stages",
+    "base": "classical"
+  },
+  {
+    "number": 17,
+    "title": "Exclude saturated depth samples from corridor coverage",
+    "state": "open",
+    "head": "16ca455daefe2f9b3ae282519dcc6e3a21dc5f99",
+    "branch": "fix/depth-no-return",
+    "base": "main"
+  },
+  {
+    "number": 16,
+    "title": "Audit DroneHacks branches and propose repository consolidation",
+    "state": "open",
+    "head": "3e89e1ba229c0263d80a5f628bcb3afd59167a0f",
+    "branch": "cleanup/repository-audit",
+    "base": "integration/unified-sitl-readiness"
+  },
+  {
+    "number": 15,
+    "title": "Integrate the managed autonomy stack for SITL qualification",
+    "state": "open",
+    "head": "bfb09c8a44607d0c7efbf3532749207b25500385",
+    "branch": "integration/unified-sitl-readiness",
+    "base": "main"
+  },
+  {
+    "number": 14,
+    "title": "Phase 8 preregistered qualification and evidence review",
+    "state": "closed",
+    "head": "0a4069e1768a72ff5cf4735428f562f484e3c649",
+    "branch": "feature/unified-phase8-qualification",
+    "base": "feature/unified-phase7-review"
+  },
+  {
+    "number": 13,
+    "title": "Phase 7 offline SITL handoff and ownership review",
+    "state": "closed",
+    "head": "05508625b621745f526e3b0c2dccd0c683d35715",
+    "branch": "feature/unified-phase7-review",
+    "base": "feature/unified-phase6-planner"
+  },
+  {
+    "number": 12,
+    "title": "Phase 6 simulation-only predictive planner",
+    "state": "closed",
+    "head": "a2c4db5f5b2cd3008601f70d4f115187c9d0b8a1",
+    "branch": "feature/unified-phase6-planner",
+    "base": "feature/unified-phase5-shadow"
+  },
+  {
+    "number": 11,
+    "title": "Phase 5 read-only dynamics replay",
+    "state": "closed",
+    "head": "5ce25958c7ebfc91d3431b638293e589cbc1a06b",
+    "branch": "feature/unified-phase5-shadow",
+    "base": "feature/unified-phase4-trajectory"
+  },
+  {
+    "number": 10,
+    "title": "Rank Phase 4 diagnostic trajectories against observed geometry",
+    "state": "closed",
+    "head": "294ee7dfc62280210bd62de38325f0cc82999bb0",
+    "branch": "feature/unified-phase4-trajectory",
+    "base": "integration/unified-phase4-base"
+  },
+  {
+    "number": 9,
+    "title": "Evaluate bounded adaptive features in unified Phase 3",
+    "state": "closed",
+    "head": "5816a0405a40f5411ad1690d52b0b6ba4bca59a8",
+    "branch": "feature/unified-phase3-adaptation",
+    "base": "feature/adaptive-dynamics-a1"
+  },
+  {
+    "number": 8,
+    "title": "Add unified Phase 2 spatial and semantic replay",
+    "state": "closed",
+    "head": "67b70eda292a2302cb5338a2c21e3bd6642eead3",
+    "branch": "feature/unified-phase2-spatial",
+    "base": "feature/semantic-reasoning-i0-i1"
+  },
+  {
+    "number": 7,
+    "title": "Add unified Phase 1 localization diagnostics",
+    "state": "closed",
+    "head": "ef2293368d43e974ab588a9aee1d87bcf388efd9",
+    "branch": "feature/unified-phase1-localization",
+    "base": "main"
+  },
+  {
+    "number": 6,
+    "title": "A1: compare offline predictors and set model-selection gates",
+    "state": "closed",
+    "head": "c36918e44c0cfa6712e71bf2240683b44ed55b13",
+    "branch": "feature/adaptive-dynamics-a1",
+    "base": "feature/adaptive-dynamics-d2"
+  },
+  {
+    "number": 5,
+    "title": "Add D2 causal dynamics adaptation and compare history encoders",
+    "state": "closed",
+    "head": "ed029018d08ae91c4fb173c6b50f5b076e048bec",
+    "branch": "feature/adaptive-dynamics-d2",
+    "base": "feature/adaptive-dynamics-d1"
+  },
+  {
+    "number": 4,
+    "title": "Add the offline D1 acceleration residual model",
+    "state": "closed",
+    "head": "8f695cdbb60fdbdbf815cb340fa9c69b3b95c97d",
+    "branch": "feature/adaptive-dynamics-d1",
+    "base": "feature/adaptive-dynamics-d0"
+  },
+  {
+    "number": 3,
+    "title": "Add offline D0 dynamics prediction and bounded rollouts",
+    "state": "closed",
+    "head": "e99e6172290231956be499aa47e99273af80a65f",
+    "branch": "feature/adaptive-dynamics-d0",
+    "base": "main"
+  },
+  {
+    "number": 2,
+    "title": "Offline semantic reasoning I0–I4: bounded context, grounded goals and validation",
+    "state": "closed",
+    "head": "b026465d1c57a056a423e51872164b7474abbf9a",
+    "branch": "feature/semantic-reasoning-i0-i1",
+    "base": "feature/semantic-world-model-p1"
+  },
+  {
+    "number": 1,
+    "title": "Offline semantic world model P1: geometry, persistent beliefs and queries",
+    "state": "closed",
+    "head": "8f71328ed022377b45ee3a936df67272a5d65fbf",
+    "branch": "feature/semantic-world-model-p1",
+    "base": "main"
+  }
+]
