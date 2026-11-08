@@ -413,6 +413,8 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
         while rclpy.ok() and driver.phase != 'done':
             rclpy.spin_once(node, timeout_sec=.02)
             now_ns, wall_ns = clocks()
+            if diagnostic:
+                inputs.advance(now_ns, wall_ns)
             if wall_ns < next_tick:
                 continue
             if getattr(driver, '_diagnostic_motion_unbounded', False):
@@ -422,6 +424,11 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
                 for _ in range(16):
                     rclpy.spin_once(node, timeout_sec=0.)
                 now_ns, wall_ns = clocks()
+                inputs.advance(now_ns, wall_ns)
+                if inputs.pending and inputs.fault is None:
+                    # Resolve clock-fenced receipts before starting synchronous
+                    # inference. Do not let its work consume a deferral's lease.
+                    continue
             next_tick = wall_ns + 50_000_000
             observation = observe(now_ns, wall_ns)
             if observation is not None and hasattr(driver,'prepare_section'):
