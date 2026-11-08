@@ -1,5 +1,5 @@
 """The steps every real flight is made of: wait on the ground until the drone is ready, wait for
-the teammate's start switch, climb, hold still, and land with the push-down step.
+the teammate's start switch, climb, hold still, and descend gently until disarm.
 
 REAL DRONE CODE, also used unchanged in the simulator (through
 simulator/test_flights/real_program_test.py, which only plays the teammate's part). course_run.py
@@ -730,22 +730,20 @@ def choose_landing_height_source(link, px4_height_is_in_doubt):
 
 
 def land(link, height_source=PX4_DISTANCE_TO_GROUND, watch=None):
-    """Lands where the drone is and waits until PX4 switches the motors off (section 7).
-    height_source is one of LASER_RAW_READING, PX4_DISTANCE_TO_GROUND or NO_HEIGHT_READING
-    (choose_landing_height_source picks one). watch, a SafetyWatch, is optional: with it, the
-    safety checks keep running until touchdown, and if PX4's height goes wrong during the descent,
-    the rest of it finds the floor with the laser's raw reading (DescentHeight). Raises
-    ControlIsNoLongerOurs if control is taken away before the motors are off."""
+    """Descend gently until disarm, without inferring touchdown from height/speed.
+
+    Fresh-but-frozen range and false floor/velocity reports can pass numeric
+    checks. Therefore neither can authorize medium descent or push-down here.
+    This uses the existing no-height descent speed, retains landing checks and
+    stops publication on authority loss. It does not certify physical contact.
+    """
+    if not link.is_armed():
+        raise ControlIsNoLongerOurs("The motors were switched off before the landing started.")
     link.stage = "landing"
-    link.log.event("landing", f"Landing, finding the floor with {height_source}.", height_source=height_source)
-    if height_source == NO_HEIGHT_READING:
-        descend_gently_until_the_motors_are_off(link)
-        return
-    descent_height = DescentHeight(link, height_source, watch)
-    descend_to_gentle_height(link, descent_height.metres_above_floor, descent_height.check_once_per_cycle)
-    touchdown_seconds = descend_gently_until_touchdown(link, descent_height.metres_above_floor,
-                                                       descent_height.check_once_per_cycle)
-    push_down_until_motors_are_off(link, touchdown_seconds)
+    link.log.event("landing", "Conservative landing: gentle descent without push-down.",
+                   height_source=height_source)
+    checks = DescentHeight(link, height_source, watch)
+    descend_gently_until_the_motors_are_off(link, checks.check_once_per_cycle)
 
 
 class DescentHeight:
@@ -786,12 +784,17 @@ class DescentHeight:
                                        "floor with the bottom laser's raw reading.", height_source=self.height_source)
 
 
-def descend_gently_until_the_motors_are_off(link):
-    """The landing with no height reading: the gentle speed all the way, which is safe to hit the
-    floor at, until PX4 decides it has landed and switches the motors off. No push-down."""
+def descend_gently_until_the_motors_are_off(link, check_each_cycle=None):
+    """Use the existing gentle speed until disarm; never escalate based on height.
+
+    Physical contact speed and automatic disarm still require qualification.
+    Disarm ends publication; it is not by itself proof of a successful landing.
+    """
     start_seconds = link.now_seconds()
     last_reminder_seconds = start_seconds
     while link.is_armed():
+        if check_each_cycle is not None:
+            check_each_cycle()
         if link.now_seconds() - last_reminder_seconds >= SECONDS_BETWEEN_REMINDERS:
             link.log.event("waiting", "Still descending gently, waiting for PX4 to say landed. " + _arming_summary(link))
             last_reminder_seconds = link.now_seconds()
@@ -835,25 +838,18 @@ def descend_gently_until_touchdown(link, height_above_floor, check_each_cycle=No
 
 
 def push_down_until_motors_are_off(link, touchdown_seconds):
-    """Commands a fast descent, which the floor stops, so that PX4 lowers the motor power quickly,
-    decides the drone has landed and switches the motors off. Waits as long as that takes:
-    pushing down on the floor does no harm."""
-    link.log.event("landing", f"Pushing down at {PUSH_DOWN_METRES_PER_SECOND} m/s until PX4 switches the motors off.")
-    px4_said_landed = False
-    last_reminder_seconds = link.now_seconds()
-    while link.is_armed():
-        if not px4_said_landed and link.is_landed():
-            px4_said_landed = True
-            link.log.event("landing", f"PX4 says landed, {link.now_seconds() - touchdown_seconds:.1f} s after touchdown.")
-        if link.now_seconds() - last_reminder_seconds >= SECONDS_BETWEEN_REMINDERS:
-            link.log.event("waiting", "Still waiting for PX4 to switch the motors off. " + _arming_summary(link))
-            last_reminder_seconds = link.now_seconds()
-        _send_landing_target(link, PUSH_DOWN_METRES_PER_SECOND, motors_off_is_expected=True)
-    link.log.event("motors_off", f"The motors are off, {link.now_seconds() - touchdown_seconds:.1f} s after touchdown.")
+    """Compatibility entry point: push-down is disabled pending qualification.
+
+    A caller's touchdown time cannot prove contact. Old callers get the same
+    conservative descent as land(), never the former aggressive command.
+    """
+    descend_gently_until_the_motors_are_off(link)
 
 
 def _send_landing_target(link, downward_metres_per_second, motors_off_is_expected=False):
     """One landing cycle: stop if control has gone, send the downward speed, record, wait."""
+    if motors_off_is_expected and not link.is_armed():
+        return
     if not motors_off_is_expected and not link.is_armed():
         raise ControlIsNoLongerOurs("The motors were switched off before the landing finished (the kill switch, or PX4).")
     if link.is_armed() and not link.control_is_ours():

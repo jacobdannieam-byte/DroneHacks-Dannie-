@@ -178,21 +178,21 @@ def test_a_stalled_descent_counts_as_touchdown_only_after_the_descent_has_had_ti
 
 # ---- The landing --------------------------------------------------------------------------------
 
-def test_the_landing_goes_medium_then_gentle_then_pushes_down_until_the_motors_are_off():
+def test_landing_uses_gentle_descent_without_touchdown_inference():
     link = PretendLink(height_metres=0.8)
     flight_steps.land(link)
 
-    assert speeds_sent(link) == [MEDIUM_DESCENT_METRES_PER_SECOND, GENTLE_DESCENT_METRES_PER_SECOND, PUSH_DOWN_METRES_PER_SECOND]
+    assert speeds_sent(link) == [GENTLE_DESCENT_METRES_PER_SECOND]
     assert not link.armed
     kinds = [kind for kind, _ in link.log.events]
-    assert "touchdown" in kinds and kinds[-1] == "motors_off"
+    assert "touchdown" not in kinds and kinds[-1] == "motors_off"
 
 
 def test_a_landing_whose_height_reading_stops_descends_gently_and_still_finishes():
     link = PretendLink(height_metres=0.8, laser_works=False)
     flight_steps.land(link, LASER_RAW_READING)
 
-    assert speeds_sent(link) == [GENTLE_DESCENT_METRES_PER_SECOND, PUSH_DOWN_METRES_PER_SECOND]
+    assert speeds_sent(link) == [GENTLE_DESCENT_METRES_PER_SECOND]
     assert not link.armed
 
 
@@ -263,8 +263,8 @@ def test_a_height_problem_during_the_descent_switches_the_landing_to_the_raw_las
     events = landing_events(link)
     assert any("raw reading" in text for text in events)
     # With the raw laser, touchdown is found the normal way, not by the drone stalling on the floor.
-    assert any("back to the launch mark" in text for text in events)
-    assert speeds_sent(link)[-1] == PUSH_DOWN_METRES_PER_SECOND and not link.armed
+    assert not any("Touchdown:" in text for text in events)
+    assert speeds_sent(link) == [GENTLE_DESCENT_METRES_PER_SECOND] and not link.armed
 
 
 def test_without_a_raw_laser_a_height_problem_during_the_descent_changes_nothing():
@@ -313,3 +313,43 @@ def test_fly_until_stops_the_run_when_it_takes_too_long():
     link = PretendLink(height_metres=0.8)
     with pytest.raises(RunMustStop, match="the impossible"):
         flight_steps.fly_until(link, lambda: False, lambda: None, 1.0, "the impossible")
+
+
+@pytest.mark.parametrize('fault', ['frozen_range', 'false_touchdown', 'nan', 'missing'])
+def test_bad_height_cannot_escalate_landing_speed(fault):
+    link = PretendLink(height_metres=0.8)
+    readings = {'frozen_range': .8, 'false_touchdown': 0., 'nan': float('nan'), 'missing': None}
+    link.px4_height_above_floor_metres = lambda: readings[fault]
+    link.laser_height_risen_metres = lambda: readings[fault]
+    if fault == 'false_touchdown':
+        link.downward_speed_metres_per_second = lambda: 0.
+    flight_steps.land(link, LASER_RAW_READING)
+    assert speeds_sent(link) == [GENTLE_DESCENT_METRES_PER_SECOND]
+    assert link.push_down_began_seconds is None
+    assert link.height_metres == 0. and not link.armed
+
+
+def test_old_push_entry_point_cannot_authorize_airborne_push():
+    link = PretendLink(height_metres=.46)
+    flight_steps.push_down_until_motors_are_off(link, 0.)
+    assert speeds_sent(link) == [GENTLE_DESCENT_METRES_PER_SECOND]
+    assert link.push_down_began_seconds is None
+
+
+def test_authority_loss_during_conservative_landing_stops_publication():
+    link = PretendLink(height_metres=.8)
+    wait = link.wait_one_cycle
+    def lose_authority():
+        wait()
+        link.offboard = False
+    link.wait_one_cycle = lose_authority
+    with pytest.raises(ControlIsNoLongerOurs):
+        flight_steps.land(link)
+    assert len(link.targets.sent) == 1
+
+
+def test_no_final_command_when_disarm_precedes_send():
+    link = PretendLink(height_metres=.8)
+    link.armed = False
+    flight_steps._send_landing_target(link, GENTLE_DESCENT_METRES_PER_SECOND, motors_off_is_expected=True)
+    assert link.targets.sent == []
