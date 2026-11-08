@@ -15,12 +15,14 @@ from team_nav.practice_flights.astar_route import plan_mission
 from team_nav.start_frame import StartFrame
 
 FLIGHT_NAME = 'astar_five_waypoints'
+# Our own choice (2026-11-08): the organizers' model without the maze, plus the sketched start area.
+DEFAULT_MAP_FILE = 'real_course_2026-11-08.json'
 # Our choice: the first checkpoint has little turn room, so slew the heading more gently.
 TIGHT_TURN_RATE_RADIANS_PER_SECOND = math.radians(5)
 
 
 def run(words, run_mode, log):
-    arguments = first_maze_leg.parse_arguments(words)
+    arguments = first_maze_leg.make_argument_parser(FLIGHT_NAME, default_map=DEFAULT_MAP_FILE).parse_args(words)
     try:
         course_map = load_course_map(find_package_file(arguments.map,'course_maps'))
         with open(find_package_file('astar_five_goals.json','missions'),encoding='utf-8') as source:

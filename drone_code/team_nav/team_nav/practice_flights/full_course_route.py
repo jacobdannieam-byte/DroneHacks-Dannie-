@@ -69,6 +69,14 @@ def route_waypoints(course_map, first_checkpoint_north_metres=BASELINE_FIRST_CHE
     points[1, 1] = first_checkpoint_north_metres
     if np.linalg.norm(points[0, :2] - course_map.launch_mark_centre_metres) > 0.02:
         raise ValueError('This route requires the sketch map launch mark.')
+    return check_route(course_map, points)
+
+
+def check_route(course_map, points):
+    """Return the route (N x 3, launch mark first) only after body, laser, checkpoint and pad
+    checks pass. Raises ValueError, with a sentence saying why, otherwise."""
+    if np.linalg.norm(points[0, :2] - course_map.launch_mark_centre_metres) > 0.02:
+        raise ValueError("The route does not start on this map's launch mark.")
     body = footprint_points()
     shapes = shapes_blocking_between_heights(course_map, CRUISE_HEIGHT_METRES - 0.20,
                                              CRUISE_HEIGHT_METRES + 0.20)

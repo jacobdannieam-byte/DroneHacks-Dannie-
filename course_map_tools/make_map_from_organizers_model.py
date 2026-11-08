@@ -216,6 +216,15 @@ def _main_directions(points):
 
 
 def main():
+    course_map = course_map_from_model()
+    save_course_map(course_map, MAP_FILE)
+    print(f"Saved {MAP_FILE}: {len(course_map.walls)} walls, {len(course_map.tubes)} tube, "
+          f"{len(course_map.low_obstacles)} low obstacles.")
+
+
+def course_map_from_model():
+    """The CourseMap of the organizers' model, with its checkpoint lines. make_real_course_map.py
+    starts from this too."""
     parts = read_parts(MODEL_FILE)
     floor_name = next(name for name in parts if name.startswith(FLOOR_PART))
     floor_corners = parts[floor_name].reshape(-1, 3)
@@ -260,8 +269,7 @@ def main():
         low_obstacles=low_obstacles,
     )
     course_map.checkpoint_lines = make_checkpoint_lines(course_map)
-    save_course_map(course_map, MAP_FILE)
-    print(f"Saved {MAP_FILE}: {len(walls)} walls, {len(tubes)} tube, {len(low_obstacles)} low obstacles.")
+    return course_map
 
 
 if __name__ == "__main__":

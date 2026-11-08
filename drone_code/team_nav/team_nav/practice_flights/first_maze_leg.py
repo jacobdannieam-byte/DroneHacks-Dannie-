@@ -71,10 +71,11 @@ def parse_arguments(command_line_words):
 
 
 def make_argument_parser(flight_name=FLIGHT_NAME,
-                         description="Flies Corridor 1, turns 90 degrees East into the maze, advances past divider M1, and lands."):
+                         description="Flies Corridor 1, turns 90 degrees East into the maze, advances past divider M1, and lands.",
+                         default_map=DEFAULT_MAP_FILE):
     """The options shared by the flights built on this one. full_course.py adds its own."""
     parser = argparse.ArgumentParser(prog=f"practice_flight {flight_name}", description=description)
-    parser.add_argument("--map", default=DEFAULT_MAP_FILE,
+    parser.add_argument("--map", default=default_map,
                         help="The map of where the drone flies: a path, or a file name in team_nav's course_maps folder.")
     parser.add_argument("--start-heading-degrees", type=float, default=DEFAULT_START_HEADING_DEGREES,
                         help="Which way the drone's nose points, in degrees from the map's east towards north.")

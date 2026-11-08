@@ -23,6 +23,7 @@ from team_nav.practice_flights.full_course_route import (
     MIDDLE_OF_FIRST_CHECKPOINT_ROOM_NORTH_METRES, footprint_distance_past_line, footprint_points, route_waypoints,
 )
 from team_nav.practice_flights.steadiness import SteadinessRule, SteadinessWatch
+from real_course_route import real_course_mission
 from test_flight_steps import PretendLink
 
 SKETCH_MAP = 'sketch_2026-11-08'
@@ -50,14 +51,16 @@ def test_baseline_switches_off_all_four():
 def test_baseline_flies_the_original_route_and_refuses_stop_options():
     course_map = load_our_map(SKETCH_MAP)
     baseline = additions_from_arguments(parse_arguments(['--baseline']))
-    plan = plan_the_flight(course_map, baseline, '')
+    plan = plan_the_flight(course_map, baseline, '', fixed_sketch_route=True)
     assert plan.route_to_fly_metres[1, 1] == BASELINE_FIRST_CHECKPOINT_NORTH_METRES
     with pytest.raises(ValueError, match='stop options are switched off'):
-        plan_the_flight(course_map, baseline, 'tunnel')
+        plan_the_flight(course_map, baseline, 'tunnel', fixed_sketch_route=True)
 
 
 def test_new_rule_turns_back_in_the_middle_of_the_first_checkpoint_room():
-    plan = plan_the_flight(load_our_map(SKETCH_MAP), additions_from_arguments(parse_arguments([])), '')
+    course_map = load_our_map('real_course_2026-11-08')
+    plan = plan_the_flight(course_map, additions_from_arguments(parse_arguments([])), '',
+                           mission=real_course_mission())
     assert plan.route_to_fly_metres[1, 1] == MIDDLE_OF_FIRST_CHECKPOINT_ROOM_NORTH_METRES
     assert plan.stop is None
 

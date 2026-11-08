@@ -46,15 +46,18 @@ from team_nav.practice_flights import first_maze_leg
 from team_nav.practice_flights.full_course_route import (
     BASELINE_FIRST_CHECKPOINT_NORTH_METRES, CHECKPOINT_LINE_NAMES, CRUISE_HEIGHT_METRES,
     MIDDLE_OF_FIRST_CHECKPOINT_ROOM_NORTH_METRES, footprint_clears_line, footprint_distance_past_line,
-    footprint_points, route_waypoints,
+    check_route, footprint_points, route_waypoints,
 )
 from team_nav.practice_flights.full_course_stops import describe_every_option, plan_stop
+from team_nav.practice_flights.north_facing_astar_route import MISSION_FILE_NAME, load_mission, plan_north_facing_route
 from team_nav.practice_flights.steadiness import SteadinessRule, SteadinessWatch
 from team_nav.practice_flights.tracking_start_check import problem_with_tracking_on_the_launch_mark
 from team_nav.run_mode import STOP_AFTER_STAGE_SETTING
 from team_nav.start_frame import StartFrame
 
 FLIGHT_NAME = 'full_course'
+# Our own choice (2026-11-08): the organizers' model without the maze, plus the sketched start area.
+DEFAULT_MAP_FILE = 'real_course_2026-11-08.json'
 
 # Our own choices, conservative relative to the original first-leg speeds.
 SPEED_METRES_PER_SECOND = 0.25
@@ -119,7 +122,11 @@ class FlightPlan:
 
 def parse_arguments(words):
     parser = first_maze_leg.make_argument_parser(
-        FLIGHT_NAME, 'Flies the checked sketch-map route through the four checkpoints and lands on the pad.')
+        FLIGHT_NAME, 'Flies an A* route through the four checkpoints, nose north, and lands on the pad.',
+        default_map=DEFAULT_MAP_FILE)
+    parser.add_argument('--fixed-sketch-route', action='store_true',
+                        help="Fly Aditya's fixed route for sketch_2026-11-08.json instead of the A* route. "
+                             "Give --map sketch_2026-11-08.json with it.")
     parser.add_argument('--no-start-check', action='store_true',
                         help='Do not refuse to start when camera tracking is far from where it started.')
     parser.add_argument('--no-takeoff-settle', action='store_true',
@@ -129,7 +136,8 @@ def parse_arguments(words):
     parser.add_argument('--no-new-arrival-rule', action='store_true',
                         help="Use Aditya's arrival rule: within 2.5 cm, then a 1 s hold at every waypoint.")
     parser.add_argument('--baseline', action='store_true',
-                        help="Switch off all four additions, which gives Aditya's version (run 20261108_122536).")
+                        help="Switch off all four additions and fly the fixed sketch route, which gives Aditya's "
+                             "version (run 20261108_122536). Give --map sketch_2026-11-08.json with it.")
     return parser.parse_args(words)
 
 
@@ -142,12 +150,10 @@ def additions_from_arguments(arguments):
     )
 
 
-def plan_the_flight(course_map, additions, stop_after_stage):
-    """The FlightPlan. Raises ValueError, with a sentence saying why, if it can't be flown."""
-    first_checkpoint_north_metres = BASELINE_FIRST_CHECKPOINT_NORTH_METRES
-    if additions.new_arrival_rule:
-        first_checkpoint_north_metres = MIDDLE_OF_FIRST_CHECKPOINT_ROOM_NORTH_METRES
-    whole_route = route_waypoints(course_map, first_checkpoint_north_metres)
+def plan_the_flight(course_map, additions, stop_after_stage, fixed_sketch_route=False, mission=None):
+    """The FlightPlan. Raises ValueError, with a sentence saying why, if it can't be flown.
+    mission is the A* goals; without it, missions/real_course_five_goals.json is read."""
+    whole_route = whole_route_for(course_map, additions, fixed_sketch_route, mission)
     if not stop_after_stage:
         return FlightPlan(whole_route, whole_route)
     if not additions.stop_options:
@@ -157,12 +163,25 @@ def plan_the_flight(course_map, additions, stop_after_stage):
     return FlightPlan(whole_route, stop.route_to_fly_metres, stop)
 
 
+def whole_route_for(course_map, additions, fixed_sketch_route, mission=None):
+    """The A* route (north_facing_astar_route.py), or Aditya's fixed sketch route, checked."""
+    if fixed_sketch_route:
+        first_checkpoint_north_metres = BASELINE_FIRST_CHECKPOINT_NORTH_METRES
+        if additions.new_arrival_rule:
+            first_checkpoint_north_metres = MIDDLE_OF_FIRST_CHECKPOINT_ROOM_NORTH_METRES
+        return route_waypoints(course_map, first_checkpoint_north_metres)
+    if mission is None:
+        mission = load_mission(find_package_file(MISSION_FILE_NAME, 'missions'))
+    return check_route(course_map, plan_north_facing_route(course_map, mission))
+
+
 def run(words, run_mode, log):
     arguments = parse_arguments(words)
     additions = additions_from_arguments(arguments)
     try:
         course_map = load_course_map(find_package_file(arguments.map, 'course_maps'))
-        plan = plan_the_flight(course_map, additions, run_mode.stop_after_stage)
+        plan = plan_the_flight(course_map, additions, run_mode.stop_after_stage,
+                               arguments.fixed_sketch_route or arguments.baseline)
     except (OSError, ValueError) as problem:
         log.event('refused', f'Full-course route refused before sending targets: {problem}')
         return EXIT_REFUSED_TO_START

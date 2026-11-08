@@ -10,7 +10,7 @@
 # Options, which come first, in any order:
 #   --world <map file>       What is really there: the course Gazebo builds, the referee judges
 #                            and the picture shows. Named from the top of the repository.
-#                            Without it, the organizers' drawing.
+#                            Without it, real_course_2026-11-08.json.
 #   --run-mode <mode>        practice (the default) or competition, given to course_run as
 #                            TEAM_NAV_RUN_MODE, as on the drone.
 #   --longest-run-seconds N  Stop course_run (as with Ctrl+C, so it lands) after N seconds.
@@ -33,7 +33,7 @@ full_folder="$repository/simulator/gazebo_full"
 box_name=drone-simulator-gazebo-full-run
 image_name=drone-simulator-gazebo-full
 
-world_map="drone_code/team_nav/course_maps/organizers_drawing.json"
+world_map="drone_code/team_nav/course_maps/real_course_2026-11-08.json"
 run_mode=practice
 # Our own choice: about 6 minutes, longer than any whole-course run so far (under 4 minutes).
 longest_run_seconds=360

@@ -10,8 +10,9 @@ checkpoint line: a line on the floor that the whole drone must cross. Seen from 
 footprint" is the rectangle that holds every motor and propeller (full_course_route.py).
 
   1. Find where, along the route, the whole footprint is first past that line.
-  2. Go a little further along the same leg, until the whole footprint is
-     LANDING_DISTANCE_PAST_LINE_METRES past the line, but no further than the leg's end.
+  2. Go a little further along the route, until the whole footprint is
+     LANDING_DISTANCE_PAST_LINE_METRES past the line (more for the options in
+     LANDING_DISTANCE_PAST_LINE_METRES_FOR_OPTION). This may be on a later leg.
   3. If that spot is open floor on the map, the drone lands straight down there.
   4. If not, it carries on to the next waypoint of the route and lands there, if that is open
      floor. If neither is, the flight refuses to start.
@@ -44,6 +45,11 @@ STOP_OPTIONS = (
 # tolerance (full_course.py). Then the drone is still wholly past the line if it stops anywhere
 # within the arrival tolerance of the landing spot.
 LANDING_DISTANCE_PAST_LINE_METRES = 0.10
+
+# The team's requirement of 2026-11-08, for options where camera tracking may have drifted further
+# by the time the drone gets there. In Gazebo run 20261108_125416 the pretend tracking had drifted
+# 0.12 to 0.15 m by the tunnel exit, and a spot 0.107 m past the line left the propellers 2 cm short.
+LANDING_DISTANCE_PAST_LINE_METRES_FOR_OPTION = {'tunnel': 0.25}
 
 # Our own choice: the column the drone comes down through must be clear from the floor to the
 # route's own checked band above the flying height (full_course_route.py checks +/- 0.20 m).
@@ -86,14 +92,14 @@ def plan_stop(course_map, route_metres, option):
     line_name = _line_for_option(option)
     leg_number, crossing_centre = _first_full_crossing(course_map, route_metres, line_name)
     line = course_map.checkpoint_line_named(line_name)
-    leg_end = route_metres[leg_number + 1]
-    spot = _spot_past_the_line(route_metres[leg_number], leg_end, crossing_centre, line)
+    wanted_distance_metres = LANDING_DISTANCE_PAST_LINE_METRES_FOR_OPTION.get(option, LANDING_DISTANCE_PAST_LINE_METRES)
+    spot_leg_number, spot = _spot_past_the_line(route_metres, leg_number, crossing_centre, line, wanted_distance_metres)
     if _is_open_floor(course_map, spot):
-        route = _route_ending_at(route_metres, leg_number, spot)
+        route = _route_ending_at(route_metres, spot_leg_number, spot)
         return _make_plan(course_map, option, line, STRAIGHT_DOWN, spot, route)
-    next_waypoint_number = leg_number + 1
-    if np.allclose(spot, leg_end[:2]):
-        next_waypoint_number = leg_number + 2
+    next_waypoint_number = spot_leg_number + 1
+    if np.allclose(spot, route_metres[spot_leg_number + 1][:2]):
+        next_waypoint_number = spot_leg_number + 2
     if next_waypoint_number >= len(route_metres):
         raise ValueError(f"The stop option '{option}' has no waypoint after its line to land at.")
     next_waypoint = route_metres[next_waypoint_number]
@@ -131,20 +137,26 @@ def _first_full_crossing(course_map, route_metres, line_name):
     raise ValueError(f"The route never has the whole drone past '{line_name}', so it can't stop after it.")
 
 
-def _spot_past_the_line(leg_start, leg_end, crossing_centre, line):
-    """The first point on the leg, from the crossing on, with the whole footprint
-    LANDING_DISTANCE_PAST_LINE_METRES past the line. The leg's end if there is none."""
+def _spot_past_the_line(route_metres, leg_number, crossing_centre, line, wanted_distance_metres):
+    """(leg number, spot): the first point along the route, from the crossing on, with the whole
+    footprint wanted_distance_metres past the line. The search carries on into later legs when the
+    crossing's leg ends too soon. The route's end if there is no such point."""
     body = footprint_points()
-    samples = samples_along_leg(leg_start, leg_end)
-    distance_from_start = np.linalg.norm(samples - leg_start[:2], axis=1)
-    crossing_distance = np.linalg.norm(crossing_centre - leg_start[:2])
-    for sample, distance in zip(samples, distance_from_start):
-        if distance < crossing_distance:
-            continue
-        distance_past_metres, is_within_ends = footprint_distance_past_line(sample, body, line)
-        if is_within_ends and distance_past_metres >= LANDING_DISTANCE_PAST_LINE_METRES:
-            return sample.copy()
-    return np.asarray(leg_end[:2], dtype=float).copy()
+    for number in range(leg_number, len(route_metres) - 1):
+        leg_start = route_metres[number]
+        samples = samples_along_leg(leg_start, route_metres[number + 1])
+        distance_from_start = np.linalg.norm(samples - leg_start[:2], axis=1)
+        skip_before_metres = 0.0
+        if number == leg_number:
+            skip_before_metres = np.linalg.norm(crossing_centre - leg_start[:2])
+        for sample, distance in zip(samples, distance_from_start):
+            if distance < skip_before_metres:
+                continue
+            distance_past_metres, is_within_ends = footprint_distance_past_line(sample, body, line)
+            if is_within_ends and distance_past_metres >= wanted_distance_metres:
+                return number, sample.copy()
+    last_leg_number = len(route_metres) - 2
+    return last_leg_number, np.asarray(route_metres[-1][:2], dtype=float).copy()
 
 
 def _clearance_at(course_map, spot_east_north):
@@ -203,6 +215,10 @@ def _make_plan(course_map, option, line, how, spot_east_north, route):
     distance_past_metres, _ = footprint_distance_past_line(spot_east_north, footprint_points(), line)
     if distance_past_metres <= LINE_CROSSING_MARGIN_METRES:
         raise ValueError(f"The landing spot for '{option}' does not have the whole drone past '{line.name}'.")
+    required_metres = LANDING_DISTANCE_PAST_LINE_METRES_FOR_OPTION.get(option)
+    if required_metres is not None and distance_past_metres < required_metres - 0.001:
+        raise ValueError(f"The route ends too soon after '{line.name}' for the '{option}' option to land "
+                         f"{required_metres:.2f} m past it. Move that goal further past the line.")
     clearance_metres, nearest_thing = _clearance_at(course_map, spot_east_north)
     spot = np.array([spot_east_north[0], spot_east_north[1], CRUISE_HEIGHT_METRES])
     return StopPlan(option, line.name, how, spot, route, distance_past_metres, clearance_metres, nearest_thing)
