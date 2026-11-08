@@ -26,10 +26,13 @@ The flight, stage by stage (the team's spec, 2026-11-08)
   forward and high climb   0.8 m north at 0.70 m, then up to the cruise height (default 2.4 m).
   corridor end             only with TEAM_NAV_CROSS_CORRIDOR_END=on: north at cruise to north 2.34.
   to S       at cruise, 0.6 m/s with a smooth start, the nose unchanged, to S.
-  descent    at S: the target slides at 0.7 m/s to 1.2 m, then 0.15 m/s to 0.90 m.
+  descent    at S: the target slides at 0.7 m/s to 1.00 m (about 2 s above 0.5 m/s, which PX4's
+             laser consistency check needs), then 0.15 m/s to 0.90 m. The height watch only logs
+             meanwhile; below 0.60 m by camera tracking the descent stops and the drone holds.
   gate       2 s of PX4 on the laser, its laser check passing, no height reset and the height
              disagreement within 0.10 m, within 4 s (TEAM_NAV_TUNNEL_GATE=relaxed: within 0.15 m
-             alone). If not, the drone lands straight down at S.
+             alone). If the strict gate fails: once, up to 1.90 m at 0.7 m/s and the same descent
+             again, then the gate again. If it fails again, the drone lands straight down at S.
   turn       180 degrees to the left at 0.90 m, slowly (heading_turn.py).
   look       backs north 0.26 m (nose south) at 0.10 m/s, settles 1 s, then the LOOK; if unsure it
              flies the map's line (TEAM_NAV_TUNNEL_IF_UNSURE=map) or lands (=land).
@@ -73,7 +76,8 @@ from team_nav.tunnel_first_look import LookStep, if_unsure_from_environment
 from team_nav.tunnel_first_readings import (camera_height_metres, heading_split_degrees, px4_estimator_flag, px4_height_metres,
                                             px4_position_field, px4_reports_ground_contact, px4_speed_metres_per_second)
 from team_nav.tunnel_first_route import (CLIMB_HEIGHT_METRES, CLIMB_SPEED_METRES_PER_SECOND, CORRIDOR_STAGE,
-                                         DESCENT_FAST_METRES_PER_SECOND, DESCENT_SLOW_FROM_METRES,
+                                         DESCENT_FAST_METRES_PER_SECOND, DESCENT_LOWEST_CAMERA_HEIGHT_METRES,
+                                         DESCENT_SLOW_FROM_LOWEST_METRES, DESCENT_SLOW_FROM_METRES, GATE_RETRY_CLIMB_METRES,
                                          DESCENT_SLOW_METRES_PER_SECOND, DESCENT_STAGE, FORWARD_STAGE, GATE_STAGE,
                                          HIGH_LEG_STAGE, HIGH_SPEED_METRES_PER_SECOND, LOOK_BACKUP_SETTLE_SECONDS,
                                          LOOK_BACKUP_SPEED_METRES_PER_SECOND, LOOK_STAGE, PAD_STAGE, SETTLE_STAGE,
@@ -317,30 +321,73 @@ class TunnelFirstRun(FallbackRun):
             samples.append(px4 - camera)
         return samples
 
-    def descend_at_s(self):
+    def descend_at_s(self, from_height_metres=None):
+        """Down at S: fast to DESCENT_SLOW_FROM_METRES, then slowly to the tunnel height. The height watch
+        only logs meanwhile (open floor, checked before the start). If camera tracking puts the drone
+        below DESCENT_LOWEST_CAMERA_HEIGHT_METRES, the descent stops and the drone holds there."""
         s_point = self.plan.route.s_metres
-        self.follow_with_speeds([_at(s_point, self.cruise), _at(s_point, DESCENT_SLOW_FROM_METRES), _at(s_point, TUNNEL_HEIGHT_METRES)],
-                                [0.0, DESCENT_FAST_METRES_PER_SECOND, DESCENT_SLOW_METRES_PER_SECOND], LOW_TARGET_LEAD_METRES)
+        top = self.cruise if from_height_metres is None else from_height_metres
+        slow_from = max(DESCENT_SLOW_FROM_METRES, DESCENT_SLOW_FROM_LOWEST_METRES)
+        self.watch.height_watch_logs_only = True
+        try:
+            stopped = self.follow_with_speeds([_at(s_point, top), _at(s_point, slow_from), _at(s_point, TUNNEL_HEIGHT_METRES)],
+                                              [0.0, DESCENT_FAST_METRES_PER_SECOND, DESCENT_SLOW_METRES_PER_SECOND],
+                                              LOW_TARGET_LEAD_METRES, stop_when=self.too_low_during_the_descent)
+            if stopped:
+                self.hold_at_the_present_height(s_point)
+        finally:
+            self.watch.height_watch_logs_only = False
+
+    def too_low_during_the_descent(self):
+        camera = camera_height_metres(self.link)
+        return camera is not None and camera < DESCENT_LOWEST_CAMERA_HEIGHT_METRES
+
+    def hold_at_the_present_height(self, point):
+        camera = camera_height_metres(self.link)
+        self.log.event("descent", f"Camera tracking puts the drone at {camera:.2f} m, below "
+                                  f"{DESCENT_LOWEST_CAMERA_HEIGHT_METRES:.2f} m: the descent stops and the drone holds.")
+        hold_target = self.height_hold_correction_target(_at(point, camera), flight_steps.CYCLE_SECONDS)
+        for _ in range(int(round(1.0 / flight_steps.CYCLE_SECONDS))):
+            self.send_one_cycle(hold_target)
 
     def pass_the_height_gate(self):
-        """At 0.90 m at S. On a failure the drone lands straight down at S."""
+        """At 0.90 m at S. If the strict gate fails, one retry: up to GATE_RETRY_CLIMB_METRES at the fast
+        speed and the same descent again. A second failure (or a relaxed failure) lands straight down."""
+        failure = self.try_the_height_gate()
+        if failure is not None and self.plan.gate_mode == GATE_STRICT:
+            self.log.event("gate", f"HEIGHT GATE RETRY: the first try failed ({failure}). Climbing to "
+                                   f"{GATE_RETRY_CLIMB_METRES:.2f} m at S and descending again.", first_failure=failure)
+            s_point = self.plan.route.s_metres
+            self.link.stage = "gate retry"
+            self.follow_with_speeds([_at(s_point, TUNNEL_HEIGHT_METRES), _at(s_point, GATE_RETRY_CLIMB_METRES)],
+                                    [0.0, DESCENT_FAST_METRES_PER_SECOND], HIGH_TARGET_LEAD_METRES)
+            self.descend_at_s(GATE_RETRY_CLIMB_METRES)
+            self.link.stage = GATE_STAGE
+            failure = self.try_the_height_gate(retry=True)
+        if failure is not None:
+            self.land_straight_down = True
+            raise RunMustStop(f"The height gate failed at S: {failure}. Landing straight down.")
+
+    def try_the_height_gate(self, retry=False):
+        """None once passed, else a sentence saying which condition failed most."""
         target_point = _at(self.plan.route.s_metres, TUNNEL_HEIGHT_METRES)
         gate = HeightGate(self.link.now_seconds(), self.plan.gate_mode, px4_position_field(self.link, "z_reset_counter"))
+        attempt = "on the retry" if retry else "on the first try"
         while True:
             self.send_one_cycle(self.height_hold_correction_target(target_point, flight_steps.CYCLE_SECONDS))
             passed = gate.update(self.link.now_seconds(), px4_estimator_flag(self.link, "cs_rng_hgt"),
                                  px4_estimator_flag(self.link, "cs_rng_kin_consistent"),
                                  px4_position_field(self.link, "z_reset_counter"), self.watch.disagreement())
             if passed:
-                self.watch.height_record.gate_result = f"passed ({self.plan.gate_mode})"
-                self.log.event("gate", f"HEIGHT GATE PASSED ({self.plan.gate_mode}): disagreement "
+                self.watch.height_record.gate_result = f"passed {attempt} ({self.plan.gate_mode})"
+                self.log.event("gate", f"HEIGHT GATE PASSED {attempt} ({self.plan.gate_mode}): disagreement "
                                        f"{self.watch.disagreement():+.3f} m.")
-                return
+                return None
             if gate.failed_because:
-                self.watch.height_record.gate_result = f"FAILED ({self.plan.gate_mode}): {gate.failed_because}"
-                self.land_straight_down = True
-                raise RunMustStop(f"The height gate failed after 4 s at S: {gate.failed_because} (counts of each failing "
-                                  f"condition: {gate.fail_counts}). Landing straight down.")
+                failure = f"{gate.failed_because} (counts of each failing condition: {gate.fail_counts})"
+                self.watch.height_record.gate_result = f"FAILED {attempt} ({self.plan.gate_mode}): {gate.failed_because}"
+                self.log.event("gate", f"HEIGHT GATE FAILED {attempt}: {failure}.")
+                return failure
 
     def turn_left_180(self):
         self.watch.heading_guard_is_on = False
@@ -396,10 +443,11 @@ class TunnelFirstRun(FallbackRun):
         speeds = [0.0] + [speed_metres_per_second] * (len(waypoints_metres) - 1)
         self.follow_with_speeds(waypoints_metres, speeds, target_lead_metres, speed_up_seconds)
 
-    def follow_with_speeds(self, waypoints_metres, speeds, target_lead_metres, speed_up_seconds=0.0):
+    def follow_with_speeds(self, waypoints_metres, speeds, target_lead_metres, speed_up_seconds=0.0, stop_when=None):
         """Slides a target along these waypoints (speeds[i] into waypoint i), the height held by camera
         tracking, the nose locked once the turn has set it. With speed_up_seconds the target's speed
-        rises from zero to full over that time, for a smooth start."""
+        rises from zero to full over that time, for a smooth start. stop_when, if given, is asked every
+        cycle; once it says True the slide ends early. Returns True if it ended that way."""
         follower = RouteFollower(waypoints_metres, leg_speeds_metres_per_second=speeds, target_lead_metres=target_lead_metres,
                                  finish_tolerance_metres=FINISH_TOLERANCE_METRES)
         self.height_hold.follower = follower
@@ -416,8 +464,17 @@ class TunnelFirstRun(FallbackRun):
             target = self.height_hold.next_target(self.watch.drone_on_course(), seconds_to_slide)
             self.watch.send_target_on_course(target, heading_on_course_radians=self.locked_heading_on_course)
 
-        flight_steps.fly_until(self.link, lambda: self.height_hold.has_finished(self.watch.drone_on_course()),
-                               send_next_target, LONGEST_STAGE_SECONDS, f"the end of the stage '{self.stage_name}'", self.watch)
+        stopped_early = [False]
+
+        def is_finished():
+            if stop_when is not None and stop_when():
+                stopped_early[0] = True
+                return True
+            return self.height_hold.has_finished(self.watch.drone_on_course())
+
+        flight_steps.fly_until(self.link, is_finished, send_next_target, LONGEST_STAGE_SECONDS,
+                               f"the end of the stage '{self.stage_name}'", self.watch)
+        return stopped_early[0]
 
     def send_one_cycle(self, target_on_course, heading_on_course_radians=None, cycle_seconds=flight_steps.CYCLE_SECONDS):
         """One cycle of: the safety checks, the target (or the last one again while holding), the record."""

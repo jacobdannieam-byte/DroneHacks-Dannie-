@@ -8,6 +8,8 @@ its check() once per cycle.
     and camera tracking's drift apart.
   - Height watch (tunnel_height.py), whenever camera tracking puts the drone above 1.5 m: warns, then
     stops the run with HeightWatchStop. tunnel_first_run.py then comes down by the watch's rules.
+    During the descent at S (verified open floor) it only writes the stop down: coming down there is
+    already the safe action.
   - The height hold's deliberate correction counts in run_safety's camera height comparison, as in
     Kenny's live navigation (Gazebo, 2026-11-08: PX4 drifting 0.33 m high in the tunnel had stopped
     runs although the height hold kept the true height).
@@ -48,6 +50,8 @@ class TunnelFirstSafetyWatch(FallbackSafetyWatch):
         self.height_record = HeightRecord()
         self.last_watch_verdict = None
         self.flight_start_seconds = None
+        self.height_watch_logs_only = False      # True during the descent at S (tunnel_first_run.py).
+        self.logged_watch_stop_during_descent = False
 
     # ---- Starting the guards ------------------------------------------------------------------------
 
@@ -108,8 +112,17 @@ class TunnelFirstSafetyWatch(FallbackSafetyWatch):
         if verdict != self.last_watch_verdict and verdict == WATCH_WARN:
             self.link.log.event("height_watch", f"HEIGHT WARNING: {self.height_watch.reason}.")
         self.last_watch_verdict = verdict
-        if verdict == WATCH_STOP:
-            raise HeightWatchStop(f"The height watch stopped the run: {self.height_watch.reason}.")
+        if verdict != WATCH_STOP:
+            return
+        if self.height_watch_logs_only:
+            # During the descent at S, over open floor that was checked before the start, coming down
+            # is already the safe action, so the watch only writes it down (the team's choice).
+            if not self.logged_watch_stop_during_descent:
+                self.logged_watch_stop_during_descent = True
+                self.link.log.event("height_watch", f"Height watch (logging only, during the descent at S): "
+                                                    f"{self.height_watch.reason}.")
+            return
+        raise HeightWatchStop(f"The height watch stopped the run: {self.height_watch.reason}.")
 
     def record_heights(self):
         link = self.link

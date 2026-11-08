@@ -371,3 +371,27 @@ def test_the_height_report_says_when_the_laser_dropped_and_came_back():
     text = record.paragraph()
     assert "dropped at 9.0 s (to S" in text and "back at 20.0 s (descent" in text
     assert "+0.12 m" in text and "passed (strict)" in text and "z_reset_counter to 2" in text
+
+
+def test_during_the_descent_at_s_the_height_watch_logs_instead_of_stopping():
+    from team_nav.tunnel_first_watch import HeightWatchStop, TunnelFirstSafetyWatch
+    from team_nav.tunnel_height import HeightWatch
+    events = []
+    position = types.SimpleNamespace(z_reset_counter=1, z_valid=True, v_z_valid=True)
+    link = types.SimpleNamespace(now_seconds=lambda: clock[0], position_from_launch=lambda: np.array([0.0, 0.0, 2.0]),
+                                 px4_height_risen_metres=lambda: 2.3,
+                                 reports=types.SimpleNamespace(latest={"px4_position": position}),
+                                 log=types.SimpleNamespace(event=lambda kind, text, **values: events.append(text)))
+    clock = [0.0]
+    watch = TunnelFirstSafetyWatch.__new__(TunnelFirstSafetyWatch)
+    watch.link, watch.height_baseline_metres, watch.height_watch = link, 0.0, HeightWatch(1)
+    watch.last_watch_verdict, watch.logged_watch_stop_during_descent = None, False
+    watch.height_watch_logs_only = True
+    for tenth in range(10):                                   # 0.30 m apart for 1 s: would stop.
+        clock[0] = tenth / 10.0
+        watch.check_the_height_watch()
+    assert any("logging only" in text for text in events)
+    watch.height_watch_logs_only = False
+    with pytest.raises(HeightWatchStop):
+        clock[0] = 1.1
+        watch.check_the_height_watch()

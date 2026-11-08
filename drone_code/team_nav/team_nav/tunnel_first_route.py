@@ -12,7 +12,9 @@ The route (the team's spec, 2026-11-08; positions are (east, north) on the cours
      across the end-of-first-corridor line.
   4. Fly at cruise to S at HIGH_SPEED_METRES_PER_SECOND, by the shortest path that keeps the bottom
      laser's rules (high_path_rules.py), turning only NET_DISTANCE_METRES or more from the net.
-  5. Descend at S to TUNNEL_HEIGHT_METRES; the height gate and the turn happen there.
+  5. Descend at S to TUNNEL_HEIGHT_METRES (fast to DESCENT_SLOW_FROM_METRES, then slowly); the
+     height gate (with one retry: up to GATE_RETRY_CLIMB_METRES and down again) and the turn
+     happen there.
   6. Back north by TEAM_NAV_LOOK_BACKUP_METRES to the LOOK point; LOOK.
   7. GO south along the tunnel to GO_END_NORTH_METRES, about 0.5 m past the exit; land there, or
      (TEAM_NAV_AFTER_TUNNEL=pad) slide to the pad spot, climb, and fly over the chicane to the pad.
@@ -74,9 +76,20 @@ GO_END_NORTH_METRES = -0.95
 CORRIDOR_END_SETTING = "TEAM_NAV_CROSS_CORRIDOR_END"
 CORRIDOR_END_NORTH_METRES = 2.34
 # The team's choices for the descent at S: the target slides at the fast speed down to the slow
-# part's top, then at the slow speed. No dip below the tunnel height.
+# part's top, then at the slow speed. No dip below the tunnel height. Why down to 1.00 m fast: PX4
+# takes the laser back only after its consistency check passes, which needs a vertical speed above
+# 0.5 m/s through a 2 s filter. Down to 1.2 m the drone was above 0.5 m/s for only about 1.2 s
+# (Gazebo, 2026-11-08) and PX4 never took the laser back; down to 1.00 m gives about 2 s. Never
+# below DESCENT_SLOW_FROM_LOWEST_METRES.
 DESCENT_FAST_METRES_PER_SECOND = 0.7
-DESCENT_SLOW_FROM_METRES = 1.2
+DESCENT_SLOW_FROM_METRES = 1.00
+DESCENT_SLOW_FROM_LOWEST_METRES = 0.95
+# The team's choices for the one retry after a failed strict gate: climb to this height at the fast
+# speed, then the same descent again.
+GATE_RETRY_CLIMB_METRES = 1.90
+# The team's choice: during the descent at S, if camera tracking puts the drone below this, the
+# descent stops and the drone holds.
+DESCENT_LOWEST_CAMERA_HEIGHT_METRES = 0.60
 DESCENT_SLOW_METRES_PER_SECOND = 0.15
 # The team's choices for the backup before the LOOK.
 LOOK_BACKUP_SETTING = "TEAM_NAV_LOOK_BACKUP_METRES"

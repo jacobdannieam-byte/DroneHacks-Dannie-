@@ -346,10 +346,10 @@ height, turns round slowly, looks at the tunnel and flies straight through it.
 - climbs to 0.70 m and waits until steady (at most 8 s), measuring the height baseline;
 - 0.8 m north, climbs to the cruise height (2.4 m; `TEAM_NAV_FALLBACK_CRUISE_METRES`), and flies at
   0.6 m/s to S = (2.17, 2.14) (`TEAM_NAV_CROSS_CORRIDOR_END=on` first flies north to 2.34);
-- descends at S to 0.90 m (0.7 m/s down to 1.2 m, then 0.15 m/s);
+- descends at S to 0.90 m (0.7 m/s down to 1.00 m, so PX4 can take the laser back, then 0.15 m/s);
 - the height gate: 2 s with PX4 on the laser, its laser check passing, no height reset and PX4's
-  height within 0.10 m of camera tracking's (after the baseline), within 4 s. If not, it lands straight
-  down at S (`TEAM_NAV_TUNNEL_GATE=relaxed` only checks the heights, within 0.15 m);
+  height within 0.10 m of camera tracking's (after the baseline), within 4 s. If not, it climbs once to
+  1.90 m and descends again for a second try; if that fails too, it lands straight down at S (`TEAM_NAV_TUNNEL_GATE=relaxed` only checks the heights, within 0.15 m);
 - turns 180 degrees to the left at 0.90 m, slowly (10 degrees a second, pausing if PX4 lags);
 - backs 0.26 m north, nose still south (`TEAM_NAV_LOOK_BACKUP_METRES`), and LOOKs; if unsure it flies
   the map's line (`TEAM_NAV_TUNNEL_IF_UNSURE=map`, the default; `=land` lands);
