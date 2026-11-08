@@ -45,7 +45,11 @@ def ground_alignment(probe, probe_sha256):
         point = np.asarray(row['position'], dtype=float)
         if (evidence['valid'] is not True or evidence['reset'] != reset or evidence['pose_frame'] != 1
                 or point.shape != (3,) or not np.isfinite(point).all()
-                or not stamp <= row['receipt_ns'] <= now):
+                # The callback can see /clock one delivery behind PX4. Use the
+                # existing 50 ms ingestion bound, and require that the captured
+                # probe clock has actually caught up before fitting the pair.
+                or not 0 <= row['receipt_ns'] <= now or stamp > now
+                or stamp-row['receipt_ns'] > 50_000_000):
             raise ValueError('invalid native ground alignment sample')
         if samples and stamp <= samples[-1][0]:
             raise ValueError('nonadvancing native ground alignment samples')

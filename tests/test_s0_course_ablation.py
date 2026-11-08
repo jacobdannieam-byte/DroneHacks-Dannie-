@@ -131,3 +131,21 @@ def test_ground_alignment_rejects_unsettled_or_unpaired_samples(tmp_path):
     missing['px4_clock_samples'] = [r for r in missing['px4_clock_samples'] if abs(r['evidence'][0]['stamp_ns']-stamp)>20_000_000]
     with pytest.raises(ValueError, match='bracket'):
         ground_alignment(missing, 'a'*64)
+
+
+def test_real_attempt002_source_ahead_of_callback_preserves_original_times():
+    probe = json.loads((ROOT/'tests/fixtures/attempt002_ground_alignment.json').read_text())
+    before = deepcopy(probe)
+    assert max(r['evidence'][0]['stamp_ns']-r['receipt_ns'] for r in probe['px4_clock_samples']) == 4_000_000
+    fit = ground_alignment(probe, probe['source_sha256'])
+    assert fit['native_bracket_ns'] == [47_000_000_000, 47_000_000_000]
+    assert np.allclose(fit['ned_origin_in_map_m'], [.0010321889440860084,-.000330248293988796,-.0030906565387330207])
+    assert probe == before
+    over = deepcopy(probe)
+    over['px4_clock_samples'][0]['receipt_ns'] = over['px4_clock_samples'][0]['evidence'][0]['stamp_ns']-50_000_001
+    with pytest.raises(ValueError, match='invalid native'):
+        ground_alignment(over, probe['source_sha256'])
+    not_caught_up = deepcopy(probe)
+    not_caught_up['px4_clock_samples'][-1]['evidence'][0]['stamp_ns'] = probe['last_observations']['/clock']['sim_ns']+1
+    with pytest.raises(ValueError, match='invalid native'):
+        ground_alignment(not_caught_up, probe['source_sha256'])
