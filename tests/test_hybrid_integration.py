@@ -130,3 +130,29 @@ def test_semantic_context_from_another_snapshot_cannot_select_a_trajectory(input
     assert decision.decision == "safe_stop_requested"
     assert not decision.ranked_ids
     assert all("semantic_context_changed" in row.reasons for row in decision.evaluation.candidates)
+
+
+def test_h2_map_consumer_is_not_called_for_invalid_estimator(inputs):
+    def forbidden(*args):
+        raise AssertionError('Invalid estimator state reached map reasoning.')
+    result = hybrid_integration.assess(**(inputs | {'estimator_healthy': False}), map_consumer=forbidden)
+    assert result.map_reasoning is None
+    assert result.receipt.plan.decision == 'safe_stop_requested'
+
+
+def test_map_diagnostics_failure_does_not_interrupt_safety(inputs):
+    def broken(*args):
+        raise ValueError('Unavailable diagnostic input')
+    result = hybrid_integration.assess(**inputs, map_consumer=broken)
+    assert result.map_reasoning is None
+    assert result.validation_reason == 'eligible_for_offline_review'
+
+
+def test_map_diagnostics_cannot_return_expired_candidate(inputs):
+    elapsed = [0.]
+    def slow(*args):
+        elapsed[0] = 1.
+        return None
+    result = hybrid_integration.assess(**(inputs | {'monotonic': lambda: elapsed[0]}), map_consumer=slow)
+    assert result.validation_reason == 'deadline_exceeded'
+    assert result.receipt.plan.decision == 'safe_stop_requested'

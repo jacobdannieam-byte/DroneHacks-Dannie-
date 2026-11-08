@@ -1,0 +1,64 @@
+[
+  {
+    "recording": "20261108_014841_practice_course_run",
+    "samples": 608,
+    "arrival_age_percentiles_seconds": {
+      "p50": 0.072,
+      "p95": 0.26304999999999995,
+      "p99": 0.29201,
+      "max": 0.383
+    },
+    "samples_over_02": 89,
+    "samples_over_05": 0,
+    "nonincreasing_sample_times": 0,
+    "largest_sample_gap_seconds": 0.11069999999999958,
+    "consecutive_identical_sampled_poses": 262,
+    "stops": [
+      {
+        "time": "2026-11-08T01:49:39+0000",
+        "seconds_since_start": 58.062,
+        "kind": "stop",
+        "text": "STOPPING THE RUN during 'climb'. Waited 20 seconds for the climb, and it did not happen.",
+        "stage": "climb"
+      }
+    ],
+    "unverified": [
+      "capture age",
+      "callback arrival gaps",
+      "estimator resets",
+      "deployment identity",
+      "frozen pose versus repeated sampling of latest report"
+    ]
+  },
+  {
+    "recording": "20261108_010909_practice_practice_out_and_back",
+    "samples": 656,
+    "arrival_age_percentiles_seconds": {
+      "p50": 0.029,
+      "p95": 0.23529999999999995,
+      "p99": 0.29592000000000007,
+      "max": 0.326
+    },
+    "samples_over_02": 62,
+    "samples_over_05": 0,
+    "nonincreasing_sample_times": 0,
+    "largest_sample_gap_seconds": 0.11229999999999762,
+    "consecutive_identical_sampled_poses": 236,
+    "stops": [
+      {
+        "time": "2026-11-08T01:10:07+0000",
+        "seconds_since_start": 58.147,
+        "kind": "stop",
+        "text": "STOPPING THE FLIGHT during 'back: slide to above the launch mark'. PX4 reports that it has stopped using the bottom laser for height for 1 second, 0.40 m above the floor. Its height now comes from the air pressure sensor, which drifts (docs/ARCHITECTURE.md, section 7), so its height can't be trusted.",
+        "stage": "back: slide to above the launch mark"
+      }
+    ],
+    "unverified": [
+      "capture age",
+      "callback arrival gaps",
+      "estimator resets",
+      "deployment identity",
+      "frozen pose versus repeated sampling of latest report"
+    ]
+  }
+]

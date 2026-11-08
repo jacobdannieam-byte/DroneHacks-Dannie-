@@ -2,9 +2,6 @@
 set -eo pipefail
 mode=$1; world=$2; seconds=$3; revision=$4; profile=$5; approval=$6
 cd /repository
-# Copy only code/assets. Builds and generated files write to this run's evidence tree.
-tar -C /source --exclude=__pycache__ --exclude=simulator/gazebo_trial/generated --exclude=simulator/generated_files \
-    -cf - simulator drone_code examples refnav onboard scenarios | tar --no-same-owner -xf -
 mkdir -p /evidence/ros /evidence/flight_records /evidence/gazebo_generated
 mkdir -p simulator/generated_files
 ln -s /evidence/flight_records simulator/generated_files/flight_records
@@ -12,7 +9,7 @@ ln -s /evidence/gazebo_generated simulator/gazebo_trial/generated
 export SIMULATOR_WORLD_MAP="/repository/$world" ROS_LOG_DIR=/evidence/ros GAZEBO_ISOLATED_DDS=1
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
 export HYBRID_GAZEBO_RUN=1
-[ "$mode" != classical ] || export HYBRID_GAZEBO_RUN=0
+[[ "$mode" != classical* ]] || export HYBRID_GAZEBO_RUN=0
 
 timeout --kill-after=10 600 bash simulator/inside_the_box/build_our_packages.sh > /evidence/colcon.txt 2>&1
 source simulator/inside_the_box/load_ros_environment.sh
@@ -27,7 +24,7 @@ export PYTHONPATH="/repository${PYTHONPATH:+:$PYTHONPATH}"
 auth=(--mode "$mode" --world "$world" --revision "$revision")
 [ -z "$profile" ] || auth+=(--profile "$profile")
 [ -z "$approval" ] || auth+=(--approval "$approval")
-if [[ "$mode" == hybrid_sitl || "$mode" == classical ]]; then
+if [[ "$mode" == hybrid_sitl || "$mode" == classical || "$mode" == classical_smoke ]]; then
     python3 -m examples.gazebo_container authorize "${auth[@]}"
     cp /approval.json /evidence/trial_approval.json
 fi
@@ -57,12 +54,37 @@ cleanup() {
 trap cleanup EXIT
 trap 'exit 130' INT TERM
 
-if [ "$mode" = classical ]; then
-    ros2 launch /repository/simulator/gazebo_trial/full_route_in_gazebo.launch.py > /evidence/stack.txt 2>&1 &
+if [[ "$mode" == classical* ]]; then
+    observe=false
+    [ "$mode" != classical_observe ] || observe=true
+    ln -s /evidence/smoke_flight_recordings simulator/generated_files/smoke_flight_recordings
+    mkdir -p /evidence/smoke_flight_recordings
+    mkdir -p /evidence/worlds
+    ln -s /evidence/worlds simulator/generated_files/worlds
+    ros2 launch /repository/simulator/gazebo_trial/full_route_in_gazebo.launch.py \
+        observe_only:="$observe" > /evidence/stack.txt 2>&1 &
     stack_pid=$!
-    # Imported test performs its own readiness and route checks.
+    ros2 bag record --use-sim-time -o /evidence/observations /clock /skybeta/state \
+        /skybeta/setpoint/pose /skybeta/setpoint/twist /visual_slam/tracking/odometry /visual_slam/status \
+        /fmu/out/vehicle_local_position /fmu/out/vehicle_odometry /fmu/out/vehicle_status_v1 \
+        /fmu/out/vehicle_land_detected /fmu/out/estimator_status_flags /fmu/out/failsafe_flags \
+        /fmu/in/manual_control_input /fmu/in/vehicle_visual_odometry /fmu/in/vehicle_command \
+        /fmu/in/offboard_control_mode /fmu/in/trajectory_setpoint /fmu/out/vehicle_command_ack \
+        /fmu/out/distance_sensor /simulator_only/touches > /evidence/rosbag.txt 2>&1 &
+    bag_pid=$!
+    python3 -m simulator.gazebo_trial.classical_preflight "$observe" "$seconds" /evidence/classical_preflight.json
+    kill -0 "$stack_pid" && kill -0 "$bag_pid" || exit 1
+    [ "$observe" = false ] || exit 0
     result=0; score=0
-    timeout --signal=INT --kill-after=10 450 python3 simulator/test_flights/route_test.py --drone-map "$world" || result=$?
+    if [ "$mode" = classical_smoke ]; then
+        timeout --signal=INT --kill-after=10 300 python3 simulator/test_flights/rise_and_land_test.py \
+            --ros-args -p use_sim_time:=true || result=$?
+    else
+        timeout --signal=INT --kill-after=10 450 python3 simulator/test_flights/route_test.py \
+            --drone-map "$world" --ros-args -p use_sim_time:=true || result=$?
+    fi
+    # Leave time for the independent referee and PX4 status to record touchdown and disarm.
+    sleep 3
     python3 -m simulator.gazebo_trial.referee_result /evidence/flight_records || score=$?
     exit "$((result != 0 ? result : score))"
 fi

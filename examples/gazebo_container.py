@@ -245,7 +245,7 @@ def main():
     commands.add_parser("land").add_argument("--trial-id", required=True)
     for name in ("authorize", "fly"):
         p = commands.add_parser(name)
-        p.add_argument("--mode", choices=("classical", "hybrid_sitl"), required=True)
+        p.add_argument("--mode", choices=("classical", "classical_smoke", "hybrid_sitl"), required=True)
         p.add_argument("--profile", type=Path)
         p.add_argument("--approval", type=Path, required=True)
         p.add_argument("--world", type=Path, required=True)

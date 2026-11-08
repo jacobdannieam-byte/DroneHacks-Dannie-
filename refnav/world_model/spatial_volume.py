@@ -6,7 +6,7 @@ import math
 
 import numpy as np
 
-from .spatial_input import MAX_LOCAL_M, SpatialReference, stamp_ok
+from .spatial_input import MAX_LOCAL_M, SpatialReference, stamp_ok, vector
 
 TILE = 8
 
@@ -22,6 +22,7 @@ def swept_cell_bounds(points, radius, resolution, origin_index):
 class Cell(IntEnum):
     UNKNOWN = 0
     FREE = 1
+    OBSERVED_FREE = FREE
     OCCUPIED = 2
 
 
@@ -52,6 +53,13 @@ class SweepResult:
     occupied_cells: int = 0
     unknown_cells: int = 0
     outside_map: bool = False
+    observed_free_cells: int = 0
+
+    @property
+    def in_volume_fractions(self):
+        """(observed-free, unknown) fractions of sampled in-volume voxels."""
+        total = self.observed_free_cells + self.unknown_cells + self.occupied_cells
+        return None if not total else (self.observed_free_cells / total, self.unknown_cells / total)
 
 
 @dataclass(frozen=True, eq=False)
@@ -68,14 +76,63 @@ class MetricSnapshot:
     _stamps: np.ndarray
     received_ns: int | None = None
 
+    def _query_valid(self, now_ns, reference):
+        return self.available and reference == self.reference and stamp_ok(now_ns) and now_ns >= self.query_ns
+
+    def cell_at(self, point_m, *, now_ns, reference):
+        """Live evidence for one half-open voxel. Use a sweep for clearance."""
+        point = vector(point_m, 3)
+        if max(map(abs, point)) > MAX_LOCAL_M or not self._query_valid(now_ns, reference):
+            return Cell.UNKNOWN
+        index = np.floor(np.asarray(point) / self.policy.resolution_m).astype(int) - self.origin_index
+        if np.any(index < 0) or np.any(index >= self.policy.shape):
+            return Cell.UNKNOWN
+        key = tuple(index)
+        cell = Cell(self._cells[key])
+        age = now_ns - self._stamps[key]
+        max_age = self.policy.occupied_age_ns if cell == Cell.OCCUPIED else self.policy.free_age_ns
+        return cell if 0 <= age <= max_age else Cell.UNKNOWN
+
+    def nearest_occupied_m(self, point_m, *, max_distance_m, now_ns, reference):
+        """Distance to a fresh occupied voxel box, or None for no supported hit."""
+        point = np.asarray(vector(point_m, 3))
+        if not 0 < max_distance_m <= 10:
+            raise ValueError("occupied proximity requires a bounded search radius")
+        if max(map(abs, point)) > MAX_LOCAL_M or not self._query_valid(now_ns, reference):
+            return None
+        resolution = self.policy.resolution_m
+        lo, hi = swept_cell_bounds(point[None], max_distance_m, resolution, self.origin_index)
+        lo, hi = np.maximum(lo[0], 0), np.minimum(hi[0], self.policy.shape)
+        if np.any(lo >= hi):
+            return None
+        region = tuple(slice(a, b) for a, b in zip(lo, hi))
+        age = now_ns - self._stamps[region]
+        hits = np.argwhere((self._cells[region] == Cell.OCCUPIED) & (0 <= age)
+                           & (age <= self.policy.occupied_age_ns))
+        if not len(hits):
+            return None
+        lower = (hits + lo + self.origin_index) * resolution
+        offset = np.maximum(np.maximum(lower - point, point - (lower + resolution)), 0.)
+        distance = float(np.linalg.norm(offset, axis=1).min())
+        return distance if distance <= max_distance_m else None
+
+    def vertical_clearance(self, point_m, *, below_m, above_m, reference, now_ns, vehicle_radius_m, margin_m):
+        """Independent below/above swept-envelope checks in this z-up frame."""
+        point = vector(point_m, 3)
+        if not all(0 < span <= 10 for span in (below_m, above_m)):
+            raise ValueError("vertical clearance requires bounded positive distances")
+        return tuple(self.check_sweep((point, (point[0], point[1], point[2] + dz)),
+                                      reference=reference, now_ns=now_ns,
+                                      vehicle_radius_m=vehicle_radius_m, margin_m=margin_m)
+                     for dz in (-below_m, above_m))
+
     def cells_at(self, now_ns, reference):
         """Detached voxel classes. Missing, invalid and expired evidence is unknown."""
-        if (reference != self.reference or not stamp_ok(now_ns) or now_ns < self.query_ns
-                or not self.available):
+        if not self._query_valid(now_ns, reference):
             return np.zeros(self.policy.shape, dtype=np.uint8)
         age = now_ns - self._stamps
-        fresh = ((self._cells == Cell.FREE) & (age <= self.policy.free_age_ns)
-                 | (self._cells == Cell.OCCUPIED) & (age <= self.policy.occupied_age_ns))
+        fresh = (age >= 0) & ((self._cells == Cell.FREE) & (age <= self.policy.free_age_ns)
+                             | (self._cells == Cell.OCCUPIED) & (age <= self.policy.occupied_age_ns))
         return np.where(fresh, self._cells, Cell.UNKNOWN).astype(np.uint8, copy=False)
 
     def check_sweep(self, points_m, *, reference, now_ns, vehicle_radius_m, margin_m):
@@ -105,11 +162,12 @@ class MetricSnapshot:
                 seen[tuple(slice(a, b) for a, b in zip(lower, upper))] = True
         occupied = int(np.count_nonzero(seen & (cells == Cell.OCCUPIED)))
         unknown = int(np.count_nonzero(seen & (cells == Cell.UNKNOWN)))
+        free = int(np.count_nonzero(seen)) - occupied - unknown
         if occupied:
-            return SweepResult("occupied", "occupied_voxel", occupied, unknown, outside)
+            return SweepResult("occupied", "occupied_voxel", occupied, unknown, outside, free)
         if unknown or outside:
-            return SweepResult("unknown", "incomplete_fresh_volume", occupied, unknown, outside)
-        return SweepResult("verified_free", "observed_swept_volume", occupied, unknown, outside)
+            return SweepResult("unknown", "incomplete_fresh_volume", occupied, unknown, outside, free)
+        return SweepResult("verified_free", "observed_swept_volume", occupied, unknown, outside, free)
 
 
 def _tile_tables(depth, policy):
