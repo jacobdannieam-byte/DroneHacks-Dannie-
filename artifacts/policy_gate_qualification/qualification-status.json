@@ -1,0 +1,114 @@
+{
+  "overall": "IMPLEMENTED_PARTIALLY_QUALIFIED_FULL_POLICY_BLOCKED",
+  "candidate_directory": "policy-gates-integration",
+  "branch": "codex/policy-gates-integration",
+  "constraints": {
+    "map_control": false,
+    "background_registration": false,
+    "physical_hardware": false,
+    "moving_trials_this_integration": 0,
+    "future_speed_limit_mps": 0.5,
+    "future_landing_timeout_s": 30,
+    "stop_on_first_failure": true,
+    "historical_evidence": "Preserved separately; no old failure converted into a fresh passing flight"
+  },
+  "gates": [
+    {
+      "id": 1,
+      "name": "Authority loss and command expiry",
+      "status": "IMPLEMENTED_ROS_CHECKED_NATIVE_PX4_PENDING",
+      "implemented": [
+        "Unexpected disarm or unknown armed state during flight ends the owner and prevents further commands and targets.",
+        "Disarm before native landing acknowledgement cannot be reported as successful landing.",
+        "Normal acknowledged AUTO_LAND completion remains supported."
+      ],
+      "evidence": [
+        "authority-ros-airborne/ros-authority.json",
+        "final-tests.txt"
+      ],
+      "evidence_limits": "ROS checks use real RefNav callbacks and private publishers with synthetic state. They do not prove PX4 airborne fallback behavior.",
+      "remaining_steps": [
+        "Measure native owner status and landed-message cadence against its 300 ms freshness limit; reconcile the safety latency budget before changing any threshold.",
+        "Build a bounded authority/expiry trial harness that records lease creation, expiry, last command, takeover, native PX4 mode, landing acknowledgement and disarm in causal order.",
+        "Test the harness offline and disarmed, including absent and delayed status, stale held target and explicit mode takeover.",
+        "Present exact candidate, fault times, limits, recovery owner and fresh-world preflight for approval before any moving trial.",
+        "Run approved native PX4 takeover and lease-expiry trials separately, stopping on the first failure. Do not force disarm in the air."
+      ],
+      "closure": "No target or command after authority loss or expiry; independently recorded native PX4 fallback and recovery within approved bounds, including landing within 30 seconds."
+    },
+    {
+      "id": 2,
+      "name": "Native sensing and integrated strategy shadow",
+      "status": "INTEGRATED_SAFE_REFUSAL_VERIFIED_POSITIVE_NATIVE_CASE_PENDING",
+      "implemented": [
+        "Integrated sensing and four strategy implementations with pinned model artifacts in the simulator archive.",
+        "Added a bounded simulation-only clock fence that retains original source and callback stamps and records later ingestion time.",
+        "Aligned simulated estimator flag freshness with the existing 1.25 second sensor contract; hardware and visual tracking retain their tighter checks.",
+        "Preserved experimental strategy execution restrictions and all unknown-space refusals."
+      ],
+      "evidence": [
+        "native-observe",
+        "clock-ros/ros-clock.json",
+        "native-strategies-final",
+        "native-synchronization-diagnosis",
+        "hybrid_existing-integrated.json",
+        "hybrid_information_gain-integrated.json",
+        "hybrid_learned_ranker-integrated.json",
+        "hybrid_physics_informed-integrated.json"
+      ],
+      "result": "Each final native replay reaches 14 planner assessments without clock errors or model fallback, but all refuse unverified progress. Synthetic positive cases are not native positive qualification.",
+      "evidence_limits": "Final replay uses a labeled uncertainty sensitivity profile, not independently measured flight bounds. Recorded ROS time supplies replay pacing; the separate ROS clock probe checks a real monotonic timeout. The final publication-stamp extension has offline regression coverage but is newer than that ROS probe.",
+      "remaining_steps": [
+        "Independently establish camera, TF, tracking, alignment and depth uncertainty bounds and document their provenance.",
+        "Acquire legitimate observations covering the whole launch and initial stopping volume; never insert an invented free-space bubble.",
+        "Repeat the identical native recording through all four strategies with the reviewed profile and complete clock audit.",
+        "Require at least one supported positive candidate in observed clearance, plus refusal for unknown, expired, occupied and insufficient-clearance cases.",
+        "Retain shadow-only restrictions on strategies that lack their own execution qualification."
+      ],
+      "closure": "Reviewed native profile produces both a positive observed-clearance decision and expected negative decisions, with model identities, clock provenance and command-publisher absence recorded."
+    },
+    {
+      "id": 3,
+      "name": "Measured stopping and whole-drone clearance",
+      "status": "EXECUTOR_GUARDS_IMPLEMENTED_MEASUREMENTS_PENDING",
+      "implemented": [
+        "Added a stopping envelope combining full-body radius and height, reaction distance and measured braking distance.",
+        "Checks apply on the first proposal and on held-target revalidation, including stopping clearance in every direction.",
+        "Unknown, expired, occupied or out-of-bounds clearance refuses execution.",
+        "Native activation requires an explicit envelope and measurement-file identity; no default measurement is supplied."
+      ],
+      "evidence": [
+        "final-tests.txt",
+        "policy-gates-integration/tests/test_policy_gate_stopping.py"
+      ],
+      "evidence_limits": "A matching file hash establishes identity, not measurement validity. There is no reviewed braking report or approved body envelope yet.",
+      "remaining_steps": [
+        "Measure or verify complete vehicle dimensions including protrusions and establish a surveyed clear calibration lane.",
+        "Implement and offline-test a dedicated calibration harness with a single motion owner, bounded duration, causal timestamps and independent position/velocity recording.",
+        "Propose separate simulator calibration trials at 0.20, 0.35 and at most 0.50 m/s; choose lane length and stopping limits from surveyed clearance before requesting approval.",
+        "Approve recovery and landing behavior before movement; maintain the 30 second landing timeout and stop on the first failure.",
+        "Measure worst-case command-to-brake delay and stopping distance with uncertainty and repeatability margins; bind the reviewed report and envelope to the candidate.",
+        "Verify full-body and braking-volume clearance against narrow, low-overhead, unknown and expired-map cases before permitting policy-owned motion."
+      ],
+      "closure": "Reviewed measured envelope covers the requested speed and operating conditions, and native trials demonstrate safe stopping and landing within its bounds."
+    }
+  ],
+  "integration_order": [
+    "Freeze source and evidence identities; retain baseline and failure folders separately.",
+    "Resolve authority cadence and finish the disarmed authority/expiry harness.",
+    "Establish reviewed sensing uncertainty and native positive shadow clearance.",
+    "Prepare the stopping calibration harness and a concrete bounded moving-trial approval package.",
+    "Run only approved trials with independent recording and first-failure stop.",
+    "Review all three gate records against the same candidate before staged policy motion; passing simulator checks does not qualify hardware."
+  ],
+  "recovery_plan": [
+    "On lost authority or stale state, stop the owner issuing commands; do not fight an external owner.",
+    "Use the approved native PX4 fallback or designated recovery owner, never multiple simultaneous command owners.",
+    "On any limit breach, missing recording, failed acknowledgement or timeout, stop the batch and preserve raw data before diagnosis.",
+    "Confirm landed and disarmed from fresh native telemetry before reset or another trial.",
+    "After a fix, produce a new pinned candidate and evidence folder; retain the original failed trial and any offline reanalysis separately."
+  ],
+  "commit": "1d5c4fa0610a41a67e0762db6d34dbaf5f1f8ef4",
+  "final_tests": "573 passed in 32.96 seconds",
+  "source_archive": "inputs-reviewed/integrated.tar"
+}

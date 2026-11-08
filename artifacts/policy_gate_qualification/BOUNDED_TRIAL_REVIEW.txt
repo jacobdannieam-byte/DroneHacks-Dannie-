@@ -1,0 +1,77 @@
+DroneHacks bounded trial review package
+Status: PREPARATION COMPLETE ONLY FOR OFFLINE/PRIVATE-ROS CHECKS.
+MOVING TRIALS NOT RELEASED: geometry, positive native clearance, and the
+deployment-specific motion/fault driver are not yet qualified.
+
+Implemented components
+- Per-stream simulator authority timing: authority 750 ms, landed 1.5 seconds,
+  position 300 ms. Hardware defaults remain 300 ms. Native owner activation
+  requires the stopping reaction budget to cover authority detection time.
+- Reviewed stopping-report content validation in addition to SHA256 identity.
+- Subscriber-only qualification recorder, original capture/receipt stamps,
+  native armed-to-disarmed detection, invalid/incomplete recording refusal.
+- Offline stop analysis: <=100 ms sample gaps, finite valid telemetry,
+  <=0.50 m/s speed, sustained <=0.05 m/s for 0.5 seconds before landing,
+  <=30 seconds from land command to disarm, maximum stopping excursion.
+
+Disarmed evidence
+- candidate-full-tests-correct-directory.txt: 604 passed.
+- trial-harness-ros/ros-owner-timing.json: actual ROS ingestion boundaries pass.
+- trial-harness-ros/ros-authority.json: native callback disarm/takeover fixture
+  cases issue zero targets/commands after loss across ten ticks.
+- trial-harness-ros/ros-recorder.json: private ROS telemetry recording passes;
+  initial disarmed status does not masquerade as completion of a flight.
+- restart-observe: landed/disarmed/healthy; recording integrity passes.
+- Prior wrong-directory full-suite failure remains separately preserved.
+These checks are not native PX4 airborne fallback or braking qualification.
+
+Proposed sequence, one trial at a time
+1. Fresh-world disarmed observation on the exact reviewed Gazebo candidate.
+2. Native positive shadow clearance and negative unknown/expired/occupied cases.
+3. Calibration at 0.20 m/s; review recording before any higher-speed trial.
+4. Calibration at 0.35 m/s, then at most 0.50 m/s if earlier trials pass.
+5. Native authority takeover, then held-command expiry in separate trials.
+6. Review measured stopping envelope before any policy-owned moving trial.
+
+Proposed common limits (subject to verified world/vehicle geometry)
+- Isolated SITL only; no hardware devices or external command network.
+- Map control OFF; background registration OFF.
+- Nominal altitude 0.8 m above the reviewed launch plane.
+- One straight acceleration/braking segment, followed by native landing.
+- Actual three-dimensional speed <=0.50 m/s, including climb and descent.
+- Landing command to disarm <=30 seconds; batch stops on first failure.
+- No airborne forced disarm; no PX4 safety-parameter relaxation.
+- No route progress into unknown space; initial whole-body clearance required.
+- Lane dimensions and maximum travel MUST be filled from reviewed geometry;
+  the phone scan is not sufficient evidence, and no placeholder is executable.
+
+Release prerequisites
+1. Exact simulator/world/vehicle source identity and full collision dimensions.
+2. Verified launch/body/overhead clearance and calibration lane bounds.
+3. Reviewed sensor/transform uncertainty profile with native positive clearance.
+4. Deployment motion/fault driver connected to one owner; offline tests and a
+   disarmed rehearsal prove the exact event timing and recovery path.
+5. Recorder and raw rosbag active before arming; event clock mapping verified.
+6. Fresh native landed/disarmed state, valid estimator, advancing clock, and
+   command graph showing no conflicting publisher.
+7. Explicit approval names source identity, world, trial IDs and limits.
+
+Recovery and acceptance
+- Lost authority: stop issuing commands, do not fight the takeover owner.
+- Expired telemetry/lease: revoke target; use only the reviewed native fallback
+  or designated recovery owner. Its observed behavior must match the trial plan.
+- Speed/space/time/recording breach: stop the batch, retain all data and diagnose.
+- Reset only after fresh landed and disarmed confirmation; no automatic retries.
+- Preserve each run, failure and correction in separate folders with hashes.
+- Stopping report requires independent review and uncertainty/repeatability
+  margins; one passing synthetic fixture cannot populate measured values.
+
+Recorder interface for deployment integration
+python -m examples.qualification_recorder --output NEW_FILE --seconds 90
+Subscriptions: /fmu/out/vehicle_local_position,
+/fmu/out/vehicle_status_v1, /qualification/events and /clock via use_sim_time.
+Owner events are JSON {"event":"brake_command"|"land_command","stamp_ns":N}
+in the same ROS simulation clock, emitted at actual command publication.
+Native status supplies disarm. Raw rosbag remains the independent audit source.
+Analysis: python -m examples.stopping_trial_analysis RECORDING NEW_OUTPUT
+Never use this document itself as an arming approval.

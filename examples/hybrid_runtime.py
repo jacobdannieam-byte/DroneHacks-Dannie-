@@ -32,6 +32,8 @@ class HybridRuntime:
         if course.stage.goal.reference != profile.spatial.reference:
             raise ValueError("course must use the reviewed H1 map reference")
         self.strategy, self.course, self.adapter = strategy, course, adapter
+        from examples.sim_clock_fence import SimulationClockFence
+        self.clock_fence = SimulationClockFence(profile.clock) if profile.tracking_source == 'simulated_estimator' else None
         if strategy == 'hybrid_sitl' and profile.reasoner.variant != 'G0':
             raise ValueError('Experimental goal reasoners are restricted to read-only shadow.')
         self.loop = ShadowLoop(replace(profile, mission_goal=None), rate_hz=plan_hz, budget_s=budget_s,
@@ -63,9 +65,18 @@ class HybridRuntime:
 
     def feed(self, topic, message, received_ns, wall_ns, *, receipt_wall_ns=None):
         canonical = topic if self.adapter is None else self.adapter.canonical(topic)
-        self.loop.feed(canonical, message, received_ns, wall_ns, receipt_wall_ns=receipt_wall_ns)
+        try:
+            rows = (self.clock_fence.accept(canonical, message, received_ns, wall_ns)
+                    if self.clock_fence else [(canonical, message, received_ns, wall_ns)])
+            for name, data, ingestion_ns, ingestion_wall in rows:
+                self.loop.feed(name, data, ingestion_ns, ingestion_wall, receipt_wall_ns=receipt_wall_ns)
+        except ValueError:
+            self.invalidate()
+            self.loop.close()
+            raise
 
     def close(self):
+        if self.clock_fence: self.clock_fence.close()
         self.executor.invalidate()
         self.loop.close()
 

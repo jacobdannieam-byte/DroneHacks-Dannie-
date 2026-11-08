@@ -15,7 +15,9 @@ from time import monotonic
 
 import numpy as np
 
-from examples.gazebo_sensor_contract import OPTICAL_TO_FLU, SIM_BINDINGS, SIM_ESTIMATOR, read_camera_rig
+from examples.gazebo_sensor_contract import (
+    OPTICAL_TO_FLU, SIM_BINDINGS, SIM_ESTIMATOR, VEHICLE_STATUS_MAX_AGE_NS, read_camera_rig,
+)
 from examples.h1_observation import PX4_TYPES, TF, TRACKING
 from examples.hybrid_launch import configured, run_reviewed_sitl
 from examples.spatial_bag_input import TOPICS
@@ -134,12 +136,12 @@ def probe(seconds, output):
         advancing = first_clock is not None and last_clock is not None and last_clock > first_clock[0]
         now = node.get_clock().now().nanoseconds
 
-        def fresh(topic):
+        def fresh(topic, max_age_ns=300_000_000):
             row = last.get(topic, {})
-            return row if 0 <= now - row.get("receipt_ns", -10**9) <= 300_000_000 else {}
+            return row if 0 <= now - row.get("receipt_ns", -10**9) <= max_age_ns else {}
 
-        disarmed = fresh(ports["vehicle_status"]).get("evidence", [{}])[0].get("armed") is False
-        landed = fresh(ports["vehicle_land_detected"]).get("evidence", [{}])[0].get("landed") is True
+        disarmed = fresh(ports["vehicle_status"], VEHICLE_STATUS_MAX_AGE_NS).get("evidence", [{}])[0].get("armed") is False
+        landed = fresh(ports["vehicle_land_detected"], 1_500_000_000).get("evidence", [{}])[0].get("landed") is True
         healthy = fresh(SIM_BINDINGS["/estimator/healthy"]).get("healthy") is True
         missing = sorted(set(topics) - set(counts))
         evidence = {"tracking_source": SIM_ESTIMATOR, "graph": graph, "advancing_clock": advancing,
@@ -245,7 +247,7 @@ def main():
     commands.add_parser("land").add_argument("--trial-id", required=True)
     for name in ("authorize", "fly"):
         p = commands.add_parser(name)
-        p.add_argument("--mode", choices=("classical", "hybrid_sitl"), required=True)
+        p.add_argument("--mode", choices=("classical", "classical_smoke", "hybrid_sitl"), required=True)
         p.add_argument("--profile", type=Path)
         p.add_argument("--approval", type=Path, required=True)
         p.add_argument("--world", type=Path, required=True)

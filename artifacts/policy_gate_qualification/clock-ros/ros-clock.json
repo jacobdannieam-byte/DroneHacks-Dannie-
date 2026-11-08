@@ -1,0 +1,17 @@
+{
+  "result": "PASS",
+  "scope": "private ROS topics; no PX4 or simulator",
+  "deferred_until_clock": true,
+  "source_stamp_unchanged": true,
+  "wall_stall_fenced": true,
+  "audit": [
+    {
+      "topic": "/fmu/out/vehicle_odometry",
+      "callback_ros_ns": 10000000000,
+      "callback_wall_ns": 25557218143720,
+      "ingestion_ros_ns": 10004000000,
+      "ingestion_wall_ns": 25557218338271,
+      "mapped_capture_upper_ns": 10004000000
+    }
+  ]
+}

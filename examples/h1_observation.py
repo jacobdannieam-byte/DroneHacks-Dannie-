@@ -131,8 +131,9 @@ class HybridBagProfile:
 class HybridBagReplay(RecordedSpatialReplay):
     """Reuse the Phase 2 reader, retaining at most one PX4 state and pending depth."""
 
-    def __init__(self, profile, *, planner_budget_s=.025, monotonic=None, continuous=False, timings=None):
-        super().__init__(profile.spatial, timings=timings)
+    def __init__(self, profile, *, planner_budget_s=.025, monotonic=None, continuous=False, timings=None,
+                 retain_aligned_depth=False):
+        super().__init__(profile.spatial, timings=timings, retain_aligned_depth=retain_aligned_depth)
         self.continuous = continuous
         self.dropped_depth = 0
         self.startup_depth_discarded = 0
@@ -366,6 +367,10 @@ class HybridBagReplay(RecordedSpatialReplay):
     def px4_sample_us(self):
         return None if self._state is None else self._state[3]
 
+    def visual_pose_available(self, now_ns, bracket_ns):
+        return (self._tracking is not None and self._tracking[1] and now_ns - self._tracking[0] <= HEALTH_MAX_AGE_NS
+                and all(stamp in self._visual for stamp in bracket_ns))
+
     def prepare(self, now_ns):
         """Return a refusal reason or one normalized H0 input set."""
         if self.fault is not None:
@@ -381,13 +386,13 @@ class HybridBagReplay(RecordedSpatialReplay):
             return "geometry_unavailable", None
         if now_ns - snapshot.metric.capture_ns > EvaluationPolicy().map_age_ns:
             return "stale_geometry", None
-        if (self._tracking is None or not self._tracking[1] or now_ns - self._tracking[0] > HEALTH_MAX_AGE_NS
-                or any(stamp not in self._visual for stamp in self.rows[-1]["pose_bracket_ns"])):
+        if not self.visual_pose_available(now_ns, self.rows[-1]["pose_bracket_ns"]):
             return "unconfirmed_or_stale_visual_tracking", None
         if (self._health is None or not self._health[1] or now_ns - self._health[0] > HEALTH_MAX_AGE_NS
                 or self._ev_received is None or now_ns - self._ev_received > HEALTH_MAX_AGE_NS
-                or any(sample is None or not sample[1] or now_ns - sample[0] > HEALTH_MAX_AGE_NS
-                       for sample in (self._flags, self._local))):
+                or self._local is None or not self._local[1]
+                or not 0 <= now_ns-self._local[0] <= HEALTH_MAX_AGE_NS
+                or not self._flags_fresh(now_ns)):
             return "estimator_health_missing_or_stale", None
         if self._state is None:
             return self._state_reason, None
@@ -402,6 +407,17 @@ class HybridBagReplay(RecordedSpatialReplay):
                           vehicle=self.hybrid.vehicle, objective=self.hybrid.objective, goal=self._goal,
                           state_received_ns=received, estimator_reset_counter=alignment.estimator_reset_counter,
                           estimator_healthy=True, predictor=self.predictor, model_id=self.predictor_id)
+
+    def _flags_fresh(self, now_ns):
+        # Match the already-reviewed Gazebo health bridge's 1 Hz flag cadence.
+        # Hardware/visual profiles retain their existing 300 ms requirement;
+        # fast pose, local position, EV and health checks are unchanged.
+        maximum = HEALTH_MAX_AGE_NS
+        if self.hybrid.tracking_source == 'simulated_estimator':
+            from examples.gazebo_sensor_contract import ESTIMATOR_FLAGS_MAX_AGE_NS
+            maximum = ESTIMATOR_FLAGS_MAX_AGE_NS
+        return (self._flags is not None and self._flags[1]
+                and 0 <= now_ns-self._flags[0] <= maximum)
 
     def diagnostic(self):
         """Run one H1 replay assessment and summarize its evidence."""

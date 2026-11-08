@@ -1,0 +1,89 @@
+{
+  "passed": true,
+  "missing_or_not_advancing": [],
+  "clock_duration_ns": 40196000000,
+  "minimum_duration_ns": 30000000000,
+  "integrity": "ok",
+  "topics": {
+    "/gazebo_hybrid/simulated_estimator/processing_status": {
+      "count": 1206,
+      "first_ns": 10968000000,
+      "last_ns": 51136000000
+    },
+    "/gazebo_hybrid/simulated_estimator/healthy": {
+      "count": 804,
+      "first_ns": 10952000000,
+      "last_ns": 51100000000
+    },
+    "/simulator_only/oak/depth/image": {
+      "count": 402,
+      "first_ns": 11024000000,
+      "last_ns": 51124000000
+    },
+    "/simulator_only/oak/depth/camera_info": {
+      "count": 402,
+      "first_ns": 11000000000,
+      "last_ns": 51100000000
+    },
+    "/clock": {
+      "count": 10050,
+      "first_ns": 10952000000,
+      "last_ns": 51148000000
+    },
+    "/fmu/out/estimator_status_flags": {
+      "count": 40,
+      "first_ns": 11192000000,
+      "last_ns": 50192000000
+    },
+    "/gazebo_hybrid/simulated_estimator/odometry": {
+      "count": 1206,
+      "first_ns": 10968000000,
+      "last_ns": 51136000000
+    },
+    "/fmu/in/vehicle_visual_odometry": {
+      "count": 1206,
+      "first_ns": 10968000000,
+      "last_ns": 51136000000
+    },
+    "/fmu/out/vehicle_status_v1": {
+      "count": 80,
+      "first_ns": 11132000000,
+      "last_ns": 50948000000
+    },
+    "/fmu/out/vehicle_attitude": {
+      "count": 4018,
+      "first_ns": 10976000000,
+      "last_ns": 51148000000
+    },
+    "/fmu/out/distance_sensor": {
+      "count": 200,
+      "first_ns": 11152000000,
+      "last_ns": 50952000000
+    },
+    "/fmu/out/vehicle_land_detected": {
+      "count": 41,
+      "first_ns": 11120000000,
+      "last_ns": 51120000000
+    },
+    "/fmu/out/vehicle_local_position": {
+      "count": 4018,
+      "first_ns": 10984000000,
+      "last_ns": 51148000000
+    },
+    "/fmu/out/vehicle_odometry": {
+      "count": 4018,
+      "first_ns": 10984000000,
+      "last_ns": 51148000000
+    },
+    "/gazebo_hybrid/simulated_estimator/health_diagnostics": {
+      "count": 803,
+      "first_ns": 11000000000,
+      "last_ns": 51100000000
+    },
+    "/tf_static": {
+      "count": 1,
+      "first_ns": 10996000000,
+      "last_ns": 10996000000
+    }
+  }
+}

@@ -84,13 +84,34 @@ def test_simulator_estimator_profile_is_explicit_and_raw_truth_is_rejected():
         GazeboObservations(sim, topics, profile_id="sim")
 
 
-def test_simulated_health_requires_fresh_tracking_and_estimator_flags():
-    assert simulated_health(now_ns=100 * MS, sample_ns=40 * MS, status=(95 * MS, True),
-                            flags=(95 * MS, True))
-    assert not simulated_health(now_ns=100 * MS, sample_ns=40 * MS, status=(95 * MS, True),
-                                flags=(95 * MS, False))
-    assert not simulated_health(now_ns=250 * MS, sample_ns=40 * MS, status=(240 * MS, True),
-                                flags=(240 * MS, True))
+def test_simulated_health_uses_independent_delivery_limits():
+    now = 2000 * MS
+    inputs = dict(now_ns=now, sample_ns=now - 33 * MS, status=(now - 33 * MS, True),
+                  vehicle_status=(now - 500 * MS, True), flags=(now - 1000 * MS, True))
+    ages, reasons = simulated_health(**inputs)
+    assert not reasons and ages["estimator_flags"] == 1000 * MS
+    for name, value, expected in (
+        ("flags", None, "estimator_flags:missing"),
+        ("flags", (now - 1250 * MS - 1, True), "estimator_flags:stale"),
+        ("flags", (now, False), "estimator_flags:unhealthy"),
+        ("flags", (now + 1, True), "estimator_flags:future"),
+        ("sample_ns", None, "tracking_pose:missing"),
+        ("sample_ns", now - 200 * MS - 1, "tracking_pose:stale"),
+        ("sample_ns", now + 1, "tracking_pose:future"),
+        ("status", (now, False), "tracking_status:unhealthy"),
+        ("vehicle_status", (now - 750 * MS - 1, True), "vehicle_status:stale"),
+        ("vehicle_status", (now, False), "vehicle_status:unhealthy"),
+    ):
+        assert expected in simulated_health(**{**inputs, name: value})[1]
+
+
+def test_simulated_health_refuses_old_epoch_and_requires_new_inputs():
+    inputs = dict(sample_ns=1500 * MS, status=(1500 * MS, True),
+                  vehicle_status=(1500 * MS, True), flags=(1500 * MS, True))
+    _, reasons = simulated_health(now_ns=100 * MS, **inputs)
+    assert len(reasons) == 4 and all(reason.endswith(":future") for reason in reasons)
+    _, reasons = simulated_health(now_ns=2000 * MS, **dict.fromkeys(inputs))
+    assert len(reasons) == 4 and all(reason.endswith(":missing") for reason in reasons)
 
 
 def test_delayed_simulated_pose_keeps_capture_health_and_h1_rejects_wrong_tracking_source():

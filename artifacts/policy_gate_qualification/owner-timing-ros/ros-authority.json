@@ -1,0 +1,19 @@
+{
+  "scope": "actual ROS owner with synthetic state; no PX4 or simulator",
+  "results": [
+    {
+      "case": "native_disarm",
+      "result": "PASS",
+      "post_loss_ticks": 10,
+      "post_loss_targets": 0,
+      "post_loss_commands": 0
+    },
+    {
+      "case": "native_takeover",
+      "result": "PASS",
+      "post_loss_ticks": 10,
+      "post_loss_targets": 0,
+      "post_loss_commands": 0
+    }
+  ]
+}

@@ -61,13 +61,15 @@ class ShadowLoop:
     """Single-consumer observation loop. Missed ticks are skipped, never queued."""
 
     def __init__(self, profile, *, rate_hz=5, budget_s=.025, monotonic=perf_counter,
-                 completion_clock=perf_counter_ns, timings=None, measure_receipt_wall=False):
+                 completion_clock=perf_counter_ns, timings=None, measure_receipt_wall=False,
+                 retain_aligned_depth=False):
         if type(rate_hz) not in (int, float) or not 1 <= rate_hz <= 20:
             raise ValueError("shadow rate must be between 1 and 20 Hz")
         if type(budget_s) not in (int, float) or not 0 < budget_s <= .05:
             raise ValueError("invalid shadow planner budget")
         self.timings = timings if timings is not None else Timings()
-        self.replay = HybridBagReplay(profile, continuous=True, timings=self.timings)
+        self.replay = HybridBagReplay(profile, continuous=True, timings=self.timings,
+                                      retain_aligned_depth=retain_aligned_depth)
         self.period_ns = round(NS / rate_hz)
         self.budget_s = budget_s
         self.monotonic = monotonic
@@ -120,7 +122,7 @@ class ShadowLoop:
             return "shadow_clock_unbound"
         return None
 
-    def poll(self, now_ns, wall_ns, *, inputs_filter=None):
+    def poll(self, now_ns, wall_ns, *, inputs_filter=None, map_consumer=None):
         """Return the next diagnostic tick when due, including reason-only stops."""
         self.filtered = False
         if not stamp_ok(now_ns) or not stamp_ok(wall_ns):
@@ -149,6 +151,7 @@ class ShadowLoop:
             if inputs is None:
                 return ShadowTick(now_ns, reason)
         result = measure(self.timings, "h0_total", assess, **inputs, budget_s=self.budget_s,
+                         map_consumer=map_consumer,
                          monotonic=self.monotonic, timings=self.timings,
                          cancelled=lambda: self._closed or self._fault is not None)
         self.timings.record("state_capture_to_tick_ros", now_ns - state_capture_ns(inputs["state"], inputs["alignment"]))

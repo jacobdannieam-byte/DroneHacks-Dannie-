@@ -1,0 +1,115 @@
+DroneHacks policy integration handoff — 2026-11-07
+
+READ THIS FIRST
+Code integration and substantial offline/disarmed qualification are complete.
+Full policy flight qualification is NOT complete. This branch is a handoff for
+the agent workflow to finish deployment integration and bounded qualification;
+it is not permission to run an unrestricted batch or to arm without review.
+
+SOURCE
+Branch requested by the user: code-integration-hybrid.
+Implementation commits: 1d5c4fa (integration merge), f85dc41 (timing/recording).
+Integration parents: sensing 43712d446b6b81d99a7d7da4ac2347e008ddf6c4 and
+strategy 26724362b685b63287a937c25e96143a3f44ddcf.
+Historical classical candidate: e5374eb84a62dddecac36e4dcc7134851be098f9.
+Do not transfer its landing/fault qualification automatically to the Hybrid owner.
+
+IMPLEMENTED
+- Integrated native sensing and four strategies: existing, information gain,
+  learned ranker, and physics informed. Pinned model artifacts travel in the
+  simulator archive. Experimental execution restrictions remain in place.
+- Core disarm/unknown-armed-state veto in airborne phases and before landing
+  acknowledgement. Unexpected disarm cannot count as a successful landing.
+- Simulation-only bounded clock ingestion fence, preserving original source
+  and callback times; 50 ms wait bound, queue bound, rewind/stall rejection.
+- Simulated estimator flags use the existing 1.25 second cadence contract.
+- Owner deadlines distinguish authority (750 ms), landed (1.5 seconds), and
+  position (300 ms) for simulated-estimator deployment. Hardware stays 300 ms.
+  Measured restart gaps were 504 ms average/508 ms maximum for status and
+  1 second for landed. Stopping reaction allowance must cover authority latency.
+- Full-body and all-direction stopping volume checks on first and held targets.
+  Native activation requires an explicit measured envelope; no default exists.
+- Stopping-report schema/content validation, source identity, dimensions,
+  speed coverage, reaction and braking bounds, and 30 second landing limit.
+- Subscriber-only qualification recorder and offline stopping analyzer.
+  Recorder retains source/receipt times and detects native disarm transition.
+
+VERIFICATION
+604 tests passed in 34.72 seconds from the correct candidate directory.
+The native-status recording hook was added while that suite was underway;
+afterward its 11 recorder/analyzer tests and private ROS probe passed.
+Final handoff verification on the complete implementation: 604 passed in
+35.68 seconds; see artifacts/policy_gate_qualification/handoff-final-tests.txt.
+Private ROS tests pass for report timing boundaries, disarm/takeover stopping
+outputs, and recorder delivery. These are fixtures, not airborne PX4 evidence.
+Fresh Gazebo observation: landed/disarmed/healthy; required streams present;
+40.196 seconds recording coverage and SQLite integrity passed.
+Wrong-directory run (598 pass/3 fail due missing relative assets) is preserved.
+
+THREE OPEN GATES
+1. Native authority/expiry recovery. Callback and offline guards work, but the
+   actual PX4 fallback after target/owner expiry is not flight-qualified. The
+   deployment fault driver, watchdog/recovery integration and moving rehearsal
+   remain to be completed. Test both ROS and wall-clock stall/expiry causality.
+2. Positive native sensing/strategy case. Four native replays reach planner
+   decisions without clock faults or model fallback, but all refuse unverified
+   progress. Sensitivity-profile uncertainty values are not reviewed flight
+   bounds. Need legitimate observed whole-body starting/stopping clearance and
+   independently reviewed sensor/transform uncertainty; never invent free space.
+3. Measured stopping. Analyzer/recorder and execution guards exist; reviewed
+   vehicle envelope, surveyed lane, braking measurements and deployment owner
+   integration do not. Hash/schema checks do not prove empirical validity.
+
+KNOWN REVIEW ITEMS FOR THE NEXT WORKFLOW
+- Measurement identity validation does not itself verify raw bag contents or
+  bind every supplied profile field to the currently running vehicle/world.
+- Recorder event topic expects trusted single-owner brake/land timestamps in
+  ROS simulation time. Harden event provenance and native disarm attribution
+  before relying on it as independent flight evidence; keep raw rosbag mandatory.
+- Recorder directly checks PX4 sample time against ROS time. Qualify its clock
+  mapping/future-sample behavior on the deployment (the H1 clock fence is separate).
+- Native callback report handling is not the H1 simulation clock ingestion fence.
+  Test future-stamp boundaries and wall-clock stalls on the final composition.
+- Calibration analysis is conservative, not a statistical braking model; add
+  reviewed uncertainty, repeatability and vehicle-configuration margins.
+
+NEXT ACTIONS
+1. Read AGENTS.md, AI_CONTEXT.md and CLAUDE.md. Coordinate ownership with the
+   full agent workflow; do not edit or run competing command owners.
+2. Integrate the user's forthcoming Gazebo implementation after they identify
+   its pushed source. Do not assume it matches the previous pinned image.
+3. Review world collision geometry, full vehicle dimensions and native interfaces.
+4. Finish single-owner calibration/fault driver and independent watchdog and
+   recorder integration. Exercise them offline and disarmed before arming.
+5. Obtain positive native shadow clearance and negative refusal evidence.
+6. Fill exact lane/travel/altitude/recovery bounds in BOUNDED_TRIAL_REVIEW.txt,
+   pin candidate/world/image and present that concrete package for approval.
+7. Execute only approved bounded trials; stop the batch on the first failure.
+
+LIMITS
+Map control OFF; background registration OFF; isolated simulator only.
+Speed <=0.50 m/s; landing timeout 30 seconds. One command owner. No forced
+airborne disarm, no PX4 safety-parameter relaxation, no unknown-space movement.
+Preserve every failure and correction separately. Historical corridor and
+candidate rehearsal folders must remain separate. No moving flight ran during
+this policy integration work. Prior approvals do not authorize full policy runs.
+
+EVIDENCE
+Portable reports, test logs and private ROS probes are under
+artifacts/policy_gate_qualification. qualification-status.json and the earlier
+briefs are historical snapshots; this handoff supersedes their code status.
+Large raw recordings and source tar snapshots remain in the original workspace:
+physical-gazebo-evidence/policy-gates-qualification (outside this Git worktree).
+They are not all included in this push. Obtain those before independently
+re-grading native evidence; do not treat report JSON as the full recording.
+Earlier baseline evidence: physical-gazebo-evidence/timing-qualified-baselines
+and landing-fault-qualification-e5374eb. Historical S1 remains protected.
+
+REPRODUCE
+Run from repository root: python -m pytest tests -q -p no:cacheprovider
+Use the archived probe scripts only in isolated Docker/private ROS topics.
+Pinned earlier image:
+sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1
+Probe scripts require /inputs/integrated.tar and /evidence mounts. Their source
+manifest identifies the exact snapshot. The copied exporter originally relied
+on the outer workspace layout; adapt paths explicitly before reusing elsewhere.

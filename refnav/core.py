@@ -314,6 +314,14 @@ class Mission:
                 self._requalify(now, out, "waiting for an explicit disarmed PX4 report")
 
         # ---- airborne supervision, before anything else may command -------------------
+        if self.phase in AIRBORNE and v.armed is not True:
+            self._end(now, out, "yielded: armed state lost during flight")
+            out.phase = self.phase
+            return out
+        if self.phase == "land" and not self.land_auto_seen and v.armed is False:
+            self._end(now, out, "yielded: disarmed before native landing acknowledgement")
+            out.phase = self.phase
+            return out
         if self.phase in AIRBORNE or (self.phase == "land" and not self.land_auto_seen):
             # only the mission's OWN landing may put PX4 in AUTO_LAND; anywhere else that is PX4 (a
             # failsafe) or a pilot taking over, and streaming on would blank PX4's land detector
