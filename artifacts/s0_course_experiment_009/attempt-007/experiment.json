@@ -1,0 +1,724 @@
+{
+  "scope": "s0_participant_map_unqualified_sitl",
+  "qualification": false,
+  "obstacle_backend": "nominal_participant_map_with_live_occupied_veto",
+  "identity": [
+    "s0_participant_map_unqualified_sitl",
+    "74a3b67ed942292d880c79cc43eb2d0740466d0c27bfa42cb5045210e05f9ccf",
+    "4df26a935d8f39a1ff40d8c8f03eb839814a5051f6dcabe400bc3bd70b7defb7",
+    "32da90d86c9425f8b9496a69b78f75c709a8023325bd121ccfa75095cf65f2b8"
+  ],
+  "records": [
+    {
+      "sequence": 1,
+      "event": "experimental_owner_readiness",
+      "strategy": "hybrid_sitl",
+      "mission_state": "INITIALIZE",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "starting",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": "missing_synchronized_depth",
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": false,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": [
+            "native_authority_missing",
+            "native_landed_missing",
+            "native_position_missing",
+            "native_usable_depth_stale_or_missing"
+          ]
+        }
+      },
+      "time_ns": 57848000000
+    },
+    {
+      "sequence": 2,
+      "event": "owner_phase",
+      "strategy": "hybrid_sitl",
+      "mission_state": "PREFLIGHT",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": "missing_synchronized_depth",
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": false,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": [
+            "native_authority_missing",
+            "native_landed_missing",
+            "native_position_missing",
+            "native_usable_depth_stale_or_missing"
+          ]
+        }
+      },
+      "time_ns": 57848000000,
+      "owner_phase": "wait",
+      "result": null,
+      "armed": null,
+      "nav_state": null,
+      "landed": null
+    },
+    {
+      "sequence": 3,
+      "event": "experimental_owner_readiness",
+      "strategy": "hybrid_sitl",
+      "mission_state": "PREFLIGHT",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": "missing_synchronized_depth",
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": false,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": [
+            "native_authority_missing",
+            "native_landed_missing",
+            "native_usable_depth_stale_or_missing"
+          ]
+        }
+      },
+      "time_ns": 58748000000
+    },
+    {
+      "sequence": 4,
+      "event": "experimental_owner_readiness",
+      "strategy": "hybrid_sitl",
+      "mission_state": "PREFLIGHT",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": "awaiting_capture_pose",
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": false,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": [
+            "native_authority_missing",
+            "native_landed_missing",
+            "native_usable_depth_stale_or_missing"
+          ]
+        }
+      },
+      "time_ns": 58848000000
+    },
+    {
+      "sequence": 5,
+      "event": "experimental_owner_readiness",
+      "strategy": "hybrid_sitl",
+      "mission_state": "PREFLIGHT",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": "estimator_health_missing_or_stale",
+        "map_reason": null,
+        "launch_reason": "experimental_ground_state_unavailable",
+        "owner_ready": false,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": [
+            "native_landed_missing"
+          ]
+        }
+      },
+      "time_ns": 58896000000
+    },
+    {
+      "sequence": 6,
+      "event": "experimental_owner_readiness",
+      "strategy": "hybrid_sitl",
+      "mission_state": "PREFLIGHT",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": "experimental_ground_state_unavailable",
+        "owner_ready": false,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": [
+            "native_landed_missing"
+          ]
+        }
+      },
+      "time_ns": 58996000000
+    },
+    {
+      "sequence": 7,
+      "event": "experimental_owner_readiness",
+      "strategy": "hybrid_sitl",
+      "mission_state": "PREFLIGHT",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59296000000
+    },
+    {
+      "sequence": 8,
+      "event": "owner_phase",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 61896000000,
+      "owner_phase": "arm",
+      "result": null,
+      "armed": false,
+      "nav_state": 4,
+      "landed": true
+    },
+    {
+      "sequence": 9,
+      "event": "owner_phase",
+      "strategy": "hybrid_sitl",
+      "mission_state": "AUTHORITY_LOST",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "owner_yielded",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": "experimental_publication_state_stale",
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 61952000000,
+      "owner_phase": "done",
+      "result": "yielded: experimental_publication_state_stale",
+      "armed": false,
+      "nav_state": 4,
+      "landed": true
+    }
+  ],
+  "total_records": 9,
+  "status": {
+    "strategy": "hybrid_sitl",
+    "mission_state": "AUTHORITY_LOST",
+    "reasoning_strategy": "hybrid_existing",
+    "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+    "predictor_fallback": null,
+    "mission_reason": "owner_yielded",
+    "stage_id": "course_00",
+    "stage_kind": "waypoint",
+    "goal_m": [
+      0.0,
+      0.0,
+      0.76
+    ],
+    "goal_slot": 0,
+    "landing_request": "experimental_publication_state_stale",
+    "experimental_owner_readiness": {
+      "observation_reason": null,
+      "map_reason": null,
+      "launch_reason": null,
+      "owner_ready": true,
+      "admission": true,
+      "priming_ready": true,
+      "native": {
+        "admission_reason": null,
+        "ready_reasons": []
+      }
+    }
+  },
+  "last_issue": null,
+  "timing": {
+    "depth_normalization": {
+      "p50_ms": 0.554622,
+      "p95_ms": 1.02524975,
+      "p99_ms": 1.0424783499999999,
+      "samples": 50,
+      "max_ms": 1.051928
+    },
+    "experimental_h1_callback": {
+      "p50_ms": 0.029781000000000002,
+      "p95_ms": 0.405404,
+      "p99_ms": 0.73042249,
+      "samples": 2048,
+      "max_ms": 3.752269
+    },
+    "experimental_owner_callback": {
+      "p50_ms": 1.4863465,
+      "p95_ms": 38.75446215,
+      "p99_ms": 44.277598600000005,
+      "samples": 120,
+      "max_ms": 46.262654
+    },
+    "experimental_owner_graph": {
+      "p50_ms": 0.7016855,
+      "p95_ms": 1.11135905,
+      "p99_ms": 1.30995993,
+      "samples": 120,
+      "max_ms": 1.605328
+    },
+    "experimental_pending_depth": {
+      "p50_ms": 0.007095,
+      "p95_ms": 36.500092599999995,
+      "p99_ms": 41.73731720000001,
+      "samples": 120,
+      "max_ms": 44.039741
+    },
+    "metric_apply": {
+      "p50_ms": 0.2420945,
+      "p95_ms": 1.0713731999999994,
+      "p99_ms": 1.3682547199999995,
+      "samples": 50,
+      "max_ms": 1.514702
+    },
+    "metric_prepare": {
+      "p50_ms": 21.3193545,
+      "p95_ms": 31.543500199999997,
+      "p99_ms": 32.79853735,
+      "samples": 50,
+      "max_ms": 33.310139
+    },
+    "pose_alignment": {
+      "p50_ms": 0.055523,
+      "p95_ms": 0.09142529999999999,
+      "p99_ms": 0.09841597999999999,
+      "samples": 50,
+      "max_ms": 0.101649
+    },
+    "worldstate_update": {
+      "p50_ms": 5.5050345,
+      "p95_ms": 7.7390998,
+      "p99_ms": 8.14149325,
+      "samples": 50,
+      "max_ms": 8.226202
+    }
+  },
+  "exit_code": 1,
+  "callback_clock": {
+    "fault": null,
+    "fault_detail": null,
+    "pending": 0,
+    "retained_releases": [
+      {
+        "kind": "att",
+        "source_ready_ns": 59076000000,
+        "original_receipt_ns": 59072000000,
+        "original_wall_ns": 45080889460420,
+        "released_ros_ns": 59088000000,
+        "released_wall_ns": 45080901450458
+      },
+      {
+        "kind": "lpos",
+        "source_ready_ns": 59488000000,
+        "original_receipt_ns": 59484000000,
+        "original_wall_ns": 45081302130304,
+        "released_ros_ns": 59496000000,
+        "released_wall_ns": 45081309854444
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 59488000000,
+        "original_receipt_ns": 59484000000,
+        "original_wall_ns": 45081302344562,
+        "released_ros_ns": 59496000000,
+        "released_wall_ns": 45081309854444
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 59528000000,
+        "original_receipt_ns": 59524000000,
+        "original_wall_ns": 45081342383331,
+        "released_ros_ns": 59536000000,
+        "released_wall_ns": 45081350520995
+      },
+      {
+        "kind": "lpos",
+        "source_ready_ns": 60096000000,
+        "original_receipt_ns": 60092000000,
+        "original_wall_ns": 45081909841427,
+        "released_ros_ns": 60096000000,
+        "released_wall_ns": 45081911278648
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 60096000000,
+        "original_receipt_ns": 60092000000,
+        "original_wall_ns": 45081910017126,
+        "released_ros_ns": 60096000000,
+        "released_wall_ns": 45081911278648
+      },
+      {
+        "kind": "lpos",
+        "source_ready_ns": 60488000000,
+        "original_receipt_ns": 60484000000,
+        "original_wall_ns": 45082302154241,
+        "released_ros_ns": 60496000000,
+        "released_wall_ns": 45082309625237
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 60488000000,
+        "original_receipt_ns": 60484000000,
+        "original_wall_ns": 45082302281144,
+        "released_ros_ns": 60496000000,
+        "released_wall_ns": 45082309625237
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 60548000000,
+        "original_receipt_ns": 60544000000,
+        "original_wall_ns": 45082361929873,
+        "released_ros_ns": 60548000000,
+        "released_wall_ns": 45082363666658
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 60748000000,
+        "original_receipt_ns": 60744000000,
+        "original_wall_ns": 45082561424195,
+        "released_ros_ns": 60748000000,
+        "released_wall_ns": 45082563579088
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 61236000000,
+        "original_receipt_ns": 61232000000,
+        "original_wall_ns": 45083050576081,
+        "released_ros_ns": 61236000000,
+        "released_wall_ns": 45083052899325
+      },
+      {
+        "kind": "lpos",
+        "source_ready_ns": 61656000000,
+        "original_receipt_ns": 61652000000,
+        "original_wall_ns": 45083469586622,
+        "released_ros_ns": 61668000000,
+        "released_wall_ns": 45083482344580
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 61656000000,
+        "original_receipt_ns": 61652000000,
+        "original_wall_ns": 45083469749023,
+        "released_ros_ns": 61668000000,
+        "released_wall_ns": 45083482344580
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 62036000000,
+        "original_receipt_ns": 62032000000,
+        "original_wall_ns": 45083850375531,
+        "released_ros_ns": 62040000000,
+        "released_wall_ns": 45083853420442
+      },
+      {
+        "kind": "lpos",
+        "source_ready_ns": 62536000000,
+        "original_receipt_ns": 62532000000,
+        "original_wall_ns": 45084349768633,
+        "released_ros_ns": 62548000000,
+        "released_wall_ns": 45084362037329
+      },
+      {
+        "kind": "lpos",
+        "source_ready_ns": 62736000000,
+        "original_receipt_ns": 62732000000,
+        "original_wall_ns": 45084549921760,
+        "released_ros_ns": 62748000000,
+        "released_wall_ns": 45084562310067
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 62736000000,
+        "original_receipt_ns": 62732000000,
+        "original_wall_ns": 45084550120289,
+        "released_ros_ns": 62748000000,
+        "released_wall_ns": 45084562310067
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 62828000000,
+        "original_receipt_ns": 62824000000,
+        "original_wall_ns": 45084642288956,
+        "released_ros_ns": 62828000000,
+        "released_wall_ns": 45084643656588
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 62876000000,
+        "original_receipt_ns": 62872000000,
+        "original_wall_ns": 45084689895213,
+        "released_ros_ns": 62888000000,
+        "released_wall_ns": 45084701491948
+      }
+    ]
+  },
+  "receipt_clock": {
+    "mode": "independent_ros_timesource_executor",
+    "failure": null,
+    "cleanup_failure": null
+  },
+  "deferred_depth": {
+    "dropped": 0,
+    "retained_rows": 1
+  },
+  "h1_clock": {
+    "deferred": 14,
+    "released": 14,
+    "pending": 0,
+    "audit_complete": true,
+    "audit": [
+      {
+        "topic": "/fmu/out/vehicle_local_position",
+        "callback_ros_ns": 59484000000,
+        "callback_wall_ns": 45081303006706,
+        "ingestion_ros_ns": 59492000000,
+        "ingestion_wall_ns": 45081304964610,
+        "mapped_capture_upper_ns": 59488000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_odometry",
+        "callback_ros_ns": 59924000000,
+        "callback_wall_ns": 45081741378983,
+        "ingestion_ros_ns": 59928000000,
+        "ingestion_wall_ns": 45081742666897,
+        "mapped_capture_upper_ns": 59928000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_local_position",
+        "callback_ros_ns": 59924000000,
+        "callback_wall_ns": 45081741487861,
+        "ingestion_ros_ns": 59928000000,
+        "ingestion_wall_ns": 45081742666897,
+        "mapped_capture_upper_ns": 59928000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_odometry",
+        "callback_ros_ns": 60092000000,
+        "callback_wall_ns": 45081910163904,
+        "ingestion_ros_ns": 60128000000,
+        "ingestion_wall_ns": 45081943451081,
+        "mapped_capture_upper_ns": 60096000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_local_position",
+        "callback_ros_ns": 60092000000,
+        "callback_wall_ns": 45081910301488,
+        "ingestion_ros_ns": 60128000000,
+        "ingestion_wall_ns": 45081943451081,
+        "mapped_capture_upper_ns": 60096000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_odometry",
+        "callback_ros_ns": 60484000000,
+        "callback_wall_ns": 45082302388120,
+        "ingestion_ros_ns": 60488000000,
+        "ingestion_wall_ns": 45082304473670,
+        "mapped_capture_upper_ns": 60488000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_local_position",
+        "callback_ros_ns": 60484000000,
+        "callback_wall_ns": 45082302485032,
+        "ingestion_ros_ns": 60488000000,
+        "ingestion_wall_ns": 45082304473670,
+        "mapped_capture_upper_ns": 60488000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_odometry",
+        "callback_ros_ns": 61652000000,
+        "callback_wall_ns": 45083469857631,
+        "ingestion_ros_ns": 61656000000,
+        "ingestion_wall_ns": 45083472602457,
+        "mapped_capture_upper_ns": 61656000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_local_position",
+        "callback_ros_ns": 61652000000,
+        "callback_wall_ns": 45083469969459,
+        "ingestion_ros_ns": 61656000000,
+        "ingestion_wall_ns": 45083472602457,
+        "mapped_capture_upper_ns": 61656000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_local_position",
+        "callback_ros_ns": 62052000000,
+        "callback_wall_ns": 45083870153420,
+        "ingestion_ros_ns": 62056000000,
+        "ingestion_wall_ns": 45083872018832,
+        "mapped_capture_upper_ns": 62056000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_local_position",
+        "callback_ros_ns": 62532000000,
+        "callback_wall_ns": 45084350464712,
+        "ingestion_ros_ns": 62540000000,
+        "ingestion_wall_ns": 45084353371177,
+        "mapped_capture_upper_ns": 62536000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_odometry",
+        "callback_ros_ns": 62532000000,
+        "callback_wall_ns": 45084351115070,
+        "ingestion_ros_ns": 62540000000,
+        "ingestion_wall_ns": 45084353371177,
+        "mapped_capture_upper_ns": 62536000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_odometry",
+        "callback_ros_ns": 62732000000,
+        "callback_wall_ns": 45084551210374,
+        "ingestion_ros_ns": 62744000000,
+        "ingestion_wall_ns": 45084557210204,
+        "mapped_capture_upper_ns": 62736000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_local_position",
+        "callback_ros_ns": 62732000000,
+        "callback_wall_ns": 45084551316748,
+        "ingestion_ros_ns": 62744000000,
+        "ingestion_wall_ns": 45084557210204,
+        "mapped_capture_upper_ns": 62736000000
+      }
+    ],
+    "failure": null
+  }
+}

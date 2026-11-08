@@ -1,0 +1,29 @@
+{
+  "scope": "simultaneous read-only image QoS counter; no command publishers",
+  "window_wall_s": 12,
+  "clock_span_s": 14.988,
+  "publishers": [
+    {
+      "name": "simulator_only_gazebo_camera_to_ros",
+      "reliability": "ReliabilityPolicy.RELIABLE"
+    }
+  ],
+  "subscribers": {
+    "best_effort": {
+      "count": 97,
+      "unique_captures": 97,
+      "first_capture_ns": 23000000000,
+      "last_capture_ns": 34600000000,
+      "maximum_capture_gap_s": 0.3,
+      "message_bytes": 655360
+    },
+    "reliable": {
+      "count": 120,
+      "unique_captures": 120,
+      "first_capture_ns": 22700000000,
+      "last_capture_ns": 34600000000,
+      "maximum_capture_gap_s": 0.1,
+      "message_bytes": 655360
+    }
+  }
+}

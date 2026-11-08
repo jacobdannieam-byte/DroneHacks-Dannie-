@@ -1,0 +1,349 @@
+{
+  "scope": "read_only_reconstruction_not_exact_owner_callback_replay",
+  "resolution_m": 0.1,
+  "frames": [
+    59100000000,
+    59200000000,
+    59300000000,
+    59400000000,
+    59500000000,
+    59600000000,
+    59700000000,
+    59800000000,
+    59900000000,
+    60000000000,
+    60100000000,
+    60200000000,
+    60300000000,
+    60400000000,
+    60500000000,
+    60600000000,
+    60700000000,
+    60800000000,
+    60900000000,
+    61000000000,
+    61100000000
+  ],
+  "body_sweep_radius_m": 0.334,
+  "target_ned": [
+    0.0013300091959536076,
+    0.0015693160239607096,
+    -0.7642609153315425
+  ],
+  "first_hit_capture_by_check_ns": {
+    "61156000000": 59200000000,
+    "61208000000": 59300000000
+  },
+  "checks": [
+    {
+      "check_ns": 61108000000,
+      "latest_frame_ns": 61000000000,
+      "native_position_ned": [
+        0.05856296047568321,
+        -3.50032678397838e-05,
+        -0.020393401384353638
+      ],
+      "map_path": [
+        [
+          0.05657147979308719,
+          0.00707939638966997,
+          0.013655658376967894
+        ],
+        [
+          -0.0006614714866424176,
+          0.005475077097869473,
+          0.7575231723241568
+        ]
+      ],
+      "refusal": null
+    },
+    {
+      "check_ns": 61156000000,
+      "latest_frame_ns": 61000000000,
+      "native_position_ned": [
+        0.07082276791334152,
+        -5.9139849327038974e-05,
+        -0.023687710985541344
+      ],
+      "map_path": [
+        [
+          0.0688312872307455,
+          0.007103532971157226,
+          0.0169499679781556
+        ],
+        [
+          -0.0006614714866424176,
+          0.005475077097869473,
+          0.7575231723241568
+        ]
+      ],
+      "refusal": "live_occupied_voxel_intersection",
+      "hits": [
+        {
+          "odom_center": [
+            0.45,
+            -0.05,
+            -0.05
+          ],
+          "course_center": [
+            -2.4646000000000003,
+            1.3644,
+            -0.010000000000000002
+          ],
+          "supporting_capture_ns": 61000000000,
+          "distance_m": 0.33167827470664674,
+          "raw_ray_support": {
+            "pixels_overlapping_axial_interval": 1824,
+            "endpoints_in_nominal_voxel": 0,
+            "endpoint_height_above_authored_floor_m": [
+              0.001912172583461734,
+              0.002015831604024576
+            ],
+            "closest_endpoint_to_centerline_m": 0.4472827380914319,
+            "pose_inflation_at_cell_m": 0.04029746541461303
+          }
+        },
+        {
+          "odom_center": [
+            0.45,
+            -0.05,
+            0.05
+          ],
+          "course_center": [
+            -2.4646000000000003,
+            1.3644,
+            0.09
+          ],
+          "supporting_capture_ns": 61000000000,
+          "distance_m": 0.33124488901403043,
+          "raw_ray_support": {
+            "pixels_overlapping_axial_interval": 1520,
+            "endpoints_in_nominal_voxel": 0,
+            "endpoint_height_above_authored_floor_m": [
+              0.0019341973863992862,
+              0.002015831604024576
+            ],
+            "closest_endpoint_to_centerline_m": 0.4472827380914319,
+            "pose_inflation_at_cell_m": 0.040214107315156095
+          }
+        },
+        {
+          "odom_center": [
+            0.45,
+            0.05,
+            -0.05
+          ],
+          "course_center": [
+            -2.5646,
+            1.3644,
+            -0.010000000000000002
+          ],
+          "supporting_capture_ns": 61000000000,
+          "distance_m": 0.3316021980200154,
+          "raw_ray_support": {
+            "pixels_overlapping_axial_interval": 1824,
+            "endpoints_in_nominal_voxel": 0,
+            "endpoint_height_above_authored_floor_m": [
+              0.001909814867130627,
+              0.0020138182764963125
+            ],
+            "closest_endpoint_to_centerline_m": 0.4472827380914319,
+            "pose_inflation_at_cell_m": 0.040325478294554185
+          }
+        },
+        {
+          "odom_center": [
+            0.45,
+            0.05,
+            0.05
+          ],
+          "course_center": [
+            -2.5646,
+            1.3644,
+            0.09
+          ],
+          "supporting_capture_ns": 61000000000,
+          "distance_m": 0.3311687127692545,
+          "raw_ray_support": {
+            "pixels_overlapping_axial_interval": 1560,
+            "endpoints_in_nominal_voxel": 0,
+            "endpoint_height_above_authored_floor_m": [
+              0.0019318044563828018,
+              0.0020138182764963125
+            ],
+            "closest_endpoint_to_centerline_m": 0.4472827380914319,
+            "pose_inflation_at_cell_m": 0.040242394582386105
+          }
+        }
+      ]
+    },
+    {
+      "check_ns": 61208000000,
+      "latest_frame_ns": 61100000000,
+      "native_position_ned": [
+        0.08513587713241577,
+        -0.00012889274512417614,
+        -0.028047196567058563
+      ],
+      "map_path": [
+        [
+          0.08314439644981975,
+          0.007173285866954364,
+          0.02130945355967282
+        ],
+        [
+          -0.0006614714866424176,
+          0.005475077097869473,
+          0.7575231723241568
+        ]
+      ],
+      "refusal": "live_occupied_voxel_intersection",
+      "hits": [
+        {
+          "odom_center": [
+            0.45,
+            -0.05,
+            -0.05
+          ],
+          "course_center": [
+            -2.4646000000000003,
+            1.3644,
+            -0.010000000000000002
+          ],
+          "supporting_capture_ns": 61100000000,
+          "distance_m": 0.31765236083223103,
+          "raw_ray_support": {
+            "pixels_overlapping_axial_interval": 1032,
+            "endpoints_in_nominal_voxel": 0,
+            "endpoint_height_above_authored_floor_m": [
+              -0.0031187776581556373,
+              -0.003077141322506187
+            ],
+            "closest_endpoint_to_centerline_m": 0.4585292978829203,
+            "pose_inflation_at_cell_m": 0.039776014914544335
+          }
+        },
+        {
+          "odom_center": [
+            0.45,
+            -0.05,
+            0.05
+          ],
+          "course_center": [
+            -2.4646000000000003,
+            1.3644,
+            0.09
+          ],
+          "supporting_capture_ns": 61100000000,
+          "distance_m": 0.3169367910661021,
+          "raw_ray_support": {
+            "pixels_overlapping_axial_interval": 1032,
+            "endpoints_in_nominal_voxel": 0,
+            "endpoint_height_above_authored_floor_m": [
+              -0.0031187776581556373,
+              -0.003077141322506187
+            ],
+            "closest_endpoint_to_centerline_m": 0.4585292978829203,
+            "pose_inflation_at_cell_m": 0.03968107251015372
+          }
+        },
+        {
+          "odom_center": [
+            0.45,
+            0.05,
+            -0.05
+          ],
+          "course_center": [
+            -2.5646,
+            1.3644,
+            -0.010000000000000002
+          ],
+          "supporting_capture_ns": 61100000000,
+          "distance_m": 0.31757135625267097,
+          "raw_ray_support": {
+            "pixels_overlapping_axial_interval": 936,
+            "endpoints_in_nominal_voxel": 0,
+            "endpoint_height_above_authored_floor_m": [
+              -0.003116852390110905,
+              -0.0030755995024563734
+            ],
+            "closest_endpoint_to_centerline_m": 0.4585292978829203,
+            "pose_inflation_at_cell_m": 0.03984295275988416
+          }
+        },
+        {
+          "odom_center": [
+            0.45,
+            0.05,
+            0.05
+          ],
+          "course_center": [
+            -2.5646,
+            1.3644,
+            0.09
+          ],
+          "supporting_capture_ns": 61100000000,
+          "distance_m": 0.3168556035501803,
+          "raw_ray_support": {
+            "pixels_overlapping_axial_interval": 936,
+            "endpoints_in_nominal_voxel": 0,
+            "endpoint_height_above_authored_floor_m": [
+              -0.003116852390110905,
+              -0.0030755995024563734
+            ],
+            "closest_endpoint_to_centerline_m": 0.4585292978829203,
+            "pose_inflation_at_cell_m": 0.03974880313679523
+          }
+        },
+        {
+          "odom_center": [
+            0.45,
+            0.15000000000000002,
+            -0.05
+          ],
+          "course_center": [
+            -2.6646,
+            1.3644,
+            -0.010000000000000002
+          ],
+          "supporting_capture_ns": 61100000000,
+          "distance_m": 0.33086003864005553,
+          "raw_ray_support": {
+            "pixels_overlapping_axial_interval": 600,
+            "endpoints_in_nominal_voxel": 0,
+            "endpoint_height_above_authored_floor_m": [
+              -0.003115674592978443,
+              -0.0030755995024563734
+            ],
+            "closest_endpoint_to_centerline_m": 0.46053076829169487,
+            "pose_inflation_at_cell_m": 0.04038466938991112
+          }
+        },
+        {
+          "odom_center": [
+            0.45,
+            0.15000000000000002,
+            0.05
+          ],
+          "course_center": [
+            -2.6646,
+            1.3644,
+            0.09
+          ],
+          "supporting_capture_ns": 61100000000,
+          "distance_m": 0.33017309453964777,
+          "raw_ray_support": {
+            "pixels_overlapping_axial_interval": 600,
+            "endpoints_in_nominal_voxel": 0,
+            "endpoint_height_above_authored_floor_m": [
+              -0.003115674592978443,
+              -0.0030755995024563734
+            ],
+            "closest_endpoint_to_centerline_m": 0.46053076829169487,
+            "pose_inflation_at_cell_m": 0.04029647696555759
+          }
+        }
+      ]
+    }
+  ]
+}

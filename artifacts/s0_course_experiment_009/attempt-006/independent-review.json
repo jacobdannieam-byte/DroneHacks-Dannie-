@@ -1,0 +1,104 @@
+{
+  "scope": "armed on ground; no observed flight or course completion",
+  "raw_sha256": "24d5d4a1ba397399bb6f691d52ed7fc7bea2205c77f867ae02d44ba87eb2b716",
+  "status_transitions": [
+    {
+      "id": 67,
+      "receipt_ns": 8296000000,
+      "capture_us": 8300000,
+      "publish_us": 8300000,
+      "arming_state": 1,
+      "nav_state": 4
+    },
+    {
+      "id": 36547,
+      "receipt_ns": 59640000000,
+      "capture_us": 59640000,
+      "publish_us": 59640000,
+      "arming_state": 2,
+      "nav_state": 14
+    },
+    {
+      "id": 37321,
+      "receipt_ns": 60732000000,
+      "capture_us": 60732000,
+      "publish_us": 60732000,
+      "arming_state": 2,
+      "nav_state": 2
+    },
+    {
+      "id": 44397,
+      "receipt_ns": 70656000000,
+      "capture_us": 70656000,
+      "publish_us": 70656000,
+      "arming_state": 1,
+      "nav_state": 14
+    }
+  ],
+  "status_same_tick_pair": [
+    {
+      "previous": {
+        "id": 36545,
+        "receipt_ns": 59640000000,
+        "capture_us": 59640000,
+        "publish_us": 59640000,
+        "arming_state": 1,
+        "nav_state": 4
+      },
+      "current": {
+        "id": 36547,
+        "receipt_ns": 59640000000,
+        "capture_us": 59640000,
+        "publish_us": 59640000,
+        "arming_state": 2,
+        "nav_state": 14
+      },
+      "changed_fields": [
+        "armed_time",
+        "arming_state",
+        "latest_arming_reason",
+        "nav_state_timestamp",
+        "nav_state_user_intention",
+        "nav_state",
+        "pre_flight_checks_pass"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "id": 36529,
+      "receipt_ns": 59624000000,
+      "capture_us": 59620000,
+      "publish_us": 59620000,
+      "command": 176,
+      "param1": 1.0,
+      "param2": 6.0
+    },
+    {
+      "id": 36530,
+      "receipt_ns": 59624000000,
+      "capture_us": 59620000,
+      "publish_us": 59620000,
+      "command": 400,
+      "param1": 1.0,
+      "param2": 0.0
+    }
+  ],
+  "external_referee_ranges": {
+    "course_x_metres": [
+      -2.5146,
+      -2.5146
+    ],
+    "course_y_metres": [
+      0.9144,
+      0.9144
+    ],
+    "height_metres": [
+      -0.0,
+      -0.0
+    ]
+  },
+  "external_samples": 5467,
+  "clock_rewind_found": false,
+  "commanded_land": false
+}

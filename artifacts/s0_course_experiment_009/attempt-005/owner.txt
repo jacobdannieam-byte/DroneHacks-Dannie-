@@ -1,0 +1,43 @@
+[INFO] [1794166633.196540587] [refnav]: route 0 legs; depth /simulator_only/oak/depth/image; health /gazebo_hybrid/simulated_estimator/healthy; sim time True
+[INFO] [1794166637.529253927] [refnav]: wait -> arm
+[INFO] [1794166637.753411870] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166638.031208554] [refnav]: wait -> arm
+[INFO] [1794166638.153006038] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166638.328187004] [refnav]: wait -> arm
+[INFO] [1794166638.553626648] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166638.833065003] [refnav]: wait -> arm
+[INFO] [1794166638.952842767] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166639.032431632] [refnav]: wait -> arm
+[INFO] [1794166639.154730014] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166639.331799266] [refnav]: wait -> arm
+[INFO] [1794166639.453381795] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166639.630813608] [refnav]: wait -> arm
+[INFO] [1794166640.052889464] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166640.331400893] [refnav]: wait -> arm
+[INFO] [1794166640.553599845] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166643.205204628] [refnav]: not ready after 3 s (gives up at 300 s): waiting for 3 s of continuously usable depth
+[INFO] [1794166646.029088169] [refnav]: wait -> arm
+[INFO] [1794166646.252374151] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166646.429054644] [refnav]: wait -> arm
+[INFO] [1794166646.753294902] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166646.831910624] [refnav]: wait -> arm
+[INFO] [1794166646.953401574] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166650.432919402] [refnav]: wait -> arm
+[INFO] [1794166650.553644768] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166650.833994549] [refnav]: wait -> arm
+[INFO] [1794166650.954219013] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166653.206201211] [refnav]: not ready after 2 s (gives up at 300 s): waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166660.528154639] [refnav]: wait -> arm
+[INFO] [1794166660.652265770] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166660.726537327] [refnav]: wait -> arm
+[INFO] [1794166660.851424850] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166660.926899086] [refnav]: wait -> arm
+[INFO] [1794166661.151984006] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166661.229272210] [refnav]: wait -> arm
+[INFO] [1794166661.551022031] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166661.630095775] [refnav]: wait -> arm
+[INFO] [1794166662.052174464] [refnav]: arm -> wait: waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166663.203558909] [refnav]: not ready after 1 s (gives up at 300 s): waiting for reviewed Hybrid inputs and owner admission
+[INFO] [1794166668.736000892] [refnav]: wait -> arm
+[WARN] [1794166668.740066932] [refnav]: publication refused: experimental_publication_state_stale
+[INFO] [1794166668.758305202] [refnav]: mission done: yielded: experimental_publication_state_stale

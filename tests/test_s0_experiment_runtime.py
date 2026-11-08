@@ -90,6 +90,34 @@ def test_post_geometry_publication_freshness_and_isolation(setup, monkeypatch):
     assert not (profile.parent / 'never.json').exists()
 
 
+def test_publication_voxel_veto_keeps_bounded_original_cell_provenance(setup):
+    _, runtime, inputs = setup
+    metric, now = inputs['snapshot'].metric, inputs['now_ns']
+    for north in (-.15, .05, .25):
+        for left in (-.15, .05, .25):
+            occupy(metric, (north, left, .76))
+    before = metric._cells.copy()
+    state, alignment = inputs['state'], inputs['alignment']
+    path = (state.position_m,)
+    sweep = runtime.geometry.sweep(metric, now)
+    witness = {}
+    assert sweep.check(path, alignment, witness=witness) == sweep.check(path, alignment) == (
+        'live_occupied_voxel_intersection')
+    assert witness['intersecting_cell_count'] > 4 and len(witness['voxels']) == 4
+    assert all(row['capture_ns'] == now and row['minimum_sampled_aabb_distance_m'] <= witness['swept_radius_m']
+               for row in witness['voxels'])
+    runtime._publication_inputs, runtime._publication_phase = inputs, 'go'
+    target = (*state.position_m, 0.)
+    assert runtime.publication_reason(None, None, Output('go', target, stream=True), now, wall_ns=now) == (
+        'live_occupied_voxel_intersection')
+    record = runtime.records[-1]
+    assert record['event'] == 'experimental_publication_voxel_veto'
+    assert record['state_capture_ns'] == now and record['output_setpoint'] == target
+    assert record['voxel_witness']['path_kind'] == 'd0_forecast'
+    assert record['voxel_witness']['metric_capture_ns'] == metric.capture_ns
+    assert np.array_equal(metric._cells, before)
+
+
 def test_paired_translation_repairs_support_pose_and_refuses_a_shifted_estimate(setup):
     profile, runtime, inputs = setup
     proof = json.loads(profile.read_text())['ground_alignment']

@@ -1,0 +1,4399 @@
+{
+  "scope": "s0_participant_map_unqualified_sitl",
+  "qualification": false,
+  "obstacle_backend": "nominal_participant_map_with_live_occupied_veto",
+  "identity": [
+    "s0_participant_map_unqualified_sitl",
+    "74a3b67ed942292d880c79cc43eb2d0740466d0c27bfa42cb5045210e05f9ccf",
+    "4df26a935d8f39a1ff40d8c8f03eb839814a5051f6dcabe400bc3bd70b7defb7",
+    "069ab00f752fb0d2e72c2d7c353f6631e5c9f20c184e82f3ee4b5a8387ea6ca1"
+  ],
+  "records": [
+    {
+      "sequence": 1,
+      "event": "experimental_owner_readiness",
+      "strategy": "hybrid_sitl",
+      "mission_state": "INITIALIZE",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "starting",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": "missing_synchronized_depth",
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": false,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": [
+            "native_authority_missing",
+            "native_landed_missing",
+            "native_usable_depth_stale_or_missing"
+          ]
+        }
+      },
+      "time_ns": 53560000000
+    },
+    {
+      "sequence": 2,
+      "event": "owner_phase",
+      "strategy": "hybrid_sitl",
+      "mission_state": "PREFLIGHT",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": "missing_synchronized_depth",
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": false,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": [
+            "native_authority_missing",
+            "native_landed_missing",
+            "native_usable_depth_stale_or_missing"
+          ]
+        }
+      },
+      "time_ns": 53560000000,
+      "owner_phase": "wait",
+      "result": null,
+      "armed": null,
+      "nav_state": null,
+      "landed": null
+    },
+    {
+      "sequence": 3,
+      "event": "experimental_owner_readiness",
+      "strategy": "hybrid_sitl",
+      "mission_state": "PREFLIGHT",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": "awaiting_capture_pose",
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": false,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": [
+            "native_authority_missing",
+            "native_landed_missing",
+            "native_usable_depth_stale_or_missing"
+          ]
+        }
+      },
+      "time_ns": 53660000000
+    },
+    {
+      "sequence": 4,
+      "event": "experimental_owner_readiness",
+      "strategy": "hybrid_sitl",
+      "mission_state": "PREFLIGHT",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": "estimator_health_missing_or_stale",
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": false,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": [
+            "native_authority_missing",
+            "native_landed_missing"
+          ]
+        }
+      },
+      "time_ns": 53708000000
+    },
+    {
+      "sequence": 5,
+      "event": "experimental_owner_readiness",
+      "strategy": "hybrid_sitl",
+      "mission_state": "PREFLIGHT",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": "estimator_health_missing_or_stale",
+        "map_reason": null,
+        "launch_reason": "experimental_ground_state_unavailable",
+        "owner_ready": false,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": [
+            "native_landed_missing"
+          ]
+        }
+      },
+      "time_ns": 53908000000
+    },
+    {
+      "sequence": 6,
+      "event": "experimental_owner_readiness",
+      "strategy": "hybrid_sitl",
+      "mission_state": "PREFLIGHT",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": "experimental_ground_state_unavailable",
+        "owner_ready": false,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": [
+            "native_landed_missing"
+          ]
+        }
+      },
+      "time_ns": 54008000000
+    },
+    {
+      "sequence": 7,
+      "event": "experimental_owner_readiness",
+      "strategy": "hybrid_sitl",
+      "mission_state": "PREFLIGHT",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 54260000000
+    },
+    {
+      "sequence": 8,
+      "event": "owner_phase",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 56708000000,
+      "owner_phase": "arm",
+      "result": null,
+      "armed": false,
+      "nav_state": 4,
+      "landed": true
+    },
+    {
+      "sequence": 9,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 56708000000,
+      "ros_issue_ns": 56708000000,
+      "px4_issue_us": 56736000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 10,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 56760000000,
+      "ros_issue_ns": 56760000000,
+      "px4_issue_us": 56760000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 11,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 56812000000,
+      "ros_issue_ns": 56812000000,
+      "px4_issue_us": 56836000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 12,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 56860000000,
+      "ros_issue_ns": 56860000000,
+      "px4_issue_us": 56860000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 13,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 56908000000,
+      "ros_issue_ns": 56908000000,
+      "px4_issue_us": 56936000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 14,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 56960000000,
+      "ros_issue_ns": 56960000000,
+      "px4_issue_us": 56960000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 15,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57012000000,
+      "ros_issue_ns": 57012000000,
+      "px4_issue_us": 57040000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 16,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57060000000,
+      "ros_issue_ns": 57060000000,
+      "px4_issue_us": 57060000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 17,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57108000000,
+      "ros_issue_ns": 57108000000,
+      "px4_issue_us": 57156000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 18,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57160000000,
+      "ros_issue_ns": 57160000000,
+      "px4_issue_us": 57164000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 19,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57212000000,
+      "ros_issue_ns": 57212000000,
+      "px4_issue_us": 57244000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 20,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57260000000,
+      "ros_issue_ns": 57260000000,
+      "px4_issue_us": 57260000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 21,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57308000000,
+      "ros_issue_ns": 57308000000,
+      "px4_issue_us": 57340000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 22,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57360000000,
+      "ros_issue_ns": 57360000000,
+      "px4_issue_us": 57364000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 23,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57408000000,
+      "ros_issue_ns": 57408000000,
+      "px4_issue_us": 57436000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 24,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57460000000,
+      "ros_issue_ns": 57460000000,
+      "px4_issue_us": 57460000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 25,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57508000000,
+      "ros_issue_ns": 57508000000,
+      "px4_issue_us": 57548000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 26,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57560000000,
+      "ros_issue_ns": 57560000000,
+      "px4_issue_us": 57564000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 27,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57608000000,
+      "ros_issue_ns": 57608000000,
+      "px4_issue_us": 57636000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 28,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57660000000,
+      "ros_issue_ns": 57660000000,
+      "px4_issue_us": 57664000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 29,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "READY",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57708000000,
+      "ros_issue_ns": 57708000000,
+      "px4_issue_us": 57740000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 30,
+      "event": "owner_phase",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57760000000,
+      "owner_phase": "climb",
+      "result": null,
+      "armed": true,
+      "nav_state": 14,
+      "landed": true
+    },
+    {
+      "sequence": 31,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57760000000,
+      "ros_issue_ns": 57760000000,
+      "px4_issue_us": 57764000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.004260915331542492,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 32,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57808000000,
+      "ros_issue_ns": 57808000000,
+      "px4_issue_us": 57836000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.018660915331543036,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 33,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57860000000,
+      "ros_issue_ns": 57860000000,
+      "px4_issue_us": 57860000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.034260915331542914,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 34,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57908000000,
+      "ros_issue_ns": 57908000000,
+      "px4_issue_us": 57936000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.04866091533154346,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 35,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 57960000000,
+      "ros_issue_ns": 57960000000,
+      "px4_issue_us": 57960000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.06426091533154334,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 36,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58008000000,
+      "ros_issue_ns": 58008000000,
+      "px4_issue_us": 58040000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.07866091533154387,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 37,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58060000000,
+      "ros_issue_ns": 58060000000,
+      "px4_issue_us": 58060000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.09426091533154375,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 38,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58108000000,
+      "ros_issue_ns": 58108000000,
+      "px4_issue_us": 58136000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.10866091533154217,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 39,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58160000000,
+      "ros_issue_ns": 58160000000,
+      "px4_issue_us": 58164000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.12426091533154204,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 40,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58208000000,
+      "ros_issue_ns": 58208000000,
+      "px4_issue_us": 58240000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.1386609153315426,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 41,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58260000000,
+      "ros_issue_ns": 58260000000,
+      "px4_issue_us": 58264000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.1542609153315425,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 42,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58312000000,
+      "ros_issue_ns": 58312000000,
+      "px4_issue_us": 58344000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.16986091533154238,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 43,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58360000000,
+      "ros_issue_ns": 58360000000,
+      "px4_issue_us": 58360000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.18426091533154293,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 44,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58408000000,
+      "ros_issue_ns": 58408000000,
+      "px4_issue_us": 58436000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.19866091533154348,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 45,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58460000000,
+      "ros_issue_ns": 58460000000,
+      "px4_issue_us": 58464000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.21426091533154337,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 46,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58508000000,
+      "ros_issue_ns": 58508000000,
+      "px4_issue_us": 58536000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.22866091533154392,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 47,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58560000000,
+      "ros_issue_ns": 58560000000,
+      "px4_issue_us": 58560000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.24426091533154382,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 48,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58612000000,
+      "ros_issue_ns": 58612000000,
+      "px4_issue_us": 58644000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.2598609153315437,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 49,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58660000000,
+      "ros_issue_ns": 58660000000,
+      "px4_issue_us": 58664000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.2742609153315421,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 50,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58708000000,
+      "ros_issue_ns": 58708000000,
+      "px4_issue_us": 58736000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.28866091533154264,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 51,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58760000000,
+      "ros_issue_ns": 58760000000,
+      "px4_issue_us": 58760000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.30426091533154254,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 52,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58808000000,
+      "ros_issue_ns": 58808000000,
+      "px4_issue_us": 58836000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.31866091533154306,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 53,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58860000000,
+      "ros_issue_ns": 58860000000,
+      "px4_issue_us": 58860000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.33426091533154295,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 54,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58908000000,
+      "ros_issue_ns": 58908000000,
+      "px4_issue_us": 58932000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.3486609153315435,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 55,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 58960000000,
+      "ros_issue_ns": 58960000000,
+      "px4_issue_us": 58960000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.36426091533154337,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 56,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59008000000,
+      "ros_issue_ns": 59008000000,
+      "px4_issue_us": 59036000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.3786609153315439,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 57,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59060000000,
+      "ros_issue_ns": 59060000000,
+      "px4_issue_us": 59064000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.3942609153315438,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 58,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59108000000,
+      "ros_issue_ns": 59108000000,
+      "px4_issue_us": 59140000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.4086609153315422,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 59,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59160000000,
+      "ros_issue_ns": 59160000000,
+      "px4_issue_us": 59164000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.4242609153315421,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 60,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59208000000,
+      "ros_issue_ns": 59208000000,
+      "px4_issue_us": 59244000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.4386609153315426,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 61,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59260000000,
+      "ros_issue_ns": 59260000000,
+      "px4_issue_us": 59264000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.4542609153315425,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 62,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59308000000,
+      "ros_issue_ns": 59308000000,
+      "px4_issue_us": 59336000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.468660915331543,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 63,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59360000000,
+      "ros_issue_ns": 59360000000,
+      "px4_issue_us": 59364000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.4842609153315429,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 64,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59408000000,
+      "ros_issue_ns": 59408000000,
+      "px4_issue_us": 59436000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.49866091533154344,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 65,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59460000000,
+      "ros_issue_ns": 59460000000,
+      "px4_issue_us": 59464000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.5142609153315433,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 66,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59508000000,
+      "ros_issue_ns": 59508000000,
+      "px4_issue_us": 59536000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.5286609153315438,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 67,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59560000000,
+      "ros_issue_ns": 59560000000,
+      "px4_issue_us": 59564000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.5442609153315436,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 68,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": true,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59608000000,
+      "ros_issue_ns": 59608000000,
+      "px4_issue_us": 59632000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.558660915331542,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 69,
+      "event": "experimental_owner_readiness",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59660000000
+    },
+    {
+      "sequence": 70,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59660000000,
+      "ros_issue_ns": 59660000000,
+      "px4_issue_us": 59664000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.5742609153315419,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 71,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59712000000,
+      "ros_issue_ns": 59712000000,
+      "px4_issue_us": 59740000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.589860915331544,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 72,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59760000000,
+      "ros_issue_ns": 59760000000,
+      "px4_issue_us": 59760000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.6042609153315424,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 73,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59808000000,
+      "ros_issue_ns": 59808000000,
+      "px4_issue_us": 59836000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.6186609153315429,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 74,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59860000000,
+      "ros_issue_ns": 59860000000,
+      "px4_issue_us": 59864000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.6342609153315427,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 75,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59908000000,
+      "ros_issue_ns": 59908000000,
+      "px4_issue_us": 59936000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.6486609153315432,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 76,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 59960000000,
+      "ros_issue_ns": 59960000000,
+      "px4_issue_us": 59960000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.6642609153315431,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 77,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60008000000,
+      "ros_issue_ns": 60008000000,
+      "px4_issue_us": 60036000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.6786609153315436,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 78,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60060000000,
+      "ros_issue_ns": 60060000000,
+      "px4_issue_us": 60064000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.6942609153315434,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 79,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60108000000,
+      "ros_issue_ns": 60108000000,
+      "px4_issue_us": 60136000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7086609153315419,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 80,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60160000000,
+      "ros_issue_ns": 60160000000,
+      "px4_issue_us": 60160000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7242609153315417,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 81,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60208000000,
+      "ros_issue_ns": 60208000000,
+      "px4_issue_us": 60232000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7386609153315422,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 82,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60260000000,
+      "ros_issue_ns": 60260000000,
+      "px4_issue_us": 60260000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.754260915331542,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 83,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60308000000,
+      "ros_issue_ns": 60308000000,
+      "px4_issue_us": 60332000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7642609153315425,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 84,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60360000000,
+      "ros_issue_ns": 60360000000,
+      "px4_issue_us": 60360000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7642609153315425,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 85,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60408000000,
+      "ros_issue_ns": 60408000000,
+      "px4_issue_us": 60436000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7642609153315425,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 86,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60460000000,
+      "ros_issue_ns": 60460000000,
+      "px4_issue_us": 60460000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7642609153315425,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 87,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60508000000,
+      "ros_issue_ns": 60508000000,
+      "px4_issue_us": 60536000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7642609153315425,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 88,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60560000000,
+      "ros_issue_ns": 60560000000,
+      "px4_issue_us": 60564000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7642609153315425,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 89,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60608000000,
+      "ros_issue_ns": 60608000000,
+      "px4_issue_us": 60636000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7642609153315425,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 90,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60660000000,
+      "ros_issue_ns": 60660000000,
+      "px4_issue_us": 60664000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7642609153315425,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 91,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60708000000,
+      "ros_issue_ns": 60708000000,
+      "px4_issue_us": 60752000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7642609153315425,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 92,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60760000000,
+      "ros_issue_ns": 60760000000,
+      "px4_issue_us": 60772000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7642609153315425,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 93,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60808000000,
+      "ros_issue_ns": 60808000000,
+      "px4_issue_us": 60840000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7642609153315425,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 94,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60860000000,
+      "ros_issue_ns": 60860000000,
+      "px4_issue_us": 60860000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7642609153315425,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 95,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60908000000,
+      "ros_issue_ns": 60908000000,
+      "px4_issue_us": 60936000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7642609153315425,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 96,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 60960000000,
+      "ros_issue_ns": 60960000000,
+      "px4_issue_us": 60964000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7642609153315425,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 97,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 61008000000,
+      "ros_issue_ns": 61008000000,
+      "px4_issue_us": 61036000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7642609153315425,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 98,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 61060000000,
+      "ros_issue_ns": 61060000000,
+      "px4_issue_us": 61060000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7642609153315425,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 99,
+      "event": "issue",
+      "strategy": "hybrid_sitl",
+      "mission_state": "TAKEOFF",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "existing_mission_owner",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": null,
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 61108000000,
+      "ros_issue_ns": 61108000000,
+      "px4_issue_us": 61136000,
+      "setpoint": [
+        0.0013300091959536076,
+        0.0015693160239607096,
+        -0.7642609153315425,
+        0.00010293009836459532
+      ]
+    },
+    {
+      "sequence": 100,
+      "event": "owner_phase",
+      "strategy": "hybrid_sitl",
+      "mission_state": "AUTHORITY_LOST",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "owner_yielded",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": "live_occupied_voxel_intersection",
+      "experimental_owner_readiness": {
+        "observation_reason": null,
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": true,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": []
+        }
+      },
+      "time_ns": 61208000000,
+      "owner_phase": "done",
+      "result": "yielded: live_occupied_voxel_intersection",
+      "armed": true,
+      "nav_state": 14,
+      "landed": false
+    },
+    {
+      "sequence": 101,
+      "event": "experimental_owner_readiness",
+      "strategy": "hybrid_sitl",
+      "mission_state": "AUTHORITY_LOST",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "owner_yielded",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": "live_occupied_voxel_intersection",
+      "experimental_owner_readiness": {
+        "observation_reason": "missing_synchronized_depth",
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": false,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": [
+            "native_health_stale_or_unhealthy"
+          ]
+        }
+      },
+      "time_ns": 62208000000
+    },
+    {
+      "sequence": 102,
+      "event": "experimental_owner_readiness",
+      "strategy": "hybrid_sitl",
+      "mission_state": "AUTHORITY_LOST",
+      "reasoning_strategy": "hybrid_existing",
+      "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+      "predictor_fallback": null,
+      "mission_reason": "owner_yielded",
+      "stage_id": "course_00",
+      "stage_kind": "waypoint",
+      "goal_m": [
+        0.0,
+        0.0,
+        0.76
+      ],
+      "goal_slot": 0,
+      "landing_request": "live_occupied_voxel_intersection",
+      "experimental_owner_readiness": {
+        "observation_reason": "missing_synchronized_depth",
+        "map_reason": null,
+        "launch_reason": null,
+        "owner_ready": false,
+        "admission": true,
+        "priming_ready": false,
+        "native": {
+          "admission_reason": null,
+          "ready_reasons": [
+            "native_health_stale_or_unhealthy",
+            "native_usable_depth_stale_or_missing"
+          ]
+        }
+      },
+      "time_ns": 62508000000
+    }
+  ],
+  "total_records": 102,
+  "status": {
+    "strategy": "hybrid_sitl",
+    "mission_state": "AUTHORITY_LOST",
+    "reasoning_strategy": "hybrid_existing",
+    "strategy_identity": "2143ef2bcfa68619fe664e63c8de5de5cae730dc53bff06077a733706aab25b2",
+    "predictor_fallback": null,
+    "mission_reason": "owner_yielded",
+    "stage_id": "course_00",
+    "stage_kind": "waypoint",
+    "goal_m": [
+      0.0,
+      0.0,
+      0.76
+    ],
+    "goal_slot": 0,
+    "landing_request": "live_occupied_voxel_intersection",
+    "experimental_owner_readiness": {
+      "observation_reason": "missing_synchronized_depth",
+      "map_reason": null,
+      "launch_reason": null,
+      "owner_ready": false,
+      "admission": true,
+      "priming_ready": false,
+      "native": {
+        "admission_reason": null,
+        "ready_reasons": [
+          "native_health_stale_or_unhealthy",
+          "native_usable_depth_stale_or_missing"
+        ]
+      }
+    }
+  },
+  "last_issue": {
+    "ros_issue_ns": 61108000000,
+    "px4_issue_us": 61136000,
+    "setpoint": [
+      0.0013300091959536076,
+      0.0015693160239607096,
+      -0.7642609153315425,
+      0.00010293009836459532
+    ]
+  },
+  "timing": {
+    "depth_normalization": {
+      "p50_ms": 0.3696855,
+      "p95_ms": 0.8440061499999998,
+      "p99_ms": 0.9442450799999983,
+      "samples": 94,
+      "max_ms": 1.168974
+    },
+    "experimental_h1_callback": {
+      "p50_ms": 0.027977000000000002,
+      "p95_ms": 0.32420489999999996,
+      "p99_ms": 0.6013939699999991,
+      "samples": 2048,
+      "max_ms": 0.934018
+    },
+    "experimental_owner_callback": {
+      "p50_ms": 1.2999465,
+      "p95_ms": 29.251673399999994,
+      "p99_ms": 34.12791457999995,
+      "samples": 190,
+      "max_ms": 39.737161
+    },
+    "experimental_owner_graph": {
+      "p50_ms": 0.6897805,
+      "p95_ms": 0.9922323,
+      "p99_ms": 1.1696427599999981,
+      "samples": 190,
+      "max_ms": 1.30461
+    },
+    "experimental_pending_depth": {
+      "p50_ms": 0.016774,
+      "p95_ms": 27.29536169999999,
+      "p99_ms": 32.57407972999996,
+      "samples": 190,
+      "max_ms": 37.517263
+    },
+    "metric_apply": {
+      "p50_ms": 0.222772,
+      "p95_ms": 0.8535715999999998,
+      "p99_ms": 1.151630959999999,
+      "samples": 85,
+      "max_ms": 1.37663
+    },
+    "metric_prepare": {
+      "p50_ms": 18.163394,
+      "p95_ms": 22.688239399999997,
+      "p99_ms": 25.060482119999996,
+      "samples": 85,
+      "max_ms": 26.357427
+    },
+    "pose_alignment": {
+      "p50_ms": 0.046233,
+      "p95_ms": 0.0933186,
+      "p99_ms": 0.12174912,
+      "samples": 85,
+      "max_ms": 0.122826
+    },
+    "worldstate_update": {
+      "p50_ms": 4.53589,
+      "p95_ms": 7.200859199999999,
+      "p99_ms": 8.218285239999998,
+      "samples": 85,
+      "max_ms": 8.562697
+    }
+  },
+  "exit_code": 1,
+  "callback_clock": {
+    "fault": null,
+    "fault_detail": null,
+    "pending": 0,
+    "retained_releases": [
+      {
+        "kind": "status",
+        "source_ready_ns": 54908000000,
+        "original_receipt_ns": 54904000000,
+        "original_wall_ns": 45272374080443,
+        "released_ros_ns": 54908000000,
+        "released_wall_ns": 45272375911898
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 55236000000,
+        "original_receipt_ns": 55232000000,
+        "original_wall_ns": 45272702047832,
+        "released_ros_ns": 55236000000,
+        "released_wall_ns": 45272702847306
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 56136000000,
+        "original_receipt_ns": 56132000000,
+        "original_wall_ns": 45273603534265,
+        "released_ros_ns": 56148000000,
+        "released_wall_ns": 45273614494323
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 56896000000,
+        "original_receipt_ns": 56892000000,
+        "original_wall_ns": 45274362315743,
+        "released_ros_ns": 56904000000,
+        "released_wall_ns": 45274373644867
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 57176000000,
+        "original_receipt_ns": 57172000000,
+        "original_wall_ns": 45274642697579,
+        "released_ros_ns": 57188000000,
+        "released_wall_ns": 45274654588330
+      },
+      {
+        "kind": "land",
+        "source_ready_ns": 57444000000,
+        "original_receipt_ns": 57440000000,
+        "original_wall_ns": 45274910439857,
+        "released_ros_ns": 57448000000,
+        "released_wall_ns": 45274914661940
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 57676000000,
+        "original_receipt_ns": 57672000000,
+        "original_wall_ns": 45275142590961,
+        "released_ros_ns": 57688000000,
+        "released_wall_ns": 45275155024346
+      },
+      {
+        "kind": "status",
+        "source_ready_ns": 57752000000,
+        "original_receipt_ns": 57748000000,
+        "original_wall_ns": 45275218582781,
+        "released_ros_ns": 57756000000,
+        "released_wall_ns": 45275222619558
+      },
+      {
+        "kind": "lpos",
+        "source_ready_ns": 58996000000,
+        "original_receipt_ns": 58992000000,
+        "original_wall_ns": 45276462278198,
+        "released_ros_ns": 59008000000,
+        "released_wall_ns": 45276475336394
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 58996000000,
+        "original_receipt_ns": 58992000000,
+        "original_wall_ns": 45276462437702,
+        "released_ros_ns": 59008000000,
+        "released_wall_ns": 45276475336394
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 59496000000,
+        "original_receipt_ns": 59492000000,
+        "original_wall_ns": 45276962108382,
+        "released_ros_ns": 59504000000,
+        "released_wall_ns": 45276973849028
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 60196000000,
+        "original_receipt_ns": 60192000000,
+        "original_wall_ns": 45277661993950,
+        "released_ros_ns": 60204000000,
+        "released_wall_ns": 45277673523917
+      },
+      {
+        "kind": "lpos",
+        "source_ready_ns": 60196000000,
+        "original_receipt_ns": 60192000000,
+        "original_wall_ns": 45277662787175,
+        "released_ros_ns": 60204000000,
+        "released_wall_ns": 45277673523917
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 60456000000,
+        "original_receipt_ns": 60452000000,
+        "original_wall_ns": 45277921946011,
+        "released_ros_ns": 60456000000,
+        "released_wall_ns": 45277922732284
+      },
+      {
+        "kind": "status",
+        "source_ready_ns": 61280000000,
+        "original_receipt_ns": 61276000000,
+        "original_wall_ns": 45278745589594,
+        "released_ros_ns": 61288000000,
+        "released_wall_ns": 45278754078677
+      },
+      {
+        "kind": "lpos",
+        "source_ready_ns": 61596000000,
+        "original_receipt_ns": 61592000000,
+        "original_wall_ns": 45279062776870,
+        "released_ros_ns": 61604000000,
+        "released_wall_ns": 45279074245586
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 61596000000,
+        "original_receipt_ns": 61592000000,
+        "original_wall_ns": 45279062904487,
+        "released_ros_ns": 61604000000,
+        "released_wall_ns": 45279074245586
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 61856000000,
+        "original_receipt_ns": 61852000000,
+        "original_wall_ns": 45279322467309,
+        "released_ros_ns": 61860000000,
+        "released_wall_ns": 45279326302228
+      },
+      {
+        "kind": "lpos",
+        "source_ready_ns": 62876000000,
+        "original_receipt_ns": 62872000000,
+        "original_wall_ns": 45280342417292,
+        "released_ros_ns": 62884000000,
+        "released_wall_ns": 45280354117370
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 62876000000,
+        "original_receipt_ns": 62872000000,
+        "original_wall_ns": 45280342530004,
+        "released_ros_ns": 62884000000,
+        "released_wall_ns": 45280354117370
+      },
+      {
+        "kind": "att",
+        "source_ready_ns": 62976000000,
+        "original_receipt_ns": 62972000000,
+        "original_wall_ns": 45280442879818,
+        "released_ros_ns": 62988000000,
+        "released_wall_ns": 45280454139625
+      }
+    ]
+  },
+  "receipt_clock": {
+    "mode": "independent_ros_timesource_executor",
+    "failure": null,
+    "cleanup_failure": null
+  },
+  "deferred_depth": {
+    "dropped": 0,
+    "retained_rows": 1
+  },
+  "h1_clock": {
+    "deferred": 8,
+    "released": 8,
+    "pending": 0,
+    "audit_complete": true,
+    "audit": [
+      {
+        "topic": "/fmu/out/vehicle_odometry",
+        "callback_ros_ns": 58992000000,
+        "callback_wall_ns": 45276462556998,
+        "ingestion_ros_ns": 59000000000,
+        "ingestion_wall_ns": 45276465877248,
+        "mapped_capture_upper_ns": 58996000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_local_position",
+        "callback_ros_ns": 58992000000,
+        "callback_wall_ns": 45276462676205,
+        "ingestion_ros_ns": 59000000000,
+        "ingestion_wall_ns": 45276465877248,
+        "mapped_capture_upper_ns": 58996000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_odometry",
+        "callback_ros_ns": 60192000000,
+        "callback_wall_ns": 45277662948265,
+        "ingestion_ros_ns": 60196000000,
+        "ingestion_wall_ns": 45277665277524,
+        "mapped_capture_upper_ns": 60196000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_local_position",
+        "callback_ros_ns": 60192000000,
+        "callback_wall_ns": 45277663050901,
+        "ingestion_ros_ns": 60196000000,
+        "ingestion_wall_ns": 45277665277524,
+        "mapped_capture_upper_ns": 60196000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_odometry",
+        "callback_ros_ns": 61592000000,
+        "callback_wall_ns": 45279063051302,
+        "ingestion_ros_ns": 61600000000,
+        "ingestion_wall_ns": 45279065985383,
+        "mapped_capture_upper_ns": 61596000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_local_position",
+        "callback_ros_ns": 61592000000,
+        "callback_wall_ns": 45279063159420,
+        "ingestion_ros_ns": 61600000000,
+        "ingestion_wall_ns": 45279065985383,
+        "mapped_capture_upper_ns": 61596000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_odometry",
+        "callback_ros_ns": 62872000000,
+        "callback_wall_ns": 45280342644937,
+        "ingestion_ros_ns": 62876000000,
+        "ingestion_wall_ns": 45280345482221,
+        "mapped_capture_upper_ns": 62876000000
+      },
+      {
+        "topic": "/fmu/out/vehicle_local_position",
+        "callback_ros_ns": 62872000000,
+        "callback_wall_ns": 45280342737837,
+        "ingestion_ros_ns": 62876000000,
+        "ingestion_wall_ns": 45280345482221,
+        "mapped_capture_upper_ns": 62876000000
+      }
+    ],
+    "failure": null
+  }
+}

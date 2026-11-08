@@ -1,0 +1,4 @@
+[INFO] [1794167442.505722926] [refnav]: route 0 legs; depth /simulator_only/oak/depth/image; health /gazebo_hybrid/simulated_estimator/healthy; sim time True
+[INFO] [1794167446.617629041] [refnav]: wait -> arm
+[WARN] [1794167446.624779816] [refnav]: publication refused: experimental_publication_state_stale
+[INFO] [1794167446.629834717] [refnav]: mission done: yielded: experimental_publication_state_stale

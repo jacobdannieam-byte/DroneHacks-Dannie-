@@ -1,0 +1,104 @@
+{
+  "passed": true,
+  "missing_or_not_advancing": [],
+  "clock_duration_ns": 123808000000,
+  "minimum_duration_ns": 0,
+  "integrity": "ok",
+  "topics": {
+    "/clock": {
+      "count": 30950,
+      "first_ns": 8624000000,
+      "last_ns": 132432000000
+    },
+    "/gazebo_hybrid/simulated_estimator/odometry": {
+      "count": 3714,
+      "first_ns": 8636000000,
+      "last_ns": 132400000000
+    },
+    "/fmu/in/vehicle_visual_odometry": {
+      "count": 3714,
+      "first_ns": 8636000000,
+      "last_ns": 132400000000
+    },
+    "/fmu/out/distance_sensor": {
+      "count": 619,
+      "first_ns": 8652000000,
+      "last_ns": 132252000000
+    },
+    "/gazebo_hybrid/simulated_estimator/health_diagnostics": {
+      "count": 2476,
+      "first_ns": 8652000000,
+      "last_ns": 132400000000
+    },
+    "/tf_static": {
+      "count": 1,
+      "first_ns": 8640000000,
+      "last_ns": 8640000000
+    },
+    "/gazebo_hybrid/simulated_estimator/healthy": {
+      "count": 2476,
+      "first_ns": 8652000000,
+      "last_ns": 132400000000
+    },
+    "/gazebo_hybrid/simulated_estimator/processing_status": {
+      "count": 3714,
+      "first_ns": 8636000000,
+      "last_ns": 132400000000
+    },
+    "/simulator_only/oak/depth/camera_info": {
+      "count": 1238,
+      "first_ns": 8700000000,
+      "last_ns": 132400000000
+    },
+    "/simulator_only/oak/depth/image": {
+      "count": 1238,
+      "first_ns": 8720000000,
+      "last_ns": 132420000000
+    },
+    "/fmu/out/vehicle_odometry": {
+      "count": 12368,
+      "first_ns": 8748000000,
+      "last_ns": 132424000000
+    },
+    "/fmu/out/vehicle_local_position": {
+      "count": 12368,
+      "first_ns": 8748000000,
+      "last_ns": 132424000000
+    },
+    "/fmu/out/vehicle_land_detected": {
+      "count": 198,
+      "first_ns": 9424000000,
+      "last_ns": 132040000000
+    },
+    "/fmu/out/vehicle_status_v1": {
+      "count": 248,
+      "first_ns": 9040000000,
+      "last_ns": 132428000000
+    },
+    "/fmu/out/vehicle_attitude": {
+      "count": 12367,
+      "first_ns": 8760000000,
+      "last_ns": 132424000000
+    },
+    "/fmu/out/estimator_status_flags": {
+      "count": 123,
+      "first_ns": 9120000000,
+      "last_ns": 131760000000
+    },
+    "/fmu/in/trajectory_setpoint": {
+      "count": 84,
+      "first_ns": 59532000000,
+      "last_ns": 84012000000
+    },
+    "/fmu/in/offboard_control_mode": {
+      "count": 84,
+      "first_ns": 59532000000,
+      "last_ns": 84012000000
+    },
+    "/refnav/status": {
+      "count": 112,
+      "first_ns": 55652000000,
+      "last_ns": 92652000000
+    }
+  }
+}

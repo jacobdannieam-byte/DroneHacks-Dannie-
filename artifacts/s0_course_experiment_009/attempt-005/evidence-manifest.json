@@ -1,0 +1,20 @@
+{
+  "raw_bag_local_path": "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-s0-experiment-009\\attempt-005\\observations\\observations_0.db3",
+  "raw_bag_sha256": "99ba35304230448b9a39c00186c3151195f7ea78fc00d5f7019e28822846f775",
+  "files": {
+    "experiment.json": "3371fc3c3a3dc4e408368fe4f5f28075a419d13389aefb74f87d1b6b3fb4e3c8",
+    "experiment_finished.json": "47d0d6e483112bbde18cee07ecf4237efed61677eb10895c7cc776b881d78e25",
+    "final-native.json": "2f69364843193d292d5c803f63547cf826eb03e8fc24c89e35a989b0db607a54",
+    "ogre2.log": "778d2b244ed5b57e159a9a88431bf1f92fe64ab968e4f1d2bc49711d4edb9d7f",
+    "owner.txt": "225c0674da28a7783b4c8eec68f923fcc9499e3b341ad7fe4172a973aefee7db",
+    "owner_exit.json": "17fdf70a6d20a8d76c44707fb17aa28ff331deb9711eb00049a370119fa163d1",
+    "recording_final.json": "b4fc21af1011bdb46a6f5fe58d908cb2d8084c90ba0102999031652769b881ee",
+    "recovery_released.json": "b4f5905fb69097770ec0f0b7f2074884a8c04da552050474e1f3d87341def01c",
+    "referee-result.json": "48ddc524f4cba6efb6c13e2f8a2bec513c93431416e2d332dec2a7f1d810ca07",
+    "settled-native.json": "fb520876b043b669f190d1c5006403620ce7c5998b6895ef1d7927d110b1ecd6",
+    "source-manifest.json": "11d8768293c93832904f69a993581ad1f1aa425789a13502a410e2caadbc88e8",
+    "s0-profile/course.json": "4df26a935d8f39a1ff40d8c8f03eb839814a5051f6dcabe400bc3bd70b7defb7",
+    "s0-profile/h1.json": "07ea86c423683afd5e00bca1c7c97ed805ab53bd9dd19942e441fefe58776c86",
+    "s0-profile/s0-experiment.json": "bb2b4e96012d47868d0fd9caadcf817e65c0b058c349429960c5991ca8f14fe9"
+  }
+}

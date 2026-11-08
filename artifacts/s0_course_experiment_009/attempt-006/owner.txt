@@ -1,0 +1,2 @@
+[INFO] [1794167070.499017649] [refnav]: route 0 legs; depth /simulator_only/oak/depth/image; health /gazebo_hybrid/simulated_estimator/healthy; sim time True
+[INFO] [1794167073.685999466] [refnav]: wait -> arm

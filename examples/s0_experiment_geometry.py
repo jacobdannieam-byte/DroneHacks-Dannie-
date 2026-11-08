@@ -78,11 +78,12 @@ class AuthoredObstacles:
 class _CourseSweep:
     def __init__(self, course, metric, now_ns):
         self.course = course
+        self.metric = metric
         self.resolution = metric.policy.resolution_m
-        occupied = np.argwhere(metric.cells_at(now_ns, metric.reference) == Cell.OCCUPIED)
-        self.occupied = (occupied + metric.origin_index + .5) * self.resolution
+        self.occupied_indices = np.argwhere(metric.cells_at(now_ns, metric.reference) == Cell.OCCUPIED)
+        self.occupied = (self.occupied_indices + metric.origin_index + .5) * self.resolution
 
-    def check(self, positions_ned, alignment, *, support_center_ned=None):
+    def check(self, positions_ned, alignment, *, support_center_ned=None, witness=None):
         positions = np.asarray(positions_ned, dtype=float)
         if positions.ndim != 2 or positions.shape[1:] != (3,) or not len(positions) or not np.isfinite(positions).all():
             return 'invalid_experimental_sweep'
@@ -114,8 +115,9 @@ class _CourseSweep:
             if np.any(horizontal ** 2 + vertical ** 2 <= radius ** 2):
                 return 'participant_cylinder_intersection'
         margin = radius + self.resolution / 2
-        local = self.occupied[np.all((self.occupied >= odom_points.min(axis=0) - margin)
-                                     & (self.occupied <= odom_points.max(axis=0) + margin), axis=1)]
+        local_ids = np.flatnonzero(np.all((self.occupied >= odom_points.min(axis=0) - margin)
+                                        & (self.occupied <= odom_points.max(axis=0) + margin), axis=1))
+        local = self.occupied[local_ids]
         if support:
             # Only the floor-intersecting voxel layer in this intentional support
             # column may include expected floor returns. Voxel provenance cannot
@@ -125,9 +127,26 @@ class _CourseSweep:
             center_odom = transform @ support_center + alignment.ned_origin_in_map_m
             floor_cell = np.abs(local[:, 2] - floor_z) <= self.resolution / 2
             near_pad = np.linalg.norm(local[:, :2] - center_odom[:2], axis=1) <= radius + self.resolution / math.sqrt(2)
-            local = local[~(floor_cell & near_pad)]
+            keep = ~(floor_cell & near_pad)
+            local_ids, local = local_ids[keep], local[keep]
         if len(local):
             delta = np.maximum(np.abs(odom_points[:, None] - local[None, :]) - self.resolution / 2, 0.)
-            if np.any(np.einsum('ijk,ijk->ij', delta, delta) <= radius ** 2):
+            squared = np.einsum('ijk,ijk->ij', delta, delta)
+            if np.any(squared <= radius ** 2):
+                if witness is not None:
+                    distances = squared.min(axis=0)
+                    hits = np.flatnonzero(distances <= radius ** 2)
+                    nearest = hits[np.argsort(distances[hits], kind='stable')[:4]]
+                    witness.update(metric_capture_ns=self.metric.capture_ns, metric_received_ns=self.metric.received_ns,
+                                   metric_query_ns=self.metric.query_ns, observation_id=self.metric.observation_id,
+                                   calibration_id=self.metric.calibration_id, map_frame=self.metric.reference.frame_id,
+                                   map_epoch=self.metric.reference.epoch, clock_id=self.metric.reference.clock_id,
+                                   resolution_m=self.resolution,
+                                   sweep_start_ned=positions[0].tolist(), sweep_end_ned=positions[-1].tolist(),
+                                   sweep_sample_count=len(odom_points), swept_radius_m=radius, support_column=support,
+                                   intersecting_cell_count=len(hits), voxels=[dict(
+                                       center_map_m=local[index].tolist(),
+                                       capture_ns=int(self.metric._stamps[tuple(self.occupied_indices[local_ids[index]])]),
+                                       minimum_sampled_aabb_distance_m=math.sqrt(distances[index])) for index in nearest])
                 return 'live_occupied_voxel_intersection'
         return None

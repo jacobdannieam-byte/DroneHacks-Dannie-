@@ -1,0 +1,157 @@
+{
+  "scope": "short liftoff followed by obstacle-veto owner withdrawal; no course completion",
+  "raw_sha256": "3d765fefa92d375a51cdaa81b6fae555a04ef6dca8642f4a38d82b8ccb8268b5",
+  "status_transitions": [
+    {
+      "id": 259,
+      "receipt_ns": 8036000000,
+      "capture_us": 8036000,
+      "publish_us": 8036000,
+      "arming_state": 1,
+      "nav_state": 4
+    },
+    {
+      "id": 35575,
+      "receipt_ns": 57752000000,
+      "capture_us": 57752000,
+      "publish_us": 57752000,
+      "arming_state": 2,
+      "nav_state": 14
+    },
+    {
+      "id": 38872,
+      "receipt_ns": 62192000000,
+      "capture_us": 62192000,
+      "publish_us": 62192000,
+      "arming_state": 2,
+      "nav_state": 2
+    },
+    {
+      "id": 43107,
+      "receipt_ns": 68120000000,
+      "capture_us": 68120000,
+      "publish_us": 68120000,
+      "arming_state": 1,
+      "nav_state": 14
+    }
+  ],
+  "land_transitions": [
+    {
+      "id": 398,
+      "receipt_ns": 8228000000,
+      "capture_us": 8228000,
+      "publish_us": 8228000,
+      "landed": true
+    },
+    {
+      "id": 36975,
+      "receipt_ns": 59612000000,
+      "capture_us": 59612000,
+      "publish_us": 59612000,
+      "landed": false
+    },
+    {
+      "id": 41673,
+      "receipt_ns": 66104000000,
+      "capture_us": 66108000,
+      "publish_us": 66108000,
+      "landed": true
+    }
+  ],
+  "commands": [
+    {
+      "id": 35564,
+      "receipt_ns": 57740000000,
+      "capture_us": 57740000,
+      "publish_us": 57740000,
+      "command": 176,
+      "param1": 1.0,
+      "param2": 6.0
+    },
+    {
+      "id": 35565,
+      "receipt_ns": 57740000000,
+      "capture_us": 57740000,
+      "publish_us": 57740000,
+      "command": 400,
+      "param1": 1.0,
+      "param2": 0.0
+    }
+  ],
+  "native_position_window": {
+    "window_us": [
+      57000000,
+      80000000
+    ],
+    "samples": 2300,
+    "bounds": {
+      "x": [
+        -0.0036935359239578247,
+        0.18415938317775726
+      ],
+      "y": [
+        -0.0010514198802411556,
+        0.006829069461673498
+      ],
+      "z": [
+        -0.19886906445026398,
+        0.03350553661584854
+      ]
+    },
+    "peak_speed": [
+      0.855546448871334,
+      62748000
+    ]
+  },
+  "external_referee_ranges": {
+    "course_x_metres": [
+      -2.5146,
+      -2.5125
+    ],
+    "course_y_metres": [
+      0.9144,
+      1.0865
+    ],
+    "height_metres": [
+      -0.0001,
+      0.2262
+    ]
+  },
+  "external_peak_height_row": {
+    "seconds": "62.336",
+    "course_x_metres": "-2.5132",
+    "course_y_metres": "1.073",
+    "height_metres": "0.2262",
+    "heading_degrees": "90.0",
+    "nearest_obstacle_metres": "0.258",
+    "armed": "",
+    "landed": "",
+    "automatic_flight": "",
+    "px4_estimated_height_metres": "0.19811102747917175"
+  },
+  "external_samples": 4689,
+  "referee": {
+    "independent_full_course_checks_passed": false,
+    "referee": {
+      "flight_record": "flight_20261108_195255.csv",
+      "world_map_file": "/repository/drone_code/team_nav/course_maps/phone_scan_2026-11-06.json",
+      "course_model_file": "/repository/simulator/generated_files/worlds/phone_scan_2026-11-06_da58749f48/course.obj",
+      "checkpoint_seconds": {},
+      "checkpoint_lines_used": {},
+      "motors_off_seconds": null,
+      "landed_on_pad": false,
+      "touches": 0,
+      "penalty_seconds": 0.0,
+      "went_above_walls": false,
+      "left_the_course": false,
+      "px4_clock_speed_compared_with_real_time": 1.0,
+      "times_above_boulders": [],
+      "stayed_above_a_boulder_too_long": false,
+      "largest_height_estimate_error_metres": 0.038,
+      "largest_height_estimate_error_at_seconds": 1.2,
+      "height_estimate_went_wrong": false
+    }
+  },
+  "commanded_land": false,
+  "final_recording": true
+}

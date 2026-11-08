@@ -58,9 +58,15 @@ class ExperimentCourse(CourseMission):
                     (inputs['state'].position_m,), inputs['alignment']) is None)
 
 
-def _path(candidate, state, alignment, sweep, *, timings=None):
+def _path(candidate, state, alignment, sweep, *, timings=None, witness=None):
     points, effort, end, speed = _forecast(candidate, state, DynamicsModel(), None, timings)
-    reason = sweep.check(points, alignment) or sweep.check((state.position_m, candidate.schedule[0].position_m), alignment)
+    reason = sweep.check(points, alignment, witness=witness)
+    path_kind = 'd0_forecast'
+    if reason is None:
+        reason = sweep.check((state.position_m, candidate.schedule[0].position_m), alignment, witness=witness)
+        path_kind = 'direct_target'
+    if witness:
+        witness['path_kind'] = path_kind
     return reason, points, effort, end, speed
 
 
@@ -125,12 +131,12 @@ class ExperimentExecutor(HeldExecutor):
         super().__init__(enabled=True, **kwargs)
         self.geometry, self.identity = geometry, identity
 
-    def _safe(self, inputs, target, now_ns):
+    def _safe(self, inputs, target, now_ns, *, witness=None):
         state, metric = inputs['state'], inputs['snapshot'].metric
         cmd = PositionSetpoint(state.reference, state.timestamp_s, state.timestamp_s + STEPS * STEP_SECONDS,
                                target[:3], target[3])
         candidate = Candidate('experimental-held', (cmd,) * STEPS)
-        return _path(candidate, state, inputs['alignment'], self.geometry.sweep(metric, now_ns))[0]
+        return _path(candidate, state, inputs['alignment'], self.geometry.sweep(metric, now_ns), witness=witness)[0]
 
     def step(self, *, inputs, assessment, key, now_ns, owner_output, vehicle, ready, generation):
         reason = self._owner_reason(inputs, now_ns, vehicle, ready)
@@ -264,11 +270,20 @@ class ExperimentalRuntime(HybridRuntime):
         if reason:
             return reason
         sweep = self.geometry.sweep(snapshot.metric, now_ns)
+
+        def checked_path(target, path_kind, support):
+            witness = {}
+            refusal = sweep.check((state.position_m, target), alignment, support_center_ned=support, witness=witness)
+            if witness:
+                witness['path_kind'] = path_kind
+                self._record_publication_veto(now_ns, state, alignment, output, witness)
+            return refusal
+
         if 'land' in output.commands:
             # PX4 owns descent; check the intended vertical descent column.
             ground_down = alignment.ned_origin_in_map_m[2] + self.geometry.course_from_odom_translation_m[2] - .04
             target = (*state.position_m[:2], ground_down)
-            return sweep.check((state.position_m, target), alignment, support_center_ned=target)
+            return checked_path(target, 'landing_column', target)
         if not output.stream or output.setpoint is None:
             return 'experimental_setpoint_unavailable'
         if self._publication_phase in ('wait', 'arm', 'climb', 'hover'):
@@ -279,9 +294,18 @@ class ExperimentalRuntime(HybridRuntime):
                 return 'experimental_launch_outside_home_column'
             climb = (*mission.home[:2], mission.home[2] - mission.p.height_m)
             support = mission.home[:3] if self._publication_phase != 'hover' else None
-            return (sweep.check((state.position_m, climb), alignment, support_center_ned=support)
-                    or sweep.check((state.position_m, output.setpoint[:3]), alignment, support_center_ned=support))
-        return self.executor._safe(inputs, output.setpoint, now_ns)
+            return (checked_path(climb, 'full_climb_column', support)
+                    or checked_path(output.setpoint[:3], 'exact_startup_setpoint', support))
+        witness = {}
+        reason = self.executor._safe(inputs, output.setpoint, now_ns, witness=witness)
+        if witness:
+            self._record_publication_veto(now_ns, state, alignment, output, witness)
+        return reason
+
+    def _record_publication_veto(self, now_ns, state, alignment, output, witness):
+        self._record('experimental_publication_voxel_veto', now_ns,
+                     state_capture_ns=state_capture_ns(state, alignment), owner_phase=self._publication_phase,
+                     output_phase=output.phase, output_setpoint=output.setpoint, voxel_witness=witness)
 
     def publication_freshness_reason(self, now_ns, *, wall_ns=None, vehicle=None):
         if self._checking_publication_wall_ns is None:

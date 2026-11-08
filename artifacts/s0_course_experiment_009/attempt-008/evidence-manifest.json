@@ -1,0 +1,31 @@
+{
+  "raw_bag_local_path": "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-s0-experiment-009\\attempt-008\\observations\\observations_0.db3",
+  "raw_bag_sha256": "3d765fefa92d375a51cdaa81b6fae555a04ef6dca8642f4a38d82b8ccb8268b5",
+  "files": {
+    "experiment.json": "8fd94b3a1814ad7b32de23e9a090f60098ca326a3ec7dc01d88a6e685c4e6920",
+    "experiment_finished.json": "47d0d6e483112bbde18cee07ecf4237efed61677eb10895c7cc776b881d78e25",
+    "final-native-1.json": "eea276532cee697eae9484c20a44d8378f5605c9351fe4e977c1f301fd245406",
+    "flight-trace.png": "e16fbbdffbf39272fd4d54a2ed992efa66afd108b922aae4e737a7e9ec0f9cff",
+    "independent-review.json": "32dadcfb71c58e94728ec63edb9d325c7a32e4a7f5bc33e9c7b264884f29f432",
+    "independent-review.md": "e18d6be9450707cda11434d78b01324e4b83e2c2d3e2f36ff28aaf3cac9abb55",
+    "offline-voxel-005.json": "b5367a36da9450b7dfc199a97a95c350c5aac7971cdc2dfc271fd3f0e1a842b9",
+    "offline-voxel-010.json": "5b1c30adaf4c54d246d3adf6e14245a2f1efe6afce2df3158518e70abf98b670",
+    "offline-voxel-020.json": "965c38cacbae93938b429e50708422941b589b668cc31cf9dbd765f2a95cc401",
+    "offline-voxel-analysis.json": "e6f976b7af5f73d2784618b3a80e485684d7a0c85e0b552ad2bf09fa5b1f122c",
+    "offline-voxel-analysis.py": "c7847fe8f0b516b0d35f0c46661cc37b9053440130eff519d466b8882cd0a052",
+    "ogre2.log": "3b7d6fca19bbb4648b5c3677fa2608998f8a34be7dd6615676c1a609e754ca2e",
+    "ordered-native-audit.json": "ca2624f72ef048a4fafca20933995cf579139ba5347cab3ae70da80bfe3e8a7f",
+    "owner.txt": "6508334ce8b43585e2940476a131a138f98e8fbd4d9545b20355e611e8ff0c93",
+    "owner_exit.json": "17fdf70a6d20a8d76c44707fb17aa28ff331deb9711eb00049a370119fa163d1",
+    "recording_final.json": "5037667a230dce7aae62f65ff212a37e6f79894ddfe2cd53469d7ca7d5ba6a2c",
+    "recovery_released.json": "0be979cde7d844e2d8d498a20687572f5136f26d40ab246b51423e28a0a5c33c",
+    "referee-result.json": "0e018128c0c2f48cbe6dde1c102dd9ef89cc86221e4ba6c474deeda764e2670a",
+    "settled-native.json": "29ff569702d9c0be6e122b9e7f23fa4a9952c51105f8743d167fd76535d754fe",
+    "source-manifest.json": "1a09967aebaa4b24af2616f04b5906a6050c4fe0b4f60dcba5a467515d7d946a",
+    "flight_records/flight_20261108_195255.csv": "874833f9535f7ff6de8d3ee7f199a78cb8a0b37268d16dda9a0a7d761fed9def",
+    "flight_records/flight_20261108_195255_summary.json": "e74cb5c46aebc0489f9baf0526f30a110706739f61d43b774ab95cfd1938a105",
+    "s0-profile/course.json": "4df26a935d8f39a1ff40d8c8f03eb839814a5051f6dcabe400bc3bd70b7defb7",
+    "s0-profile/h1.json": "6118028ea85562e6550730e8040030a4d2c9c8ee80f96534b0584312acda3d02",
+    "s0-profile/s0-experiment.json": "069ab00f752fb0d2e72c2d7c353f6631e5c9f20c184e82f3ee4b5a8387ea6ca1"
+  }
+}
