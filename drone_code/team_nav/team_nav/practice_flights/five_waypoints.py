@@ -35,10 +35,10 @@ COMMAND_ALIGNMENT_RADIANS = 1e-6
 MAXIMUM_HEIGHT_CORRECTION_METRES = .15
 
 
-def turn_towards(current, wanted, seconds):
+def turn_towards(current, wanted, seconds, rate=TURN_RATE_RADIANS_PER_SECOND):
     step = np.clip(angle_difference(wanted, current),
-                   -TURN_RATE_RADIANS_PER_SECOND * seconds,
-                   TURN_RATE_RADIANS_PER_SECOND * seconds)
+                   -rate * seconds,
+                   rate * seconds)
     return angle_difference(current + step, 0)
 
 
@@ -102,11 +102,11 @@ class FiveWaypointFlight(first_maze_leg.FirstMazeLegFlight):
                        total_seconds=round(self.link.now_seconds()-self.flight_start_seconds, 2),
                        depth_pictures=self.depth.messages_used)
 
-    def turn_and_settle(self, position, heading):
+    def turn_and_settle(self, position, heading, turn_rate=TURN_RATE_RADIANS_PER_SECOND):
         commanded = self.watch.drone_heading_on_course()
         if commanded is None:
             raise flight_steps.RunMustStop('No tracked heading available before turn.')
-        longest = abs(angle_difference(heading, commanded))/TURN_RATE_RADIANS_PER_SECOND + TURN_EXTRA_WAIT_SECONDS
+        longest = abs(angle_difference(heading, commanded))/turn_rate + TURN_EXTRA_WAIT_SECONDS
         previous = self.link.now_seconds()
         settled = None
         complete = False
@@ -116,7 +116,7 @@ class FiveWaypointFlight(first_maze_leg.FirstMazeLegFlight):
             if now-previous > MAXIMUM_CYCLE_SECONDS:
                 settled = None  # A safety hold cannot count toward continuous settling.
             seconds = min(now-previous, MAXIMUM_CYCLE_SECONDS)
-            commanded = turn_towards(commanded, heading, seconds)
+            commanded = turn_towards(commanded, heading, seconds, turn_rate)
             previous = now
             measured = self.watch.drone_heading_on_course()
             actual = self.watch.drone_on_course()

@@ -1,0 +1,11 @@
+{
+  "description": "Five main goals only. A* generates intermediate points; every point states height in metres. First stop is just beyond the line, at a forward-turn position instead of the old reverse retreat.",
+  "start_metres": [-2.5146, 0.9144, 0.75],
+  "goals": [
+    {"name":"First corridor","checkpoint":"end of first corridor","point_metres":[-2.5146,2.451,0.75]},
+    {"name":"Maze exit","checkpoint":"Gate A","point_metres":[1.65,2.12,0.75]},
+    {"name":"Tunnel exit","checkpoint":"tunnel exit","point_metres":[2.06,-0.65,0.75]},
+    {"name":"Chicane exit","checkpoint":"Gate B","point_metres":[-1.20,-1.35,0.75]},
+    {"name":"Landing pad","checkpoint":null,"point_metres":[-2.0422,-0.7925,0.75]}
+  ]
+}

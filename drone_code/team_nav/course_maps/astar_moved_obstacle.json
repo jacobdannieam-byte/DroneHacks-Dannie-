@@ -1,0 +1,368 @@
+{
+  "map_format_version": 1,
+  "name": "A* test: north-west boulder moved south",
+  "description": "Controlled simulation comparison: only the north-west boulder is moved from (-1.1,2.2) to (-1.1,1.75). The participant map is updated explicitly; this is not an unknown-obstacle perception test.",
+  "course_edges": {
+    "lowest_corner_metres": [
+      -3.048,
+      -3.048
+    ],
+    "highest_corner_metres": [
+      3.048,
+      3.048
+    ],
+    "wall_top_height_metres": 1.727,
+    "source": "From the organizers' drawing. The scanned net lines up with the drawing's net to within about 10 cm; a net sags, so it can't be placed more closely than that."
+  },
+  "launch_mark": {
+    "centre_metres": [
+      -2.5146,
+      0.9144
+    ],
+    "source": "From the organizers' drawing. The scan does not show floor markings clearly."
+  },
+  "landing_pad": {
+    "centre_metres": [
+      -2.0422,
+      -0.7925
+    ],
+    "outer_radius_metres": 0.762,
+    "approach_ring_radius_metres": 1.0033,
+    "source": "From the organizers' drawing. The scan does not show floor markings clearly."
+  },
+  "walls": [
+    {
+      "name": "Long barrier",
+      "start_metres": [
+        -3.048,
+        0.2911
+      ],
+      "end_metres": [
+        1.2885,
+        0.3
+      ],
+      "thickness_metres": 0.185,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.8734,
+      "openings": [],
+      "source": "Measured from our phone scan of 2026-11-06 by course_map_tools/measure_phone_scan.py, from the scan points in the box x -3.0 to 1.25 m, y 0.19 to 0.45 m. Its start is extended to meet the west net; its end is extended to meet the tunnel's west side."
+    },
+    {
+      "name": "C2a chicane wall (window)",
+      "start_metres": [
+        -0.71,
+        -3.048
+      ],
+      "end_metres": [
+        -0.1945,
+        -1.432
+      ],
+      "thickness_metres": 0.1216,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7687,
+      "openings": [
+        {
+          "name": "window",
+          "start_along_wall_metres": 0.27,
+          "end_along_wall_metres": 1.26,
+          "bottom_height_metres": 0.81,
+          "top_height_metres": 1.56,
+          "source": "Measured from our phone scan of 2026-11-06 by course_map_tools/measure_phone_scan.py: the biggest hole in the scanned wall, to the nearest 3 cm. The organizers' drawing puts it 0.32 to 1.20 m high instead. Check with a photo."
+        }
+      ],
+      "source": "Measured from our phone scan of 2026-11-06 by course_map_tools/measure_phone_scan.py, from the scan points in the box x -0.85 to -0.1 m, y -3.0 to -1.35 m. Its start is extended to meet the south net; its end is where the scan's points end."
+    },
+    {
+      "name": "C1 chicane wall",
+      "start_metres": [
+        1.5163,
+        -1.2876
+      ],
+      "end_metres": [
+        1.1094,
+        0.1852
+      ],
+      "thickness_metres": 0.4021,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7391,
+      "openings": [],
+      "source": "Measured from our phone scan of 2026-11-06 by course_map_tools/measure_phone_scan.py, from the scan points in the box x 0.85 to 1.75 m, y -1.35 to 0.2 m. Its start is where the scan's points end; its end is where the scan's points end. Its points are smeared over about 30 cm, so its position is uncertain. Check with a photo."
+    },
+    {
+      "name": "A1 approach wall",
+      "start_metres": [
+        -0.9754,
+        -0.6223
+      ],
+      "end_metres": [
+        -0.9754,
+        0.4064
+      ],
+      "thickness_metres": 0.1016,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.7272,
+      "openings": [],
+      "source": "Copied from the organizers' drawing. The scan shows this wall about 65 cm from where the drawing puts it, joined to an extra line of points just south of the barrier where nothing should be. The wall and the extra line are shifted by about the same amount, which suggests the phone lost track and drew them a second time."
+    },
+    {
+      "name": "Sketch top wall (north-west)",
+      "start_metres": [
+        -2.69,
+        2.82
+      ],
+      "end_metres": [
+        -1.0,
+        2.82
+      ],
+      "thickness_metres": 0.1,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.75,
+      "openings": [],
+      "source": "Read from the team's sketch of 2026-11-08 (2 x 2 quadrants of the north half); about 15 cm at best."
+    },
+    {
+      "name": "Sketch diagonal (north-west)",
+      "start_metres": [
+        -1.41,
+        0.56
+      ],
+      "end_metres": [
+        -0.25,
+        1.69
+      ],
+      "thickness_metres": 0.1,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.75,
+      "openings": [],
+      "source": "Read from the team's sketch of 2026-11-08 (2 x 2 quadrants of the north half); about 15 cm at best."
+    },
+    {
+      "name": "Sketch wall to the tunnel (north-east)",
+      "start_metres": [
+        -0.14,
+        0.33
+      ],
+      "end_metres": [
+        1.31,
+        0.73
+      ],
+      "thickness_metres": 0.1,
+      "bottom_height_metres": 0.0,
+      "top_height_metres": 1.75,
+      "openings": [],
+      "source": "Read from the team's sketch of 2026-11-08 (2 x 2 quadrants of the north half); about 15 cm at best."
+    }
+  ],
+  "tubes": [
+    {
+      "name": "Tunnel",
+      "entrance_centre_metres": [
+        2.0811,
+        0.85
+      ],
+      "exit_centre_metres": [
+        2.0542,
+        -0.2196
+      ],
+      "outside_width_metres": 1.5492,
+      "outside_height_metres": 1.6547,
+      "wall_thickness_metres": 0.0341,
+      "source": "Width and exit from the phone scan; entrance moved south to about north 0.85, as in the team's sketch."
+    }
+  ],
+  "low_obstacles": [
+    {
+      "name": "Low object 1",
+      "centre_metres": [
+        -1.625,
+        -2.375
+      ],
+      "radius_metres": 0.125,
+      "top_height_metres": 0.2724,
+      "source": "Measured from our phone scan of 2026-11-06 by course_map_tools/measure_phone_scan.py. Something standing on the floor; the scan can't tell what. It may be a boulder."
+    },
+    {
+      "name": "Low object 3",
+      "centre_metres": [
+        2.8,
+        -0.525
+      ],
+      "radius_metres": 0.125,
+      "top_height_metres": 0.3001,
+      "source": "Measured from our phone scan of 2026-11-06 by course_map_tools/measure_phone_scan.py. Something standing on the floor; the scan can't tell what. It may be a boulder."
+    },
+    {
+      "name": "Boulder 1",
+      "centre_metres": [
+        2.0117,
+        -2.4689
+      ],
+      "radius_metres": 0.2286,
+      "top_height_metres": 0.5334,
+      "source": "From the organizers' drawing. Kept in case it is still there, because boulders are easy to move and the scan may have missed it. The nearest low thing the scan found is 2.10 m away, centre to centre."
+    },
+    {
+      "name": "Boulder 3",
+      "centre_metres": [
+        0.7925,
+        -2.347
+      ],
+      "radius_metres": 0.2286,
+      "top_height_metres": 0.5334,
+      "source": "From the organizers' drawing. Kept in case it is still there, because boulders are easy to move and the scan may have missed it. The nearest low thing the scan found is 2.42 m away, centre to centre."
+    },
+    {
+      "name": "Boulder 4",
+      "centre_metres": [
+        -2.5603,
+        -2.4994
+      ],
+      "radius_metres": 0.2286,
+      "top_height_metres": 0.5334,
+      "source": "From the organizers' drawing. Kept in case it is still there, because boulders are easy to move and the scan may have missed it. The nearest low thing the scan found is 0.94 m away, centre to centre."
+    },
+    {
+      "name": "Boulder 5",
+      "centre_metres": [
+        -1.3411,
+        -2.3774
+      ],
+      "radius_metres": 0.2286,
+      "top_height_metres": 0.5334,
+      "source": "From the organizers' drawing. Kept in case it is still there, because boulders are easy to move and the scan may have missed it. The nearest low thing the scan found is 0.28 m away, centre to centre."
+    },
+    {
+      "name": "Boulder 2",
+      "centre_metres": [
+        2.5298,
+        -1.5545
+      ],
+      "radius_metres": 0.2286,
+      "top_height_metres": 0.5334,
+      "source": "From the organizers' drawing. Kept in case it is still there, because boulders are easy to move and the scan may have missed it. The nearest low thing the scan found is 1.06 m away, centre to centre."
+    },
+    {
+      "name": "Sketch boulder north-west",
+      "centre_metres": [
+        -1.1,
+        1.75
+      ],
+      "radius_metres": 0.2286,
+      "top_height_metres": 0.5334,
+      "source": "Controlled A* moved-obstacle experiment; moved 0.45 m south from the sketch map."
+    },
+    {
+      "name": "Sketch boulder north-east 1",
+      "centre_metres": [
+        2.56,
+        2.72
+      ],
+      "radius_metres": 0.2286,
+      "top_height_metres": 0.5334,
+      "source": "Read from the team's sketch of 2026-11-08 (2 x 2 quadrants of the north half); about 15 cm at best. Size copied from the scan's boulders."
+    },
+    {
+      "name": "Sketch boulder north-east 2",
+      "centre_metres": [
+        2.86,
+        2.77
+      ],
+      "radius_metres": 0.2286,
+      "top_height_metres": 0.5334,
+      "source": "Read from the team's sketch of 2026-11-08 (2 x 2 quadrants of the north half); about 15 cm at best. Size copied from the scan's boulders."
+    },
+    {
+      "name": "Sketch boulder at the tunnel",
+      "centre_metres": [
+        1.31,
+        0.8
+      ],
+      "radius_metres": 0.2286,
+      "top_height_metres": 0.5334,
+      "source": "Read from the team's sketch of 2026-11-08 (2 x 2 quadrants of the north half); about 15 cm at best. Size copied from the scan's boulders."
+    }
+  ],
+  "checkpoint_lines": [
+    {
+      "name": "end of first corridor",
+      "start_metres": [
+        -3.048,
+        2.1912
+      ],
+      "end_metres": [
+        -1.8514,
+        2.1912
+      ],
+      "far_side_point_metres": [
+        -2.4497,
+        2.6912
+      ],
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    },
+    {
+      "name": "Gate A",
+      "start_metres": [
+        1.1859,
+        0.299
+      ],
+      "end_metres": [
+        1.1859,
+        3.048
+      ],
+      "far_side_point_metres": [
+        1.6859,
+        1.6735
+      ],
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    },
+    {
+      "name": "tunnel exit",
+      "start_metres": [
+        1.2797,
+        -0.2061
+      ],
+      "end_metres": [
+        2.8286,
+        -0.2331
+      ],
+      "far_side_point_metres": [
+        2.0454,
+        -0.7196
+      ],
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    },
+    {
+      "name": "through the window",
+      "start_metres": [
+        -0.628,
+        -2.7908
+      ],
+      "end_metres": [
+        -0.3271,
+        -1.8476
+      ],
+      "far_side_point_metres": [
+        -0.9539,
+        -2.1672
+      ],
+      "opening_name": "window",
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    },
+    {
+      "name": "Gate B",
+      "start_metres": [
+        -0.9754,
+        -0.6223
+      ],
+      "end_metres": [
+        -0.1945,
+        -1.432
+      ],
+      "far_side_point_metres": [
+        -0.9448,
+        -1.3742
+      ],
+      "source": "Our draft reading of the rulebook's words, placed using this map's walls by course_map_tools/checkpoint_line_rules.py. The rulebook gives no coordinates."
+    }
+  ]
+}

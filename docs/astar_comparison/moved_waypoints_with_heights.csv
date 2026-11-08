@@ -1,0 +1,20 @@
+number,stage,east_metres,north_metres,height_metres
+1,First corridor,-2.5146,2.4510,0.7500
+2,Maze exit,1.6500,2.1200,0.7500
+3,Tunnel exit,2.0500,-0.3800,0.7500
+4,Tunnel exit,2.0600,-0.6500,0.7500
+5,Chicane exit,2.1600,-1.4500,0.7500
+6,Chicane exit,2.0600,-1.8500,0.7500
+7,Chicane exit,1.9600,-2.0500,0.7500
+8,Chicane exit,1.7600,-2.1500,0.7500
+9,Chicane exit,1.5600,-2.2500,0.7500
+10,Chicane exit,1.1600,-2.1500,0.7500
+11,Chicane exit,0.1600,-1.0500,0.7500
+12,Chicane exit,-0.2400,-0.9500,0.7500
+13,Chicane exit,-0.4400,-1.0500,0.7500
+14,Chicane exit,-0.5400,-1.1500,0.7500
+15,Chicane exit,-0.6400,-1.2500,0.7500
+16,Chicane exit,-1.0400,-1.3500,0.7500
+17,Chicane exit,-1.2000,-1.3500,0.7500
+18,Landing pad,-2.0422,-0.7925,0.7500
+19,Touchdown,-2.0422,-0.7925,0.0000
