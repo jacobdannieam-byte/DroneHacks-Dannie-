@@ -86,7 +86,7 @@ These are the primary control algorithms responsible for solving and flying the 
   * Takes map files (`organizers_drawing.json` or `phone_scan_2026-11-06.json`) and rulebook requirements (`missions/dronehacks_2026.json`).
   * Enforces `0.35 m` clearance from all walls (`0.30 m` drone propeller radius + `0.05 m` safety margin).
   * Penalizes paths passing within `0.25 m` of floor boulders to prevent EKF2 downward laser drop faults.
-  * Generates a 4-waypoint perpendicular climb/descent through the window opening (`0.81 m` to `1.56 m` height).
+  * Generates a 4-waypoint perpendicular climb/descent through the window opening (`0.81 m` to `1.56 m` height; **crucial:** the preliminary CAD drawing's `0.32–1.20 m` height is wrong on the actual physical course — see Section 6).
 
 ### 5. `drone_code/team_nav/team_nav/route_follower.py` — Lookahead Carrot Controller
 * **Path:** `drone_code/team_nav/team_nav/route_follower.py`
@@ -126,14 +126,25 @@ These are the primary control algorithms responsible for solving and flying the 
 
 Offline tools located in [`course_map_tools/`](course_map_tools/):
 
-* **`make_map_from_organizers_model.py`:** Extracts walls, tunnel, window opening (`0.32–1.20 m`), and pad coordinates from CAD `dronehacks-course-v3.obj` to produce `organizers_drawing.json`.
-* **`make_map_from_phone_scan.py`:** Aligns the 600,000-point LiDAR phone scan (`.ply`) to the course coordinate frame and outputs `phone_scan_2026-11-06.json`.
+* **`make_map_from_organizers_model.py`:** Extracts walls, tunnel, preliminary CAD window opening (`0.32–1.20 m` — see Critical Geometry Warning below), and pad coordinates from CAD `dronehacks-course-v3.obj` to produce `organizers_drawing.json`.
+* **`make_map_from_phone_scan.py`:** Aligns the 600,000-point LiDAR phone scan (`.ply`) to the course coordinate frame and outputs `phone_scan_2026-11-06.json` (reflecting the true physical window at `0.81–1.56 m`).
 * **`draw_planned_routes.py`:** Solves the route across maps and saves high-resolution top-down PNG diagrams with clearance corridors.
 * **`make_boulder_surprise_worlds.py`:** Builds synthetic course maps with moved boulders to verify that obstacle-stopping logic reacts safely.
 
 ---
 
-## 6. Preflight Checklist Summary Table
+## 6. CRITICAL COURSE GEOMETRY WARNING: Window Opening Height
+
+> ⚠️ **IMPORTANT NOTION NOTE FOR FLIGHT PLANNING:**
+> 
+> * **The preliminary CAD drawing (`organizers_drawing.json`) is WRONG about the window:** It modeled the opening from **0.32 m to 1.20 m** above the floor (sill at 0.32 m).
+> * **The real physical course scan (`phone_scan_2026-11-06.json`) measured a completely different height:** The actual physical window opening is **0.81 m to 1.56 m** above the floor (bottom sill at ~0.81–0.85 m, opening center at ~1.185 m).
+> * **Flight Impact:** If the drone cruises at the standard `0.80 m` height and attempts to cross through the window, **it will crash directly into the wall beneath the opening!**
+> * **Required Action:** Any path choosing the window over Gate B must command a climb to **1.15 m – 1.20 m** before entering the wall opening, maintain that height through the wall, and descend back to `0.80 m` only after clearing the far side. Alternatively, route through **Gate B**, which has no vertical restriction.
+
+---
+
+## 7. Preflight Checklist Summary Table
 
 Before commanding an automated flight in FlyX:
 
