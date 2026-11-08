@@ -336,6 +336,47 @@ On the organizers' changed course (2026-11-08), add `--map organizers_new_start_
 end of any `course_run` command above. As the map stands, every program refuses to start there: the
 new diagonal wall is 0.08 m from the launch mark's centre, and the drone needs 0.35 m.
 
+## Step 9T. The tunnel_first mission (fly test)
+
+`TEAM_NAV_MISSION=tunnel_first` flies high to above the tunnel's north end, turns round slowly,
+comes down and flies straight through the tunnel. `team_nav/team_nav/tunnel_first_run.py` explains
+it stage by stage:
+- climb to 0.70 m on the launch mark, and wait until the drone is steady there (at most 8 s);
+- 0.8 m north, climb to 2.4 m, fly at 2.4 m to S = (2.17, 2.14), above open floor before the tunnel;
+- turn 180 degrees to the left, slowly (10 degrees a second, pausing if PX4 lags);
+- descend at S to 0.90 m, then fly south at 0.25 m/s along x = 2.17 through the tunnel, to north -0.95;
+- land there (the default, `TEAM_NAV_AFTER_TUNNEL=land`), or with `TEAM_NAV_AFTER_TUNNEL=pad` climb
+  back to 2.4 m and fly to the pad.
+
+It refuses to start if camera tracking puts the drone more than 0.3 m sideways or 0.1 m in height from
+the launch mark. Put the drone on the launch mark BEFORE the drone software starts, or restart it there.
+
+Each flight starts with:
+
+```bash
+./drone.sh start test_flights
+```
+
+1. Only as far as the turn (it lands at S after the turn):
+
+```bash
+TEAM_NAV_RUN_MODE=practice TEAM_NAV_MISSION=tunnel_first TEAM_NAV_STOP_AFTER_STAGE=turn ./drone.sh course_run
+```
+
+2. The whole mission, in practice mode:
+
+```bash
+TEAM_NAV_RUN_MODE=practice TEAM_NAV_MISSION=tunnel_first ./drone.sh course_run
+```
+
+3. The scored run:
+
+```bash
+TEAM_NAV_MISSION=tunnel_first ./drone.sh course_run
+```
+
+The result is correct if the drone lands past the tunnel's south end and the program ends with 0.
+
 ## Step 10. Make the drone safe after each flight (fly test)
 
 ```bash

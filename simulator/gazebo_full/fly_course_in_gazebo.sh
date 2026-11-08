@@ -18,6 +18,14 @@
 # Everything else, or everything after "--", goes to course_run unchanged. The drone's own map
 # is course_run's --map; without it, course_run uses its default map, whatever --world says.
 #
+# The TEAM_NAV_* settings that drone.sh passes into the drone's container (its PASSED_SETTINGS
+# list, read from drone_code/team_nav/drone.sh) are passed into course_run here the same way, if
+# they are set on this Mac. For example, to fly the tunnel_first mission:
+#
+#   TEAM_NAV_MISSION=tunnel_first simulator/gazebo_full/fly_course_in_gazebo.sh --world <map file>
+#
+# TEAM_NAV_RUN_MODE and TEAM_NAV_RECORDS_FOLDER come from --run-mode and this run's folder instead.
+#
 # Each run gets its own folder in simulator/generated_files/gazebo_full_runs/, with the path
 # picture, a short summary, the referee's records, course_run's records, the stereo check and
 # every log. README.md lists them.
@@ -49,6 +57,17 @@ if [ ! -f "$repository/$world_map" ]; then
     echo "There is no map file at $world_map. Name it from the top of the repository, for example drone_code/team_nav/course_maps/phone_scan_2026-11-06.json."
     exit 1
 fi
+
+# The same list drone.sh uses, so the simulator can't drift from the drone.
+passed_settings="$(sed -n 's/^PASSED_SETTINGS="\(.*\)"$/\1/p' "$repository/drone_code/team_nav/drone.sh")"
+settings_to_export=""
+for name in $passed_settings; do
+    case "$name" in TEAM_NAV_RUN_MODE|TEAM_NAV_RECORDS_FOLDER) continue ;; esac
+    if [ -n "${!name:-}" ]; then
+        settings_to_export+="export $name=$(printf %q "${!name}"); "
+        echo "Passing $name=${!name} to course_run, as drone.sh would."
+    fi
+done
 
 if ! docker image inspect "$image_name" > /dev/null 2>&1; then
     "$full_folder/build_gazebo_full_image.sh"
@@ -111,5 +130,7 @@ docker exec "$box_name" bash -c "
     source /repository/simulator/inside_the_box/load_ros_environment.sh
     export TEAM_NAV_RUN_MODE=$run_mode
     export TEAM_NAV_RECORDS_FOLDER=$run_folder_in_box/course_run_records
+    $settings_to_export
+    export TEAM_NAV_PASSED_SETTINGS=\"$passed_settings\"
     bash /repository/simulator/gazebo_full/inside_the_box/check_cameras_then_fly.sh $longest_run_seconds $quoted_course_run_arguments
 " 2>&1 | tee "$run_folder/flight_program_output.txt"

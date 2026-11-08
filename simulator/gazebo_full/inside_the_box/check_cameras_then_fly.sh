@@ -52,11 +52,22 @@ echo "[gazebo_full] Checking stereo depth once, on the launch mark."
 python3 /repository/simulator/gazebo_full/check_stereo_depth.py "$run_folder/stereo_check" \
     || echo "[gazebo_full] The stereo check failed. Its message above says why. The flight goes on."
 
-echo "[gazebo_full] Starting course_run, as on the drone: ros2 run team_nav course_run $*"
+# The other TEAM_NAV_* settings drone.sh passes (TEAM_NAV_PASSED_SETTINGS, from
+# fly_course_in_gazebo.sh), each one only if it is set.
+other_settings=()
+for name in ${TEAM_NAV_PASSED_SETTINGS:-}; do
+    case "$name" in TEAM_NAV_RUN_MODE|TEAM_NAV_RECORDS_FOLDER) continue ;; esac
+    if [ -n "${!name:-}" ]; then
+        other_settings+=(--env "$name=${!name}")
+    fi
+done
+
+echo "[gazebo_full] Starting course_run, as on the drone: ros2 run team_nav course_run $* (settings: ${other_settings[*]:-none})"
 python3 /repository/simulator/test_flights/real_program_test.py \
     --longest-run-seconds "$longest_run_seconds" \
     --env "TEAM_NAV_RUN_MODE=$TEAM_NAV_RUN_MODE" \
     --env "TEAM_NAV_RECORDS_FOLDER=$TEAM_NAV_RECORDS_FOLDER" \
+    "${other_settings[@]}" \
     -- ros2 run team_nav course_run "$@"
 flight_exit_code=$?
 

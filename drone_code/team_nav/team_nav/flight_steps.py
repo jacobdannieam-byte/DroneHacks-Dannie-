@@ -251,12 +251,13 @@ class DroneLink:
     def now_seconds(self):
         return time.monotonic()
 
-    def wait_one_cycle(self):
-        """Handles every report that arrives until the next tenth of a second."""
-        self.next_cycle_seconds += CYCLE_SECONDS
+    def wait_one_cycle(self, cycle_seconds=CYCLE_SECONDS):
+        """Handles every report that arrives until the next tenth of a second (or cycle_seconds:
+        tunnel_first.py's turn steps every 0.05 s)."""
+        self.next_cycle_seconds += cycle_seconds
         if self.next_cycle_seconds < time.monotonic():
             # We fell behind, for example while planning. Start a fresh rhythm rather than rushing.
-            self.next_cycle_seconds = time.monotonic() + CYCLE_SECONDS
+            self.next_cycle_seconds = time.monotonic() + cycle_seconds
         rclpy.spin_once(self.node, timeout_sec=0.0)
         while True:
             seconds_left = self.next_cycle_seconds - time.monotonic()
@@ -405,15 +406,28 @@ def _tracking_columns(link):
         "from_launch_left_metres": None if from_launch is None else from_launch[1],
         "from_launch_up_metres": None if from_launch is None else from_launch[2],
         "camera_tracking_lost": link.camera_tracking_says_lost(),
+        "tracked_heading_degrees": _degrees_or_none(link.tracked_heading_radians()),
     }
+
+
+def _degrees_or_none(radians):
+    return None if radians is None else math.degrees(radians)
 
 
 def _px4_columns(reports):
     position = reports.latest.get("px4_position")
-    names = ["x", "y", "z", "vx", "vy", "vz", "dist_bottom", "xy_valid", "z_valid"]
+    # The heading and the reset counters let a flight be checked for PX4 moving its own estimate
+    # (tunnel_first.py's turn, 2026-11-08). getattr with a default, because the tests' pretend
+    # reports don't have every field.
+    names = ["x", "y", "z", "vx", "vy", "vz", "dist_bottom", "xy_valid", "z_valid", "heading", "heading_reset_counter",
+             "delta_heading", "xy_reset_counter", "z_reset_counter"]
     columns = {}
     for name in names:
-        columns[f"px4_{name}"] = None if position is None else getattr(position, name)
+        columns[f"px4_{name}"] = None if position is None else getattr(position, name, None)
+    attitude = reports.latest.get("px4_attitude")
+    columns["px4_quat_reset_counter"] = None if attitude is None else getattr(attitude, "quat_reset_counter", None)
+    delta_q = None if attitude is None else getattr(attitude, "delta_q_reset", None)
+    columns["px4_delta_q_reset"] = None if delta_q is None else " ".join(f"{float(value):.5f}" for value in delta_q)
     return columns
 
 

@@ -464,17 +464,23 @@ def split_file_names(words):
     return names
 
 
+def plan_the_chosen_mission(arguments, run_mode, log):
+    """(plan, the class that flies it), for the mission TEAM_NAV_MISSION names: tunnel_first, a
+    fallback route, or (unset) the normal course route."""
+    # Imported here because fallback_run.py and tunnel_first_run.py build on this file.
+    from team_nav import fallback_run, tunnel_first_run
+    if tunnel_first_run.tunnel_first_is_chosen():
+        return tunnel_first_run.plan_tunnel_first(arguments, run_mode, log), tunnel_first_run.TunnelFirstRun
+    fallback_route_name = fallback_run.fallback_route_from_environment()
+    if fallback_route_name is None:
+        return plan_the_course(arguments, run_mode, log), CourseRun
+    return fallback_run.plan_the_fallback(arguments, run_mode, log, fallback_route_name), fallback_run.FallbackRun
+
+
 def plan_then_fly(arguments, run_mode, log):
     """Returns the exit code."""
-    # Imported here because fallback_run.py builds on this file.
-    from team_nav import fallback_run
     try:
-        fallback_route_name = fallback_run.fallback_route_from_environment()
-        if fallback_route_name is None:
-            plan, run_class = plan_the_course(arguments, run_mode, log), CourseRun
-        else:
-            plan = fallback_run.plan_the_fallback(arguments, run_mode, log, fallback_route_name)
-            run_class = fallback_run.FallbackRun
+        plan, run_class = plan_the_chosen_mission(arguments, run_mode, log)
     except (OSError, CourseMapError, MissionError, RoutePlanningError, ValueError) as problem:
         log.event("refused", f"REFUSING TO START, before anything was sent to the drone. {problem}")
         return EXIT_REFUSED_TO_START

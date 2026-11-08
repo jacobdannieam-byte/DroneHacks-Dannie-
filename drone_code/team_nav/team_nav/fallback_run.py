@@ -93,7 +93,7 @@ def fallback_route_from_environment():
     if value == "":
         return None
     if value not in FALLBACK_ROUTES:
-        raise ValueError(f"{MISSION_SETTING} is '{value}'. Use one of {', '.join(FALLBACK_ROUTES)}, or leave it out "
+        raise ValueError(f"{MISSION_SETTING} is '{value}'. Use one of {', '.join(FALLBACK_ROUTES)} or tunnel_first, or leave it out "
                          f"to fly the normal course route.")
     return value
 
@@ -148,15 +148,15 @@ class FallbackRun(CourseRun):
         sent, every cycle while waiting for the switch, and once more on the remembered launch pose
         when control arrives (in case the switch came within the same cycle)."""
         flight_steps.wait_until_ready_on_the_ground(self.link)
-        problem = launch_pose_problem(self.link)
+        problem = self.launch_pose_problem(self.link)
         if problem is None:
             try:
                 flight_steps.hold_above_launch_until_control_is_ours(self.link, cruise_height_metres,
-                                                                     launch_pose_problem=launch_pose_problem)
+                                                                     launch_pose_problem=self.launch_pose_problem)
             except LaunchPoseRefused as refusal:
                 problem = str(refusal)
             else:
-                problem = pose_too_far_from_origin(self.link.launch.tracked_position_metres)
+                problem = self.pose_problem(self.link.launch.tracked_position_metres)
                 if problem is not None:
                     # Control is already ours: put the drone straight back down, with course_run's
                     # landing in place, never the abort's flight to the pad.
@@ -167,6 +167,13 @@ class FallbackRun(CourseRun):
             self.refuse(problem)
             return False
         return True
+
+    def launch_pose_problem(self, link):
+        """tunnel_first_run.py replaces this and pose_problem with its own limits."""
+        return launch_pose_problem(link)
+
+    def pose_problem(self, tracked_position_metres):
+        return pose_too_far_from_origin(tracked_position_metres)
 
     def refuse(self, problem):
         self.refusal = problem
@@ -223,7 +230,7 @@ class FallbackRun(CourseRun):
             return
         # Never above the route's height: a run often stops because PX4's height drifted, which can
         # leave the drone above 2.3 m, and run_safety refuses targets above 2.45 m (simulator, 2026-11-08).
-        abort_height_metres = min(float(drone[2]), HIGH_HEIGHT_METRES)
+        abort_height_metres = min(float(drone[2]), self.highest_abort_height_metres())
         spot, why = choose_landing_spot(self.plan.course_map, [drone[0], drone[1], abort_height_metres])
         if spot is None:
             self.log.event("abort", f"Position is healthy, but there is {why}: landing where the drone is.")
@@ -232,6 +239,10 @@ class FallbackRun(CourseRun):
                                 f"({spot[0]:+.2f}, {spot[1]:+.2f}), then landing.", landing_spot_metres=spot.tolist())
         self.link.stage = "abort: flying to a landing spot"
         self.fly_straight_to(spot, drone, abort_height_metres)
+
+    def highest_abort_height_metres(self):
+        """The route's cruise height; tunnel_first_run.py replaces it with its own."""
+        return HIGH_HEIGHT_METRES
 
     def fly_straight_to(self, spot, drone, height_metres):
         """Slides a target from above the drone to above the spot, both at height_metres. If the drone

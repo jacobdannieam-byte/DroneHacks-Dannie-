@@ -304,25 +304,29 @@ def _maze_corners(course_map, launch, tunnel):
 
 # ---- The searched parts --------------------------------------------------------------------------
 
-def shortest_high_path(course_map, start_metres, goal_metres):
+def shortest_high_path(course_map, start_metres, goal_metres, height_metres=None, keep_turns_inside=None):
     """The shortest path from start to goal (both stops) with the fewest rule breaks, then the
-    fewest cautions: a straight line, else one turn, else two turns. Returns (path points, check)."""
+    fewest cautions: a straight line, else one turn, else two turns. Returns (path points, check).
+    height_metres is the flying height (HIGH_HEIGHT_METRES if None). keep_turns_inside, if given,
+    is ((lowest east, lowest north), (highest east, highest north)): turns only inside that box
+    (tunnel_first.py uses it to keep 0.9 m from the net)."""
+    height_metres = HIGH_HEIGHT_METRES if height_metres is None else height_metres
     start, goal = np.asarray(start_metres, dtype=float)[:2], np.asarray(goal_metres, dtype=float)[:2]
-    best = _best_path(course_map, [[start, goal]])
+    best = _best_path(course_map, [[start, goal]], height_metres)
     if not best[1].rule_breaks and not best[1].cautions:
         return best
-    candidates = _turn_point_candidates(course_map)
-    best = min([best, _best_path(course_map, [[start, turn, goal] for turn in candidates])], key=_path_cost)
+    candidates = _turn_point_candidates(course_map, height_metres, keep_turns_inside)
+    best = min([best, _best_path(course_map, [[start, turn, goal] for turn in candidates], height_metres)], key=_path_cost)
     if not best[1].rule_breaks:
         return best
-    two_turns = _two_turn_corners(course_map, start, goal, candidates)
-    return min([best, _best_path(course_map, two_turns)], key=_path_cost)
+    two_turns = _two_turn_corners(course_map, start, goal, candidates, height_metres)
+    return min([best, _best_path(course_map, two_turns, height_metres)], key=_path_cost)
 
 
-def _two_turn_corners(course_map, start, goal, candidates):
+def _two_turn_corners(course_map, start, goal, candidates, height_metres):
     """Pairs of the turn points whose own legs from the start and to the goal are best."""
     def leg_cost(corners):
-        return check_high_path(course_map, corners, HIGH_HEIGHT_METRES).cost()
+        return check_high_path(course_map, corners, height_metres).cost()
 
     first_turns = sorted(candidates, key=lambda turn: leg_cost([start, turn]))[:BEST_TURN_POINTS_TO_PAIR]
     last_turns = sorted(candidates, key=lambda turn: leg_cost([turn, goal]))[:BEST_TURN_POINTS_TO_PAIR]
@@ -334,7 +338,7 @@ def _two_turn_corners(course_map, start, goal, candidates):
     return pairs
 
 
-def _best_path(course_map, corner_lists):
+def _best_path(course_map, corner_lists, height_metres):
     """(path points, check) of the corner list whose rounded path is best."""
     best = None
     for corners in corner_lists:
@@ -342,7 +346,7 @@ def _best_path(course_map, corner_lists):
             path = rounded_corners(corners)
         except FallbackRouteError:
             continue
-        candidate = (path, check_high_path(course_map, path, HIGH_HEIGHT_METRES))
+        candidate = (path, check_high_path(course_map, path, height_metres))
         if best is None or _path_cost(candidate) < _path_cost(best):
             best = candidate
     if best is None:
@@ -354,15 +358,18 @@ def _path_cost(path_and_check):
     return path_and_check[1].cost()
 
 
-def _turn_point_candidates(course_map):
+def _turn_point_candidates(course_map, height_metres, keep_turns_inside=None):
     """Grid points over open floor, with room for an arc, where a turn could be."""
     lowest = course_map.lowest_corner_metres + REQUIRED_ROOM_METRES
     highest = course_map.highest_corner_metres - REQUIRED_ROOM_METRES
+    if keep_turns_inside is not None:
+        lowest = np.maximum(lowest, keep_turns_inside[0])
+        highest = np.minimum(highest, keep_turns_inside[1])
     candidates = []
     for east in np.arange(lowest[0], highest[0] + 1e-9, TURN_SEARCH_SPACING_METRES):
         for north in np.arange(lowest[1], highest[1] + 1e-9, TURN_SEARCH_SPACING_METRES):
             point = np.array([east, north])
-            clearances = open_floor_clearances(course_map, point, HIGH_HEIGHT_METRES)
+            clearances = open_floor_clearances(course_map, point, height_metres)
             if min(margin for _, margin in clearances) >= 0.0:
                 candidates.append(point)
     return candidates
