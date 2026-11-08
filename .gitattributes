@@ -1,3 +1,5 @@
 simulator/**/*.sh text eol=lf
 simulator/**/Dockerfile* text eol=lf
 artifacts/goal_comparison/** -text
+artifacts/strategy_comparison/** -text
+examples/run_recorded_strategy_inventory.sh text eol=lf

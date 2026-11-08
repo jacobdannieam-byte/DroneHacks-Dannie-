@@ -84,6 +84,8 @@ def optimize(state, snapshot, alignment, vehicle, objective, now_ns, *, predicto
                                          model_id=model_id, interrupted=expired)
         except (ValueError, ArithmeticError):
             return DiagnosticOptimization('invalid_model_or_candidate', None, None, evaluations, monotonic() - start)
+        except RuntimeError:
+            return DiagnosticOptimization('solver_failure', None, None, evaluations, monotonic() - start)
         evaluations += len(options)
         reason = expired()
         if reason or result.fallback_reason in ('cancelled', 'deadline_exceeded'):

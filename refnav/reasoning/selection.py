@@ -113,6 +113,8 @@ class ConfiguredReasoner:
         if monotonic() - start > self.config.budget_seconds:
             proposal = DeterministicReasoner().propose(context)
             scores, reason = (), 'deadline_fresh_baseline_fallback'
+        if reason in ('fresh_baseline_fallback', 'deadline_fresh_baseline_fallback'):
+            options = tuple(option for option in options if option.mode != 'yaw')
         selected = proposal.target_entity_id if any(c.entity_id == proposal.target_entity_id for c in options) else None
         envelope = Selection(inputs, proposal.proposal_id, selected, identity, scores, reason)
         return proposal, replace(envelope, identity=selection_digest(envelope))

@@ -56,6 +56,19 @@ def test_mpc_cancellation_discards_schedule():
     assert result.status == 'cancelled' and result.candidate is None and result.evaluations == 0
 
 
+def test_mpc_solver_failure_discards_schedule():
+    from examples.diagnostic_mpc import optimize
+    from examples.unified_planner_ablation import cases
+    from examples.unified_trajectory_replay import VEHICLE
+    class FailedSolver:
+        def rollout(self, *args, **kwargs):
+            raise RuntimeError('solver failed')
+    case = next(c for c in cases() if c.name == 'clear')
+    result = optimize(case.state, case.snapshot, case.alignment, VEHICLE, case.objective,
+                      case.now_ns, predictor=FailedSolver(), model_id='failure_fixture', monotonic=lambda: 0.)
+    assert result.status == 'solver_failure' and result.candidate is None
+
+
 def test_h1_passes_selected_predictor_to_actual_d5_consumer():
     from examples.h1_fixture import profile, setup, tick
     from refnav.hybrid_integration import assess
