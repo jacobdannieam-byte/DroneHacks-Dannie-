@@ -8,6 +8,8 @@ import numpy as np
 import pytest
 
 from examples.gazebo_container import _json_value, load_approval, sha
+from examples.gazebo_sensor_contract import gazebo_ev_pose_in_enu
+from onboard.vio.frames import WORLD_ENU, attitude_to_px4, world_vec
 from examples.gazebo_hybrid_adapter import GazeboObservations
 from examples.gazebo_sensor_contract import (
     OPTICAL_TO_FLU, SIM_BINDINGS, SIM_DEPTH, SIM_ESTIMATOR,
@@ -28,6 +30,15 @@ def test_probe_serializes_px4_numpy_fields_as_strict_json():
                "reset": np.uint8(6)}
     wire = json.dumps(_json_value(samples), allow_nan=False)
     assert json.loads(wire) == {"position": [.25, None, None], "reset": 6}
+
+
+def test_gazebo_ev_converts_north_left_up_pose_to_enu_before_px4():
+    covariance = np.diag([1., 4., 9., 16., 25., 36.]).ravel()
+    p, q, rotated = gazebo_ev_pose_in_enu((2., 3., 4.), (1., 0., 0., 0.), covariance)
+    assert p == pytest.approx((-3., 2., 4.))
+    assert world_vec(p, WORLD_ENU) == pytest.approx((2., -3., -4.))
+    assert attitude_to_px4(q, WORLD_ENU) == pytest.approx((1., 0., 0., 0.))
+    assert np.diag(np.asarray(rotated).reshape(6, 6)) == pytest.approx([4., 1., 9., 16., 25., 36.])
 
 
 def test_rig_uses_authored_mount_and_optical_axes():

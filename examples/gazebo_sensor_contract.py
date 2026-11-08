@@ -1,10 +1,12 @@
 """Pure provenance and clock contracts for the imported Gazebo depth rig."""
 
 from dataclasses import dataclass
+import math
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
 from examples.spatial_bag_input import _ns
+from onboard.vio.frames import WORLD_FLU, align_to_enu
 from refnav.world_model.spatial_input import NS
 
 
@@ -77,3 +79,12 @@ def ros_clock_parts(gazebo_clock):
 
 def capture_ns(message):
     return _ns(message.header.stamp)
+
+
+def gazebo_ev_pose_in_enu(position, q_wxyz, pose_covariance):
+    # PX4's Gazebo bridge maps world ENU to NED. TrueDroneState converts
+    # that to north/left/up as (n, -e, -d). Its emulated odometry therefore
+    # needs a quarter turn about up before the organizer's ENU bridge.
+    position, quaternion, _, covariance, _ = align_to_enu(
+        position, q_wxyz, None, pose_covariance, None, WORLD_FLU, True, math.pi / 2)
+    return position, quaternion, covariance
