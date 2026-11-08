@@ -82,6 +82,7 @@ class Observation:
     armed: bool | None
     landed: bool
     nav_state: int
+    heading_rad: float | None = None
 
 
 @dataclass(frozen=True)
@@ -90,6 +91,8 @@ class Intent:
     command: str | None = None
     event: str | None = None
     recovery_lease: bool = False
+    position_ned_m: tuple | None = None
+    yaw_rad: float | None = None
 
 
 class CalibrationTrial:
@@ -321,15 +324,18 @@ class CalibrationTrial:
         if obs.landed or abs(height_error) > self.plan.hover_tolerance_m:
             return self._land('left_navigation_height_band', ros_ns, wall_ns)
         if self.phase == 'transit':
-            if max(self._elapsed(ros_ns, wall_ns)) >= self.plan.transit_timeout_s:
-                return self._land('transit_trigger_deadline', ros_ns, wall_ns)
-            if offset[0] >= self.plan.north_brake_m:
-                self._enter('brake', ros_ns, wall_ns)
-                return self._issue(Intent(ZERO, event='brake_command'), ros_ns)
-            return self._issue(Intent((self.plan.transit_speed_mps, 0., vertical_target)), ros_ns)
+            return self.transit(obs, offset, vertical_target, ros_ns, wall_ns)
         if (self.plan.brake_timeout_s is not None
                 and max(self._elapsed(ros_ns, wall_ns)) >= self.plan.brake_timeout_s):
             return self._land('brake_settle_deadline', ros_ns, wall_ns)
         if self._settled(obs, speed):
             return self._land(None, ros_ns, wall_ns)
         return self._issue(Intent(ZERO), ros_ns)
+
+    def transit(self, obs, offset, vertical_target, ros_ns, wall_ns):
+        if max(self._elapsed(ros_ns, wall_ns)) >= self.plan.transit_timeout_s:
+            return self._land('transit_trigger_deadline', ros_ns, wall_ns)
+        if offset[0] >= self.plan.north_brake_m:
+            self._enter('brake', ros_ns, wall_ns)
+            return self._issue(Intent(ZERO, event='brake_command'), ros_ns)
+        return self._issue(Intent((self.plan.transit_speed_mps, 0., vertical_target)), ros_ns)

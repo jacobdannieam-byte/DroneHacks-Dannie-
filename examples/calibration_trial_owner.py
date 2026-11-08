@@ -123,6 +123,7 @@ class NativeInputs:
         self.source_stamps = {}
         self.reset_identity = None
         self.fault = None
+        self.heading = None
 
     def offer(self, role, source_us, publish_us, value, ros_ns, wall_ns):
         if ros_ns < self.mapping.valid_from_ns or ros_ns <= 0:
@@ -174,6 +175,7 @@ class NativeInputs:
         if self.reset_identity is not None and reset != self.reset_identity:
             self.fault = 'estimator_reset'
         self.reset_identity = reset
+        self.heading = getattr(msg, 'heading', None)
         valid = all(getattr(msg, field, False) for field in ('xy_valid', 'z_valid', 'v_xy_valid', 'v_z_valid'))
         self.offer('position', msg.timestamp_sample, msg.timestamp,
                    ((msg.x, msg.y, msg.z), (msg.vx, msg.vy, msg.vz)) if valid else None, ros_ns, wall_ns)
@@ -193,11 +195,22 @@ class NativeInputs:
         if pos is None or type(armed) is not bool or not self.samples['flags'][2] or not self.samples['health'][2]:
             return None
         return Observation(*pos, self.samples['position'][0], self.samples['authority'][0], armed,
-                           self.samples['landed'][2], nav)
+                           self.samples['landed'][2], nav, self.heading)
+
+
+def position_messages(intent, stamp):
+    """Shared native serialization; also exercised on a private ROS topic."""
+    from px4_msgs.msg import OffboardControlMode, TrajectorySetpoint
+    if (intent.velocity_ned_mps is not None or intent.position_ned_m is None or intent.yaw_rad is None
+            or not all(math.isfinite(x) for x in (*intent.position_ned_m, intent.yaw_rad))):
+        raise ValueError('Ambiguous or invalid position control mode')
+    return (OffboardControlMode(timestamp=stamp, position=True),
+            TrajectorySetpoint(timestamp=stamp, position=list(intent.position_ned_m),
+                velocity=[math.nan] * 3, acceleration=[math.nan] * 3, yaw=float(intent.yaw_rad), yawspeed=math.nan))
 
 
 def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=None,
-         seconds=8., recorder_pid=None, bag_pid=None, recorder_ready=None):
+         seconds=8., recorder_pid=None, bag_pid=None, recorder_ready=None, driver=None, preview=None):
     import rclpy
     from px4_msgs.msg import (EstimatorStatusFlags, OffboardControlMode, TrajectorySetpoint, VehicleCommand,
                               VehicleLandDetected, VehicleLocalPosition, VehicleStatus)
@@ -205,7 +218,7 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
     from refnav.node import CMD_ARM, CMD_LAND, CMD_SET_MODE, PX4_MAIN_MODE_OFFBOARD, PX4_QOS
 
     owner = approval is not None
-    driver = CalibrationTrial(plan)
+    driver = CalibrationTrial(plan) if driver is None else driver
     inputs = NativeInputs(mapping, plan.receipt_wall_limit_s)
     rclpy.init(args=['--ros-args', '-p', 'use_sim_time:=true'])
     node = rclpy.create_node(OWNER_ID[1:])
@@ -305,6 +318,8 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
         report.update(disarmed_check=bool(checked), graph=graph, ros_ns=now_ns, input_fault=inputs.fault,
                       observed_ned_m=None if obs is None else obs.position,
                       expected_origin_ned_m=plan.origin_ned_m, topics=topics)
+        if not owner and checked and preview is not None:
+            report['model_preview'] = preview(obs, now_ns)
         if not owner or not checked:
             return report, int(not checked)
         recorder_start, bag_start = process_start(recorder_pid), process_start(bag_pid)
@@ -349,6 +364,10 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
                 driver.stop('publication_fence_closed')
                 break
             stamp = mapping.source_stamp_us(issued_ros_ns)
+            if intent.position_ned_m is not None:
+                mode, target = position_messages(intent, stamp)
+                ocm_pub.publish(mode)
+                sp_pub.publish(target)
             if intent.velocity_ned_mps is not None:
                 mode = OffboardControlMode(timestamp=stamp, velocity=True)
                 target = TrajectorySetpoint(timestamp=stamp, position=[math.nan] * 3,

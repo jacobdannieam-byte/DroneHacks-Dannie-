@@ -2,6 +2,12 @@
 set -eo pipefail
 mode=$1; world=$2; seconds=$3; revision=$4; profile=$5; approval=$6
 cd /repository
+if [[ "$mode" == model_check || "$mode" == model_trial ]]; then
+    [[ "$world" == drone_code/team_nav/course_maps/phone_scan_2026-11-06.json ]] || exit 2
+    [[ "$profile" == scenarios/model_flight/h1_pinn_prefix.json ]] || exit 2
+    : "${CALIBRATION_IMAGE_SHA256:?Pinned image required}"
+    contract=scenarios/model_flight/h1_recorder.json
+fi
 if [[ "$mode" == calibration_check || "$mode" == calibration_trial ]]; then
     [[ "$world" == scenarios/calibration/straight_lane_v1.json ]] || exit 2
     : "${CALIBRATION_IMAGE_SHA256:?Pinned image identity required}"
@@ -52,7 +58,7 @@ if [[ "$mode" == hybrid_sitl || "$mode" == classical || "$mode" == classical_smo
     python3 -m examples.gazebo_container authorize "${auth[@]}"
     cp /approval.json /evidence/trial_approval.json
 fi
-if [ -n "$profile" ] && [[ "$mode" != calibration_* ]]; then
+if [ -n "$profile" ] && [[ "$mode" != calibration_* && "$mode" != model_* ]]; then
     python3 - "$profile" <<'PY'
 import json, shutil, sys
 from pathlib import Path
@@ -186,7 +192,7 @@ if [ "$ready" != 1 ]; then echo "Disarmed Gazebo sensor/authority preflight fail
 
 ps -eo pid,comm,%cpu,rss > /evidence/resources_start.txt
 case "$mode" in
-    calibration_check|calibration_trial)
+    calibration_check|calibration_trial|model_check|model_trial)
         geometry=artifacts/taskforce_batch_003/native-lane-reviewed-v2/geometry-review.json
         contract_sha="$(sha256sum "$contract" | cut -d' ' -f1)"
         cp "$profile" /evidence/calibration_profile.json
@@ -201,11 +207,18 @@ case "$mode" in
             sleep .05
         done
         [ -f /evidence/calibration_recorder_ready.json ] || exit 1
+        owner_module=examples.calibration_trial_owner
+        if [[ "$mode" == model_* ]]; then owner_module=examples.model_flight_owner; fi
         calibration_args=(--profile "$profile" --world simulator/gazebo_trial/generated/worlds/straight_lane_v1_full_simulator.sdf
             --vehicle simulator/gazebo_trial/generated/models/drone_16_like/model.sdf
             --geometry-evidence "$geometry" --revision "$revision" --image-sha256 "$CALIBRATION_IMAGE_SHA256")
-        if [ "$mode" = calibration_check ]; then
-            python3 -m examples.calibration_trial_owner "${calibration_args[@]}" --disarmed-check \
+        if [[ "$mode" == model_* ]]; then
+            calibration_args=(--profile "$profile" --world simulator/gazebo_trial/generated/worlds/phone_scan_2026-11-06_full_simulator.sdf
+                --vehicle simulator/gazebo_trial/generated/models/drone_16_like/model.sdf
+                --revision "$revision" --image-sha256 "$CALIBRATION_IMAGE_SHA256")
+        fi
+        if [[ "$mode" == calibration_check || "$mode" == model_check ]]; then
+            python3 -m "$owner_module" "${calibration_args[@]}" --disarmed-check \
                 --output /evidence/calibration_disarmed_check.json
             sleep "$seconds"
             kill -0 "$calibration_recorder_pid" && kill -0 "$bag_pid" && kill -0 "$stack_pid"
@@ -215,7 +228,7 @@ case "$mode" in
                 --recorder-ready /evidence/calibration_recorder_ready.json
                 --recorder-pid "$calibration_recorder_pid" --bag-pid "$bag_pid")
             # No parameter mutation or command endpoint before exact approval.
-            python3 -m examples.calibration_trial_owner "${calibration_args[@]}" --authorize-only \
+            python3 -m "$owner_module" "${calibration_args[@]}" --authorize-only \
                 --output /evidence/calibration_authorization.json
             (
                 cd /opt/PX4-Autopilot/build/px4_sitl_default/rootfs
@@ -224,8 +237,10 @@ case "$mode" in
             ) > /evidence/approved_landing_speed.txt
             grep -Eq 'MPC_LAND_SPEED.*: 0\.3000' /evidence/approved_landing_speed.txt
             result=0
-            timeout --signal=INT --kill-after=5 130 python3 -m examples.calibration_trial_owner \
-                "${calibration_args[@]}" --output /evidence/calibration_owner.json || result=$?
+            owner_output=/evidence/calibration_owner.json
+            [[ "$mode" != model_trial ]] || owner_output=/evidence/model_owner.json
+            timeout --signal=INT --kill-after=5 130 python3 -m "$owner_module" \
+                "${calibration_args[@]}" --output "$owner_output" || result=$?
             # Observe recovery for at most 60 s after the command owner exits.
             # Emergency simulator cancellation requires its own explicit approval
             # flag and can never masquerade as landing or authorize a retry.
@@ -246,6 +261,8 @@ case "$mode" in
                     > /evidence/emergency_simulator_termination.json
                 result=1
             fi
+            # The complete raw bag is copied by cleanup. Independent model audit
+            # is run after container exit against the finalized bag.
             exit "$result"
         fi
         ;;

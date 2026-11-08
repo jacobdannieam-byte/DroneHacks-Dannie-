@@ -1,0 +1,79 @@
+{
+  "scope": "simulator_only_hybrid_pinn_classical_prefix",
+  "plan": {
+    "trial_kind": "stopping",
+    "origin_ned_m": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "minimum_offset_m": [
+      -0.05,
+      -0.05,
+      -1.05
+    ],
+    "maximum_offset_m": [
+      0.85,
+      0.18,
+      0.02
+    ],
+    "origin_tolerance_m": 0.05,
+    "height_m": 0.8,
+    "hover_tolerance_m": 0.15,
+    "north_brake_m": 0.6,
+    "transit_speed_mps": 0.2,
+    "climb_speed_mps": 0.2,
+    "actual_speed_limit_mps": 0.5,
+    "transit_timeout_s": 20.0,
+    "trial_ros_limit_s": 60.0,
+    "trial_wall_limit_s": 120.0,
+    "receipt_wall_limit_s": 3.0,
+    "settle_duration_s": 0.6,
+    "brake_timeout_s": 4.0
+  },
+  "clock_mapping": {
+    "source_clock_id": "px4_sitl_lockstep",
+    "ros_clock_id": "ros_sim_time",
+    "offset_ns": 0,
+    "max_error_ns": 4000000,
+    "valid_from_ns": 0,
+    "valid_until_ns": 600000000000,
+    "evidence_id": "batch003-native-timing-plus-pinned-lockstep-source"
+  },
+  "parameter_overrides": {
+    "MPC_LAND_SPEED": 0.3
+  },
+  "recovery_review": "Proposed one-shot Hybrid PINN trial in Classical launch corridor. Native lifecycle and LAND retained. Any model refusal, recorder loss, deadline, speed or height fault fails trial; no Classical fallback. Stop publishing on authority/input loss, observe native failsafe, allow only separately approved bounded simulator termination if recovery is unconfirmed. No retries.",
+  "model_flight": {
+    "registration_enabled": false,
+    "fallback_allowed": false,
+    "checkpoint": "artifacts/goal_comparison/predictors/physics_11.npz",
+    "checkpoint_sha256": "e935d56dfd0a9cf898c15ab2611afe9525fa9507f859f813121a9e181ed23375",
+    "participant_map": "drone_code/team_nav/course_maps/phone_scan_2026-11-06.json",
+    "participant_map_sha256": "74a3b67ed942292d880c79cc43eb2d0740466d0c27bfa42cb5045210e05f9ccf",
+    "waypoints_ned_m": [
+      [
+        0.3,
+        0.0296423135,
+        -0.8
+      ],
+      [
+        0.6,
+        0.059284627,
+        -0.8
+      ]
+    ],
+    "command_low_ned_m": [
+      -0.02,
+      -0.02,
+      -0.95
+    ],
+    "command_high_ned_m": [
+      0.75,
+      0.15,
+      -0.65
+    ],
+    "route_east_per_north": 0.0988077117,
+    "cross_track_limit_m": 0.025
+  }
+}
