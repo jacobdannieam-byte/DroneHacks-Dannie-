@@ -7,29 +7,22 @@ REAL DRONE CODE, also flown unchanged in the simulator. Start it on the drone wi
 
 What it does
 ------------
-  1. Checks on the course map that the flight corridor to North = +2.18 m and the turn East to
-     East = -0.50 m have adequate room and stay clear of every wall and boulder.
+  1. Loads the course map for coordinate conversion and target boundary checks. This routine
+     does not validate the route against walls or boulders.
   2. Waits until the drone is ready on the ground, then holds a target 0.75 m above the launch
      mark until a teammate arms the drone and flips the switch to Position (Offboard mode).
   3. Climbs vertically to CRUISE_HEIGHT_METRES (0.75 m) and holds still for 2 seconds.
   4. Flies straight North down the first corridor from North = +0.91 m to North = +2.18 m at
-     CORRIDOR_SPEED_METRES_PER_SECOND (0.30 m/s), crossing Checkpoint 1 ("end of first corridor").
+     CORRIDOR_SPEED_METRES_PER_SECOND (0.30 m/s). Checkpoint clearance is judged separately.
      It stays 0.87 m south of the North perimeter net (+3.05 m), avoiding the corner net trap.
   5. Settle pause: holds still at (-2.51 m, +2.18 m) and turns smoothly clockwise from 90° (North)
      to 0° (East) at TURN_RATE_DEGREES_PER_SECOND (15°/s).
   6. Flies straight East along North = +2.18 m to East = -0.50 m at MAZE_SPEED_METRES_PER_SECOND
-     (0.25 m/s), safely entering the maze corridor well clear of the boulder at (-1.0, +2.2).
+     (0.25 m/s). On the sketch map this passes over the north-west boulder.
   7. Lands where it is, finding the floor with PX4's distance to the ground, and disarms.
 
-Every target goes through flight_steps' SafetyWatch, so all safety checks run continuously.
-If an impact or net touch is detected (> 120°/s or > 20° tilt), the run stops immediately.
-
-Why this guarantees a Top 3 finish
-----------------------------------
-Under the competition rulebook, clearing the first corridor and successfully crossing into the
-maze corridor awards the primary tier of checkpoint points. Most competitor drones fail during
-takeoff or collide with the first corridor walls. Banking this clean, repeatable flight banks
-the qualification score.
+Every target goes through flight_steps' SafetyWatch. The optional bare-bones mode disables
+touch and height-divergence aborts. Completing this sequence does not establish a competition score.
 """
 import argparse
 import math
@@ -56,10 +49,10 @@ LAUNCH_EAST_METRES = -2.51
 LAUNCH_NORTH_METRES = 0.91
 CRUISE_HEIGHT_METRES = 0.75
 
-# 0.87 m south of the North perimeter net (+3.048 m), keeping prop tips > 0.70 m from netting.
+# Our own choice: centre is 0.868 m south of the North perimeter net (+3.048 m).
 CORRIDOR_1_TURN_NORTH_METRES = 2.18
 
-# Penetrates 1.35 m into the maze past divider M1 (-1.85 m), stopping well before the boulder (-1.0 m).
+# Our own choice: stop east of the sketch map's north-west boulder, after passing over it.
 MAZE_ENTRY_EAST_METRES = -0.50
 
 # Measured on drone 16: 15 deg/s prevents the 0.5 m lateral sliding caused by 30 deg/s turns.
@@ -120,7 +113,7 @@ def run(command_line_words, run_mode, log):
     return fly_with_ros(course_map, start_frame, arguments, log)
 
 
-def fly_with_ros(course_map, start_frame, arguments, log):
+def fly_with_ros(course_map, start_frame, arguments, log, flight_class=None):
     import rclpy
     from rclpy.node import Node
     from rclpy.signals import SignalHandlerOptions
@@ -131,7 +124,8 @@ def fly_with_ros(course_map, start_frame, arguments, log):
     node = Node(f"practice_{FLIGHT_NAME}")
     try:
         link = flight_steps.DroneLink(node, log, ignore_raw_laser=arguments.ignore_raw_laser)
-        flight = FirstMazeLegFlight(course_map, start_frame, link, bare_bones_safety=arguments.bare_bones_safety)
+        flight_type = FirstMazeLegFlight if flight_class is None else flight_class
+        flight = flight_type(course_map, start_frame, link, bare_bones_safety=arguments.bare_bones_safety)
         return flight.run()
     except Exception:
         log.event("error", f"ERROR before the flight could begin:\n{traceback.format_exc()}")
@@ -205,8 +199,8 @@ class FirstMazeLegFlight:
         flight_steps.land(self.link, height_source, self.watch)
 
         total_time = self.link.now_seconds() - self.flight_start_seconds
-        self.log.event("result", f"FIRST MAZE LEG FINISHED: landed safely in {total_time:.1f} s. "
-                                 f"Top 3 qualification points banked!", total_seconds=round(total_time, 2))
+        self.log.event("result", f"FIRST MAZE LEG FINISHED: landed with motors off in {total_time:.1f} s. "
+                                 f"Check referee records for contacts and checkpoints.", total_seconds=round(total_time, 2))
 
     def fly_corridor_1(self):
         """Slides the target straight North along Corridor 1 to North = +2.18 m."""
@@ -218,7 +212,9 @@ class FirstMazeLegFlight:
 
         start_time = self.link.now_seconds()
 
-        def send_corridor_target(seconds_since_start):
+        def send_corridor_target():
+            # fly_until calls a no-argument callback; use the same clock as the stage deadline.
+            seconds_since_start = self.link.now_seconds() - start_time
             progress = min(1.0, seconds_since_start / duration_seconds)
             current_target_north = start_north + progress * distance_metres
             target_course = np.array([LAUNCH_EAST_METRES, current_target_north, CRUISE_HEIGHT_METRES])
@@ -241,7 +237,8 @@ class FirstMazeLegFlight:
         start_time = self.link.now_seconds()
         hold_target = np.array([LAUNCH_EAST_METRES, CORRIDOR_1_TURN_NORTH_METRES, CRUISE_HEIGHT_METRES])
 
-        def send_turning_target(seconds_since_start):
+        def send_turning_target():
+            seconds_since_start = self.link.now_seconds() - start_time
             progress = min(1.0, seconds_since_start / turn_seconds)
             current_heading_deg = 90.0 - progress * 90.0
             self.watch.send_target_on_course(hold_target, heading_on_course_radians=math.radians(current_heading_deg))
@@ -263,7 +260,8 @@ class FirstMazeLegFlight:
 
         start_time = self.link.now_seconds()
 
-        def send_maze_target(seconds_since_start):
+        def send_maze_target():
+            seconds_since_start = self.link.now_seconds() - start_time
             progress = min(1.0, seconds_since_start / duration_seconds)
             current_target_east = start_east + progress * distance_metres
             target_course = np.array([current_target_east, CORRIDOR_1_TURN_NORTH_METRES, CRUISE_HEIGHT_METRES])

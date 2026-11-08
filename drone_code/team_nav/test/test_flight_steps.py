@@ -175,6 +175,23 @@ def test_a_landing_with_no_height_reading_never_pushes_down():
     assert not link.armed
 
 
+@pytest.mark.parametrize('height_source', [LASER_RAW_READING, NO_HEIGHT_READING])
+def test_landing_speed_limit_keeps_airborne_descent_slow(height_source):
+    link = PretendLink(height_metres=0.8)
+    flight_steps.land(link, height_source, descent_speed_limit=0.15)
+    expected = [0.15] if height_source == NO_HEIGHT_READING else [0.15, PUSH_DOWN_METRES_PER_SECOND]
+    assert speeds_sent(link) == expected
+    assert not link.armed
+
+
+@pytest.mark.parametrize('limit', [0, -1, float('nan')])
+def test_invalid_landing_speed_limit_sends_nothing(limit):
+    link = PretendLink(height_metres=0.8)
+    with pytest.raises(ValueError, match='positive finite'):
+        flight_steps.land(link, descent_speed_limit=limit)
+    assert not link.targets.sent
+
+
 @pytest.mark.parametrize("in_doubt, raw_laser, px4_usable, expected", [
     (False, True, True, PX4_DISTANCE_TO_GROUND),
     (True, True, True, LASER_RAW_READING),

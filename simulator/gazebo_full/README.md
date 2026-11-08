@@ -27,6 +27,30 @@ The first run builds the box (`build_gazebo_full_image.sh`, a few minutes if the
 
 ## What a run leaves
 
+### WSL clock jumps before takeoff
+
+If state reports go stale while PX4 is running, check the host clock before changing flight
+timeouts. On this Windows/WSL setup, Ubuntu's `systemd-timesyncd` reported an NTP offset of
+about -60 seconds while WSL restored Windows time. Both Python's wall clock and the kernel's
+realtime clock jumped; the monotonic clock stayed steady. This broke ROS timers and link-age
+checks. Disabling touch/height aborts does not fix that problem.
+
+For this conflict, stop the competing Ubuntu service from PowerShell:
+
+```powershell
+wsl -d Ubuntu -u root -- systemctl stop systemd-timesyncd
+```
+
+This is a session-level host configuration change, not flight code. It leaves WSL using
+Windows time and does not change any PX4 checks. Wait for the last correction, then sample
+wall-clock versus monotonic-clock increments for at least 20 seconds before launching a fresh
+container. The service can be restored with `systemctl start systemd-timesyncd` once the two
+time sources agree; it may also restart after reboot.
+
+The first-maze-leg practice flight is selected by passing
+`-- practice_flight first_maze_leg` to `fly_course_in_gazebo.sh`. Specify `--world` explicitly
+if the intended world is the sketch map; the launcher otherwise uses the organizers' drawing.
+
 Each run has its own folder, `simulator/generated_files/gazebo_full_runs/<date_time>/`:
 
 | File | What it is |

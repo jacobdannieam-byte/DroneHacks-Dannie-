@@ -1,5 +1,34 @@
 # Practice flights
 
+`full_course` extends the first-leg experiment through all four checkpoint lines and onto the
+landing pad on `sketch_2026-11-08.json`. It validates the fixed, north-facing airframe footprint
+and bottom-laser clearance before starting, then waits for measured arrival at each waypoint.
+The first checkpoint requires a short northward excursion followed by backing south; the path
+then goes around the north-west boulder rather than over it. This avoids the range discontinuity
+that caused PX4's height estimate to diverge in the previous first-leg run. It does not change
+PX4's estimator configuration. The referee must still confirm each actual flight.
+
+The full-course landing caps airborne descent at 0.15 m/s. The first full-course Gazebo
+trial cleared all checkpoints but reached 12.7 cm of height-estimate error during the old
+0.5/0.35 m/s descent. With the slower descent, run `20261108_100150` cleared all four lines,
+landed inside the pad, recorded zero contacts and no boulder overflight, and had 7.2 cm peak
+in-flight height-estimate error. These are simulation results, not hardware qualification.
+
+Run in Gazebo with `-- practice_flight full_course` after the launcher options. Normal touch and
+height checks are enabled unless `--bare-bones-safety` is explicitly supplied.
+
+From the repository root, run the tested full-course configuration:
+
+```bash
+bash simulator/gazebo_full/fly_course_in_gazebo.sh \
+  --world drone_code/team_nav/course_maps/sketch_2026-11-08.json \
+  --run-mode practice --longest-run-seconds 300 -- practice_flight full_course
+```
+
+The new flight is named `full_course`; `first_maze_leg` remains the shorter original route.
+The fixed route assumes the sketch-map geometry and a north-facing aircraft throughout.
+For the WSL clock conflict observed during testing, see `simulator/gazebo_full/README.md`.
+
 Short real-drone flights for the practice steps in `docs/ARCHITECTURE.md`, section 11 ("Test order"): flying 1 m out and back to measure how quickly the drone follows its target, and flying a mock gap and a mock window built in the net. They run on drone 16 exactly as written. So far they have flown only in our simulator (the 3D rendered sim, `simulator/`).
 
 The hover-and-land flight is not here. It is in `drone_code/smoke_flights/`.

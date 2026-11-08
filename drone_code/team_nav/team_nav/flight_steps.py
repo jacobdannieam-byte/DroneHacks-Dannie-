@@ -798,22 +798,32 @@ def choose_landing_height_source(link, px4_height_is_in_doubt):
     return NO_HEIGHT_READING
 
 
-def land(link, height_source=PX4_DISTANCE_TO_GROUND, watch=None):
+def land(link, height_source=PX4_DISTANCE_TO_GROUND, watch=None, descent_speed_limit=None):
     """Lands where the drone is and waits until PX4 switches the motors off (section 7).
     height_source is one of LASER_RAW_READING, PX4_DISTANCE_TO_GROUND or NO_HEIGHT_READING
     (choose_landing_height_source picks one). watch, a SafetyWatch, is optional: with it, the
     safety checks keep running until touchdown, and if PX4's height goes wrong during the descent,
     the rest of it finds the floor with the laser's raw reading (DescentHeight). Raises
-    ControlIsNoLongerOurs if control is taken away before the motors are off."""
+    ControlIsNoLongerOurs if control is taken away before the motors are off.
+    descent_speed_limit, if given, caps both airborne descent speeds in metres per second.
+    It does not change touchdown detection or the push-down after touchdown."""
+    medium_speed = MEDIUM_DESCENT_METRES_PER_SECOND
+    gentle_speed = GENTLE_DESCENT_METRES_PER_SECOND
+    if descent_speed_limit is not None:
+        if not math.isfinite(descent_speed_limit) or descent_speed_limit <= 0:
+            raise ValueError('The descent speed limit must be a positive finite speed in metres per second.')
+        medium_speed = min(medium_speed, descent_speed_limit)
+        gentle_speed = min(gentle_speed, descent_speed_limit)
     link.stage = "landing"
     link.log.event("landing", f"Landing, finding the floor with {height_source}.", height_source=height_source)
     if height_source == NO_HEIGHT_READING:
-        descend_gently_until_the_motors_are_off(link)
+        descend_gently_until_the_motors_are_off(link, gentle_speed)
         return
     descent_height = DescentHeight(link, height_source, watch)
-    descend_to_gentle_height(link, descent_height.metres_above_floor, descent_height.check_once_per_cycle)
+    descend_to_gentle_height(link, descent_height.metres_above_floor, descent_height.check_once_per_cycle,
+                             medium_speed)
     touchdown_seconds = descend_gently_until_touchdown(link, descent_height.metres_above_floor,
-                                                       descent_height.check_once_per_cycle)
+                                                       descent_height.check_once_per_cycle, gentle_speed)
     push_down_until_motors_are_off(link, touchdown_seconds)
 
 
@@ -855,7 +865,7 @@ class DescentHeight:
                                        "floor with the bottom laser's raw reading.", height_source=self.height_source)
 
 
-def descend_gently_until_the_motors_are_off(link):
+def descend_gently_until_the_motors_are_off(link, downward_speed=GENTLE_DESCENT_METRES_PER_SECOND):
     """The landing with no height reading: the gentle speed all the way, which is safe to hit the
     floor at, until PX4 decides it has landed and switches the motors off. No push-down."""
     start_seconds = link.now_seconds()
@@ -864,12 +874,13 @@ def descend_gently_until_the_motors_are_off(link):
         if link.now_seconds() - last_reminder_seconds >= SECONDS_BETWEEN_REMINDERS:
             link.log.event("waiting", "Still descending gently, waiting for PX4 to say landed. " + _arming_summary(link))
             last_reminder_seconds = link.now_seconds()
-        _send_landing_target(link, GENTLE_DESCENT_METRES_PER_SECOND, motors_off_is_expected=True)
+        _send_landing_target(link, downward_speed, motors_off_is_expected=True)
     link.log.event("motors_off", f"The motors are off, {link.now_seconds() - start_seconds:.1f} s after the gentle "
                                  f"descent began.")
 
 
-def descend_to_gentle_height(link, height_above_floor, check_each_cycle=None):
+def descend_to_gentle_height(link, height_above_floor, check_each_cycle=None,
+                             downward_speed=MEDIUM_DESCENT_METRES_PER_SECOND):
     """Descends at the medium speed until height_above_floor() is below the gentle descent's
     starting height. check_each_cycle, if given, is called at the start of every cycle."""
     start_seconds = link.now_seconds()
@@ -882,10 +893,11 @@ def descend_to_gentle_height(link, height_above_floor, check_each_cycle=None):
         if link.now_seconds() - start_seconds > LONGEST_DESCENT_STAGE_SECONDS:
             link.log.event("landing", "The medium-speed descent took too long. Carrying on more gently.")
             return
-        _send_landing_target(link, MEDIUM_DESCENT_METRES_PER_SECOND)
+        _send_landing_target(link, downward_speed)
 
 
-def descend_gently_until_touchdown(link, height_above_floor, check_each_cycle=None):
+def descend_gently_until_touchdown(link, height_above_floor, check_each_cycle=None,
+                                   downward_speed=GENTLE_DESCENT_METRES_PER_SECOND):
     """Descends at the gentle speed until touchdown, and returns the time of touchdown.
     check_each_cycle, if given, is called at the start of every cycle before touchdown."""
     detector = TouchdownDetector(link.now_seconds())
@@ -900,7 +912,7 @@ def descend_gently_until_touchdown(link, height_above_floor, check_each_cycle=No
         if now - detector.start_seconds > LONGEST_DESCENT_STAGE_SECONDS:
             link.log.event("landing", "No touchdown was seen during the gentle descent. Pushing down anyway.")
             return now
-        _send_landing_target(link, GENTLE_DESCENT_METRES_PER_SECOND)
+        _send_landing_target(link, downward_speed)
 
 
 def push_down_until_motors_are_off(link, touchdown_seconds):
