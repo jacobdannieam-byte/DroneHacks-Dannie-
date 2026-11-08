@@ -1,0 +1,201 @@
+{
+  "strategy": "hybrid_information_gain",
+  "identity": "bf71c8e7eb20e06ec8e8ff92d7aecaee891fe2ddf93bf4c4f86142d9082daab5",
+  "scope": "offline synthetic ROS messages; not flight",
+  "rows": [
+    {
+      "case": "observed_volume",
+      "result": {
+        "reason": "eligible_for_offline_review",
+        "decision": "candidate_proposed",
+        "ranked_ids": [
+          "forward",
+          "right",
+          "left",
+          "drift-check",
+          "short",
+          "wide-right",
+          "wide-left"
+        ],
+        "strategy_identity": "bf71c8e7eb20e06ec8e8ff92d7aecaee891fe2ddf93bf4c4f86142d9082daab5",
+        "predictor_fallback": null,
+        "px4_sample_us": 90000,
+        "state_capture_ns": 100000000,
+        "state_received_ns": 102000000,
+        "depth_capture_ns": 100000000,
+        "depth_received_ns": 102000000,
+        "assessment_ns": 103000000,
+        "px4_variances": [
+          [
+            1e-06,
+            1e-06,
+            1e-06
+          ],
+          [
+            1e-06,
+            1e-06,
+            1e-06
+          ],
+          [
+            1e-06,
+            1e-06,
+            1e-06
+          ]
+        ],
+        "goal_id": null,
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ]
+          },
+          {
+            "id": "drift-check",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ]
+          },
+          {
+            "id": "forward",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ]
+          },
+          {
+            "id": "short",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ]
+          },
+          {
+            "id": "left",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ]
+          },
+          {
+            "id": "right",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ]
+          },
+          {
+            "id": "wide-left",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ]
+          },
+          {
+            "id": "wide-right",
+            "status": "feasible",
+            "reasons": [
+              "observed_swept_volume"
+            ]
+          }
+        ],
+        "h0_ms": 11.6336
+      }
+    },
+    {
+      "case": "unknown_starting_volume",
+      "result": {
+        "reason": "no_verified_progress",
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "strategy_identity": "bf71c8e7eb20e06ec8e8ff92d7aecaee891fe2ddf93bf4c4f86142d9082daab5",
+        "predictor_fallback": null,
+        "px4_sample_us": 90000,
+        "state_capture_ns": 100000000,
+        "state_received_ns": 102000000,
+        "depth_capture_ns": 100000000,
+        "depth_received_ns": 102000000,
+        "assessment_ns": 103000000,
+        "px4_variances": [
+          [
+            1e-06,
+            1e-06,
+            1e-06
+          ],
+          [
+            1e-06,
+            1e-06,
+            1e-06
+          ],
+          [
+            1e-06,
+            1e-06,
+            1e-06
+          ]
+        ],
+        "goal_id": "goal_fce6413ca0ecd449dba16e273d3b0a8a63a2ae350b994f29079a0cdac01fb38c",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ]
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ]
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ]
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ]
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ]
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ]
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ]
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ]
+          }
+        ],
+        "h0_ms": 19.4691
+      }
+    }
+  ]
+}
