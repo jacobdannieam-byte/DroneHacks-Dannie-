@@ -94,6 +94,33 @@ def test_landing_speed_and_deadline_fail_even_with_native_disarm():
     assert fixture.trial.result == 'landing_deadline'
 
 
+def test_stationary_recovery_lease_expires_without_renewal_or_command():
+    fixture = Fixture('authority_expiry')
+    fixture.reach_hover()
+    assert fixture.trial.phase == 'authority_expiry'
+    assert fixture.outputs[-1].recovery_lease and fixture.outputs[-1].velocity_ned_mps == (0., 0., 0.)
+    lease = fixture.trial.recovery_lease
+    active = dict(position=(0., 0., -1.), nav=NAV_OFFBOARD, armed=True, landed=False)
+    assert fixture.step(**active) is None
+    assert fixture.step(**active) is None
+    assert fixture.trial.result is None
+    fixture.wall_ns -= 50_000_000  # Third tick lands on the exact 250 ms wall boundary.
+    assert fixture.step(**active) is None
+    assert fixture.trial.result == 'planned_authority_expiry'
+    assert lease['expiry_detected_wall_ns'] == lease['deadline_wall_ns']
+    assert fixture.step(**active) is None
+    assert not fixture.trial.events and not any(intent.command == 'land' for intent in fixture.outputs)
+
+
+def test_unexpected_loss_before_recovery_deadline_cannot_count_as_planned_expiry():
+    fixture = Fixture('authority_expiry')
+    fixture.reach_hover()
+    fixture.trial.request_land()
+    assert fixture.step(position=(0., 0., -1.), nav=NAV_OFFBOARD, armed=True, landed=False) is None
+    assert fixture.trial.result == 'recovery_window_invalidated'
+    assert 'expiry_detected_wall_ns' not in fixture.trial.recovery_lease
+
+
 @pytest.mark.parametrize('fault,result', [
     ({'admitted': False}, 'owner_admission_lost'),
     ({'nav': 0}, 'native_authority_lost'),

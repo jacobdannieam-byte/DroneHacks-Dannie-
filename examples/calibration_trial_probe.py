@@ -29,7 +29,7 @@ class Fixture:
         if intent is not None:
             self.outputs.append(intent)
             if publish:
-                self.trial.published(intent, self.ros_ns, self.mapping.source_stamp_us(self.ros_ns))
+                self.trial.published(intent, self.ros_ns, self.mapping.source_stamp_us(self.ros_ns), wall_ns=self.wall_ns)
         return intent
 
     def reach_hover(self):

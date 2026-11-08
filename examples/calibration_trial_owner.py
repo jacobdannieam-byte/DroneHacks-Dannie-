@@ -361,7 +361,7 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
                                'arm': (CMD_ARM, 1., 0.), 'land': (CMD_LAND, 0., 0.)}[intent.command]
                 cmd_pub.publish(VehicleCommand(timestamp=stamp, command=cmd, param1=p1, param2=p2,
                     target_system=1, target_component=1, source_system=1, source_component=1, from_external=True))
-            event = driver.published(intent, issued_ros_ns, stamp)
+            event = driver.published(intent, issued_ros_ns, stamp, wall_ns=issued_wall_ns)
             if event is not None:
                 event_pub.publish(String(data=json.dumps(dict(event, trial_id=approval['trial_id'],
                     owner_id=OWNER_ID, profile_sha256=identity['profile_sha256']), allow_nan=False)))
@@ -371,6 +371,8 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
                       native_land_ack_ns=driver.native_land_ack_ns, native_disarm_ns=driver.native_disarm_ns,
                       max_observed_speed_mps=driver.max_observed_speed_mps,
                       recovery_operator=approval['recovery_operator'], input_fault=inputs.fault)
+        if plan.trial_kind == 'authority_expiry':
+            report['recovery_lease'] = driver.recovery_lease
         return report, int(driver.result != 'complete')
     finally:
         node.destroy_node()

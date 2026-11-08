@@ -8,6 +8,7 @@ if [[ "$mode" == calibration_check || "$mode" == calibration_trial ]]; then
     case "${profile##*/}" in
         c0_hover_land.json) contract=scenarios/calibration/c0_recorder.json ;;
         c1_stop_020.json) contract=scenarios/calibration/c1_recorder.json ;;
+        r1_stationary_expiry.json) contract=scenarios/calibration/r1_recorder.json ;;
         *) echo 'Unknown calibration profile' >&2; exit 2 ;;
     esac
     python3 - "$profile" "$contract" <<'PY'

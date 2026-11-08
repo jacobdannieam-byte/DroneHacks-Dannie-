@@ -8,6 +8,7 @@ from .core import NAV_AUTO_LAND, NAV_OFFBOARD
 
 NS = 10**9
 CLOCK_STALL_NS = 300_000_000
+RECOVERY_LEASE_NS = 250_000_000
 STOP_MPS = .05
 ZERO = (0., 0., 0.)
 
@@ -54,7 +55,7 @@ class CalibrationPlan:
                    self.transit_speed_mps, self.climb_speed_mps, self.actual_speed_limit_mps,
                    self.transit_timeout_s, self.trial_ros_limit_s, self.trial_wall_limit_s,
                    self.receipt_wall_limit_s, self.settle_duration_s)
-        if (self.trial_kind not in ('hover_land', 'stopping') or not _numbers(scalars)
+        if (self.trial_kind not in ('hover_land', 'stopping', 'authority_expiry') or not _numbers(scalars)
                 or not all(-5 <= lo < 0 < hi <= 5 for lo, hi in zip(low, high))
                 or not 0 < self.origin_tolerance_m <= .10
                 or not 0 < self.hover_tolerance_m < self.height_m
@@ -88,6 +89,7 @@ class Intent:
     velocity_ned_mps: tuple | None = None
     command: str | None = None
     event: str | None = None
+    recovery_lease: bool = False
 
 
 class CalibrationTrial:
@@ -107,6 +109,7 @@ class CalibrationTrial:
         self.native_land_ack_ns = None
         self.native_disarm_ns = None
         self.max_observed_speed_mps = 0.
+        self.recovery_lease = None
         self._pending = None
         self._command_stamp = None
         self._operator_land = False
@@ -132,7 +135,7 @@ class CalibrationTrial:
         self._pending = (intent, ros_ns)
         return intent
 
-    def published(self, intent, stamp_ns, px4_issue_us):
+    def published(self, intent, stamp_ns, px4_issue_us, *, wall_ns=None):
         """Acknowledge a returned intent only after the actual publisher accepts it."""
         if (self._pending is None or intent is not self._pending[0] or type(stamp_ns) is not int
                 or type(px4_issue_us) is not int or px4_issue_us <= 0
@@ -140,6 +143,12 @@ class CalibrationTrial:
             self.stop('invalid_publication_receipt')
             raise ValueError('Invalid calibration publication receipt')
         self._pending = None
+        if intent.recovery_lease:
+            if type(wall_ns) is not int or not 0 <= wall_ns - self._clock[1] < 50_000_000:
+                self.stop('invalid_recovery_lease_clock')
+                raise ValueError('Recovery lease needs its actual steady publication time')
+            self.recovery_lease = dict(last_output_ros_ns=stamp_ns, last_output_px4_us=px4_issue_us,
+                                       last_output_wall_ns=wall_ns, deadline_wall_ns=wall_ns + RECOVERY_LEASE_NS)
         if intent.command is not None:
             self._command_stamp = stamp_ns
         if intent.event is None:
@@ -233,6 +242,16 @@ class CalibrationTrial:
                 self.stop('native_authority_lost_during_land')
             return None
 
+        if self.phase == 'authority_expiry':
+            height = -offset[2]
+            if (self._operator_land or not obs.armed or obs.landed or obs.nav_state != NAV_OFFBOARD
+                    or speed > STOP_MPS or abs(height - self.plan.height_m) > self.plan.hover_tolerance_m):
+                self.stop('recovery_window_invalidated')
+            elif wall_ns >= self.recovery_lease['deadline_wall_ns']:
+                self.recovery_lease.update(expiry_detected_ros_ns=ros_ns, expiry_detected_wall_ns=wall_ns)
+                self.stop('planned_authority_expiry')
+            return None  # This branch can never publish a renewal, including operator LAND.
+
         if self._operator_land:
             if obs.armed and obs.nav_state == NAV_OFFBOARD:
                 return self._land('operator_land', ros_ns, wall_ns)
@@ -281,6 +300,9 @@ class CalibrationTrial:
                 if self._settled(obs, speed):
                     if self.plan.trial_kind == 'hover_land':
                         return self._land(None, ros_ns, wall_ns)
+                    if self.plan.trial_kind == 'authority_expiry':
+                        self._enter('authority_expiry', ros_ns, wall_ns)
+                        return self._issue(Intent(ZERO, recovery_lease=True), ros_ns)
                     self._enter('transit', ros_ns, wall_ns)
                 else:
                     return self._issue(Intent(ZERO), ros_ns)

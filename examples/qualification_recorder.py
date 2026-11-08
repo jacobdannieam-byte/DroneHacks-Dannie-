@@ -43,7 +43,7 @@ def event_publisher_identity(node, topic, owner_id):
 class TrialRecording:
     def __init__(self, clock_id, frame_id, *, clock_mapping=None, trial_id=None,
                  owner_id=None, profile_sha256=None, trial_kind='stopping'):
-        if trial_kind not in ('hover_land', 'stopping'):
+        if trial_kind not in ('hover_land', 'stopping', 'authority_expiry'):
             raise ValueError('explicit calibration trial kind required')
         self.document = dict(clock_id=clock_id, frame_id=frame_id, trial_kind=trial_kind, samples=[], events=[])
         self.mapping = clock_mapping
@@ -154,7 +154,14 @@ class TrialRecording:
             self.faults.append('nonadvancing_status'); return
         self.last_status_stamp = stamp
         if self.mapping is not None:
-            self.document['status_reports'].append(dict(**provenance, arming_state=message.arming_state))
+            status = dict(**provenance, arming_state=message.arming_state)
+            if self.document['trial_kind'] == 'authority_expiry':
+                nav_state = getattr(message, 'nav_state', None)
+                if type(nav_state) is not int:
+                    self.faults.append('missing_native_nav_state')
+                    return
+                status['nav_state'] = nav_state
+            self.document['status_reports'].append(status)
         if message.arming_state == 2:
             self.seen_armed = True
         elif message.arming_state == 1:
@@ -206,7 +213,8 @@ class TrialRecording:
         try:
             event=json.loads(raw)
             name=event['event']; stamp=event['stamp_ns']
-            if name not in ('brake_command','land_command') or type(stamp) is not int:
+            if (self.document['trial_kind'] == 'authority_expiry'
+                    or name not in ('brake_command','land_command') or type(stamp) is not int):
                 raise ValueError()
             if type(receipt_ns) is not int or stamp <= 0:
                 raise ValueError()
@@ -232,7 +240,9 @@ class TrialRecording:
         except (ValueError,KeyError,TypeError): self.faults.append('invalid_or_duplicate_event')
 
     def result(self):
-        required = ('land_command', 'disarm') if self.document['trial_kind'] == 'hover_land' else ('brake_command','land_command','disarm')
+        required = {'hover_land': ('land_command', 'disarm'),
+                    'stopping': ('brake_command', 'land_command', 'disarm'),
+                    'authority_expiry': ('disarm',)}[self.document['trial_kind']]
         return dict(**self.document, recording_faults=list(self.faults),
                     pending_clock_samples=len(self.pending),
                     recording_complete=bool(self.document['samples']) and not self.faults and not self.pending
