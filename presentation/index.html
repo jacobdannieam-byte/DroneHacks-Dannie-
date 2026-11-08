@@ -1,3 +1,45 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DroneHacks — World semantics and reasoning</title><link rel="stylesheet" href="style.css"></head>
-<body><main id="deck" aria-label="Presentation slides"></main><nav aria-label="Slide navigation"><button id="prev" aria-label="Previous slide">←</button><span id="progress" aria-live="polite"></span><button id="next" aria-label="Next slide">→</button><button id="notes">Speaker notes (N)</button></nav><script src="slides.js"></script><script src="shell.js"></script></body></html>
+<!-- Audience entry point. Content and drawings are local; no robotics code runs here. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#101318" />
+    <title>DroneHacks — From observations to justified actions</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="vendor/reveal.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="reveal"><main class="slides" id="deck"></main></div>
+    <nav class="toolbar" aria-label="Presentation controls">
+      <span class="brand">DRONEHACKS <span>/</span> WORLD SEMANTICS</span>
+      <div class="tools">
+        <button id="previous" aria-label="Previous animation or slide">←</button
+        ><span id="position" aria-live="polite">01 / 11</span
+        ><button id="next" aria-label="Next animation or slide">→</button
+        ><button id="overview" title="Slide overview (Esc)">Overview</button
+        ><button id="speaker" title="Presenter window (S)">Presenter</button
+        ><button id="appendix">Q&amp;A</button
+        ><button id="motion" aria-pressed="false">Reduce motion</button
+        ><button id="fullscreen" title="Fullscreen (F)">⛶</button>
+      </div>
+    </nav>
+    <dialog id="appendix-dialog" aria-labelledby="appendix-title">
+      <button class="close" aria-label="Close Q and A menu">×</button>
+      <p class="eyebrow">BEYOND THE TEN MINUTES</p>
+      <h2 id="appendix-title">Questions worth asking.</h2>
+      <div id="appendix-links"></div>
+      <button id="return-closing">Return to closing slide →</button>
+    </dialog>
+    <noscript
+      >This deck needs JavaScript. Enable it to navigate the slides.</noscript
+    >
+    <script src="vendor/reveal.js"></script>
+    <script src="vendor/notes.js"></script>
+    <script src="slides.js"></script>
+    <script src="visuals.js"></script>
+    <script src="appendix.js"></script>
+    <script src="player.js"></script>
+  </body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "name": "dronehacks-presentation",
+  "version": "1.0.0",
+  "description": "Animated ten-minute DroneHacks architecture and research presentation",
+  "scripts": {
+    "test": "node verify.cjs",
+    "build": "node build.cjs",
+    "start": "node serve.cjs",
+    "export": "node verify.cjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "reveal.js": "6.0.2"
+  },
+  "devDependencies": {
+    "playwright": "1.65.0",
+    "prettier": "3.9.10"
+  },
+  "private": true
+}

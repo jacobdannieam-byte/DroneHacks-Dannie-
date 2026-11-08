@@ -2,6 +2,8 @@
 
 Research cutoff: November 8, 2026. Selected relevant sources were read; this is not an exhaustive audit of the entire Notion workspace or independent reproduction of experiments.
 
+Animation-build refresh: N6 and N7 were fetched again on November 8, 2026. Returned last-edit timestamps were 2026-11-08T10:32:00.593Z and 2026-11-08T19:28:13.292Z respectively. N7 still ends at S0 attempt 004, disarmed with a scheduling bottleneck; no later course success was present in that fetched record. Diagrams remain conceptual and the chart retains the same synthetic evidence-acquisition scope.
+
 ## Primary project sources
 
 | ID | Source | Use |
