@@ -262,7 +262,7 @@ def test_a_height_problem_during_the_descent_switches_the_landing_to_the_raw_las
 
     events = landing_events(link)
     assert any("raw reading" in text for text in events)
-    # With the raw laser, touchdown is found the normal way, not by the drone stalling on the floor.
+    # Source selection remains observable, but no sensor-inferred touchdown permits push-down.
     assert not any("Touchdown:" in text for text in events)
     assert speeds_sent(link) == [GENTLE_DESCENT_METRES_PER_SECOND] and not link.armed
 
@@ -276,14 +276,13 @@ def test_without_a_raw_laser_a_height_problem_during_the_descent_changes_nothing
     assert not link.armed
 
 
-def test_the_checks_run_through_the_descent_and_stop_at_touchdown():
+def test_the_checks_continue_during_conservative_descent():
     link = PretendLink(height_metres=0.8)
     watch = WatchThatFindsPx4sHeightWrong(link, wrong_from_check_number=1000)
     flight_steps.land(link, PX4_DISTANCE_TO_GROUND, watch)
 
     assert watch.heights_when_checked[0] == pytest.approx(0.8)
-    # They ran right down to the floor, but not while pushing down on it, where PX4's height
-    # reads low on purpose.
+    # Checks continue to the floor; no push-down phase is entered.
     assert min(watch.heights_when_checked) < 0.05
     assert watch.checks_while_pushing_down == 0
 

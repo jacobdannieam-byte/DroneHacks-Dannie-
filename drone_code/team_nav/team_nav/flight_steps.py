@@ -747,19 +747,12 @@ def land(link, height_source=PX4_DISTANCE_TO_GROUND, watch=None):
 
 
 class DescentHeight:
-    """The height above the floor that a landing's descent goes by, and the safety checks that
-    keep running until touchdown.
+    """Retain landing safety checks and record a change in preferred height source.
 
-    It starts with the source the landing was given. If the checks find PX4's height wrong during
-    the descent, for example because PX4 stopped using the laser over the pad, and the laser's raw
-    reading exists, the rest of the descent uses the raw reading, which stays right whatever PX4
-    does. Without a raw reading (the real drone) there is nothing better to switch to, so the
-    problem is only recorded; touchdown then also counts when the drone stops moving down.
-
-    The checks stop at touchdown, on purpose: while the drone presses down on the floor, PX4's
-    height drifts up to 45 cm away from the truth (seen in simulator flights; docs/ARCHITECTURE.md,
-    section 7). That is harmless, because the drone is already down, and must not look like a
-    problem."""
+    The conservative landing calls these checks through disarm. Height-source
+    selection is diagnostic: it cannot increase descent speed or authorize
+    push-down. metres_above_floor remains available for legacy unit tests.
+    """
 
     def __init__(self, link, height_source, watch):
         self.link = link
