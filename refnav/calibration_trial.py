@@ -295,8 +295,14 @@ class CalibrationTrial:
         if speed > self.plan.actual_speed_limit_mps:
             return self._land('speed_limit', ros_ns, wall_ns)
         height_error = self.plan.height_m + offset[2]
+        # C1 must center before translating and maintain that target in transit.
+        # The navigation band remains an abort boundary, not an altitude target.
+        # Leave C0/R1 behavior and C1's all-axis zero-velocity brake unchanged.
+        maintain_height = self.plan.trial_kind == 'stopping'
+        entry_tolerance = min(.03, self.plan.hover_tolerance_m / 4) if maintain_height else self.plan.hover_tolerance_m
+        vertical_target = -max(-self.plan.climb_speed_mps, min(self.plan.climb_speed_mps, height_error))
         if self.phase == 'climb':
-            if abs(height_error) <= self.plan.hover_tolerance_m and not obs.landed:
+            if abs(height_error) <= entry_tolerance and not obs.landed:
                 if self._settled(obs, speed):
                     if self.plan.trial_kind == 'hover_land':
                         return self._land(None, ros_ns, wall_ns)
@@ -305,13 +311,13 @@ class CalibrationTrial:
                         return self._issue(Intent(ZERO, recovery_lease=True), ros_ns)
                     self._enter('transit', ros_ns, wall_ns)
                 else:
-                    return self._issue(Intent(ZERO), ros_ns)
+                    return self._issue(Intent((0., 0., vertical_target) if maintain_height else ZERO), ros_ns)
             elif height_error < -self.plan.hover_tolerance_m:
                 return self._land('hover_height_exceeded', ros_ns, wall_ns)
             else:
                 self._settling = None
                 climb = min(self.plan.climb_speed_mps, max(0., height_error))
-                return self._issue(Intent((0., 0., -climb)), ros_ns)
+                return self._issue(Intent((0., 0., vertical_target if maintain_height else -climb)), ros_ns)
         if obs.landed or abs(height_error) > self.plan.hover_tolerance_m:
             return self._land('left_navigation_height_band', ros_ns, wall_ns)
         if self.phase == 'transit':
@@ -320,7 +326,7 @@ class CalibrationTrial:
             if offset[0] >= self.plan.north_brake_m:
                 self._enter('brake', ros_ns, wall_ns)
                 return self._issue(Intent(ZERO, event='brake_command'), ros_ns)
-            return self._issue(Intent((self.plan.transit_speed_mps, 0., 0.)), ros_ns)
+            return self._issue(Intent((self.plan.transit_speed_mps, 0., vertical_target)), ros_ns)
         if (self.plan.brake_timeout_s is not None
                 and max(self._elapsed(ros_ns, wall_ns)) >= self.plan.brake_timeout_s):
             return self._land('brake_settle_deadline', ros_ns, wall_ns)
