@@ -123,6 +123,7 @@ class NativeInputs:
         self.source_stamps = {}
         self.reset_identity = None
         self.fault = None
+        self.clock_failures = []
 
     def offer(self, role, source_us, publish_us, value, ros_ns, wall_ns):
         if ros_ns < self.mapping.valid_from_ns or ros_ns <= 0:
@@ -157,6 +158,8 @@ class NativeInputs:
     def advance(self, ros_ns, wall_ns):
         for role, (upper, row) in tuple(self.pending.items()):
             if wall_ns - row[1] > MAX_DEFER_NS:
+                self.clock_failures.append(dict(role=role,target_ns=upper,now_ns=ros_ns,
+                    receipt_wall_ns=row[1],now_wall_ns=wall_ns,source_ns=row[0]))
                 self.fault = 'px4_clock_deferral_expired'
                 del self.pending[role]
             elif upper <= ros_ns:
@@ -262,9 +265,16 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
                 and len(node.get_publishers_info_by_topic(EVENTS)) == 1
                 and event_pub.get_subscription_count() >= 1)
 
+    section_input = None
+
+    def position_input(message):
+        inputs.position(message,*clocks())
+        if section_input is not None:
+            section_input.position(message)
+
     try:
         bindings = {
-            'vehicle_local_position': (VehicleLocalPosition, lambda m: inputs.position(m, *clocks())),
+            'vehicle_local_position': (VehicleLocalPosition, position_input),
             'vehicle_status': (VehicleStatus, lambda m: native('authority', m, (armed(m), int(m.nav_state)))),
             'vehicle_land_detected': (VehicleLandDetected, lambda m: native('landed', m, bool(m.landed))),
             'estimator_status_flags': (EstimatorStatusFlags,
@@ -280,7 +290,6 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
         node.create_subscription(Bool, SIM_HEALTH, lambda m: inputs.health(m.data, *clocks()), 10)
         if getattr(driver, 'config', {}).get('full_course'):
             node.create_subscription(String, '/simulator_only/touches', lambda _: driver.request_land(), 10)
-        section_input = None
         if hasattr(driver, 'section_policy'):
             from examples.section_depth_input import attach
             from examples.gazebo_sensor_contract import SIM_DEPTH, SIM_INFO
@@ -328,6 +337,7 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
             capture = driver.section_policy.observation
             checked = checked and capture is not None and driver.section_policy.fault is None and 0<=now_ns/NS-capture.stamp<=.25
         report.update(disarmed_check=bool(checked), graph=graph, ros_ns=now_ns, input_fault=inputs.fault,
+                      input_clock_failures=inputs.clock_failures,
                       observed_ned_m=None if obs is None else obs.position,
                       expected_origin_ned_m=plan.origin_ned_m, topics=topics)
         if section_input is not None:
@@ -407,6 +417,7 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
                 event_pub.publish(String(data=json.dumps(dict(event, trial_id=approval['trial_id'],
                     owner_id=OWNER_ID, profile_sha256=identity['profile_sha256']), allow_nan=False)))
         report.update(trial_id=approval['trial_id'], trial_kind=plan.trial_kind, owner_id=OWNER_ID,
+                      input_clock_failures=inputs.clock_failures,
                       result=driver.result or 'interrupted',
                       recovery_reason=driver.recovery_reason, events=driver.events,
                       native_land_ack_ns=driver.native_land_ack_ns, native_disarm_ns=driver.native_disarm_ns,

@@ -109,13 +109,12 @@ def attach(node, policy, mapping, position_topic, attitude_topic, depth_topic, i
     from px4_msgs.msg import VehicleLocalPosition, VehicleAttitude
     from sensor_msgs.msg import Image, CameraInfo
     from tf2_msgs.msg import TFMessage
-    from rclpy.qos import qos_profile_sensor_data, QoSProfile, DurabilityPolicy
+    from rclpy.qos import qos_profile_sensor_data, QoSProfile, DurabilityPolicy, ReliabilityPolicy
     from refnav.node import PX4_QOS
     adapter = SectionDepthInput(policy,mapping)
     for kind,topic,callback,qos in (
-        (VehicleLocalPosition,position_topic,adapter.position,PX4_QOS),
         (VehicleAttitude,attitude_topic,adapter.attitude,PX4_QOS),
-        (Image,depth_topic,adapter.depth,qos_profile_sensor_data),
+        (Image,depth_topic,adapter.depth,QoSProfile(depth=1,reliability=ReliabilityPolicy.BEST_EFFORT)),
         (CameraInfo,info_topic,adapter.camera_info,qos_profile_sensor_data),
         (TFMessage,'/tf_static',adapter.transforms,QoSProfile(depth=1,durability=DurabilityPolicy.TRANSIENT_LOCAL))):
         node.create_subscription(kind,topic,callback,qos)
