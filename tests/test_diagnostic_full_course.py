@@ -54,3 +54,32 @@ def test_discard_replans_without_claiming_a_publication(tmp_path,monkeypatch):
     result=audit(rows,commands,a['model_flight'])
     assert result['model_command_proof']=='PASS' and result['discarded_decisions']==1
     assert 'unpublished_model_decision' in audit([r for r in rows if r['kind']!='discarded'],commands,a['model_flight'])['faults']
+
+
+def test_diagnostic_waits_for_new_state_and_records_slow_inference(tmp_path,monkeypatch):
+    from refnav.calibration_trial import Observation,NS
+    from refnav.core import NAV_OFFBOARD
+    monkeypatch.setattr('examples.gazebo_container.isolated',lambda:True)
+    a=raw();log=DecisionLog(tmp_path/'log')
+    driver=FullCourseFlight(FullCoursePlan(**a['plan']),a['model_flight'],log)
+    driver.phase='transit';driver._phase_time=(NS,NS)
+    obs=Observation((0.,0.,-.8),(0.,0.,0.),NS,NS,True,False,NAV_OFFBOARD,0.)
+    assert driver.step(NS+120_000_000,NS+120_000_000,obs,admitted=True) is None
+    assert driver.phase=='transit' and driver.pending_model is None
+    stamp=NS+170_000_000;obs=replace(obs,position_stamp_ns=stamp,authority_stamp_ns=stamp)
+    times=iter([0.,.06]);driver.selector.monotonic=lambda:next(times)
+    intent=driver.step(stamp,stamp,obs,admitted=True)
+    assert intent.position_ned_m is not None and driver.pending_model['elapsed_s']==.06
+    log.close()
+
+
+def test_native_diagnostic_fence_accepts_fresh_position_but_not_authority_change():
+    from examples.calibration_trial_owner import publication_reason
+    from refnav.calibration_trial import Observation,NS
+    from refnav.core import NAV_OFFBOARD
+    obs=Observation((0.,0.,-.8),(0.,0.,0.),NS,NS,True,False,NAV_OFFBOARD,0.)
+    fresh=replace(obs,position_stamp_ns=NS+8_000_000,position=(0.,0.,-.801))
+    assert publication_reason(obs,fresh,6_000_000,NS,NS+8_000_000,diagnostic_native=True) is None
+    assert publication_reason(obs,fresh,6_000_000,NS,NS+8_000_000)=='observation_superseded'
+    assert publication_reason(obs,replace(fresh,armed=False),6_000_000,NS,NS+8_000_000,diagnostic_native=True)=='observation_superseded'
+    assert publication_reason(obs,None,6_000_000,NS,NS+8_000_000,diagnostic_native=True)=='native_observation_lost'

@@ -210,6 +210,23 @@ def position_messages(intent, stamp):
                 velocity=[math.nan] * 3, acceleration=[math.nan] * 3, yaw=float(intent.yaw_rad), yawspeed=math.nan))
 
 
+def publication_reason(observation, latest, elapsed, now_ns, issued_ns, *, diagnostic_native=False):
+    if issued_ns < now_ns or elapsed < 0:
+        return 'clock_rewind'
+    if latest is None:
+        return 'native_observation_lost'
+    changed = latest != observation
+    if diagnostic_native and observation is not None:
+        # A fresh position does not revoke an already computed native lifecycle
+        # command. Authority changes still do; model intents replan separately.
+        changed = any(getattr(latest,k)!=getattr(observation,k) for k in ('armed','landed','nav_state'))
+    if changed:
+        return 'observation_superseded'
+    if elapsed >= (300_000_000 if diagnostic_native else 50_000_000):
+        return 'computation_deadline'
+    return None
+
+
 def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=None,
          seconds=8., recorder_pid=None, bag_pid=None, recorder_ready=None, driver=None, preview=None):
     import rclpy
@@ -413,10 +430,9 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
             issued_ros_ns, issued_wall_ns = clocks()
             latest = inputs.observe(issued_ros_ns, issued_wall_ns)
             elapsed = issued_wall_ns - wall_ns
-            reason = ('clock_rewind' if issued_ros_ns < now_ns or elapsed < 0 else
-                      'native_observation_lost' if latest is None else
-                      'observation_superseded' if latest != observation else
-                      'computation_deadline' if elapsed >= 50_000_000 else None)
+            reason = publication_reason(observation, latest, elapsed, now_ns, issued_ros_ns,
+                diagnostic_native=(getattr(driver, '_diagnostic_motion_unbounded', False)
+                                   and intent.position_ned_m is None))
             if reason is not None:
                 if (reason in ('observation_superseded', 'computation_deadline')
                         and hasattr(driver, 'discard_model_intent')
