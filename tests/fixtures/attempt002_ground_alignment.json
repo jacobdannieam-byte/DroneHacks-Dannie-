@@ -1,0 +1,2040 @@
+{
+  "source_sha256": "d1c0b453791104213447b48bb4618ea412a42adb846c2575208f24fe6245e54e",
+  "source": "taskforce-s0-experiment-009/attempt-002/settled-native.json",
+  "scope": "Unmodified relevant source fields from preserved native disarmed probe; no timestamp repair",
+  "last_observations": {
+    "/clock": {
+      "sim_ns": 47092000000,
+      "receipt_ns": 47092000000
+    },
+    "/gazebo_hybrid/simulated_estimator/odometry": {
+      "header_frame": "odom",
+      "body_frame": "base_link",
+      "position": [
+        0.0019606932201753787,
+        0.0010054174060370605,
+        0.00493297056364201
+      ],
+      "q_xyzw": [
+        -2.281670120073446e-16,
+        1.242980302018637e-10,
+        1.836610863392707e-06,
+        1.000004529953003
+      ],
+      "covariance": [
+        0.0004,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0004,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0004,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0001,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0001,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0001
+      ],
+      "receipt_ns": 47068000000,
+      "capture_ns": 47000000000
+    },
+    "/fmu/out/vehicle_local_position": {
+      "evidence": [
+        {
+          "stamp_ns": 47088000000,
+          "publish_stamp_us": 47088000,
+          "valid": true,
+          "reset": [
+            2,
+            1,
+            1,
+            1,
+            1
+          ],
+          "heading_good": true,
+          "speed_mps": 0.0024429513102228345
+        }
+      ],
+      "receipt_ns": 47088000000,
+      "px4_publish_us": 47088000
+    },
+    "/fmu/out/vehicle_odometry": {
+      "evidence": [
+        {
+          "stamp_ns": 47088000000,
+          "publish_stamp_us": 47088000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 47088000000,
+      "px4_publish_us": 47088000,
+      "position": [
+        0.0007167537696659565,
+        -0.001382142654620111,
+        -0.00790130440145731
+      ],
+      "q": [
+        1.0,
+        -5.464609421323985e-05,
+        -3.1466499876842136e-06,
+        -2.6997595341526903e-05
+      ],
+      "position_variance": [
+        0.0006870187353342772,
+        0.0006870015640743077,
+        0.016828998923301697
+      ]
+    }
+  },
+  "px4_clock_samples": [
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46136000000,
+          "publish_stamp_us": 46136000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46136000000,
+      "position": [
+        0.00029531525797210634,
+        0.00015553488628938794,
+        -0.00739720044657588
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46144000000,
+          "publish_stamp_us": 46144000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46148000000,
+      "position": [
+        0.0003169512783642858,
+        0.00012827351747546345,
+        -0.007432919926941395
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46152000000,
+          "publish_stamp_us": 46152000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46156000000,
+      "position": [
+        0.00033865415025502443,
+        0.00010141781240236014,
+        -0.007467363029718399
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46160000000,
+          "publish_stamp_us": 46160000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46168000000,
+      "position": [
+        0.00034731734194792807,
+        7.463662041118369e-05,
+        -0.007500980515033007
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46168000000,
+          "publish_stamp_us": 46168000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46176000000,
+      "position": [
+        0.0003559395845513791,
+        4.796526991412975e-05,
+        -0.007533758878707886
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46184000000,
+          "publish_stamp_us": 46184000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46188000000,
+      "position": [
+        0.0003736272337846458,
+        -5.555215011554537e-06,
+        -0.007595567964017391
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46192000000,
+          "publish_stamp_us": 46192000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46196000000,
+      "position": [
+        0.00039344659307971597,
+        -3.88017033401411e-05,
+        -0.007622973062098026
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46208000000,
+          "publish_stamp_us": 46208000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46204000000,
+      "position": [
+        0.00043296560761518776,
+        -0.00010359142470406368,
+        -0.007675240747630596
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46216000000,
+          "publish_stamp_us": 46216000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46216000000,
+      "position": [
+        0.0004529021680355072,
+        -0.00013520935317501426,
+        -0.007699812762439251
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46224000000,
+          "publish_stamp_us": 46224000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46228000000,
+      "position": [
+        0.00047273444943130016,
+        -0.00016663811402395368,
+        -0.007723859045654535
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46232000000,
+          "publish_stamp_us": 46232000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46236000000,
+      "position": [
+        0.0004924179520457983,
+        -0.00019778522255364805,
+        -0.007746871095150709
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46240000000,
+          "publish_stamp_us": 46240000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46248000000,
+      "position": [
+        0.0005117072141729295,
+        -0.00022872345289215446,
+        -0.007768642157316208
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46248000000,
+          "publish_stamp_us": 46248000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46256000000,
+      "position": [
+        0.0005311566637828946,
+        -0.00025939891929738224,
+        -0.0077982814982533455
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46264000000,
+          "publish_stamp_us": 46264000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46268000000,
+      "position": [
+        0.0005726619274355471,
+        -0.0003260910452809185,
+        -0.007854802533984184
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46272000000,
+          "publish_stamp_us": 46272000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46276000000,
+      "position": [
+        0.0005925595760345459,
+        -0.0003575257142074406,
+        -0.007883183658123016
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46288000000,
+          "publish_stamp_us": 46288000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46288000000,
+      "position": [
+        0.000625467102508992,
+        -0.0004143248952459544,
+        -0.00793612189590931
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46296000000,
+          "publish_stamp_us": 46296000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46296000000,
+      "position": [
+        0.0006386723835021257,
+        -0.0004398372839204967,
+        -0.007960627786815166
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46304000000,
+          "publish_stamp_us": 46304000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46308000000,
+      "position": [
+        0.0006525091594085097,
+        -0.00046522528282366693,
+        -0.007984332740306854
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46312000000,
+          "publish_stamp_us": 46312000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46316000000,
+      "position": [
+        0.0006669361609965563,
+        -0.0004904125235043466,
+        -0.008014293387532234
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46320000000,
+          "publish_stamp_us": 46320000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46328000000,
+      "position": [
+        0.0006814272492192686,
+        -0.0005151649820618331,
+        -0.008043131791055202
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46328000000,
+          "publish_stamp_us": 46328000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46336000000,
+      "position": [
+        0.000700685428455472,
+        -0.0005405534757301211,
+        -0.00807112641632557
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46344000000,
+          "publish_stamp_us": 46344000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46348000000,
+      "position": [
+        0.0007403616327792406,
+        -0.000590588606428355,
+        -0.008119522593915462
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46352000000,
+          "publish_stamp_us": 46352000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46356000000,
+      "position": [
+        0.000760671216994524,
+        -0.0006155244773253798,
+        -0.008139547891914845
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46360000000,
+          "publish_stamp_us": 46360000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46368000000,
+      "position": [
+        0.0007780627929605544,
+        -0.0006403903244063258,
+        -0.008158511482179165
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46368000000,
+          "publish_stamp_us": 46368000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46376000000,
+      "position": [
+        0.0007954016327857971,
+        -0.0006651898729614913,
+        -0.008182421326637268
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46384000000,
+          "publish_stamp_us": 46384000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46388000000,
+      "position": [
+        0.0008290522382594645,
+        -0.0007137724896892905,
+        -0.008227482438087463
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46392000000,
+          "publish_stamp_us": 46392000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46396000000,
+      "position": [
+        0.0008460540557280183,
+        -0.000731488224118948,
+        -0.008248847909271717
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46408000000,
+          "publish_stamp_us": 46408000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46404000000,
+      "position": [
+        0.0008806854602880776,
+        -0.0007654227083548903,
+        -0.008288261480629444
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46416000000,
+          "publish_stamp_us": 46416000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46416000000,
+      "position": [
+        0.0008981383289210498,
+        -0.0007818827289156616,
+        -0.008306239731609821
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46424000000,
+          "publish_stamp_us": 46424000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46428000000,
+      "position": [
+        0.0009161342168226838,
+        -0.0008152337977662683,
+        -0.008323573507368565
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46432000000,
+          "publish_stamp_us": 46432000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46436000000,
+      "position": [
+        0.0009337989031337202,
+        -0.0008484217105433345,
+        -0.008330355398356915
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46448000000,
+          "publish_stamp_us": 46448000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46448000000,
+      "position": [
+        0.000969225075095892,
+        -0.0009132907725870609,
+        -0.008342728950083256
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46456000000,
+          "publish_stamp_us": 46456000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46456000000,
+      "position": [
+        0.000978365889750421,
+        -0.0009426462347619236,
+        -0.008347384631633759
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46464000000,
+          "publish_stamp_us": 46464000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46468000000,
+      "position": [
+        0.000987538485787809,
+        -0.0009719589143060148,
+        -0.008350944146513939
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46472000000,
+          "publish_stamp_us": 46472000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46476000000,
+      "position": [
+        0.0009972526459023356,
+        -0.001001046854071319,
+        -0.008354105055332184
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46488000000,
+          "publish_stamp_us": 46488000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46488000000,
+      "position": [
+        0.0010285360040143132,
+        -0.001047636498697102,
+        -0.008357315324246883
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46496000000,
+          "publish_stamp_us": 46496000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46496000000,
+      "position": [
+        0.0010511683067306876,
+        -0.0010663983412086964,
+        -0.008355564437806606
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46504000000,
+          "publish_stamp_us": 46504000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46504000000,
+      "position": [
+        0.0010736866388469934,
+        -0.0010850963881239295,
+        -0.00835326500236988
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46512000000,
+          "publish_stamp_us": 46512000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46516000000,
+      "position": [
+        0.0010962910018861294,
+        -0.001103792805224657,
+        -0.008350718766450882
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46528000000,
+          "publish_stamp_us": 46528000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46528000000,
+      "position": [
+        0.0011305343359708786,
+        -0.001130361924879253,
+        -0.00834463257342577
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46536000000,
+          "publish_stamp_us": 46536000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46536000000,
+      "position": [
+        0.0011424170807003975,
+        -0.001138160820119083,
+        -0.00834103673696518
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46544000000,
+          "publish_stamp_us": 46544000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46548000000,
+      "position": [
+        0.0011543150758370757,
+        -0.0011463018599897623,
+        -0.008334546349942684
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46552000000,
+          "publish_stamp_us": 46552000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46556000000,
+      "position": [
+        0.0011661621974781156,
+        -0.0011546277673915029,
+        -0.008340508677065372
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46568000000,
+          "publish_stamp_us": 46568000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46568000000,
+      "position": [
+        0.0011637045536190271,
+        -0.0011792320292443037,
+        -0.008350923657417297
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46576000000,
+          "publish_stamp_us": 46576000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46576000000,
+      "position": [
+        0.0011633221292868257,
+        -0.0011912782210856676,
+        -0.008355178870260715
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46584000000,
+          "publish_stamp_us": 46584000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46588000000,
+      "position": [
+        0.0011631341185420752,
+        -0.0012034977553412318,
+        -0.008358829654753208
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46592000000,
+          "publish_stamp_us": 46592000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46596000000,
+      "position": [
+        0.001157103106379509,
+        -0.001206675311550498,
+        -0.008362069725990295
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46608000000,
+          "publish_stamp_us": 46608000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46604000000,
+      "position": [
+        0.0011459490051493049,
+        -0.0012134886346757412,
+        -0.00836475845426321
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46616000000,
+          "publish_stamp_us": 46616000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46616000000,
+      "position": [
+        0.0011410374427214265,
+        -0.0012166545493528247,
+        -0.008364371955394745
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46624000000,
+          "publish_stamp_us": 46624000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46628000000,
+      "position": [
+        0.001133858459070325,
+        -0.0012353305937722325,
+        -0.00836365669965744
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46632000000,
+          "publish_stamp_us": 46632000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46636000000,
+      "position": [
+        0.0011269543319940567,
+        -0.001254146103747189,
+        -0.008362346328794956
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46648000000,
+          "publish_stamp_us": 46648000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46648000000,
+      "position": [
+        0.0011140286223962903,
+        -0.0012913718819618225,
+        -0.008357827551662922
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46656000000,
+          "publish_stamp_us": 46656000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46656000000,
+      "position": [
+        0.0011055078357458115,
+        -0.0012964317575097084,
+        -0.008355198428034782
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46664000000,
+          "publish_stamp_us": 46664000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46668000000,
+      "position": [
+        0.0010972190648317337,
+        -0.001301621668972075,
+        -0.008352718316018581
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46672000000,
+          "publish_stamp_us": 46672000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46676000000,
+      "position": [
+        0.0010892929276451468,
+        -0.0013072250876575708,
+        -0.008345536887645721
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46680000000,
+          "publish_stamp_us": 46680000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46688000000,
+      "position": [
+        0.001081617083400488,
+        -0.0013128354912623763,
+        -0.008338440209627151
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46696000000,
+          "publish_stamp_us": 46696000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46696000000,
+      "position": [
+        0.0010831651743501425,
+        -0.001342705567367375,
+        -0.008328083902597427
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46704000000,
+          "publish_stamp_us": 46704000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46704000000,
+      "position": [
+        0.001084013725630939,
+        -0.001357426168397069,
+        -0.008322431705892086
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46712000000,
+          "publish_stamp_us": 46712000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46716000000,
+      "position": [
+        0.0010848219972103834,
+        -0.00137202232144773,
+        -0.008316166698932648
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46728000000,
+          "publish_stamp_us": 46728000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46728000000,
+      "position": [
+        0.0010972477030009031,
+        -0.0013862730702385306,
+        -0.008302193135023117
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46736000000,
+          "publish_stamp_us": 46736000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46736000000,
+      "position": [
+        0.0011083006393164396,
+        -0.0013860269682481885,
+        -0.008294148370623589
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46744000000,
+          "publish_stamp_us": 46744000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46748000000,
+      "position": [
+        0.0011189423967152834,
+        -0.0013857879675924778,
+        -0.008285146206617355
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46752000000,
+          "publish_stamp_us": 46752000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46756000000,
+      "position": [
+        0.0011294339783489704,
+        -0.0013855516444891691,
+        -0.008275795727968216
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46760000000,
+          "publish_stamp_us": 46760000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46768000000,
+      "position": [
+        0.0011363484663888812,
+        -0.0013655376387760043,
+        -0.008266274817287922
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46768000000,
+          "publish_stamp_us": 46768000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46776000000,
+      "position": [
+        0.0011431215098127723,
+        -0.0013456654269248247,
+        -0.008256405591964722
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46784000000,
+          "publish_stamp_us": 46784000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46788000000,
+      "position": [
+        0.0011568083427846432,
+        -0.0013066871324554086,
+        -0.008235893212258816
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46792000000,
+          "publish_stamp_us": 46792000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46796000000,
+      "position": [
+        0.001154981437139213,
+        -0.001292381901293993,
+        -0.008229125291109085
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46800000000,
+          "publish_stamp_us": 46800000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46804000000,
+      "position": [
+        0.0011533478973433375,
+        -0.0012785301078110933,
+        -0.008222230710089207
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46816000000,
+          "publish_stamp_us": 46816000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46816000000,
+      "position": [
+        0.0011513079516589642,
+        -0.0012520443415269256,
+        -0.008208749815821648
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46824000000,
+          "publish_stamp_us": 46824000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46828000000,
+      "position": [
+        0.0011519244872033596,
+        -0.0012458276469260454,
+        -0.008201802149415016
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46832000000,
+          "publish_stamp_us": 46832000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46836000000,
+      "position": [
+        0.0011526481248438358,
+        -0.0012399040861055255,
+        -0.008194605819880962
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46848000000,
+          "publish_stamp_us": 46848000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46848000000,
+      "position": [
+        0.0011537255486473441,
+        -0.0012289361329749227,
+        -0.008180631324648857
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46856000000,
+          "publish_stamp_us": 46856000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46856000000,
+      "position": [
+        0.0011482819681987166,
+        -0.0012299544177949429,
+        -0.008174055255949497
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46864000000,
+          "publish_stamp_us": 46864000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46868000000,
+      "position": [
+        0.0011434664484113455,
+        -0.0012311638565734029,
+        -0.00816693902015686
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46872000000,
+          "publish_stamp_us": 46872000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46876000000,
+      "position": [
+        0.0011392737505957484,
+        -0.0012327020522207022,
+        -0.008159429766237736
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46880000000,
+          "publish_stamp_us": 46880000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46888000000,
+      "position": [
+        0.0011355266906321049,
+        -0.001234381808899343,
+        -0.008151854388415813
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46888000000,
+          "publish_stamp_us": 46888000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46896000000,
+      "position": [
+        0.001126892864704132,
+        -0.0012354152277112007,
+        -0.008143818005919456
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46904000000,
+          "publish_stamp_us": 46904000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46908000000,
+      "position": [
+        0.0011093912180513144,
+        -0.0012362590059638023,
+        -0.008131280541419983
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46912000000,
+          "publish_stamp_us": 46912000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46916000000,
+      "position": [
+        0.0011009927839040756,
+        -0.0012368466705083847,
+        -0.008122565224766731
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46928000000,
+          "publish_stamp_us": 46928000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46928000000,
+      "position": [
+        0.001080600661225617,
+        -0.0012469759676605463,
+        -0.008105414919555187
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46936000000,
+          "publish_stamp_us": 46936000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46936000000,
+      "position": [
+        0.0010688372422009706,
+        -0.001256605377420783,
+        -0.00809677317738533
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46944000000,
+          "publish_stamp_us": 46944000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46948000000,
+      "position": [
+        0.0010576482163742185,
+        -0.0012664335081353784,
+        -0.008088669739663601
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46952000000,
+          "publish_stamp_us": 46952000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46956000000,
+      "position": [
+        0.0010468739783391356,
+        -0.0012762246187776327,
+        -0.008080468513071537
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46968000000,
+          "publish_stamp_us": 46968000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46968000000,
+      "position": [
+        0.0010151597671210766,
+        -0.0012886847835034132,
+        -0.008063269779086113
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46976000000,
+          "publish_stamp_us": 46976000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46976000000,
+      "position": [
+        0.0010000242618843913,
+        -0.001294918591156602,
+        -0.008053930476307869
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46984000000,
+          "publish_stamp_us": 46984000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46988000000,
+      "position": [
+        0.000985363032668829,
+        -0.0013013859279453754,
+        -0.00804423913359642
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 46992000000,
+          "publish_stamp_us": 46992000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 46996000000,
+      "position": [
+        0.0009567977394908667,
+        -0.001318701426498592,
+        -0.008034131489694118
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 47000000000,
+          "publish_stamp_us": 47000000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 47008000000,
+      "position": [
+        0.0009285042760893703,
+        -0.0013356657000258565,
+        -0.00802362710237503
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 47008000000,
+          "publish_stamp_us": 47008000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 47016000000,
+      "position": [
+        0.0009004166931845248,
+        -0.0013521971413865685,
+        -0.008013173006474972
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 47024000000,
+          "publish_stamp_us": 47024000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 47028000000,
+      "position": [
+        0.0008497701492160559,
+        -0.001367370830848813,
+        -0.00799265131354332
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 47032000000,
+          "publish_stamp_us": 47032000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 47036000000,
+      "position": [
+        0.0008279694593511522,
+        -0.0013665490550920367,
+        -0.00798078253865242
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 47040000000,
+          "publish_stamp_us": 47040000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 47048000000,
+      "position": [
+        0.0008066244190558791,
+        -0.0013660789700224996,
+        -0.007969307713210583
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 47048000000,
+          "publish_stamp_us": 47048000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 47056000000,
+      "position": [
+        0.0007852796697989106,
+        -0.00136552844196558,
+        -0.007958128117024899
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 47064000000,
+          "publish_stamp_us": 47064000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 47068000000,
+      "position": [
+        0.0007549106376245618,
+        -0.001371860969811678,
+        -0.007935864850878716
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 47072000000,
+          "publish_stamp_us": 47072000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 47076000000,
+      "position": [
+        0.000739979324862361,
+        -0.001375128049403429,
+        -0.007924661040306091
+      ]
+    },
+    {
+      "evidence": [
+        {
+          "stamp_ns": 47088000000,
+          "publish_stamp_us": 47088000,
+          "pose_frame": 1,
+          "velocity_frame": 1,
+          "reset": [
+            6
+          ],
+          "valid": true
+        }
+      ],
+      "receipt_ns": 47088000000,
+      "position": [
+        0.0007167537696659565,
+        -0.001382142654620111,
+        -0.00790130440145731
+      ]
+    }
+  ]
+}
