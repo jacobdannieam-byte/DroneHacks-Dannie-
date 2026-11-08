@@ -1,9 +1,9 @@
 # Local Gazebo trial
 
-**Source integrated; no Gazebo flight was run on this host.** The Windows
-host and its x86-64 Ubuntu WSL 2 distribution have no Docker, Gazebo,
-ROS 2 or PX4 installation. Start with an observe-only run on a Docker
-host. Do not treat the original classical results as Hybrid evidence.
+**Gazebo and PX4 ran disarmed on Windows with Docker Desktop and Ubuntu
+WSL 2.** See the [native validation report](gazebo_hybrid_validation.md)
+for results, open readiness gates and evidence locations. The
+original classical results are a separate baseline.
 
 The import [`f0497ad`](https://github.com/jacobdannieam-byte/DroneHacks-Dannie-/commit/f0497ad145441eeab4e30fd3d686417fa491225c)
 preserves the 130 files in `simulator/`, `drone_code/team_nav/` and
@@ -32,8 +32,9 @@ docker build -f simulator/gazebo_trial/Dockerfile.hybrid \
 The upstream recipes pin PX4 **1.16.2**, Micro XRCE-DDS Agent **2.4.3**
 and [`px4_msgs@392e831c`](https://github.com/PX4/px4_msgs/tree/392e831c1f659429ca83902e66820d7094591410).
 The base is Ubuntu 22.04 with ROS 2 Humble. The overlay uses Gazebo
-Harmonic and adds Humble rosbag tools. The imported recipe was measured
-on an M1 Mac; the x86-64 image build and rendering rate remain untested.
+Harmonic and adds Humble rosbag tools. The imported recipe was originally
+measured on an M1 Mac. The native validation report records the x86-64
+build and stationary rendering rate.
 Use Linux containers, the default native CPU architecture and the
 software renderer first. Allow disk space for three image layers and
 bag data. The trial launcher passes no hardware or GPU devices and
@@ -173,7 +174,7 @@ and pad landing, but failed the referee height check. The integrated
 runner preserves height, touch, and course-boundary failures and
 reports full-course credit separately from a partial trial.
 
-## Verification from this implementation pass
+## Verification from the original integration pass
 
 - The original 414 tests reproduced. The final Hybrid suite passed 421
   tests and the imported classical pure suite passed 84. The new tests exercise the optical
