@@ -221,6 +221,15 @@ class CourseMission:
             self.abort(reason)
 
     def result(self, now_ns, reason):
+        if reason == 'observation_wait_verified':
+            # Waiting is neither checkpoint progress nor a failed movement.
+            # Keep the original inspection start time across fresh frames.
+            self._unavailable = now_ns if self._unavailable is None else self._unavailable
+            if now_ns - self._unavailable >= self.observation_ns:
+                self.abort('inspection_exhausted')
+            elif self.land_reason is None:
+                self._set('OBSERVATION_WAIT', reason)
+            return
         if reason == "eligible_for_offline_review":
             self._failures = 0
             return

@@ -1,0 +1,25 @@
+{
+  "scope": "private ROS fixture; no PX4/Gazebo/arming",
+  "image": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1",
+  "ros_domain_id": 49,
+  "network": "none",
+  "source_matches_current_tree": true,
+  "raw_files": {
+    "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-native-002\\inputs\\candidate.tar": {
+      "sha256": "245ba164c9ff93dbeb644a82888501ffb125239e53fbcf689816e44038b600eb",
+      "bytes": 1228800
+    },
+    "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-native-002\\inputs\\candidate-final.tar": {
+      "sha256": "a8f1fd621ca5df7ef1e59f6b1779aa5d1310faa8596370b4c31054b388a54aaf",
+      "bytes": 1228800
+    },
+    "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-native-002\\private-ros\\watchdog-attempt-1.txt": {
+      "sha256": "f5bb1ed557c81bb04118f68899781296aad5797347bdf4c971bd9cbb61b4cf27",
+      "bytes": 1967
+    },
+    "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-native-002\\private-ros\\watchdog-final.txt": {
+      "sha256": "23698eaa8e723e0b310d550dc2026c7f0f45739eb85ae01acf8278bda09bd9ea",
+      "bytes": 1967
+    }
+  }
+}

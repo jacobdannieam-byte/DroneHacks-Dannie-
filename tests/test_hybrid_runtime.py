@@ -92,6 +92,69 @@ def test_wall_expiry_is_not_extended_by_unchanged_sim_clock():
     assert runtime.executor.held is None
 
 
+def test_watchdog_expires_held_target_without_a_ros_owner_tick():
+    wall = [0.]
+    runtime = runtime_fixture(monotonic=lambda: wall[0])
+    sink = start_navigation(runtime)
+    target = sink.messages[-1]["setpoint"]
+    now_ns = sink.messages[-1]["tick_ns"]
+    assert runtime.executor.held.target == target
+    wall[0] = .249
+    assert not runtime.expire_owner_target(now_ns, 249 * MS)
+    wall[0] = .25
+    assert runtime.expire_owner_target(now_ns, 250 * MS)
+    assert runtime.executor.held is None
+    assert runtime.records[-1]["event"] == "owner_target_expired"
+    assert runtime.records[-1]["wall_expired"] and not runtime.records[-1]["ros_expired"]
+    out = sink.step(420, .04, armed=True, landed=False, nav_state=NAV_OFFBOARD)
+    assert out.setpoint[:3] == (.04, -.10, -1.3) and out.setpoint != target
+
+
+def test_publication_fence_expires_target_on_ros_time_jump():
+    runtime = runtime_fixture()
+    start_navigation(runtime)
+    expiry = runtime.executor.held.ros_expires_ns
+    assert not runtime.expire_owner_target(expiry - 1, 383 * MS)
+    assert runtime.expire_owner_target(expiry, 383 * MS)
+    assert runtime.executor.held is None
+    assert runtime.records[-1]["ros_expired"] and not runtime.records[-1]["wall_expired"]
+
+
+def test_terminal_phase_with_pending_command_still_checks_clock():
+    runtime = runtime_fixture()
+    sink = start_navigation(runtime)
+    now_ns = sink.messages[-1]["tick_ns"]
+    assert not runtime.watch_owner_clock(sink.mission, now_ns, now_ns)
+    sink.mission.phase = "done"
+    assert not runtime.watch_owner_clock(sink.mission, now_ns, now_ns + 300 * MS)
+    assert runtime.watch_owner_clock(sink.mission, now_ns, now_ns + 300 * MS, control_pending=True)
+    assert sink.mission.result == "yielded: owner_ros_clock_stalled"
+
+
+@pytest.mark.parametrize("clock_delta_ms,wall_delta_ms,reason", [
+    (0, 300, "owner_ros_clock_stalled"),
+    (5, 300, "owner_ros_clock_stalled"),  # /clock resumed before the overdue callback ran
+    (-1, 50, "owner_ros_clock_rewind"),
+])
+def test_active_clock_watchdog_yields_and_latches_across_recovery(clock_delta_ms, wall_delta_ms, reason):
+    runtime = runtime_fixture()
+    sink = start_navigation(runtime)
+    mission = sink.mission
+    now_ns = sink.messages[-1]["tick_ns"]
+    assert mission.phase == "go" and runtime.executor.held is not None
+    assert not runtime.watch_owner_clock(mission, now_ns, now_ns)
+    assert not runtime.watch_owner_clock(mission, now_ns, now_ns + 20 * MS)
+    assert runtime.watch_owner_clock(mission, now_ns + clock_delta_ms * MS, now_ns + wall_delta_ms * MS)
+    assert runtime.owner_watchdog_fault == reason
+    assert runtime.executor.held is None
+    assert mission.result == f"yielded: {reason}"
+    assert runtime.course.state == "AUTHORITY_LOST"
+    assert runtime.records[-1]["event"] == "owner_watchdog"
+    assert not runtime.watch_owner_clock(mission, now_ns + 400 * MS, now_ns + 400 * MS)
+    out = sink.step(440, .04, armed=True, landed=False, nav_state=NAV_OFFBOARD)
+    assert out.phase == "done" and not out.stream and out.setpoint is None and out.commands == []
+
+
 @pytest.mark.parametrize("loss", ["takeover", "approval", "epoch"])
 def test_owner_loss_fences_motion_and_never_replays_target(loss):
     runtime = runtime_fixture()

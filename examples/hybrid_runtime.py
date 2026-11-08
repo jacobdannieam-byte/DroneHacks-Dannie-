@@ -5,7 +5,7 @@ from dataclasses import replace
 import math
 from time import perf_counter, perf_counter_ns
 
-from examples.hybrid_shadow_loop import ShadowLoop
+from examples.hybrid_shadow_loop import CLOCK_STALL_NS, ShadowLoop
 from refnav.core import NAV_OFFBOARD, Output
 from refnav.hybrid_execution import HeldExecutor
 from refnav.hybrid_mission import CourseMission, map_position
@@ -50,6 +50,8 @@ class HybridRuntime:
         self._course_started = False
         self.last_issued = None
         self._last_status = None
+        self._owner_clock = None
+        self.owner_watchdog_fault = None
 
     @property
     def timings(self):
@@ -159,6 +161,46 @@ class HybridRuntime:
 
     def invalidate(self):
         self.executor.invalidate()
+
+    def expire_owner_target(self, now_ns, wall_ns):
+        held = self.executor.held
+        if held is None:
+            return False
+        ros_expired = now_ns >= held.ros_expires_ns
+        wall_expired = self.executor.clock() >= held.wall_expires_s
+        if not (ros_expired or wall_expired):
+            return False
+        self.invalidate()
+        self._record("owner_target_expired", now_ns, wall_ns=wall_ns,
+                     ros_expired=ros_expired, wall_expired=wall_expired)
+        return True
+
+    def watch_owner_clock(self, mission, now_ns, wall_ns, *, control_pending=False):
+        """Latch a clock fault once the native owner has begun priming or flight."""
+        if self.owner_watchdog_fault is not None or (mission.phase == "done" and not control_pending):
+            return False
+        previous = self._owner_clock
+        reason = None
+        if previous is not None:
+            previous_ros_ns, progress_wall_ns = previous
+            if now_ns < previous_ros_ns:
+                reason = "owner_ros_clock_rewind"
+            elif wall_ns - progress_wall_ns >= CLOCK_STALL_NS:
+                # Check before accepting new progress in case the executor
+                # missed the watchdog deadline and /clock just resumed.
+                reason = "owner_ros_clock_stalled"
+        if previous is None or now_ns != previous[0]:
+            self._owner_clock = (now_ns, wall_ns) if now_ns > 0 else None
+        if reason is None or mission.phase == "wait":
+            return False
+        self.owner_watchdog_fault = reason
+        self.close()
+        self.course.abort(reason)
+        self.course.lifecycle("done", yielded=True)
+        mission.yield_hybrid_authority(now_ns / NS, reason)
+        self._record("owner_watchdog", now_ns, reason=reason, wall_ns=wall_ns,
+                     owner_phase=mission.phase, result=mission.result)
+        return True
 
     def owner_step(self, mission, vehicle, *, now_ns, wall_ns, generation, admission, owner_ready):
         """Pure mission integration. Admission and ready come from the existing ROS owner."""

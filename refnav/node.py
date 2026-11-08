@@ -153,6 +153,9 @@ class RefNav(Node):
         if hybrid_runtime is not None:
             from examples.hybrid_launch import attach_observations
             attach_observations(self, hybrid_runtime)
+            # A paused ROS clock suppresses the control timer, so supervise
+            # clock progress and held leases on the same executor's steady clock.
+            self.create_timer(0.05, self._hybrid_watchdog_tick, clock=Clock(clock_type=ClockType.STEADY_TIME))
         self.create_timer(0.05, self._tick)            # node clock: pauses with a paused simulator
         self.create_timer(0.5, self._publish_status)
         self.get_logger().info(f"route {len(route)} legs; depth {self.depth_topic}; health {self.health_topic}; "
@@ -341,10 +344,30 @@ class RefNav(Node):
             runtime.course.lifecycle("done", yielded=True)
             return self.mission.yield_hybrid_authority(now_ns * 1e-9, runtime.course.land_reason)
 
+    def _check_hybrid_watchdog(self, now_ns, wall_ns, *, control_pending=False):
+        runtime = self._hybrid_runtime
+        if runtime.watch_owner_clock(self.mission, now_ns, wall_ns, control_pending=control_pending):
+            self._hybrid_reports.clear()
+            self._invalidate_hybrid()
+            self.done_at = now_ns * 1e-9
+            self.get_logger().warning(self.mission.result)
+            self._publish_status()
+            if self.exit_when_done:
+                raise SystemExit(1)
+        return runtime.owner_watchdog_fault is None
+
+    def _hybrid_watchdog_tick(self):
+        now_ns = self.get_clock().now().nanoseconds
+        wall_ns = perf_counter_ns()
+        if self._check_hybrid_watchdog(now_ns, wall_ns):
+            self._hybrid_runtime.expire_owner_target(now_ns, wall_ns)
+
     def _tick(self):
         now_ns = self.get_clock().now().nanoseconds
         now = now_ns * 1e-9
         if self._hybrid_runtime is not None:
+            if not self._check_hybrid_watchdog(now_ns, perf_counter_ns()):
+                return
             if self._hybrid_clock_ns is not None and now_ns < self._hybrid_clock_ns:
                 self._hybrid_reports.clear()
                 self._invalidate_hybrid()
@@ -364,6 +387,13 @@ class RefNav(Node):
             self._publish_status()
         if not out.stream or out.commands or out.phase != "go":
             self._invalidate_hybrid()
+        if self._hybrid_runtime is not None:
+            publication_ns = self.get_clock().now().nanoseconds
+            wall_ns = perf_counter_ns()
+            control_pending = bool(out.commands) or (out.stream and out.setpoint is not None)
+            if (not self._check_hybrid_watchdog(publication_ns, wall_ns, control_pending=control_pending)
+                    or self._hybrid_runtime.expire_owner_target(publication_ns, wall_ns)):
+                return
         if out.stream and out.setpoint is not None:
             setpoint = out.setpoint
             o = self._OCM()

@@ -114,6 +114,18 @@ def inspection_yaw(state, alignment, goal, snapshot, now_ns):
     return Candidate('inspection-yaw', (command,) * STEPS)
 
 
+def stationary_reobservation(state, alignment, goal, snapshot, now_ns):
+    """Identify a reconstructed observation objective, never a motion lease."""
+    if not isinstance(goal, GoalBinding) or goal.proposal.intent != 'observe_more':
+        return False
+    from refnav.trajectory_evaluation import _resolve_goal
+    from refnav.reasoning.inspection import candidates
+    _, status, _ = _resolve_goal(snapshot, goal, now_ns, state, alignment)
+    return (status is None and goal.selection is not None and any(
+        item.entity_id == goal.proposal.target_entity_id and item.mode == 'reobserve'
+        for item in candidates(goal.context, goal.selection.inputs)))
+
+
 def plan(state, snapshot, *, now_ns, alignment, vehicle, objective, goal=None,
          predictor=None, model_id=None, history=None, min_clearance_m=CLEARANCE_PROBE_M,
          budget_s=.025, monotonic=perf_counter, cancelled=None, timings=None):
@@ -158,6 +170,20 @@ def plan(state, snapshot, *, now_ns, alignment, vehicle, objective, goal=None,
     if reason:
         return Plan("safe_stop_requested", reason, deadline_monotonic_s=deadline)
     if not ordered:
+        # A grounded stationary observation need not invent spatial progress.
+        # D3 still checks the entire predicted hold sweep, including drift.
+        # This has no ranked IDs and cannot pass the execution receipt gate;
+        # CourseMission owns the non-renewing bounded observation timer.
+        hold = next((entry for entry in evaluation.candidates if entry.candidate_id == 'hold'), None)
+        if (hold is not None and hold.status == 'feasible'
+                and hold.evidence == 'verified_observed_volume'
+                and hold.clearance_lower_bound_m >= clearance
+                and stationary_reobservation(state, alignment, goal, snapshot, now_ns)):
+            reason = interrupted()
+            if reason:
+                return Plan('safe_stop_requested', reason, deadline_monotonic_s=deadline)
+            return Plan('observation_wait_requested', 'observation_wait_verified', evaluation=evaluation,
+                        deadline_monotonic_s=deadline)
         return Plan("safe_stop_requested", "no_verified_progress", evaluation=evaluation,
                     deadline_monotonic_s=deadline)
     return Plan("candidate_proposed", "verified_progress", tuple(entry.candidate_id for entry in ordered),

@@ -1,0 +1,6 @@
+{
+  "byte_and_sqlite_audit": "PASS",
+  "verified_files": 8,
+  "clock_duration_ns": 40616000000,
+  "qualification": "integrity only; no decoded telemetry, clearance, or motion approval"
+}

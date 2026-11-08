@@ -12,6 +12,9 @@ from refnav.trajectory_evaluation import state_capture_ns
 from refnav.world_model.spatial_input import NS, stamp_ok
 
 
+CLOCK_STALL_NS = 300_000_000
+
+
 @dataclass(frozen=True)
 class ShadowTick:
     now_ns: int
@@ -116,7 +119,7 @@ class ShadowLoop:
     def observation_reason(self, now_ns, wall_ns):
         if self._closed or self._fault is not None:
             return "shadow_closed" if self._closed else self._fault
-        if self._clock_wall_ns is None or not 0 <= wall_ns - self._clock_wall_ns <= 300_000_000:
+        if self._clock_wall_ns is None or not 0 <= wall_ns - self._clock_wall_ns <= CLOCK_STALL_NS:
             return "shadow_clock_stalled"
         if abs(now_ns - self._clock_ns) > CLOCK_SKEW_NS:
             return "shadow_clock_unbound"
