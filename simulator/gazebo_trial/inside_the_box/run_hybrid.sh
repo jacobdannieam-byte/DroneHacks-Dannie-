@@ -16,6 +16,7 @@ export HYBRID_GAZEBO_RUN=1
 
 timeout --kill-after=10 600 bash simulator/inside_the_box/build_our_packages.sh > /evidence/colcon.txt 2>&1
 source simulator/inside_the_box/load_ros_environment.sh
+export PYTHONPATH="/repository${PYTHONPATH:+:$PYTHONPATH}"
 {
     uname -m
     gz sim --versions || gz sim --version || true
