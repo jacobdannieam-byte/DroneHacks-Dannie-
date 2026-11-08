@@ -65,16 +65,19 @@ CORNER_HEIGHT_TOLERANCE_METRES = 0.10
 
 class RouteFollower:
 
-    def __init__(self, waypoints_metres, leg_speeds_metres_per_second=None, target_lead_metres=TARGET_LEAD_METRES):
+    def __init__(self, waypoints_metres, leg_speeds_metres_per_second=None, target_lead_metres=TARGET_LEAD_METRES,
+                 finish_tolerance_metres=CORNER_TOLERANCE_METRES):
         """waypoints_metres: the planned route, one (east, north, height) row per waypoint.
         leg_speeds_metres_per_second: optional, the speed at which the target slides along the leg
         into each waypoint (the first entry is unused). Without it, every leg uses
         CRUISE_SPEED_METRES_PER_SECOND. target_lead_metres: how far the target may get ahead of the
-        drone. The course run uses both defaults; the fallback routes (fallback_routes.py) fly
-        faster high above the walls and pass their own."""
+        drone. finish_tolerance_metres: how close the drone must be sideways to the last waypoint
+        for the route to count as finished. The course run uses all three defaults; the fallback
+        missions (fallback_run.py) pass their own."""
         self.waypoints_metres = np.asarray(waypoints_metres, dtype=float)
         self.leg_speeds_metres_per_second = leg_speeds_metres_per_second
         self.target_lead_metres = target_lead_metres
+        self.finish_tolerance_metres = finish_tolerance_metres
         self.target_metres = self.waypoints_metres[0].copy()
         # The waypoint the target is sliding towards.
         self.next_waypoint_number = 1
@@ -83,7 +86,11 @@ class RouteFollower:
     def has_finished(self, drone_position_metres):
         """True once the target has reached the last waypoint and the drone is there too."""
         at_last_waypoint = self.next_waypoint_number >= len(self.waypoints_metres)
-        return at_last_waypoint and self._drone_is_at_target(drone_position_metres)
+        if not at_last_waypoint:
+            return False
+        height_difference_metres = abs(np.asarray(drone_position_metres, dtype=float)[2] - self.target_metres[2])
+        return (self._sideways_distance_to_target_metres(drone_position_metres) < self.finish_tolerance_metres
+                and height_difference_metres < CORNER_HEIGHT_TOLERANCE_METRES)
 
     def next_target(self, drone_position_metres, seconds_since_last_target):
         """Moves the target on, if the rules allow, and returns it as (east, north, height)."""

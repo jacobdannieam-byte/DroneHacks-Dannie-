@@ -79,6 +79,12 @@ MISSION_SETTING = "TEAM_NAV_MISSION"
 # the drone was moved after the software started, and the limits no longer mean what we think.
 LARGEST_LAUNCH_POSE_FROM_ORIGIN_METRES = 0.3
 
+# The team's choice (2026-11-08), after simulator runs of 42783f6: the landing starts above the pad
+# once the drone is within this distance sideways, not route_follower.py's 5 cm. With 5 cm the drone
+# hovered 6-7 cm off for up to 11 s while PX4's air pressure height drifted, until camera tracking's
+# height check stopped the run. Also used for the abort's flight to its landing spot.
+LANDING_START_SIDEWAYS_TOLERANCE_METRES = 0.10
+
 
 def fallback_route_from_environment():
     """The fallback route named by TEAM_NAV_MISSION, or None for the normal course route."""
@@ -173,8 +179,11 @@ class FallbackRun(CourseRun):
     def make_route_follower(self):
         follower = RouteFollower(self.plan.waypoints_to_fly(self.stop_after_stage),
                                  leg_speeds_metres_per_second=self.plan.leg_speeds_to_fly(self.stop_after_stage),
-                                 target_lead_metres=TARGET_LEAD_METRES)
-        return HeightHeldByCameraTracking(follower, self.link)
+                                 target_lead_metres=TARGET_LEAD_METRES,
+                                 finish_tolerance_metres=LANDING_START_SIDEWAYS_TOLERANCE_METRES)
+        # Kept, so that an abort carries on with the same height correction (fly_straight_to).
+        self.height_hold = HeightHeldByCameraTracking(follower, self.link)
+        return self.height_hold
 
     # ---- The abort (fallback_abort.py) ----------------------------------------------------------
 
@@ -222,8 +231,15 @@ class FallbackRun(CourseRun):
         """Slides a target from above the drone to above the spot, both at height_metres. If the drone
         is higher, the first target simply takes it down to that height where it is."""
         follower = RouteFollower([[drone[0], drone[1], height_metres], [spot[0], spot[1], height_metres]],
-                                 [0.0, ABORT_SPEED_METRES_PER_SECOND])
-        held = HeightHeldByCameraTracking(follower, self.link)
+                                 [0.0, ABORT_SPEED_METRES_PER_SECOND],
+                                 finish_tolerance_metres=LANDING_START_SIDEWAYS_TOLERANCE_METRES)
+        # The route's height hold carries on with its present correction. A fresh one would start
+        # from zero and, in the simulator (2026-11-08), let the drone climb to 2.70 m by the whole of
+        # PX4's height error before catching up at 0.1 m/s.
+        held = getattr(self, "height_hold", None)
+        if held is None:
+            held = HeightHeldByCameraTracking(follower, self.link)
+        held.follower = follower
         deadline_seconds = self.link.now_seconds() + longest_abort_seconds(drone, spot)
         while not held.has_finished(drone):
             if not (self.link.control_is_ours() and self.link.is_armed()):

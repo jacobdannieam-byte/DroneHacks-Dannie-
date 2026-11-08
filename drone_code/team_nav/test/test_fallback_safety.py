@@ -285,3 +285,33 @@ def test_a_drone_that_drifted_above_the_route_aborts_at_no_more_than_the_route_h
     run.fly_to_a_landing_spot_if_position_is_healthy()
     targets = np.array(run.watch.targets_sent)
     assert len(targets) > 0 and np.allclose(targets[:, 2], HIGH_HEIGHT_METRES)
+
+
+# ---- The two fixes after the simulator runs of 42783f6 ----------------------------------------------
+
+def test_the_fallback_route_finishes_within_010_m_of_the_pad_and_the_course_route_still_needs_005_m():
+    from team_nav.fallback_run import LANDING_START_SIDEWAYS_TOLERANCE_METRES
+    waypoints = np.array([[0.0, 0.0, 2.3], [1.0, 0.0, 2.3]])
+    hovering_off = np.array([1.07, 0.0, 2.3])                  # 7 cm off, as in the runs
+    fallback = RouteFollower(waypoints, finish_tolerance_metres=LANDING_START_SIDEWAYS_TOLERANCE_METRES)
+    course = RouteFollower(waypoints)
+    for follower in (fallback, course):
+        drone = waypoints[0].copy()
+        for _ in range(40):                                    # the drone keeps up with its target
+            drone = follower.next_target(drone, SECONDS_PER_CYCLE)
+        assert follower.next_waypoint_number >= len(waypoints)
+    assert fallback.has_finished(hovering_off)
+    assert not course.has_finished(hovering_off)
+    assert not fallback.has_finished(np.array([1.12, 0.0, 2.3]))
+
+
+def test_the_abort_carries_on_with_the_routes_height_correction():
+    run, events = abort_run(None, [0.0, 2.6, HIGH_HEIGHT_METRES])
+    run.watch.drone_on_course = lambda: run.watch.drone
+    run.link.now_seconds = iter(np.arange(0.0, 1000.0, 0.1)).__next__
+    route_hold = HeightHeldByCameraTracking(RouteFollower(np.array([[0.0, 0.0, 2.3], [1.0, 0.0, 2.3]])), run.link)
+    route_hold.correction_metres = -0.2
+    run.height_hold = route_hold
+    run.fly_to_a_landing_spot_if_position_is_healthy()
+    targets = np.array(run.watch.targets_sent)
+    assert targets[0][2] == pytest.approx(HIGH_HEIGHT_METRES - 0.2)    # not 2.3: the correction was kept
