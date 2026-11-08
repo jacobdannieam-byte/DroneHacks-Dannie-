@@ -79,7 +79,9 @@ def main():
                     targets.append(dict(timestamp=m.timestamp,velocity=list(m.velocity),position=list(m.position)))
                 else: modes.append(dict(timestamp=m.timestamp,velocity=m.velocity,position=m.position))
     result = correlate(recording,events,commands,targets,modes)
-    if before != hashlib.sha256(database.read_bytes()).hexdigest():
+    if (before != hashlib.sha256(database.read_bytes()).hexdigest() or
+            list(args.bag.glob('*.db3')) != databases or
+            any(p.stat().st_size for p in args.bag.glob('*.db3-wal'))):
         raise ValueError('raw recording changed during audit')
     result.update(raw_bag_sha256=before,recording_sha256=hashlib.sha256(raw).hexdigest())
     with args.output.open('x') as stream: json.dump(result,stream,indent=2)
