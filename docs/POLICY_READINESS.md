@@ -26,6 +26,8 @@ An in-place scan changes viewing direction, but the forward optical origin and n
 
 C1 braking and R1 owner-expiry/recovery drivers, recorder/audit checks and disarmed composition evidence exist. Their moving results remain outstanding in the cited batch. C0 takeoff/hover/landing evidence is narrower and supplies no translation/braking envelope. An approval package, schema-valid report or successful synthetic operator receipt is not a measured stopping or recovery result.
 
+The subsequently approved [first C1 attempt](C1_BRAKING_ATTEMPT_001_RESULT.md) took off and translated but aborted on the unchanged lower height limit before its braking trigger. Native LAND/disarm completed; no stopping envelope was produced. Altitude regulation must be revised and independently reviewed before a separately approved repeat. R1 and S0 remain unflown.
+
 Before the first bounded policy segment, establish measured braking and recovery bounds, reviewed sensor/transform uncertainty, owner timing under load, complete launch/route/stopping/recovery coverage, and a fresh exact-source disarmed composition. Obtain approval for that concrete motion configuration. A successful bounded S0 segment would still precede full-course validation and separate promotion of other strategies. The narrow original phone-course start may fail the required margin even with an accurate map; preserve it as a negative case rather than reducing the margin to pass.
 
 Protected Classic's saved four-checkpoint success demonstrates its different static-map route contract, not these new Hybrid gates. [Classic comparison](CLASSIC_HYBRID_BOOTSTRAP_COMPARISON.md). RTX acceleration can improve timing but cannot observe missing space or replace measured bounds.

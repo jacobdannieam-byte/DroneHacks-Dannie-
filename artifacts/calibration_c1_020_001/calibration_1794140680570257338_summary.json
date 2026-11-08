@@ -1,0 +1,82 @@
+{
+  "scope": "isolated_calibration_lane_only",
+  "course_score": null,
+  "policy_positive_clearance": false,
+  "flight_qualified": false,
+  "map_sha256": "a5dd0fc8dee3226d3acafad7c53cfb1aa58bbef43f2e83f7837411b31d8266a7",
+  "contact_measurement_available": false,
+  "geometry_kind": "sampled_conservative_body_sphere_not_actual_contact",
+  "frame_contract": "Gazebo ENU=(native NED y,x,-z); floor z=-0.04; no recentering",
+  "samples": 2381,
+  "intrusion_samples": 0,
+  "speed_exceedance_samples": 0,
+  "max_speed_3d_mps": 0.3325757969801403,
+  "latest_telemetry_fresh": true,
+  "latest": {
+    "position_ned_m": [
+      1.179927110671997,
+      0.0005524964653886855,
+      8.058040634750796e-07
+    ],
+    "velocity_ned_mps": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "position_world_enu_m": [
+      0.0005524964653886855,
+      1.179927110671997,
+      -8.058040634750796e-07
+    ],
+    "speed_3d_mps": 0.0,
+    "body_sphere_margin_m": {
+      "west": 2.6505524964653886,
+      "east": 2.6494475035346112,
+      "south": 2.829927110671997,
+      "north": 4.470072889328003,
+      "roof": 2.6580008058040634,
+      "floor": -0.3100008058040635
+    },
+    "side_or_roof_envelope_intrusion": false,
+    "floor_envelope_overlap": true,
+    "center_below_modeled_floor": false,
+    "navigation_center_box": false,
+    "source_publish_us": 83984000,
+    "source_sample_us": 83984000,
+    "receipt_ros_ns": 83984000000,
+    "observer_ros_ns": 84000000000,
+    "receipt_monotonic_ns": 18448736707059,
+    "telemetry_fresh": true,
+    "source_reports": {
+      "status": {
+        "source_publish_us": 83800000,
+        "receipt_ros_ns": 83800000000,
+        "receipt_monotonic_ns": 18448552088078
+      },
+      "landed": {
+        "source_publish_us": 83560000,
+        "receipt_ros_ns": 83560000000,
+        "receipt_monotonic_ns": 18448312519732
+      },
+      "position": {
+        "source_publish_us": 83984000,
+        "receipt_ros_ns": 83984000000,
+        "receipt_monotonic_ns": 18448736707059
+      },
+      "attitude": {
+        "source_publish_us": 83984000,
+        "receipt_ros_ns": 83984000000,
+        "receipt_monotonic_ns": 18448736771937
+      }
+    },
+    "attitude_q_wxyz": [
+      1.0000041723251343,
+      4.531255370920917e-08,
+      7.490509688068414e-07,
+      -0.0008706283406354487
+    ],
+    "armed": false,
+    "landed": true,
+    "nav_state": 14
+  }
+}

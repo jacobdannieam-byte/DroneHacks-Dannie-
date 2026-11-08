@@ -1,0 +1,50 @@
+{
+  "runtime_revision": "2ecbee3281727cff8c3791068f3503e66edf2bcf",
+  "archive_sha256": "87e8781e0e26492b0f77e733a0d54cdd6bfc17c7e3016947c9538f5cff350e88",
+  "outcome": "FAILED_left_navigation_height_band_native_land_and_disarm",
+  "retry_authorized": false,
+  "raw_files": [
+    {
+      "path": "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-c1-020-001\\evidence\\observations\\observations_0.db3",
+      "bytes": 347693056,
+      "sha256": "b00189fc42df0cfd67148a0ef769b1cf1607baadc2e0352b3c53771b9e530d9c"
+    },
+    {
+      "path": "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-c1-020-001\\evidence\\flight_records\\calibration_1794140680570257338_truth.jsonl",
+      "bytes": 3410872,
+      "sha256": "92c3e3600e1833f038e703393e20eb104617922d2bb53250a6794f0b678ba5eb"
+    }
+  ],
+  "retained_files": {
+    "approved_landing_speed.txt": "37ff3ed3cd01858560c7de7b4b069d4d86f89f8b15fd36a7958b9fecebf3509d",
+    "audit.sh": "daadfced60fc40b6b209eaca764462f85f54816e02b889e28efa0e34908cfafa",
+    "calibration_1794140680570257338_summary.json": "f3a0b1c28ae37474289bcf9835872502ad7e3996e86899c489a3af4464f08880",
+    "calibration_authorization.json": "e4a818bf2788869617f1baf2a0b964ea52a6821378675b3ff8bd6740b25ac96d",
+    "calibration_owner.json": "4b6277da84fd2960562a0cfb6d09a499222412c391e28ec616ed70a0e2d5b0a0",
+    "calibration_profile.json": "cb0f11b36c8591eacfbdc832b8d080d70c4e6858931d2a7637764be6255ea76c",
+    "calibration_recorder_ready.json": "78866d89f6f14d571239c11f7c3b78f82533eea22bbb4444e0a95ef4920b45d6",
+    "calibration_recording.json": "3db2a9a354931ff1a9bd06b7bf6b013d01a3007d928ebad38b688e6ccd788c49",
+    "disarmed-1.json": "64a36093b90bf5c3fe01e2be83c305d249d89daf2c2ef4a1c5ad3596850d525a",
+    "launcher.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "native_recovery_parameters.txt": "ef75c5851da193d0be3f4174bf868121f562882dc2f8bf9fc1736270c92ea493",
+    "ogre2.log": "e72943a7f3683e443b1f3221d9f6e37e0b186d65b1369daea0b33ff3408e3361",
+    "recorder_contract.json": "4a3176d59aaba5901a4e835fcf3951d156e0104ccde5791a6d01f1af703dbbc9",
+    "recording_final.json": "0e5989fda9c6fdb29645e967160064707294302fc70b554ee3f12734c03f212e",
+    "recording_ready.json": "f46a947d959259d9e4c8a1ed5a99e763827957a916d7a0392a05e71cf1cf7c84",
+    "recovery-1.json": "9e193f1ee175f29223cb9de8a8e15466b6a571555e28de0d62ed58efebb7c90f",
+    "run.ps1": "d66a160d3fe3129bfcec0d3c0a9f18f2e8af00b9148eeb3293a88845dea4bb4b",
+    "run_trial.sh": "26285d77a7a0865ba351b85d2d56fd506fd3548a71e3451aa89e24f8514cd981",
+    "trial_approval.json": "4164ffd799bd19d48588ec96494c60b1c5629d2fac8e4f198f0de29e7ff7bfca",
+    "versions.txt": "689da13b27db9afd70e7c365021d0394b18e6c33222cfba5547272fcb1dd686a",
+    "analysis\\calibration-bag-audit.txt": "d7ecbdb0d54100b890c7bd5c625e6a7b9cd6c8ed48601371f351ba97f5610ea4",
+    "analysis\\harness-first-failure.txt": "60dc1224aebb322946feba94f5eb4aa5e8b53fc9234b0964af5cffbc9c38b051",
+    "analysis\\initial-audits.json": "541685db29c11d0905e08a8ac53f807bc703a45d80bf76f16f2f233100bb3f68",
+    "analysis\\initial-pythonpath-failure.txt": "1aac999758d7b360269ea0cb1d38f17b0ff53d18dc3d8883869c14c4b1ea72c1",
+    "analysis\\initial-stopping-rejection.txt": "bb5efa36af2f2251e0e373d45e5248b31a14c9282c7e8ec234e7998f1b69dd9d",
+    "analysis\\standard-audits.json": "541685db29c11d0905e08a8ac53f807bc703a45d80bf76f16f2f233100bb3f68",
+    "analysis\\stopping-analysis.txt": "bb5efa36af2f2251e0e373d45e5248b31a14c9282c7e8ec234e7998f1b69dd9d",
+    "review\\c1_raw_review.json": "30ca1ec5be9f7322066523547a9b04bf13ecc5ee4518c508345f0e9fd7f4bcdb",
+    "review\\c1_raw_review.py": "d3c92b7cad3bba06c66bcf5457840f669db98f14b7f519b68f4e4b6860c6897f",
+    "review\\independent-review.md": "8432c43c3635c6ca84c355a3d51d8ff5de8def7745c84c8135c6e95ca26255ee"
+  }
+}

@@ -1,0 +1,28 @@
+Symbols: x = used, + = saved, * = unsaved
+x   COM_OF_LOSS_T [285,509] : 1.0000
+
+ 1013/1925 parameters used.
+Symbols: x = used, + = saved, * = unsaved
+x   COM_OBL_RC_ACT [284,508] : 0
+
+ 1013/1925 parameters used.
+Symbols: x = used, + = saved, * = unsaved
+x   MPC_LAND_SPEED [602,1083] : 0.7000
+
+ 1013/1925 parameters used.
+Symbols: x = used, + = saved, * = unsaved
+x   MPC_LAND_CRWL [599,1080] : 0.3000
+
+ 1013/1925 parameters used.
+Symbols: x = used, + = saved, * = unsaved
+x   MPC_Z_VEL_MAX_DN [644,1125] : 1.5000
+
+ 1013/1925 parameters used.
+Symbols: x = used, + = saved, * = unsaved
+x   MPC_Z_VEL_MAX_UP [645,1126] : 3.0000
+
+ 1013/1925 parameters used.
+Symbols: x = used, + = saved, * = unsaved
+x   COM_DISARM_LAND [256,472] : 2.0000
+
+ 1013/1925 parameters used.
