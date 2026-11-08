@@ -75,6 +75,11 @@ class RefNav(Node):
             if hybrid_runtime.executor.stopping_envelope is None:
                 raise ValueError('native owner requires a reviewed measured stopping envelope')
             self._owner_timing.validate_stopping_budget(hybrid_runtime.executor.stopping_envelope)
+            if hybrid_runtime.launch_guard is None:
+                raise ValueError('native Hybrid owner requires bound simulator launch geometry')
+            if hybrid_runtime.map_certificate is not None and (hybrid_runtime.map_clearance is None
+                                                              or hybrid_runtime.recovery_guard is None):
+                raise ValueError('map-assisted owner requires live clearance and qualified recovery')
         route, doc = load_route(self) if hybrid_runtime is None else ([], {})
         prm = C.Params(route=route)
         for k, v in vars(C.Params()).items():
@@ -393,6 +398,25 @@ class RefNav(Node):
             control_pending = bool(out.commands) or (out.stream and out.setpoint is not None)
             if (not self._check_hybrid_watchdog(publication_ns, wall_ns, control_pending=control_pending)
                     or self._hybrid_runtime.expire_owner_target(publication_ns, wall_ns)):
+                return
+            try:
+                reason = self._hybrid_runtime.publication_reason(self.mission, self.v, out, publication_ns)
+            except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, ArithmeticError, OSError) as error:
+                reason = 'publication_check_failed:' + type(error).__name__
+            publication_ns = self.get_clock().now().nanoseconds
+            wall_ns = perf_counter_ns()
+            if (not self._check_hybrid_watchdog(publication_ns, wall_ns, control_pending=control_pending)
+                    or self._hybrid_runtime.expire_owner_target(publication_ns, wall_ns)):
+                return
+            try:
+                reason = reason or self._hybrid_runtime.publication_freshness_reason(publication_ns)
+            except (ValueError, TypeError, KeyError, AttributeError, RuntimeError, ArithmeticError) as error:
+                reason = 'publication_freshness_failed:' + type(error).__name__
+            if reason is not None:
+                self._hybrid_runtime.invalidate()
+                self._hybrid_runtime.course.abort(reason)
+                self.mission.yield_hybrid_authority(publication_ns * 1e-9, reason)
+                self.get_logger().warning('publication refused: ' + reason)
                 return
         if out.stream and out.setpoint is not None:
             setpoint = out.setpoint

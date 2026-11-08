@@ -448,7 +448,10 @@ class HybridBagReplay(RecordedSpatialReplay):
                 "depth_capture_ns": snapshot.metric.capture_ns,
                 "depth_received_ns": snapshot.metric.received_ns, "assessment_ns": self.now, "px4_variances": variances,
                 "goal_id": plan.evaluation.goal_proposal_id if plan.evaluation else None,
-                "candidates": [{"id": row.candidate_id, "status": row.status, "reasons": row.reasons}
+                "candidates": [{"id": row.candidate_id, "status": row.status, "reasons": row.reasons,
+                                "inflation_m": row.inflation_m,
+                                "occupied_segments": row.occupied_segments,
+                                "unknown_segments": row.unknown_segments}
                                for row in plan.evaluation.candidates] if plan.evaluation else [],
                 "h0_ms": (perf_counter_ns() - start) / 1e6}
 

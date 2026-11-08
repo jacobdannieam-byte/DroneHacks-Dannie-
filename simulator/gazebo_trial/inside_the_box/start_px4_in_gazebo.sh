@@ -89,7 +89,18 @@ make_drone_model_and_world() {
 
 start_gazebo() {
     echo "Starting Gazebo..."
-    gz sim -s -r --headless-rendering -v 2 "$world_file" > "$log_folder/gazebo.txt" 2>&1 &
+    local render_args=(--headless-rendering)
+    case "${GAZEBO_RENDER_BACKEND:-egl}" in
+        egl) ;;
+        wslg_d3d12)
+            glxinfo -B > "$log_folder/renderer.txt" 2>&1
+            grep -q 'Accelerated: yes' "$log_folder/renderer.txt"
+            grep -q 'OpenGL renderer string: D3D12 (NVIDIA' "$log_folder/renderer.txt"
+            render_args=()
+            ;;
+        *) echo 'Unsupported Gazebo rendering backend' >&2; return 1 ;;
+    esac
+    gz sim -s -r "${render_args[@]}" -v 2 "$world_file" > "$log_folder/gazebo.txt" 2>&1 &
     gazebo_process_id=$!
     wait_until "Gazebo's clock" bash -c "gz topic -l | grep -q /world/$world_name/clock"
 }

@@ -41,6 +41,11 @@ class HybridRuntime:
         if course.stage.goal.reference != profile.spatial.reference:
             raise ValueError("course must use the reviewed H1 map reference")
         self.strategy, self.course, self.adapter = strategy, course, adapter
+        self.launch_guard = None
+        self.map_certificate = self.map_clearance = None
+        self.map_source_valid = None
+        self.recovery_guard = None
+        self._publication_inputs = self._publication_phase = None
         from examples.sim_clock_fence import SimulationClockFence
         self.clock_fence = SimulationClockFence(profile.clock) if profile.tracking_source == 'simulated_estimator' else None
         if strategy == 'hybrid_sitl' and profile.reasoner.variant != 'G0':
@@ -93,6 +98,80 @@ class HybridRuntime:
         if self.course.scan_pending and self.course.land_reason is None:
             self.course.abort('scan_observation_ended')
 
+    def install_map_clearance(self, lease, verify_exclusion, *, monotonic_ns=perf_counter_ns):
+        """Deployment-only lease attachment; configuration alone grants nothing."""
+        from refnav.map_assisted_clearance import MapAssistedClearance
+        if self.map_certificate is None or not callable(self.map_source_valid) or not callable(verify_exclusion):
+            raise ValueError('bound participant map and live exclusion verifier required')
+        if self.executor.stopping_envelope is None:
+            raise ValueError('reviewed stopping envelope required for map-assisted clearance')
+        def verified(current):
+            return self.map_source_valid() is True and verify_exclusion(current) is True
+        self.map_clearance = MapAssistedClearance(self.map_certificate, lease, verified,
+            stopping_envelope=self.executor.stopping_envelope, monotonic_ns=monotonic_ns)
+        self.invalidate()
+
+    def _map_inputs(self, inputs, now_ns):
+        if self.map_certificate is None:
+            return None, inputs
+        if self.map_clearance is None:
+            return 'map_clearance_lease_unavailable', None
+        if inputs is None:
+            return 'map_clearance_inputs_unavailable', None
+        reason = self.map_clearance.reason(inputs['alignment'], now_ns)
+        return (reason, None) if reason else (None, self.map_clearance.attach(inputs))
+
+    def publication_reason(self, mission, vehicle, output, now_ns):
+        """Final deployment fence immediately before native output publication."""
+        if not output.commands and not (output.stream and output.setpoint is not None):
+            return None
+        inputs = self._publication_inputs
+        phase = self._publication_phase
+        if phase in ('wait', 'arm', 'climb', 'hover') and self.launch_guard is not None:
+            reason = self.launch_guard.check_output(mission, vehicle, inputs, output, phase=phase)
+            if reason:
+                return reason
+        if self.map_certificate is None:
+            return None
+        reason, inputs = self._map_inputs(inputs, now_ns)
+        if reason:
+            return reason
+        if output.phase == 'land' or 'land' in output.commands:
+            if self.recovery_guard is None:
+                return 'map_assisted_recovery_unqualified'
+            return self.recovery_guard(mission, vehicle, inputs, output, now_ns)
+        if output.phase == 'go' and output.setpoint is not None:
+            from refnav.hybrid_integration import _input_reason
+            reason = _input_reason(inputs['state'], inputs['snapshot'].metric, inputs['alignment'], now_ns,
+                inputs['state_received_ns'], inputs['estimator_reset_counter'], inputs['estimator_healthy'],
+                inputs.get('objective') or self.course.goal)
+            if reason:
+                return reason
+            if self.executor.stopping_envelope is None:
+                return 'map_stopping_envelope_unavailable'
+            return target_sweep(inputs['state'], output.setpoint[:3], inputs['snapshot'],
+                inputs['alignment'], inputs['vehicle'], now_ns, stopping_envelope=self.executor.stopping_envelope)
+        return None
+
+    def publication_freshness_reason(self, now_ns):
+        """Cheap freshness fence after potentially slow source/geometry checks."""
+        if self.map_certificate is None:
+            return None
+        from refnav.trajectory_evaluation import state_capture_ns
+        inputs = self._publication_inputs
+        if inputs is None or self.map_clearance is None:
+            return 'publication_inputs_unavailable'
+        if not 0 <= now_ns - state_capture_ns(inputs['state'], inputs['alignment']) <= 50_000_000:
+            return 'publication_state_stale'
+        reason = self.map_clearance.observation_reason(inputs['snapshot'].metric, inputs['alignment'], now_ns)
+        if reason:
+            return reason
+        lease = self.map_clearance.lease
+        wall_ns = self.map_clearance.monotonic_ns()
+        if not lease.valid_from_ns <= now_ns < lease.valid_until_ns or not lease.wall_from_ns <= wall_ns < lease.wall_until_ns:
+            return 'publication_clearance_expired'
+        return None
+
     def _semantic(self, inputs, now_ns):
         stage = self.course.stage
         if stage.semantic is None:
@@ -144,6 +223,11 @@ class HybridRuntime:
     def _select(self, inputs, now_ns, wall_ns):
         self._motion_allowed = False
         self._course_started = True
+        reason, inputs = self._map_inputs(inputs, now_ns)
+        if reason:
+            self.course.abort(reason)
+            self.invalidate()
+            return reason, None
         binding = None if self.course.scan_pending else self._semantic(inputs, now_ns)
         if (not self.course.scan_pending and self.course.stage.semantic is not None
                 and self._semantic_metric is not inputs["snapshot"].metric):
@@ -204,6 +288,9 @@ class HybridRuntime:
                 "landing_request": self.course.land_reason}
         if self.course.scan_report is not None:
             status['waypoint_scan'] = self.course.scan_report
+        if self.map_certificate is not None:
+            status['clearance_mode'] = 'controlled_sitl_participant_map'
+            status['clearance_lease_installed'] = self.map_clearance is not None
         return status
 
     def issue(self, now_ns, *, px4_issue_us, setpoint):
@@ -263,7 +350,16 @@ class HybridRuntime:
         now = now_ns / NS
         clock_reason = self.loop.observation_reason(now_ns, wall_ns)
         reason, inputs = ((clock_reason, None) if clock_reason else self.loop.replay.prepare(now_ns))
+        map_reason, inputs = self._map_inputs(inputs, now_ns)
+        reason = reason or map_reason
+        self._publication_inputs, self._publication_phase = inputs, mission.phase
         sensors_ready = admission and owner_ready and inputs is not None
+        if self.launch_guard is not None and mission.phase in ('wait','arm','climb','hover'):
+            launch_reason = self.launch_guard.check_owner(mission, vehicle, inputs)
+            if launch_reason is not None:
+                reason = launch_reason
+                sensors_ready = False
+                self.invalidate()
         priming_ready = sensors_ready and vehicle.landed is True
         # After the first arming request, losing a verified source stops startup.
         # The core always handles authority loss before landing or streaming.

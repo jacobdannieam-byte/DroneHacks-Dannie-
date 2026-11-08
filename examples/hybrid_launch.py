@@ -70,6 +70,12 @@ def configured(path):
         measured_envelope = StoppingEnvelope(**envelope)
         validate_measurement(_read(measurement), measured_envelope)
         runtime.executor.stopping_envelope = measured_envelope
+    if 'simulator_launch' in doc:
+        from examples.bind_simulator_launch import bind
+        runtime.launch_guard = bind(runtime, doc['simulator_launch'], root)
+    if 'map_assisted' in doc:
+        from examples.bind_map_clearance import bind
+        bind(runtime, doc['map_assisted'], root)
     return strategy, runtime
 
 
@@ -80,6 +86,8 @@ def run_reviewed_sitl(runtime, approval, *, ros_args, output):
         raise ValueError("live isolated-SITL approval refused")
     if runtime.executor.stopping_envelope is None:
         raise ValueError('reviewed measured stopping envelope required before native policy execution')
+    if runtime.map_certificate is not None and (runtime.map_clearance is None or runtime.recovery_guard is None):
+        raise ValueError('map-assisted execution requires a live exclusion lease and qualified recovery guard')
     output = Path(output)
     if output.exists():
         raise ValueError("choose a new runtime log output")

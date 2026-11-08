@@ -26,7 +26,9 @@ def test_actual_executor_applies_stop_volume_on_first_proposal():
     runtime.executor.stopping_envelope=envelope(braking_distance_m=1.5)
     sink=start_navigation(runtime)
     assert not any(row['setpoint'] and row['phase']=='go' for row in sink.messages)
-    assert any('stopping_volume_unverified' in str(row) for row in runtime.records)
+    assert any(row['event']=='plan' and row['reason']=='eligible_for_offline_review' for row in runtime.records)
+    assert any(row['event']=='owner_decision' and row['reason']=='execution_sweep:unobserved_swept_volume'
+               for row in runtime.records)
 
 def test_native_activation_refuses_missing_stopping_measurement(tmp_path, monkeypatch):
     from examples.gazebo_hybrid_adapter import IsolationApproval

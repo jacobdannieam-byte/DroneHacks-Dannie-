@@ -1,0 +1,42 @@
+{
+  "evidence_kind": "synthetic_schema_example",
+  "motion_authority": false,
+  "description": "Documentation wrapper, not a runtime certificate, permission, survey, stopping report or approved profile. All hashes are placeholders; frame and times are synthetic. Do not strip this wrapper and use it for motion.",
+  "certificate": {
+    "scope": "controlled_sitl_participant_map",
+    "participant_map_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "review_id": "SYNTHETIC-NOT-REVIEWED",
+    "reference": {
+      "frame_id": "synthetic_prior_example",
+      "clock_id": "synthetic_clock",
+      "epoch": 0,
+      "body_frame": "base_link"
+    },
+    "alignment_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "bounds_min_m": [-2.0, -3.0, 0.05],
+    "bounds_max_m": [2.0, 3.0, 2.9],
+    "map_from_prior_yaw_rad": 0.0,
+    "prior_origin_in_map_m": [0.0, 0.0, 0.0],
+    "position_error_m": 0.1,
+    "angle_error_rad": 0.1,
+    "valid_from_ns": 0,
+    "valid_until_ns": 1000000000,
+    "stopping_evidence_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "lease": {
+    "lease_id": "SYNTHETIC-NO-OCCUPANCY-VERIFICATION",
+    "certificate_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "valid_from_ns": 0,
+    "valid_until_ns": 1000000000,
+    "wall_from_ns": 0,
+    "wall_until_ns": 1000000000
+  },
+  "required_external_inputs_not_supplied": [
+    "independently permitted complete participant source and its actual hash",
+    "reviewed frame transform and uncertainty",
+    "exact certificate byte hash and actual alignment_identity hash",
+    "raw-audited measured stopping evidence",
+    "fresh independent controlled-occupancy verification at each use",
+    "final owner profile and explicit movement approval"
+  ]
+}

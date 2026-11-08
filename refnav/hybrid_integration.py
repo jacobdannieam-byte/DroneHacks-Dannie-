@@ -5,6 +5,7 @@ from time import perf_counter
 
 from refnav.dynamics import DroneState
 from refnav.integration_timing import measure
+from refnav.map_assisted_clearance import MapAssistedClearance
 from refnav.predictive_planner import Plan, plan
 from refnav.sitl_review import ProposalReceipt, validate_receipt
 from refnav.trajectory_evaluation import (
@@ -60,6 +61,7 @@ def assess(state, snapshot, *, now_ns, alignment, vehicle, objective,
     """
     if (not isinstance(state, DroneState) or not isinstance(snapshot, SpatialSnapshot)
             or not isinstance(snapshot.metric, MetricSnapshot) or not isinstance(alignment, FrameAlignment)
+            or (snapshot.clearance is not None and not isinstance(snapshot.clearance, MapAssistedClearance))
             or not isinstance(vehicle, VehicleBounds) or not stamp_ok(now_ns)
             or (objective is not None and not isinstance(objective, MetricGoal))
             or (goal is not None and not isinstance(goal, GoalBinding))):
@@ -77,10 +79,11 @@ def assess(state, snapshot, *, now_ns, alignment, vehicle, objective,
         decision = Plan("safe_stop_requested", reason)
 
     receipt = ProposalReceipt(decision, state, alignment, metric, now_ns,
-                              state_received_ns=state_received_ns, estimator_reset_counter=estimator_reset_counter)
+                              state_received_ns=state_received_ns, estimator_reset_counter=estimator_reset_counter,
+                              clearance_identity=snapshot.clearance.identity if snapshot.clearance else None)
     if reason is None:
         reason = measure(timings, "receipt_validation", validate_receipt, receipt, state=state,
-                         alignment=alignment, metric=metric, now_ns=now_ns)
+                         alignment=alignment, metric=metric, now_ns=now_ns, clearance=snapshot.clearance)
         if decision.decision == "candidate_proposed":
             if cancelled is not None and cancelled():
                 reason = "cancelled"

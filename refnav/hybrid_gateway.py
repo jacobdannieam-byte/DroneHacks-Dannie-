@@ -10,6 +10,7 @@ from onboard.adapters.geometry import R_ENU_NED, rot_z
 from refnav.dynamics.validation import wrap_yaw
 from refnav.hybrid_integration import HybridAssessment, _input_reason
 from refnav.integration_timing import measure
+from refnav.map_assisted_clearance import AUTHORIZED_STATIC, clearance_sweep
 from refnav.predictive_planner import MIN_PROGRESS_M, candidate_for_id, has_progress
 from refnav.sitl_review import review
 from refnav.trajectory_evaluation import (
@@ -70,7 +71,7 @@ class HybridGateway:
             return GatewayDecision("invalid_review_input", fallback)
         receipt = assessment.receipt
         reason = review(receipt, state=state, alignment=alignment, metric=snapshot.metric, now_ns=now_ns,
-                        owner_output=out, vehicle=vehicle, owner_ready=owner_ready)
+                        owner_output=out, vehicle=vehicle, owner_ready=owner_ready, clearance=snapshot.clearance)
         if reason != "eligible_for_offline_review":
             return GatewayDecision(reason, fallback)
         bounds, objective, goal = (inputs[key] for key in ("vehicle", "objective", "goal"))
@@ -110,9 +111,10 @@ class HybridGateway:
         row = checked.candidates[0]
         if self.monotonic() >= deadline:
             return GatewayDecision("handoff_deadline_exceeded", fallback)
-        if (row.status != "feasible" or row.clearance_lower_bound_m < CLEARANCE_PROBE_M
+        if (row.status != "feasible" or row.clearance_lower_bound_m is None
+                or row.clearance_lower_bound_m < CLEARANCE_PROBE_M
                 or not has_progress(row)):
-            return GatewayDecision("sweep_rejected:" + row.reasons[0], fallback)
+            return GatewayDecision("sweep_rejected:" + next(iter(row.reasons), 'unverified'), fallback)
 
         target = candidate.schedule[0]
         # D0's horizon can end short of the held target. Check the entire
@@ -125,15 +127,27 @@ class HybridGateway:
         return GatewayDecision("hybrid_position_selected", (*target.position_m, target.yaw_rad))
 
 
-def target_sweep(state, target, snapshot, alignment, bounds, now_ns):
+def target_sweep(state, target, snapshot, alignment, bounds, now_ns, *, stopping_envelope=None):
     """Independently check the whole displacement to a held target."""
     points = np.asarray((state.position_m, target))
     transform = rot_z(alignment.map_from_enu_yaw_rad) @ R_ENU_NED
     margin = (bounds.state_position_error_m + bounds.tracking_error_m + alignment.position_error_m
               + 2 * math.sin(alignment.angle_error_rad / 2) * np.linalg.norm(points, axis=1).max())
     mapped = points @ transform.T + alignment.ned_origin_in_map_m
-    if margin > 2 or bounds.radius_m + CLEARANCE_PROBE_M > 2 or np.max(np.abs(mapped)) > MAX_LOCAL_M:
+    clearance = snapshot.clearance
+    if clearance is not None:
+        if stopping_envelope is not None and stopping_envelope != clearance.stopping_envelope:
+            return 'prior_stopping_evidence_mismatch'
+        stopping_envelope = clearance.stopping_envelope
+    radius = bounds.radius_m
+    if stopping_envelope is not None:
+        reason = stopping_envelope.speed_reason(math.hypot(*state.velocity_mps))
+        if reason:
+            return reason
+        radius = stopping_envelope.sweep_radius(bounds)
+    if margin > 2 or radius + CLEARANCE_PROBE_M > 2 or np.max(np.abs(mapped)) > MAX_LOCAL_M:
         return "target_uncertainty_outside_bound"
-    sweep = snapshot.metric.check_sweep(mapped, reference=alignment.map, now_ns=now_ns,
-                                        vehicle_radius_m=bounds.radius_m + CLEARANCE_PROBE_M, margin_m=margin)
-    return None if sweep.status == "verified_free" else "target_sweep_rejected:" + sweep.status
+    sweep = clearance_sweep(snapshot, mapped, alignment=alignment, now_ns=now_ns,
+                            vehicle_radius_m=radius + CLEARANCE_PROBE_M, margin_m=margin)
+    reason = sweep.status if clearance is None else sweep.reason
+    return None if sweep.status in ('verified_free', AUTHORIZED_STATIC) else 'target_sweep_rejected:' + reason

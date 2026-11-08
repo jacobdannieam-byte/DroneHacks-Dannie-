@@ -29,6 +29,7 @@ class Held:
     calibration: str
     ros_expires_ns: int
     wall_expires_s: float
+    clearance_identity: tuple | None = None
 
 
 class HeldExecutor:
@@ -59,6 +60,13 @@ class HeldExecutor:
                                inputs["estimator_reset_counter"], inputs["estimator_healthy"], inputs["objective"])
         if reason is not None:
             return reason
+        clearance = inputs['snapshot'].clearance
+        if clearance is not None:
+            if self.stopping_envelope != clearance.stopping_envelope:
+                return 'prior_stopping_evidence_mismatch'
+            reason = clearance.reason(alignment, now_ns)
+            if reason is not None:
+                return reason
         if (now_ns - state_capture_ns(state, alignment) > 50_000_000 or vehicle.pos is None
                 or not math.dist(vehicle.pos, state.position_m) <= inputs["vehicle"].state_position_error_m
                 or vehicle.heading is None
@@ -77,12 +85,6 @@ class HeldExecutor:
     def _checked(self, target, inputs, now_ns, *, deadline, hold=False):
         state, snapshot, alignment = inputs["state"], inputs["snapshot"], inputs["alignment"]
         bounds = inputs["vehicle"]
-        if self.stopping_envelope is not None:
-            from dataclasses import replace
-            reason = self.stopping_envelope.check(state, snapshot, alignment, bounds, now_ns)
-            if reason:
-                return reason
-            bounds = replace(bounds, radius_m=max(bounds.radius_m, self.stopping_envelope.body_radius_m))
         if not self._bounded(state, target, hold=hold):
             return "target_outside_execution_limits"
         if self.clock() >= deadline:
@@ -93,10 +95,12 @@ class HeldExecutor:
         row = evaluate_candidates(state, (candidate,), snapshot, now_ns=now_ns, alignment=alignment,
                                   vehicle=bounds, goal=None if hold else inputs["goal"] or inputs["objective"],
                                   interrupted=lambda: "execution_recheck_deadline" if self.clock() >= deadline else None,
-                                  timings=self.timings).candidates[0]
-        if row.status != "feasible" or row.clearance_lower_bound_m < CLEARANCE_PROBE_M:
-            return "execution_sweep:" + row.reasons[0]
-        reason = target_sweep(state, target[:3], snapshot, alignment, bounds, now_ns)
+                                  timings=self.timings, stopping_envelope=self.stopping_envelope).candidates[0]
+        if (row.status != 'feasible' or row.clearance_lower_bound_m is None
+                or row.clearance_lower_bound_m < CLEARANCE_PROBE_M):
+            return 'execution_sweep:' + next(iter(row.reasons), 'unverified')
+        reason = target_sweep(state, target[:3], snapshot, alignment, bounds, now_ns,
+                              stopping_envelope=self.stopping_envelope)
         return "execution_recheck_deadline" if self.clock() >= deadline else reason
 
     def step(self, *, inputs, assessment, key, now_ns, owner_output, vehicle, ready, generation):
@@ -105,6 +109,8 @@ class HeldExecutor:
             self.invalidate()
             return GatewayDecision(reason, None)
         state, metric = inputs["state"], inputs["snapshot"].metric
+        clearance = inputs['snapshot'].clearance
+        identity = clearance.identity if clearance is not None else None
         if assessment is not None:
             self.invalidate()
             self.gateway.offer(assessment, owner_generation=generation)
@@ -118,13 +124,13 @@ class HeldExecutor:
                     if reason:
                         return GatewayDecision(reason, None)
                 self.held = Held(result.setpoint, generation, key, metric.reference, metric.calibration_id,
-                                 now_ns + round(self.lease_s * NS), self.clock() + self.lease_s)
+                                 now_ns + round(self.lease_s * NS), self.clock() + self.lease_s, identity)
                 return result
             reason = result.reason if result.setpoint is None else "target_outside_execution_limits"
         elif self.held is not None:
             held = self.held
-            if ((held.generation, held.key, held.reference, held.calibration) ==
-                    (generation, key, metric.reference, metric.calibration_id) and
+            if ((held.generation, held.key, held.reference, held.calibration, held.clearance_identity) ==
+                    (generation, key, metric.reference, metric.calibration_id, identity) and
                     now_ns < held.ros_expires_ns and self.clock() < held.wall_expires_s):
                 reason = self._checked(held.target, inputs, now_ns,
                                        deadline=min(held.wall_expires_s, self.clock() + .01))

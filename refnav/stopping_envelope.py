@@ -35,15 +35,31 @@ class StoppingEnvelope:
     def stop_distance_m(self):
         return self.max_speed_mps*self.reaction_s+self.braking_distance_m
 
-    def check(self, state, snapshot, alignment, bounds, now_ns):
-        speed=math.hypot(*state.velocity_mps)
-        if not math.isfinite(speed) or speed>self.max_speed_mps:
+    def sweep_radius(self, bounds):
+        return max(bounds.radius_m, self.body_radius_m) + self.stop_distance_m
+
+    def speed_reason(self, speed):
+        if not math.isfinite(speed) or speed > self.max_speed_mps:
             return 'stopping_speed_outside_measurement'
-        point=np.asarray(state.position_m)
-        mapped=rot_z(alignment.map_from_enu_yaw_rad) @ R_ENU_NED @ point + alignment.ned_origin_in_map_m
-        margin=(bounds.state_position_error_m+bounds.tracking_error_m+alignment.position_error_m
-                +2*math.sin(alignment.angle_error_rad/2)*np.linalg.norm(point))
-        radius=max(bounds.radius_m,self.body_radius_m)+self.stop_distance_m
-        result=snapshot.metric.check_sweep((mapped,),reference=alignment.map,now_ns=now_ns,
-            vehicle_radius_m=radius,margin_m=margin)
-        return None if result.status=='verified_free' else 'stopping_volume_unverified:'+result.status
+        return None
+
+    def check(self, state, snapshot, alignment, bounds, now_ns, *, target=None):
+        """Check the full displacement with all-direction stopping at every point."""
+        from refnav.map_assisted_clearance import AUTHORIZED_STATIC, clearance_sweep
+
+        if snapshot.clearance is not None and self != snapshot.clearance.stopping_envelope:
+            return 'prior_stopping_evidence_mismatch'
+        reason = self.speed_reason(math.hypot(*state.velocity_mps))
+        if reason:
+            return reason
+        points = np.asarray((state.position_m,) if target is None else (state.position_m, target))
+        transform = rot_z(alignment.map_from_enu_yaw_rad) @ R_ENU_NED
+        mapped = points @ transform.T + alignment.ned_origin_in_map_m
+        margin = (bounds.state_position_error_m + bounds.tracking_error_m + alignment.position_error_m
+                  + 2 * math.sin(alignment.angle_error_rad / 2) * np.linalg.norm(points, axis=1).max())
+        radius = self.sweep_radius(bounds)
+        if radius > 2 or margin > 2:
+            return 'stopping_uncertainty_outside_bound'
+        result = clearance_sweep(snapshot, mapped, alignment=alignment, now_ns=now_ns,
+                                 vehicle_radius_m=radius, margin_m=margin)
+        return None if result.status in ('verified_free', AUTHORIZED_STATIC) else 'stopping_volume_unverified:' + result.reason

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import math
 from threading import RLock
 from types import MappingProxyType
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -14,6 +15,9 @@ from .observations import Config, Observation, validate
 from .spatial_input import AlignedDepth, Alignment, DepthCalibration, DepthCapture, NS, PoseBuffer, PoseSample, SpatialReference, stamp_ok
 from .spatial_volume import Cell, MapPolicy, MetricSnapshot, RollingVolume
 from .state import WorldState
+
+if TYPE_CHECKING:
+    from refnav.map_assisted_clearance import MapAssistedClearance
 
 
 @dataclass(frozen=True)
@@ -30,6 +34,7 @@ class SpatialSnapshot:
     metric: MetricSnapshot
     semantic: Mapping
     semantic_time_origin_ns: int | None
+    clearance: 'MapAssistedClearance | None' = None
 
 
 def _freeze_semantic(value):

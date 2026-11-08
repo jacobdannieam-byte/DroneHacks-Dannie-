@@ -43,6 +43,9 @@ def diagnostic_profile(probe, evidence_id):
     if not variances or not all(math.isfinite(v) and v >= 0 for v in variances):
         raise ValueError('finite observed PX4 covariance required')
     variance = max(variances)
+    worst_row, worst_axis = max(
+        ((row, axis) for row in probe['px4_clock_samples'] for axis in range(3)),
+        key=lambda item: item[0]['position_variance'][item[1]])
     now = last['/clock']['sim_ns']
     reference = {'frame_id': 'odom', 'clock_id': 'gazebo_sim', 'epoch': 0, 'body_frame': 'base_link'}
     document = {
@@ -68,6 +71,13 @@ def diagnostic_profile(probe, evidence_id):
         'ev_reset_counter': last['/fmu/in/vehicle_visual_odometry']['evidence'][0]['reset'][0],
         'local_reset_counters': last['/fmu/out/vehicle_local_position']['evidence'][0]['reset'],
         'tracking_source': 'simulated_estimator', 'mission_goal': asdict(MissionGoal()),
+        'diagnostic_covariance_provenance': {
+            'formula': '3 * sqrt(max position variance over all probe samples and axes)',
+            'variance_m2': variance, 'axis_ned': ('north', 'east', 'down')[worst_axis],
+            'source_publish_us': worst_row.get('px4_publish_us'),
+            'receipt_ns': worst_row.get('receipt_ns'),
+            'isotropic_application': True,
+            'qualification': 'diagnostic sensitivity only; covariance is not a certified error bound'},
         'diagnostic_assumptions': ['Pose/depth/TF uncertainty and identity clock are sensitivity assumptions.',
             'Observed covariance is not a worst-case physical error bound.',
             'No free-space bubble; reference-map control and background registration disabled.',

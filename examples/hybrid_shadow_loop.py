@@ -43,7 +43,8 @@ class ShadowTick:
                    state_age_ns=self.now_ns - capture, depth_age_ns=self.now_ns - receipt.metric.capture_ns,
                    state_receipt_age_ns=self.now_ns - receipt.state_received_ns,
                    depth_receipt_age_ns=self.now_ns - receipt.metric.received_ns,
-                   deadline_monotonic_s=plan.deadline_monotonic_s)
+                   deadline_monotonic_s=plan.deadline_monotonic_s,
+                   clearance_identity=receipt.clearance_identity)
         if self.state_receipt_wall_ns is not None:
             row["state_receipt_to_decision_wall_ns"] = self.completion_wall_ns - self.state_receipt_wall_ns
         if self.depth_receipt_wall_ns is not None:
@@ -61,6 +62,9 @@ class ShadowTick:
                 {"id": entry.candidate_id, "status": entry.status, "reasons": entry.reasons,
                  "clearance_lower_bound_m": entry.clearance_lower_bound_m,
                  "occupied_segments": entry.occupied_segments, "unknown_segments": entry.unknown_segments,
+                 "inflation_m": entry.inflation_m,
+                 "evidence": entry.evidence, "prior_backed_segments": entry.prior_backed_segments,
+                 "predicted_peak_speed_mps": entry.predicted_peak_speed_mps,
                  "predicted_end_position_ned_m": entry.predicted_end_position_ned_m,
                  "predicted_end_velocity_ned_mps": entry.predicted_end_velocity_ned_mps}
                 for entry in plan.evaluation.candidates]

@@ -10,7 +10,9 @@ from refnav.dynamics import DroneState, DynamicsModel, LocalNED, PositionSetpoin
 from refnav.dynamics.history import MotionHistory, STEP_SECONDS
 from refnav.dynamics.validation import finite_real, vector3, wrap_yaw
 from refnav.integration_timing import measure
+from refnav.map_assisted_clearance import AUTHORIZED_STATIC, MapAssistedClearance
 from refnav.reasoning import GoalProposal, ReasoningContext, WorldReference, build_context, validate_proposal
+from refnav.stopping_envelope import StoppingEnvelope
 from refnav.world_model.spatial_input import MAX_LOCAL_M, NS, SpatialReference, stamp_ok
 from refnav.world_model.spatial_pipeline import SpatialSnapshot
 from refnav.world_model.spatial_volume import Cell, MetricSnapshot, swept_cell_bounds
@@ -147,6 +149,8 @@ class CandidateDiagnostic:
     predicted_end_velocity_ned_mps: tuple | None = None
     inspection_yaw_progress_rad: float | None = None
     predicted_end_yaw_rad: float | None = None
+    prior_backed_segments: int = 0
+    predicted_peak_speed_mps: float | None = None
 
 
 @dataclass(frozen=True)
@@ -161,6 +165,7 @@ class Evaluation:
     calibration_id: str
     alignment_provenance: str
     goal_proposal_id: str | None
+    clearance_identity: tuple | None = None
 
 
 def _prefix(mask):
@@ -178,8 +183,9 @@ def _box_counts(prefix, lo, hi):
 class _Geometry:
     """One detached evidence grid and two summed-volume tables per candidate batch."""
 
-    def __init__(self, metric, now_ns):
+    def __init__(self, metric, now_ns, clearance=None):
         self.metric = metric
+        self.clearance = clearance
         cells = metric.cells_at(now_ns, metric.reference)
         self.occupied = _prefix(cells == Cell.OCCUPIED)
         # An unexpected class cannot be interpreted as free.
@@ -193,6 +199,9 @@ class _Geometry:
         occupied = _box_counts(self.occupied, lo, hi) > 0
         unknown = outside | (_box_counts(self.unknown, lo, hi) > 0)
         return int(np.count_nonzero(occupied)), int(np.count_nonzero(unknown))
+
+    def certifies(self, points, radius):
+        return self.clearance is not None and self.clearance.certificate.contains_segments(points, radius).all()
 
 
 def state_capture_ns(state, alignment):
@@ -273,6 +282,7 @@ def _forecast(candidate, state, predictor, history, timings):
         raise ValueError("forecast shape mismatch")
     effort = 0.
     positions = [state.position_m]
+    peak_speed = math.hypot(*state.velocity_mps)
     for index, prediction in enumerate(trajectory, start=1):
         expected = state.timestamp_s + index * STEP_SECONDS
         if (not isinstance(prediction, Prediction) or not isinstance(prediction.state, PredictedState)
@@ -283,16 +293,17 @@ def _forecast(candidate, state, predictor, history, timings):
                          finite_real(prediction.yaw_acceleration_rad_s2, "yaw acceleration"))
         effort += sum(value * value for value in accelerations) * STEP_SECONDS
         positions.append(prediction.state.position_m)
+        peak_speed = max(peak_speed, math.hypot(*prediction.state.velocity_mps))
     points = np.asarray(positions)
     if not math.isfinite(effort) or np.max(np.abs(points)) > MAX_LOCAL_M:
         raise ValueError("forecast outside local bounds")
-    return points, effort, trajectory[-1].state
+    return points, effort, trajectory[-1].state, peak_speed
 
 
 def _evaluate_one(candidate, state, predictor, history, transform, alignment, vehicle, geometry, goal_point,
-                  timings):
+                  timings, stopping_envelope):
     try:
-        points, effort, predicted_end = _forecast(candidate, state, predictor, history, timings)
+        points, effort, predicted_end, peak_speed = _forecast(candidate, state, predictor, history, timings)
     except (TypeError, ValueError, OverflowError):
         return CandidateDiagnostic(candidate.candidate_id, "rejected", ("invalid_schedule_or_prediction",), "invalid")
     margin = (vehicle.state_position_error_m + vehicle.tracking_error_m + alignment.position_error_m
@@ -300,7 +311,15 @@ def _evaluate_one(candidate, state, predictor, history, transform, alignment, ve
     mapped = points @ transform.T + alignment.ned_origin_in_map_m
     if margin > 2 or np.max(np.abs(mapped)) > MAX_LOCAL_M:
         return CandidateDiagnostic(candidate.candidate_id, "unknown", ("uncertainty_or_map_bound",), "unverified")
-    radius = vehicle.radius_m + margin
+    radius = vehicle.radius_m
+    if stopping_envelope is not None:
+        reason = stopping_envelope.speed_reason(peak_speed)
+        radius = stopping_envelope.sweep_radius(vehicle)
+        if reason or radius + CLEARANCE_PROBE_M > 2:
+            return CandidateDiagnostic(candidate.candidate_id, 'unknown',
+                                       (reason or 'stopping_uncertainty_outside_bound',), 'unverified',
+                                       predicted_peak_speed_mps=peak_speed)
+    radius += margin
     occupied, unknown = geometry.check(mapped, radius)
     progress = 0. if goal_point is None else float(np.linalg.norm(mapped[0] - goal_point)
                                                   - np.linalg.norm(mapped[-1] - goal_point))
@@ -308,25 +327,36 @@ def _evaluate_one(candidate, state, predictor, history, transform, alignment, ve
                "occupied_segments": occupied, "unknown_segments": unknown,
                "predicted_end_position_ned_m": predicted_end.position_m,
                "predicted_end_velocity_ned_mps": predicted_end.velocity_mps,
-               "predicted_end_yaw_rad": predicted_end.yaw_rad}
+               "predicted_end_yaw_rad": predicted_end.yaw_rad,
+               "predicted_peak_speed_mps": peak_speed}
     if occupied:
         return CandidateDiagnostic(candidate.candidate_id, "rejected", ("occupied_swept_volume",), "occupied", **details)
-    if unknown:
+    if geometry.clearance is not None and not geometry.certifies(mapped, radius):
+        return CandidateDiagnostic(candidate.candidate_id, 'unknown', ('outside_certified_volume',), 'unverified', **details)
+    if unknown and geometry.clearance is None:
         return CandidateDiagnostic(candidate.candidate_id, "unknown", ("unobserved_swept_volume",), "unverified", **details)
-    extra = geometry.check(mapped, radius + CLEARANCE_PROBE_M)
-    clearance = CLEARANCE_PROBE_M if not any(extra) else 0.
-    return CandidateDiagnostic(candidate.candidate_id, "feasible", ("observed_swept_volume",), "verified_observed_volume",
+    extra_radius = radius + CLEARANCE_PROBE_M
+    extra_occupied, extra_unknown = geometry.check(mapped, extra_radius)
+    extra_certified = geometry.certifies(mapped, extra_radius)
+    extra_clear = (not extra_occupied and (extra_certified if geometry.clearance is not None else not extra_unknown))
+    clearance = CLEARANCE_PROBE_M if extra_clear else 0.
+    prior_segments = max(unknown, extra_unknown if extra_clear else 0) if geometry.clearance is not None else 0
+    reason, evidence = (('prior_authorized_swept_volume', AUTHORIZED_STATIC) if prior_segments
+                        else ('observed_swept_volume', 'verified_observed_volume'))
+    return CandidateDiagnostic(candidate.candidate_id, "feasible", (reason,), evidence,
                                clearance_lower_bound_m=clearance, score=progress - .02 * effort + .1 * clearance,
-                               **details)
+                               prior_backed_segments=prior_segments, **details)
 
 
 def evaluate_candidates(state, candidates, snapshot, *, now_ns, alignment, vehicle,
                         goal=None, predictor=None, model_id=None, history=None, policy=EvaluationPolicy(), interrupted=None,
-                        timings=None):
-    """Rank feasible supplied candidates against current, static observed evidence."""
+                        timings=None, stopping_envelope=None):
+    """Rank feasible supplied candidates against the current clearance contract."""
     if (not isinstance(state, DroneState) or not isinstance(snapshot, SpatialSnapshot)
             or not isinstance(snapshot.metric, MetricSnapshot) or not isinstance(alignment, FrameAlignment)
             or not isinstance(vehicle, VehicleBounds) or not isinstance(policy, EvaluationPolicy)
+            or (stopping_envelope is not None and not isinstance(stopping_envelope, StoppingEnvelope))
+            or (snapshot.clearance is not None and not isinstance(snapshot.clearance, MapAssistedClearance))
             or not stamp_ok(now_ns) or (goal is not None and not isinstance(goal, (GoalBinding, MetricGoal)))):
         raise ValueError("invalid evaluation input contract")
     if (not isinstance(candidates, tuple) or not 1 <= len(candidates) <= MAX_CANDIDATES
@@ -344,6 +374,14 @@ def evaluate_candidates(state, candidates, snapshot, *, now_ns, alignment, vehic
     metric = snapshot.metric
     interruption = None if interrupted is None else interrupted()
     reasons = _shared_reasons(state, metric, alignment, now_ns, policy)
+    clearance = snapshot.clearance
+    if not reasons and clearance is not None:
+        refusal = clearance.observation_reason(metric, alignment, now_ns) or clearance.reason(alignment, now_ns)
+        if stopping_envelope is not None and stopping_envelope != clearance.stopping_envelope:
+            refusal = 'prior_stopping_evidence_mismatch'
+        if refusal:
+            reasons = (refusal,)
+        stopping_envelope = clearance.stopping_envelope
     status, goal_point = "unknown", None
     if not reasons:
         goal_point, status, reasons = _resolve_goal(snapshot, goal, now_ns, state, alignment)
@@ -352,14 +390,14 @@ def evaluate_candidates(state, candidates, snapshot, *, now_ns, alignment, vehic
                             for item in candidates)
     elif interruption is None:
         transform = rot_z(alignment.map_from_enu_yaw_rad) @ R_ENU_NED
-        geometry = _Geometry(metric, now_ns)
+        geometry = _Geometry(metric, now_ns, clearance)
         evaluated = []
         for item in candidates:
             interruption = None if interrupted is None else interrupted()
             if interruption is not None:
                 break
             evaluated.append(_evaluate_one(item, state, predictor, history, transform, alignment, vehicle,
-                                           geometry, goal_point, timings))
+                                           geometry, goal_point, timings, stopping_envelope))
         diagnostics = tuple(evaluated)
         if isinstance(goal, GoalBinding) and goal.selection is not None:
             from refnav.predictive_planner import inspection_yaw
@@ -388,4 +426,5 @@ def evaluate_candidates(state, candidates, snapshot, *, now_ns, alignment, vehic
     fallback = None if order else (interruption or "no_verified_candidate")
     return Evaluation(ranked, order, fallback, model_id, metric.reference,
                       metric.capture_ns, metric.observation_id, metric.calibration_id,
-                      alignment.provenance, goal.proposal.proposal_id if isinstance(goal, GoalBinding) else None)
+                      alignment.provenance, goal.proposal.proposal_id if isinstance(goal, GoalBinding) else None,
+                      clearance.identity if clearance is not None else None)
