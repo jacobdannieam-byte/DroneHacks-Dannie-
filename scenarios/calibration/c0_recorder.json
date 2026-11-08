@@ -1,0 +1,23 @@
+{
+  "review_status": "reviewed",
+  "trial_kind": "hover_land",
+  "clock_id": "ros_sim_time",
+  "frame_id": "px4_local_ned",
+  "clock_mapping": {
+    "source_clock_id": "px4_sitl_lockstep",
+    "ros_clock_id": "ros_sim_time",
+    "offset_ns": 0,
+    "max_error_ns": 4000000,
+    "valid_from_ns": 0,
+    "valid_until_ns": 600000000000,
+    "evidence_id": "batch003-native-timing-plus-pinned-lockstep-source"
+  },
+  "trial_id": "calibration-c0-001",
+  "owner_id": "/calibration_trial_owner",
+  "profile_sha256": "8aa559c6e3634ef7271578258181efde5a5aa79f95452f78ae5630b6766c57fb",
+  "topics": {
+    "vehicle_local_position": "/fmu/out/vehicle_local_position",
+    "vehicle_status": "/fmu/out/vehicle_status_v1",
+    "events": "/qualification/events"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "map_format_version": 1,
+  "name": "Isolated SITL stopping calibration lane v1",
+  "description": "Proposed empty calibration enclosure, not the phone course, not a physical survey, and never runtime policy free-space evidence. Explicit approval required before movement.",
+  "course_edges": {
+    "lowest_corner_metres": [-3.0, -4.0],
+    "highest_corner_metres": [3.0, 4.0],
+    "wall_top_height_metres": 3.048,
+    "source": "Design choice: 6 x 8 m; existing Gazebo net generator fixes roof at 3.048 m."
+  },
+  "launch_mark": {
+    "centre_metres": [0.0, -2.0],
+    "source": "Calibration design choice, 2 m from rear enclosure face."
+  },
+  "landing_pad": {
+    "centre_metres": [0.0, -2.0],
+    "outer_radius_metres": 0.75,
+    "approach_ring_radius_metres": 1.0,
+    "source": "Metadata only: recover by vertical landing in place anywhere within the approved empty lane bounds, not by return to this pad."
+  },
+  "walls": [],
+  "tubes": [],
+  "low_obstacles": [],
+  "checkpoint_lines": []
+}

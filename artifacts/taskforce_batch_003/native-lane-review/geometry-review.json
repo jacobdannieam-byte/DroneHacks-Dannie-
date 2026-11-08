@@ -1,0 +1,117 @@
+{
+  "status": "OFFLINE_DESIGN_REVIEW_ONLY_NOT_FLIGHT_APPROVAL",
+  "policy_positive_clearance": false,
+  "hardware_qualified": false,
+  "source_sha256": {
+    "scenarios/calibration/straight_lane_v1.json": "a5dd0fc8dee3226d3acafad7c53cfb1aa58bbef43f2e83f7837411b31d8266a7",
+    "externally_supplied_generated_drone_model.sdf": "f8cc362929337eb37e8649632ce3426d86a029a80932cee06a1a80f2d1e169f3",
+    "simulator/gazebo_trial/models/oak_d_s2_camera/model.sdf": "abcfc9977bdc8fe29ec1f7a319d97470ea407a1ce2abf46796022dcffa2cb61c",
+    "simulator/gazebo_trial/models/drone_16_with_oak_d_s2/model.sdf": "12d2b065f4467456f58666c8d05733491859565445937a41603fe02b07e493de",
+    "simulator/gazebo_trial/make_drone_16_model.py": "b92d4627991087c1f79896533a01fbd702c0f49a5ba4e1225f3747136442381b",
+    "simulator/gazebo_trial/course_world_sdf.py": "9cf254e6e4fb83fcaa728f086a30299eb96a6a406d52dcbfaa8f7e901cb2d465",
+    "simulator/gazebo_trial/calibration_lane.py": "3e8aed95550f0148b442a8c9f40339f437d7ec189d08bfacc9d7b46b1ab85883"
+  },
+  "world_sha256": "cfdb13b4e41a80f0314f2c851d8870a7d6a92dbc9faf8c93076095ba24cd23f4",
+  "body_sphere_design_m": 0.35,
+  "position_reserve_design_m": 0.25,
+  "generated_collision_radius_bound_m": 0.3030783638885472,
+  "collision_shapes": [
+    {
+      "link": "base_link",
+      "collision": "base_link_collision_0",
+      "size_m": [
+        0.2,
+        0.2,
+        0.08
+      ],
+      "sphere_radius_bound_m": 0.14696938456699069
+    },
+    {
+      "link": "rotor_0",
+      "collision": "rotor_0_collision",
+      "size_m": [
+        0.1778,
+        0.016923076923076923,
+        0.0008461538461538462
+      ],
+      "sphere_radius_bound_m": 0.2779824032653598
+    },
+    {
+      "link": "rotor_1",
+      "collision": "rotor_1_collision",
+      "size_m": [
+        0.1778,
+        0.016923076923076923,
+        0.0008461538461538462
+      ],
+      "sphere_radius_bound_m": 0.3030783638885472
+    },
+    {
+      "link": "rotor_2",
+      "collision": "rotor_2_collision",
+      "size_m": [
+        0.1778,
+        0.016923076923076923,
+        0.0008461538461538462
+      ],
+      "sphere_radius_bound_m": 0.2779824032653598
+    },
+    {
+      "link": "rotor_3",
+      "collision": "rotor_3_collision",
+      "size_m": [
+        0.1778,
+        0.016923076923076923,
+        0.0008461538461538462
+      ],
+      "sphere_radius_bound_m": 0.3030783638885472
+    },
+    {
+      "link": "camera_link",
+      "collision": "camera_body_collision",
+      "size_m": [
+        0.02,
+        0.1,
+        0.03
+      ],
+      "sphere_radius_bound_m": 0.17315072906367324
+    }
+  ],
+  "geometry": {
+    "interior_low_enu_m": [
+      -3.0,
+      -1.9999999999999998,
+      -0.04
+    ],
+    "interior_high_enu_m": [
+      3.0,
+      6.0,
+      3.008
+    ],
+    "navigation_low_enu_m": [
+      -0.5,
+      -0.5,
+      0.75
+    ],
+    "navigation_high_enu_m": [
+      0.5,
+      4.0,
+      1.25
+    ],
+    "inflated_body_radius_m": 0.6,
+    "navigation_clearance_design_m": {
+      "west": 1.9,
+      "south": 0.8999999999999998,
+      "floor": 0.19000000000000006,
+      "east": 1.9,
+      "north": 1.4,
+      "roof": 1.158
+    }
+  },
+  "limits": [
+    "Not measured stopping evidence.",
+    "No native NED-origin validation here.",
+    "Navigation floor margin excludes takeoff and landing contact phases.",
+    "Forward camera cannot observe its own near/rear body volume."
+  ]
+}

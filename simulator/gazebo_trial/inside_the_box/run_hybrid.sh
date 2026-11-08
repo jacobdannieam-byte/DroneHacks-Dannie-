@@ -2,6 +2,11 @@
 set -eo pipefail
 mode=$1; world=$2; seconds=$3; revision=$4; profile=$5; approval=$6
 cd /repository
+if [[ "$mode" == calibration_check || "$mode" == calibration_trial ]]; then
+    [[ "$world" == scenarios/calibration/straight_lane_v1.json ]] || exit 2
+    : "${CALIBRATION_IMAGE_SHA256:?Pinned image identity required}"
+    export CALIBRATION_LANE_RUN=1
+fi
 # The host stages an immutable source archive, including pinned strategy models.
 mkdir -p /evidence/ros /evidence/flight_records /evidence/gazebo_generated
 mkdir -p simulator/generated_files
@@ -29,7 +34,7 @@ if [[ "$mode" == hybrid_sitl || "$mode" == classical || "$mode" == classical_smo
     python3 -m examples.gazebo_container authorize "${auth[@]}"
     cp /approval.json /evidence/trial_approval.json
 fi
-if [ -n "$profile" ]; then
+if [ -n "$profile" ] && [[ "$mode" != calibration_* ]]; then
     python3 - "$profile" <<'PY'
 import json, shutil, sys
 from pathlib import Path
@@ -43,6 +48,7 @@ fi
 
 stack_pid=
 bag_pid=
+calibration_recorder_pid=
 bag_root="$(mktemp -d)"
 bag_path="$bag_root/observations"
 required=()
@@ -72,7 +78,7 @@ YAML
 
 cleanup() {
     local status=$? bag_status=0 pid
-    for pid in "$bag_pid" "$stack_pid"; do
+    for pid in "$calibration_recorder_pid" "$bag_pid" "$stack_pid"; do
         [ -n "$pid" ] || continue
         kill -INT "$pid" 2>/dev/null || true
         for _ in {1..50}; do kill -0 "$pid" 2>/dev/null || break; sleep .1; done
@@ -83,7 +89,7 @@ cleanup() {
         # A Windows bind mount need not permit preserving Linux file times.
         cp -R "$bag_path" /evidence/observations || bag_status=1
         local minimum_duration=0
-        if [[ "$mode" == observe || "$mode" == classical_observe ]]; then
+        if [[ "$mode" == observe || "$mode" == classical_observe || "$mode" == calibration_check ]]; then
             minimum_duration="$((seconds * 1000000000))"
         fi
         MIN_BAG_DURATION_NS="$minimum_duration" python3 -m simulator.gazebo_trial.recording_gate verify /evidence/observations \
@@ -138,7 +144,8 @@ topics="$(python3 -m examples.gazebo_container topics)"
 mapfile -t bag_topics <<< "$topics"
 required=("${bag_topics[@]}" /gazebo_hybrid/simulated_estimator/health_diagnostics /fmu/out/distance_sensor)
 start_recording "${required[@]}" \
-    /fmu/in/offboard_control_mode /fmu/in/trajectory_setpoint /fmu/in/vehicle_command /refnav/status
+    /fmu/in/offboard_control_mode /fmu/in/trajectory_setpoint /fmu/in/vehicle_command /refnav/status \
+    /qualification/events /calibration_trial/control /fmu/out/vehicle_command_ack /simulator_only/touches
 # Give DDS discovery / EKF bootstrap time without creating any owner. Every
 # attempt leaves its report, and the entire startup has a bounded wall budget.
 ready=0
@@ -151,8 +158,80 @@ for attempt in {1..12}; do
 done
 if [ "$ready" != 1 ]; then echo "Disarmed Gazebo sensor/authority preflight failed"; exit 1; fi
 
+# Capture effective settings without changing the deployed recovery behavior.
+(
+    cd /opt/PX4-Autopilot/build/px4_sitl_default/rootfs
+    for parameter in COM_OF_LOSS_T COM_OBL_RC_ACT MPC_LAND_SPEED MPC_LAND_CRWL MPC_Z_VEL_MAX_DN MPC_Z_VEL_MAX_UP COM_DISARM_LAND; do
+        ../bin/px4-param show "$parameter"
+    done
+) > /evidence/native_recovery_parameters.txt
+
 ps -eo pid,comm,%cpu,rss > /evidence/resources_start.txt
 case "$mode" in
+    calibration_check|calibration_trial)
+        contract=scenarios/calibration/c0_recorder.json
+        geometry=artifacts/taskforce_batch_003/native-lane-review/geometry-review.json
+        contract_sha="$(sha256sum "$contract" | cut -d' ' -f1)"
+        cp "$profile" /evidence/calibration_profile.json
+        cp "$contract" /evidence/recorder_contract.json
+        python3 -m examples.qualification_recorder --contract "$contract" --contract-sha256 "$contract_sha" \
+            --output /evidence/calibration_recording.json --ready-output /evidence/calibration_recorder_ready.json \
+            --seconds 240 > /evidence/calibration_recorder.txt 2>&1 &
+        calibration_recorder_pid=$!
+        for attempt in {1..100}; do
+            kill -0 "$calibration_recorder_pid" && kill -0 "$bag_pid" || exit 1
+            [ ! -f /evidence/calibration_recorder_ready.json ] || break
+            sleep .05
+        done
+        [ -f /evidence/calibration_recorder_ready.json ] || exit 1
+        calibration_args=(--profile "$profile" --world simulator/gazebo_trial/generated/worlds/straight_lane_v1_full_simulator.sdf
+            --vehicle simulator/gazebo_trial/generated/models/drone_16_like/model.sdf
+            --geometry-evidence "$geometry" --revision "$revision" --image-sha256 "$CALIBRATION_IMAGE_SHA256")
+        if [ "$mode" = calibration_check ]; then
+            python3 -m examples.calibration_trial_owner "${calibration_args[@]}" --disarmed-check \
+                --output /evidence/calibration_disarmed_check.json
+            sleep "$seconds"
+            kill -0 "$calibration_recorder_pid" && kill -0 "$bag_pid" && kill -0 "$stack_pid"
+        else
+            [ -n "$approval" ] || exit 2
+            calibration_args+=(--approval "$approval" --recording-contract "$contract"
+                --recorder-ready /evidence/calibration_recorder_ready.json
+                --recorder-pid "$calibration_recorder_pid" --bag-pid "$bag_pid")
+            # No parameter mutation or command endpoint before exact approval.
+            python3 -m examples.calibration_trial_owner "${calibration_args[@]}" --authorize-only \
+                --output /evidence/calibration_authorization.json
+            (
+                cd /opt/PX4-Autopilot/build/px4_sitl_default/rootfs
+                ../bin/px4-param set MPC_LAND_SPEED 0.3
+                ../bin/px4-param show MPC_LAND_SPEED
+            ) > /evidence/approved_landing_speed.txt
+            grep -Eq 'MPC_LAND_SPEED.*: 0\.3000' /evidence/approved_landing_speed.txt
+            result=0
+            timeout --signal=INT --kill-after=5 130 python3 -m examples.calibration_trial_owner \
+                "${calibration_args[@]}" --output /evidence/calibration_owner.json || result=$?
+            # Observe recovery for at most 60 s after the command owner exits.
+            # Emergency simulator cancellation requires its own explicit approval
+            # flag and can never masquerade as landing or authorize a retry.
+            recovered=0
+            recovery_deadline=$((SECONDS + 60))
+            for recovery_attempt in {1..12}; do
+                kill -0 "$stack_pid" && kill -0 "$bag_pid" || break
+                remaining=$((recovery_deadline - SECONDS))
+                [ "$remaining" -gt 0 ] || break
+                if timeout --signal=INT --kill-after=2 "$remaining" python3 -m examples.gazebo_container probe --seconds 4 \
+                    --output "/evidence/recovery-$recovery_attempt.json"; then
+                    recovered=1
+                    break
+                fi
+            done
+            if [ "$recovered" != 1 ]; then
+                printf '%s\n' '{"result":"FAIL","reason":"emergency_simulator_termination_without_confirmed_landing","landing_confirmed":false,"retry_authorized":false,"evidence":"recovery-*.json and observations/"}' \
+                    > /evidence/emergency_simulator_termination.json
+                result=1
+            fi
+            exit "$result"
+        fi
+        ;;
     observe)
         sleep "$seconds"
         kill -0 "$stack_pid" && kill -0 "$bag_pid"

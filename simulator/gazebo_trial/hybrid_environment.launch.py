@@ -8,13 +8,18 @@ from launch_ros.actions import Node
 
 from course_simulator.world import prepare_world
 from examples.gazebo_sensor_contract import SIM_ODOM, SIM_STATUS
+from simulator.gazebo_trial.calibration_referee import calibration_observer_enabled
 
 ROOT = "/repository"
 SIM = {"use_sim_time": True}
 
 
 def generate_launch_description():
+    calibration = calibration_observer_enabled()
     prepare_world()
+    observer = (ExecuteProcess(cmd=['python3', '-m', 'simulator.gazebo_trial.calibration_referee',
+                                    '--ros-args', '-p', 'use_sim_time:=true'], cwd=ROOT, output='screen')
+                if calibration else Node(package='course_simulator', executable='referee', parameters=[SIM]))
     stack = [
         ExecuteProcess(cmd=["bash", f"{ROOT}/simulator/gazebo_trial/inside_the_box/start_px4_in_gazebo.sh"],
                        output="screen"),
@@ -26,7 +31,7 @@ def generate_launch_description():
         Node(package="course_simulator", executable="pretend_camera_tracking", parameters=[SIM],
              remappings=[("/visual_slam/tracking/odometry", SIM_ODOM), ("/visual_slam/status", SIM_STATUS)]),
         Node(package="course_simulator", executable="pretend_bottom_laser", parameters=[SIM]),
-        Node(package="course_simulator", executable="referee", parameters=[SIM]),
+        observer,
     ]
     handlers = [RegisterEventHandler(OnProcessExit(
         target_action=action, on_exit=[EmitEvent(event=Shutdown(reason="Gazebo service exited"))]))
