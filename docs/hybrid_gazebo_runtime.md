@@ -1,5 +1,10 @@
 # Hybrid runtime and Gazebo integration
 
+The [offline goal comparison](goal_reasoning_comparison.md) adds an H1 `reasoner`
+configuration (G0 default; G1/G2 shadow only) and inspection-specific metric
+objectives. It does not close any native acceptance gap recorded here. An
+`observe_more` goal no longer implicitly targets the opening center.
+
 For the imported Gazebo assets and the integrated container launcher, use
 [the current Gazebo trial runbook](gazebo_hybrid_trial.md). The earlier
 runtime design and Windows-only evidence are retained below.

@@ -1,0 +1,4280 @@
+{
+  "G0": {
+    "rows": [
+      {
+        "tick_ns": 103000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90770699767800,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 90000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 100000000,
+        "state_received_ns": 102000000,
+        "depth_capture_ns": 100000000,
+        "depth_received_ns": 102000000,
+        "observation_id": "depth-100000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90770.70672959999,
+        "goal_id": "goal_fce6413ca0ecd449dba16e273d3b0a8a63a2ae350b994f29079a0cdac01fb38c",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.0,
+              -0.1,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.17882620228918214,
+              -0.0949388809918706,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.1755281352768012,
+              0.004967777487520206,
+              0.0
+            ]
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.32513854961669475,
+              -0.09079796543976469,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.31914206413963847,
+              0.009032322704582155,
+              0.0
+            ]
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.16256927480834737,
+              -0.09539898271988236,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.15957103206981924,
+              0.0045161613522910855,
+              0.0
+            ]
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.22818371751613206,
+              -0.2561169857632415,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.22397535665028181,
+              -0.15323774170265653,
+              0.0
+            ]
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.21898872316662582,
+              0.06877280974473665,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.21494994431479206,
+              0.1656601560660222,
+              0.0
+            ]
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.10455415340935975,
+              -0.30226296845797285,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.10262587556219502,
+              -0.19853266039596548,
+              0.0
+            ]
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.09294710808517197,
+              0.10785262688545029,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.09123289737584768,
+              0.2040192295231382,
+              0.0
+            ]
+          }
+        ]
+      },
+      {
+        "tick_ns": 303000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90770740379400,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 290000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 300000000,
+        "state_received_ns": 302000000,
+        "depth_capture_ns": 300000000,
+        "depth_received_ns": 302000000,
+        "observation_id": "depth-300000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90770.74911539999,
+        "goal_id": "goal_82282d9fcaa4524fc79b3a383ab4d82cad57a7f560566b6ebe91794553aee1ea",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.0,
+              -0.1,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.17882620228918214,
+              -0.0949388809918706,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.1755281352768012,
+              0.004967777487520206,
+              0.0
+            ]
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.32513854961669475,
+              -0.09079796543976469,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.31914206413963847,
+              0.009032322704582155,
+              0.0
+            ]
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.16256927480834737,
+              -0.09539898271988236,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.15957103206981924,
+              0.0045161613522910855,
+              0.0
+            ]
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.22818371751613206,
+              -0.2561169857632415,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.22397535665028181,
+              -0.15323774170265653,
+              0.0
+            ]
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.21898872316662582,
+              0.06877280974473665,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.21494994431479206,
+              0.1656601560660222,
+              0.0
+            ]
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.10455415340935975,
+              -0.30226296845797285,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.10262587556219502,
+              -0.19853266039596548,
+              0.0
+            ]
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.09294710808517197,
+              0.10785262688545029,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.09123289737584768,
+              0.2040192295231382,
+              0.0
+            ]
+          }
+        ]
+      },
+      {
+        "tick_ns": 503000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90770780337000,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 490000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 500000000,
+        "state_received_ns": 502000000,
+        "depth_capture_ns": 500000000,
+        "depth_received_ns": 502000000,
+        "observation_id": "depth-500000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90770.79021539999,
+        "goal_id": "goal_efba859a50979b526adeb71153f6821e7f17d831d918ce61c13c13e969498393",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.0,
+              -0.1,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.17882620228918214,
+              -0.0949388809918706,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.1755281352768012,
+              0.004967777487520206,
+              0.0
+            ]
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.32513854961669475,
+              -0.09079796543976469,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.31914206413963847,
+              0.009032322704582155,
+              0.0
+            ]
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.16256927480834737,
+              -0.09539898271988236,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.15957103206981924,
+              0.0045161613522910855,
+              0.0
+            ]
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.22818371751613206,
+              -0.2561169857632415,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.22397535665028181,
+              -0.15323774170265653,
+              0.0
+            ]
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.21898872316662582,
+              0.06877280974473665,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.21494994431479206,
+              0.1656601560660222,
+              0.0
+            ]
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.10455415340935975,
+              -0.30226296845797285,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.10262587556219502,
+              -0.19853266039596548,
+              0.0
+            ]
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.09294710808517197,
+              0.10785262688545029,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.09123289737584768,
+              0.2040192295231382,
+              0.0
+            ]
+          }
+        ]
+      },
+      {
+        "tick_ns": 703000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90770808604800,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 690000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 700000000,
+        "state_received_ns": 702000000,
+        "depth_capture_ns": 700000000,
+        "depth_received_ns": 702000000,
+        "observation_id": "depth-700000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90770.8291399,
+        "goal_id": "goal_1c428125704141b0b1561942fd5d3d2c2620a3eba6fafdebcd09a2a834df0b2d",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          }
+        ]
+      },
+      {
+        "tick_ns": 903000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90770836905900,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 890000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 900000000,
+        "state_received_ns": 902000000,
+        "depth_capture_ns": 900000000,
+        "depth_received_ns": 902000000,
+        "observation_id": "depth-900000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90770.8575004,
+        "goal_id": "goal_5103f51bd9000ce19655b44444e83f0c835fce4c70814dc1ff1ed47eb36f95ea",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          }
+        ]
+      },
+      {
+        "tick_ns": 1103000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90770865162000,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 1090000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 1100000000,
+        "state_received_ns": 1102000000,
+        "depth_capture_ns": 1100000000,
+        "depth_received_ns": 1102000000,
+        "observation_id": "depth-1100000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90770.88562249999,
+        "goal_id": "goal_897131d842ef12b284e98c9e6d507f3df12a4c9a0b6a5a07e57742f1db174861",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          }
+        ]
+      },
+      {
+        "tick_ns": 1303000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90770893896500,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 1290000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 1300000000,
+        "state_received_ns": 1302000000,
+        "depth_capture_ns": 1300000000,
+        "depth_received_ns": 1302000000,
+        "observation_id": "depth-1300000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90770.914419,
+        "goal_id": "goal_434cf9497f2e0fd10981c99341a95ed41dd370d96f7ba74ef12e8e205827cca8",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          }
+        ]
+      },
+      {
+        "tick_ns": 1503000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90770922511400,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 1490000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 1500000000,
+        "state_received_ns": 1502000000,
+        "depth_capture_ns": 1500000000,
+        "depth_received_ns": 1502000000,
+        "observation_id": "depth-1500000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90770.9429839,
+        "goal_id": "goal_a27da2e5ccb2b343baca328cb9d610220b6c499328d6026f3222b42f1a6cacf9",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          }
+        ]
+      },
+      {
+        "tick_ns": 1703000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90770951399900,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 1690000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 1700000000,
+        "state_received_ns": 1702000000,
+        "depth_capture_ns": 1700000000,
+        "depth_received_ns": 1702000000,
+        "observation_id": "depth-1700000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90770.97193279999,
+        "goal_id": "goal_9144e8c0415779bb80b6baad4aec3ae04e2f8607548e225945110cef17d7f97c",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "no_supported_inspection"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          }
+        ]
+      }
+    ],
+    "timings": {
+      "d3_evaluation": {
+        "p50_ms": 2.207,
+        "p95_ms": 14.1809,
+        "p99_ms": 14.3233,
+        "samples": 9,
+        "max_ms": 14.3589
+      },
+      "d5_planning": {
+        "p50_ms": 4.5048,
+        "p95_ms": 17.29784,
+        "p99_ms": 17.863568,
+        "samples": 9,
+        "max_ms": 18.005
+      },
+      "depth_capture_to_tick_ros": {
+        "p50_ms": 3.0,
+        "p95_ms": 3.0,
+        "p99_ms": 3.0,
+        "samples": 9,
+        "max_ms": 3.0
+      },
+      "depth_normalization": {
+        "p50_ms": 0.0476,
+        "p95_ms": 0.05058,
+        "p99_ms": 0.050996,
+        "samples": 9,
+        "max_ms": 0.0511
+      },
+      "h0_total": {
+        "p50_ms": 4.5523,
+        "p95_ms": 17.350479999999997,
+        "p99_ms": 17.918256,
+        "samples": 9,
+        "max_ms": 18.0602
+      },
+      "inspection_inputs": {
+        "p50_ms": 0.1937,
+        "p95_ms": 0.24194,
+        "p99_ms": 0.253268,
+        "samples": 9,
+        "max_ms": 0.2561
+      },
+      "metric_apply": {
+        "p50_ms": 0.2681,
+        "p95_ms": 0.35766,
+        "p99_ms": 0.397212,
+        "samples": 9,
+        "max_ms": 0.4071
+      },
+      "metric_prepare": {
+        "p50_ms": 12.4036,
+        "p95_ms": 16.964779999999998,
+        "p99_ms": 19.265996,
+        "samples": 9,
+        "max_ms": 19.8413
+      },
+      "pose_alignment": {
+        "p50_ms": 0.0129,
+        "p95_ms": 0.015899999999999997,
+        "p99_ms": 0.0167,
+        "samples": 9,
+        "max_ms": 0.0169
+      },
+      "prediction_rollout": {
+        "p50_ms": 0.83395,
+        "p95_ms": 1.0458749999999997,
+        "p99_ms": 1.068924,
+        "samples": 24,
+        "max_ms": 1.0692
+      },
+      "reasoner_inference": {
+        "p50_ms": 0.5479,
+        "p95_ms": 0.593,
+        "p99_ms": 0.59828,
+        "samples": 9,
+        "max_ms": 0.5996
+      },
+      "reasoning_context": {
+        "p50_ms": 1.6144,
+        "p95_ms": 1.74674,
+        "p99_ms": 1.796148,
+        "samples": 9,
+        "max_ms": 1.8085
+      },
+      "receipt_validation": {
+        "p50_ms": 0.0148,
+        "p95_ms": 0.02062,
+        "p99_ms": 0.021644,
+        "samples": 9,
+        "max_ms": 0.0219
+      },
+      "semantic_goal": {
+        "p50_ms": 2.4324,
+        "p95_ms": 2.61572,
+        "p99_ms": 2.710344,
+        "samples": 9,
+        "max_ms": 2.734
+      },
+      "state_capture_to_tick_ros": {
+        "p50_ms": 3.0,
+        "p95_ms": 3.0,
+        "p99_ms": 3.0,
+        "samples": 9,
+        "max_ms": 3.0
+      },
+      "worldstate_update": {
+        "p50_ms": 5.6101,
+        "p95_ms": 17.754499999999993,
+        "p99_ms": 23.9985,
+        "samples": 9,
+        "max_ms": 25.5595
+      }
+    }
+  },
+  "G1": {
+    "rows": [
+      {
+        "tick_ns": 103000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90770991525400,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 90000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 100000000,
+        "state_received_ns": 102000000,
+        "depth_capture_ns": 100000000,
+        "depth_received_ns": 102000000,
+        "observation_id": "depth-100000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90771.00169559999,
+        "goal_id": "goal_fce6413ca0ecd449dba16e273d3b0a8a63a2ae350b994f29079a0cdac01fb38c",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.0,
+              -0.1,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.17882620228918214,
+              -0.0949388809918706,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.1755281352768012,
+              0.004967777487520206,
+              0.0
+            ]
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.32513854961669475,
+              -0.09079796543976469,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.31914206413963847,
+              0.009032322704582155,
+              0.0
+            ]
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.16256927480834737,
+              -0.09539898271988236,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.15957103206981924,
+              0.0045161613522910855,
+              0.0
+            ]
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.22818371751613206,
+              -0.2561169857632415,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.22397535665028181,
+              -0.15323774170265653,
+              0.0
+            ]
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.21898872316662582,
+              0.06877280974473665,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.21494994431479206,
+              0.1656601560660222,
+              0.0
+            ]
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.10455415340935975,
+              -0.30226296845797285,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.10262587556219502,
+              -0.19853266039596548,
+              0.0
+            ]
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.09294710808517197,
+              0.10785262688545029,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.09123289737584768,
+              0.2040192295231382,
+              0.0
+            ]
+          }
+        ]
+      },
+      {
+        "tick_ns": 303000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90771031428900,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 290000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 300000000,
+        "state_received_ns": 302000000,
+        "depth_capture_ns": 300000000,
+        "depth_received_ns": 302000000,
+        "observation_id": "depth-300000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90771.04102769999,
+        "goal_id": "goal_82282d9fcaa4524fc79b3a383ab4d82cad57a7f560566b6ebe91794553aee1ea",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.0,
+              -0.1,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.17882620228918214,
+              -0.0949388809918706,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.1755281352768012,
+              0.004967777487520206,
+              0.0
+            ]
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.32513854961669475,
+              -0.09079796543976469,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.31914206413963847,
+              0.009032322704582155,
+              0.0
+            ]
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.16256927480834737,
+              -0.09539898271988236,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.15957103206981924,
+              0.0045161613522910855,
+              0.0
+            ]
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.22818371751613206,
+              -0.2561169857632415,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.22397535665028181,
+              -0.15323774170265653,
+              0.0
+            ]
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.21898872316662582,
+              0.06877280974473665,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.21494994431479206,
+              0.1656601560660222,
+              0.0
+            ]
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.10455415340935975,
+              -0.30226296845797285,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.10262587556219502,
+              -0.19853266039596548,
+              0.0
+            ]
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.09294710808517197,
+              0.10785262688545029,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.09123289737584768,
+              0.2040192295231382,
+              0.0
+            ]
+          }
+        ]
+      },
+      {
+        "tick_ns": 503000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90771071476400,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 490000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 500000000,
+        "state_received_ns": 502000000,
+        "depth_capture_ns": 500000000,
+        "depth_received_ns": 502000000,
+        "observation_id": "depth-500000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90771.0806449,
+        "goal_id": "goal_efba859a50979b526adeb71153f6821e7f17d831d918ce61c13c13e969498393",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.0,
+              -0.1,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.17882620228918214,
+              -0.0949388809918706,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.1755281352768012,
+              0.004967777487520206,
+              0.0
+            ]
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.32513854961669475,
+              -0.09079796543976469,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.31914206413963847,
+              0.009032322704582155,
+              0.0
+            ]
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.16256927480834737,
+              -0.09539898271988236,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.15957103206981924,
+              0.0045161613522910855,
+              0.0
+            ]
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.22818371751613206,
+              -0.2561169857632415,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.22397535665028181,
+              -0.15323774170265653,
+              0.0
+            ]
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.21898872316662582,
+              0.06877280974473665,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.21494994431479206,
+              0.1656601560660222,
+              0.0
+            ]
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.10455415340935975,
+              -0.30226296845797285,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.10262587556219502,
+              -0.19853266039596548,
+              0.0
+            ]
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.09294710808517197,
+              0.10785262688545029,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.09123289737584768,
+              0.2040192295231382,
+              0.0
+            ]
+          }
+        ]
+      },
+      {
+        "tick_ns": 703000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90771098417700,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 690000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 700000000,
+        "state_received_ns": 702000000,
+        "depth_capture_ns": 700000000,
+        "depth_received_ns": 702000000,
+        "observation_id": "depth-700000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90771.12137719999,
+        "goal_id": "goal_7ad03e9e662710d0f82804c0bf2e1103d6fd76a834c1bd3925a866e2af32393b",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          }
+        ]
+      },
+      {
+        "tick_ns": 903000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90771124888000,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 890000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 900000000,
+        "state_received_ns": 902000000,
+        "depth_capture_ns": 900000000,
+        "depth_received_ns": 902000000,
+        "observation_id": "depth-900000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90771.14775199999,
+        "goal_id": "goal_37def38c5dad1bb74c8e15d09dcfbb83be13c5a7698669c0f270ce25492b2460",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          }
+        ]
+      },
+      {
+        "tick_ns": 1103000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90771152018000,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 1090000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 1100000000,
+        "state_received_ns": 1102000000,
+        "depth_capture_ns": 1100000000,
+        "depth_received_ns": 1102000000,
+        "observation_id": "depth-1100000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90771.1749378,
+        "goal_id": "goal_2d07ddd1cd89786ccef112abb5c2f028df2e0e6194d479cac4cd148e399e0882",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          }
+        ]
+      },
+      {
+        "tick_ns": 1303000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90771178641900,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 1290000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 1300000000,
+        "state_received_ns": 1302000000,
+        "depth_capture_ns": 1300000000,
+        "depth_received_ns": 1302000000,
+        "observation_id": "depth-1300000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90771.20145329999,
+        "goal_id": "goal_4e5ca1b9fed7bbd08e956ac8040356353546bbc373b4f2c0aa39a830ca860649",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          }
+        ]
+      },
+      {
+        "tick_ns": 1503000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90771204794300,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 1490000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 1500000000,
+        "state_received_ns": 1502000000,
+        "depth_capture_ns": 1500000000,
+        "depth_received_ns": 1502000000,
+        "observation_id": "depth-1500000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90771.22773809999,
+        "goal_id": "goal_8c44c3e547f4b84e964fe446fb0ed5b0f319ac340c5d6a905283a55477ab3b61",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          }
+        ]
+      },
+      {
+        "tick_ns": 1703000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90771231860700,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 1690000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 1700000000,
+        "state_received_ns": 1702000000,
+        "depth_capture_ns": 1700000000,
+        "depth_received_ns": 1702000000,
+        "observation_id": "depth-1700000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90771.25474579999,
+        "goal_id": "goal_45039fc44958b29f672b8aae429ea1e557b210885eca6114009a37d7a82772a3",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          }
+        ]
+      }
+    ],
+    "timings": {
+      "d3_evaluation": {
+        "p50_ms": 1.9787,
+        "p95_ms": 13.23608,
+        "p99_ms": 13.307376,
+        "samples": 9,
+        "max_ms": 13.3252
+      },
+      "d5_planning": {
+        "p50_ms": 2.119,
+        "p95_ms": 15.63162,
+        "p99_ms": 15.766564,
+        "samples": 9,
+        "max_ms": 15.8003
+      },
+      "depth_capture_to_tick_ros": {
+        "p50_ms": 3.0,
+        "p95_ms": 3.0,
+        "p99_ms": 3.0,
+        "samples": 9,
+        "max_ms": 3.0
+      },
+      "depth_normalization": {
+        "p50_ms": 0.0465,
+        "p95_ms": 0.06457999999999998,
+        "p99_ms": 0.07331599999999999,
+        "samples": 9,
+        "max_ms": 0.0755
+      },
+      "h0_total": {
+        "p50_ms": 2.1539,
+        "p95_ms": 15.675180000000001,
+        "p99_ms": 15.812236,
+        "samples": 9,
+        "max_ms": 15.8465
+      },
+      "inspection_inputs": {
+        "p50_ms": 0.1736,
+        "p95_ms": 0.20246,
+        "p99_ms": 0.202492,
+        "samples": 9,
+        "max_ms": 0.2025
+      },
+      "metric_apply": {
+        "p50_ms": 0.2844,
+        "p95_ms": 0.3384,
+        "p99_ms": 0.36447999999999997,
+        "samples": 9,
+        "max_ms": 0.371
+      },
+      "metric_prepare": {
+        "p50_ms": 12.1783,
+        "p95_ms": 12.49738,
+        "p99_ms": 12.527716,
+        "samples": 9,
+        "max_ms": 12.5353
+      },
+      "pose_alignment": {
+        "p50_ms": 0.0117,
+        "p95_ms": 0.01234,
+        "p99_ms": 0.012468,
+        "samples": 9,
+        "max_ms": 0.0125
+      },
+      "prediction_rollout": {
+        "p50_ms": 0.8226500000000001,
+        "p95_ms": 0.900015,
+        "p99_ms": 0.915538,
+        "samples": 24,
+        "max_ms": 0.92
+      },
+      "reasoner_inference": {
+        "p50_ms": 0.884,
+        "p95_ms": 0.89696,
+        "p99_ms": 0.9006719999999999,
+        "samples": 9,
+        "max_ms": 0.9016
+      },
+      "reasoning_context": {
+        "p50_ms": 1.582,
+        "p95_ms": 1.70804,
+        "p99_ms": 1.746248,
+        "samples": 9,
+        "max_ms": 1.7558
+      },
+      "receipt_validation": {
+        "p50_ms": 0.0126,
+        "p95_ms": 0.01696,
+        "p99_ms": 0.018432,
+        "samples": 9,
+        "max_ms": 0.0188
+      },
+      "semantic_goal": {
+        "p50_ms": 2.69,
+        "p95_ms": 2.8505599999999998,
+        "p99_ms": 2.896352,
+        "samples": 9,
+        "max_ms": 2.9078
+      },
+      "state_capture_to_tick_ros": {
+        "p50_ms": 3.0,
+        "p95_ms": 3.0,
+        "p99_ms": 3.0,
+        "samples": 9,
+        "max_ms": 3.0
+      },
+      "worldstate_update": {
+        "p50_ms": 5.6395,
+        "p95_ms": 5.92744,
+        "p99_ms": 5.945168,
+        "samples": 9,
+        "max_ms": 5.9496
+      }
+    }
+  },
+  "G2": {
+    "rows": [
+      {
+        "tick_ns": 103000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90771275073200,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 90000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 100000000,
+        "state_received_ns": 102000000,
+        "depth_capture_ns": 100000000,
+        "depth_received_ns": 102000000,
+        "observation_id": "depth-100000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90771.28480919999,
+        "goal_id": "goal_fce6413ca0ecd449dba16e273d3b0a8a63a2ae350b994f29079a0cdac01fb38c",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.0,
+              -0.1,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.17882620228918214,
+              -0.0949388809918706,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.1755281352768012,
+              0.004967777487520206,
+              0.0
+            ]
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.32513854961669475,
+              -0.09079796543976469,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.31914206413963847,
+              0.009032322704582155,
+              0.0
+            ]
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.16256927480834737,
+              -0.09539898271988236,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.15957103206981924,
+              0.0045161613522910855,
+              0.0
+            ]
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.22818371751613206,
+              -0.2561169857632415,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.22397535665028181,
+              -0.15323774170265653,
+              0.0
+            ]
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.21898872316662582,
+              0.06877280974473665,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.21494994431479206,
+              0.1656601560660222,
+              0.0
+            ]
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.10455415340935975,
+              -0.30226296845797285,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.10262587556219502,
+              -0.19853266039596548,
+              0.0
+            ]
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.09294710808517197,
+              0.10785262688545029,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.09123289737584768,
+              0.2040192295231382,
+              0.0
+            ]
+          }
+        ]
+      },
+      {
+        "tick_ns": 303000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90771315036600,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 290000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 300000000,
+        "state_received_ns": 302000000,
+        "depth_capture_ns": 300000000,
+        "depth_received_ns": 302000000,
+        "observation_id": "depth-300000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90771.3249298,
+        "goal_id": "goal_82282d9fcaa4524fc79b3a383ab4d82cad57a7f560566b6ebe91794553aee1ea",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.0,
+              -0.1,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.17882620228918214,
+              -0.0949388809918706,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.1755281352768012,
+              0.004967777487520206,
+              0.0
+            ]
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.32513854961669475,
+              -0.09079796543976469,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.31914206413963847,
+              0.009032322704582155,
+              0.0
+            ]
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.16256927480834737,
+              -0.09539898271988236,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.15957103206981924,
+              0.0045161613522910855,
+              0.0
+            ]
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.22818371751613206,
+              -0.2561169857632415,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.22397535665028181,
+              -0.15323774170265653,
+              0.0
+            ]
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.21898872316662582,
+              0.06877280974473665,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.21494994431479206,
+              0.1656601560660222,
+              0.0
+            ]
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.10455415340935975,
+              -0.30226296845797285,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.10262587556219502,
+              -0.19853266039596548,
+              0.0
+            ]
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.09294710808517197,
+              0.10785262688545029,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.09123289737584768,
+              0.2040192295231382,
+              0.0
+            ]
+          }
+        ]
+      },
+      {
+        "tick_ns": 503000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90771353855700,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 490000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 500000000,
+        "state_received_ns": 502000000,
+        "depth_capture_ns": 500000000,
+        "depth_received_ns": 502000000,
+        "observation_id": "depth-500000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90771.3638732,
+        "goal_id": "goal_efba859a50979b526adeb71153f6821e7f17d831d918ce61c13c13e969498393",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.0,
+              -0.1,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.17882620228918214,
+              -0.0949388809918706,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.1755281352768012,
+              0.004967777487520206,
+              0.0
+            ]
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.32513854961669475,
+              -0.09079796543976469,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.31914206413963847,
+              0.009032322704582155,
+              0.0
+            ]
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.16256927480834737,
+              -0.09539898271988236,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.15957103206981924,
+              0.0045161613522910855,
+              0.0
+            ]
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.22818371751613206,
+              -0.2561169857632415,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.22397535665028181,
+              -0.15323774170265653,
+              0.0
+            ]
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.21898872316662582,
+              0.06877280974473665,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.21494994431479206,
+              0.1656601560660222,
+              0.0
+            ]
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.10455415340935975,
+              -0.30226296845797285,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.10262587556219502,
+              -0.19853266039596548,
+              0.0
+            ]
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "unobserved_swept_volume"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 50,
+            "predicted_end_position_ned_m": [
+              0.09294710808517197,
+              0.10785262688545029,
+              -1.3
+            ],
+            "predicted_end_velocity_ned_mps": [
+              0.09123289737584768,
+              0.2040192295231382,
+              0.0
+            ]
+          }
+        ]
+      },
+      {
+        "tick_ns": 703000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90771381734800,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 690000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 700000000,
+        "state_received_ns": 702000000,
+        "depth_capture_ns": 700000000,
+        "depth_received_ns": 702000000,
+        "observation_id": "depth-700000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90771.4046976,
+        "goal_id": "goal_7ad03e9e662710d0f82804c0bf2e1103d6fd76a834c1bd3925a866e2af32393b",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          }
+        ]
+      },
+      {
+        "tick_ns": 903000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90771411226800,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 890000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 900000000,
+        "state_received_ns": 902000000,
+        "depth_capture_ns": 900000000,
+        "depth_received_ns": 902000000,
+        "observation_id": "depth-900000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90771.4340655,
+        "goal_id": "goal_37def38c5dad1bb74c8e15d09dcfbb83be13c5a7698669c0f270ce25492b2460",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          }
+        ]
+      },
+      {
+        "tick_ns": 1103000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90771437654200,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 1090000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 1100000000,
+        "state_received_ns": 1102000000,
+        "depth_capture_ns": 1100000000,
+        "depth_received_ns": 1102000000,
+        "observation_id": "depth-1100000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90771.4605416,
+        "goal_id": "goal_2d07ddd1cd89786ccef112abb5c2f028df2e0e6194d479cac4cd148e399e0882",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          }
+        ]
+      },
+      {
+        "tick_ns": 1303000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90771463838000,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 1290000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 1300000000,
+        "state_received_ns": 1302000000,
+        "depth_capture_ns": 1300000000,
+        "depth_received_ns": 1302000000,
+        "observation_id": "depth-1300000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90771.4867916,
+        "goal_id": "goal_4e5ca1b9fed7bbd08e956ac8040356353546bbc373b4f2c0aa39a830ca860649",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          }
+        ]
+      },
+      {
+        "tick_ns": 1503000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90771491099000,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 1490000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 1500000000,
+        "state_received_ns": 1502000000,
+        "depth_capture_ns": 1500000000,
+        "depth_received_ns": 1502000000,
+        "observation_id": "depth-1500000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90771.51403329999,
+        "goal_id": "goal_8c44c3e547f4b84e964fe446fb0ed5b0f319ac340c5d6a905283a55477ab3b61",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          }
+        ]
+      },
+      {
+        "tick_ns": 1703000000,
+        "reason": "no_verified_progress",
+        "completion_wall_ns": 90771517180700,
+        "decision": "safe_stop_requested",
+        "ranked_ids": [],
+        "epoch": 0,
+        "clock": "synthetic",
+        "reset_counter": 4,
+        "state_frame": "local_ned",
+        "map_frame": "odom",
+        "px4_sample_us": 1690000,
+        "clock_evidence_id": "synthetic-offset",
+        "state_capture_ns": 1700000000,
+        "state_received_ns": 1702000000,
+        "depth_capture_ns": 1700000000,
+        "depth_received_ns": 1702000000,
+        "observation_id": "depth-1700000000",
+        "calibration_id": "synthetic-rig-x1",
+        "state_age_ns": 3000000,
+        "depth_age_ns": 3000000,
+        "state_receipt_age_ns": 1000000,
+        "depth_receipt_age_ns": 1000000,
+        "deadline_monotonic_s": 90771.5401533,
+        "goal_id": "goal_45039fc44958b29f672b8aae429ea1e557b210885eca6114009a37d7a82772a3",
+        "candidates": [
+          {
+            "id": "hold",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "drift-check",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "forward",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "short",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-left",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          },
+          {
+            "id": "wide-right",
+            "status": "unknown",
+            "reasons": [
+              "semantic_goal_unavailable"
+            ],
+            "clearance_lower_bound_m": null,
+            "occupied_segments": 0,
+            "unknown_segments": 0,
+            "predicted_end_position_ned_m": null,
+            "predicted_end_velocity_ned_mps": null
+          }
+        ]
+      }
+    ],
+    "timings": {
+      "d3_evaluation": {
+        "p50_ms": 1.9557,
+        "p95_ms": 12.94914,
+        "p99_ms": 12.972947999999999,
+        "samples": 9,
+        "max_ms": 12.9789
+      },
+      "d5_planning": {
+        "p50_ms": 2.0935,
+        "p95_ms": 15.18014,
+        "p99_ms": 15.229228,
+        "samples": 9,
+        "max_ms": 15.2415
+      },
+      "depth_capture_to_tick_ros": {
+        "p50_ms": 3.0,
+        "p95_ms": 3.0,
+        "p99_ms": 3.0,
+        "samples": 9,
+        "max_ms": 3.0
+      },
+      "depth_normalization": {
+        "p50_ms": 0.0487,
+        "p95_ms": 0.07075999999999999,
+        "p99_ms": 0.073352,
+        "samples": 9,
+        "max_ms": 0.074
+      },
+      "h0_total": {
+        "p50_ms": 2.1306,
+        "p95_ms": 15.218440000000001,
+        "p99_ms": 15.269128,
+        "samples": 9,
+        "max_ms": 15.2818
+      },
+      "inspection_inputs": {
+        "p50_ms": 0.1837,
+        "p95_ms": 0.19714,
+        "p99_ms": 0.19886800000000002,
+        "samples": 9,
+        "max_ms": 0.1993
+      },
+      "metric_apply": {
+        "p50_ms": 0.2769,
+        "p95_ms": 0.37944,
+        "p99_ms": 0.412848,
+        "samples": 9,
+        "max_ms": 0.4212
+      },
+      "metric_prepare": {
+        "p50_ms": 12.3958,
+        "p95_ms": 14.455739999999999,
+        "p99_ms": 15.194268,
+        "samples": 9,
+        "max_ms": 15.3789
+      },
+      "pose_alignment": {
+        "p50_ms": 0.012,
+        "p95_ms": 0.01346,
+        "p99_ms": 0.014132,
+        "samples": 9,
+        "max_ms": 0.0143
+      },
+      "prediction_rollout": {
+        "p50_ms": 0.8215,
+        "p95_ms": 0.860665,
+        "p99_ms": 0.920249,
+        "samples": 24,
+        "max_ms": 0.9372
+      },
+      "reasoner_inference": {
+        "p50_ms": 0.9096,
+        "p95_ms": 0.9555400000000001,
+        "p99_ms": 0.9691080000000001,
+        "samples": 9,
+        "max_ms": 0.9725
+      },
+      "reasoning_context": {
+        "p50_ms": 1.5873,
+        "p95_ms": 1.61736,
+        "p99_ms": 1.6301919999999999,
+        "samples": 9,
+        "max_ms": 1.6334
+      },
+      "receipt_validation": {
+        "p50_ms": 0.0128,
+        "p95_ms": 0.01486,
+        "p99_ms": 0.015212,
+        "samples": 9,
+        "max_ms": 0.0153
+      },
+      "semantic_goal": {
+        "p50_ms": 2.7352,
+        "p95_ms": 2.801,
+        "p99_ms": 2.80292,
+        "samples": 9,
+        "max_ms": 2.8034
+      },
+      "state_capture_to_tick_ros": {
+        "p50_ms": 3.0,
+        "p95_ms": 3.0,
+        "p99_ms": 3.0,
+        "samples": 9,
+        "max_ms": 3.0
+      },
+      "worldstate_update": {
+        "p50_ms": 5.5912,
+        "p95_ms": 5.925,
+        "p99_ms": 6.026599999999999,
+        "samples": 9,
+        "max_ms": 6.052
+      }
+    }
+  }
+}

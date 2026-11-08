@@ -4,6 +4,7 @@ Synthetic plane truth scores returned diagnostics only. These results cannot
 qualify a controller, native deadline, or collision-free physical flight.
 """
 from dataclasses import asdict
+from hashlib import sha256
 import json
 from pathlib import Path
 
@@ -16,7 +17,12 @@ from refnav.predictive_planner import plan, candidate_for_id
 
 def main():
     output = Path('artifacts/goal_comparison')
-    learned = ResidualDynamicsModel(network=ResidualMLP.load(output / 'predictors/plain_11.npz'))
+    checkpoint = output / 'predictors/plain_11.npz'
+    identity = sha256(checkpoint.read_bytes()).hexdigest()
+    expected = json.loads((output / 'predictors/comparison.json').read_text())['training']['plain_11']['sha256']
+    if identity != expected:
+        raise ValueError('MPC checkpoint differs from the matched training manifest.')
+    learned = ResidualDynamicsModel(network=ResidualMLP.load(checkpoint))
     rows = []
     for case in cases():
         for name, predictor in (('classical_mpc', None), ('neural_model_mpc', learned)):
@@ -30,7 +36,8 @@ def main():
         chosen = candidate_for_id(case.state, case.objective, case.alignment, fixed.ranked_ids[0]) if fixed.ranked_ids else None
         rows.append({'case': case.name, 'variant': 'D5', 'status': fixed.reason,
                      'truth': None if chosen is None else _truth(case, chosen)})
-    (output / 'mpc.json').write_text(json.dumps({'scope': 'diagnostic only; no gateway artifact', 'rows': rows}, indent=2) + '\n')
+    (output / 'mpc.json').write_text(json.dumps({'scope': 'diagnostic only; no gateway artifact',
+                                               'checkpoint_sha256': identity, 'rows': rows}, indent=2) + '\n')
     print(json.dumps(rows, indent=2))
 
 

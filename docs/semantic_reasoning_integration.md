@@ -1,5 +1,10 @@
 # Semantic reasoning integration I0–I4
 
+Current extension: [goal reasoner comparison](goal_reasoning_comparison.md) adds
+G1/G2, bounded inspection objectives and read-only H1/H2 integration. The I0–I4
+results below are historical evidence for the preserved G0/schema-v1 baseline;
+their original scope statements do not describe the whole current checkout.
+
 WorldState + mission objective → compact ReasoningContext → replaceable Reasoner
 → independently validated, **non-executable** GoalProposal. This implements I0–I3
 and the I4 design. No learned model, trajectory planner, ROS node or vehicle

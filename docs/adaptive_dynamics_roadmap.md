@@ -1,5 +1,10 @@
 # Adaptive dynamics roadmap
 
+Current offline comparison: [goal reasoning and independent predictor/MPC
+experiments](goal_reasoning_comparison.md), mapped to the existing unified
+Phases 0/2/3/4/5/6. D3–D5 are now implemented offline; the original design
+sequence below is preserved historically. D0 remains selected.
+
 D0 is the position-setpoint baseline. D1 adds a trained offline residual
 predictor. D2 adds causal adaptation and a classical online identification
 baseline. D3–D5 describe future work.
