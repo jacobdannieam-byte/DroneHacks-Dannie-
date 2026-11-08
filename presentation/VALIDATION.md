@@ -8,6 +8,7 @@ Verified November 8, 2026 on Windows with Microsoft Edge and Playwright.
 - No browser JavaScript errors or external playback requests in the automated run.
 - Presenter popup manually inspected through browser screenshots: current/next state, notes, elapsed timer and slide pacing are present.
 - Animated memory scene verified with motion enabled: camera rotation changes and returns to the initial state when seeking backward.
+- Continuous slide 4: 64 illustrative samples retain their elements while positions transform from geometry into graph nodes; seeking backward exactly reproduces prior positions. Decision visibility, keyboard stage stepping and pause-on-exit pass. The animation plays once and holds, with pause/replay/scrub and static reduced-motion stages.
 - Audience PDFs: 11 main pages and 17 pages with appendix; notes excluded. PDF rendering reviewed separately after correcting reveal.js's default print styling.
 - Original static shell preserved. Local build contains the player, visuals, content and reveal.js assets.
 

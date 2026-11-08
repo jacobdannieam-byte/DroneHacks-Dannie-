@@ -54,15 +54,15 @@ window.slides = [
     time: 55,
     kicker: "World semantics",
     body: "opening_0003 · observed width · unknown height · observation age · supporting frames",
-    takeaway: "An opening label alone cannot establish traversability.",
+    takeaway: "Missing evidence becomes a reason to look again.",
     visual: "opening",
     sources: ["N3", "N4"],
     notes:
-      "Consider a single opening. Depth suggests two surfaces and a gap. We give the candidate a stable identity and retain its geometry and provenance. Width can be observed while height and connectivity remain unknown. As observations arrive, the hypothesis can persist, become stale, or be rejected. Semantic meaning is task-specific: what might this feature let us do, and what evidence is still required?",
+      "Watch the same samples move through the entire chain. First, the drone receives a partial observation. Those samples settle into two surfaces with a gap. We preserve the measured geometry and give the opening a stable identity. The same evidence becomes a small graph: walls support a candidate opening, an observation records its provenance, and height remains unknown. The reasoning decision follows from that missing fact: observe this opening again. It is a grounded proposal, not a command to fly. This is an illustrative explanation of our representation and reasoning contracts, not recorded sensor data.",
     builds: [
-      "Draw wall geometry and gap",
-      "Attach stable entity ID and measured evidence",
-      "Mark height and connectivity unknown",
+      "Play the continuous observation → geometry → graph → decision scene once",
+      "Pause or scrub to explain an intermediate state",
+      "Hold on observe_more; motion still needs separate validation",
     ],
   },
   {

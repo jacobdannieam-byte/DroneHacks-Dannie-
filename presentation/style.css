@@ -97,6 +97,54 @@ body {
 .notes {
   display: none;
 }
+.continuous-scene {
+  height: 100%;
+}
+.scene .continuous-scene svg {
+  height: calc(100% - 38px);
+}
+.continuity-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  height: 38px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.continuity-controls button {
+  border: 1px solid #34414d;
+  padding: 5px 10px;
+}
+.continuity-controls button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.continuity-controls button[aria-pressed="true"] {
+  color: var(--green);
+  border-color: var(--green);
+}
+.continuity-scrub {
+  width: 330px;
+  accent-color: var(--blue);
+  cursor: pointer;
+}
+.continuity-time {
+  min-width: 95px;
+  font-variant-numeric: tabular-nums;
+}
+.continuity-stages {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.static-mode .continuity-controls {
+  visibility: hidden;
+}
+@media print {
+  .continuity-controls {
+    visibility: hidden;
+  }
+}
 .scene svg text {
   font-family: Arial, Helvetica, sans-serif;
   fill: var(--text);

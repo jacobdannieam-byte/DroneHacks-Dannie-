@@ -18,7 +18,7 @@
     "The course is visible.<br>The next action is uncertain.",
     "Build what the drone <em>remembers.</em>",
     "Combine ideas at the interfaces.",
-    "A gap becomes a hypothesis.",
+    "From seeing to <em>understanding.</em>",
     "Sometimes the next action is <em>to look.</em>",
     "Each layer answers a different question.",
     "Complexity has to earn its place.",
@@ -31,7 +31,7 @@
     "Indoor navigation, incomplete observations, and a mission beyond the field of view.",
     "Persistent identity. Evidence. Uncertainty. A reason to observe again.",
     "Research gave us the structure; our constraints shaped the implementation.",
-    "World semantics ties a possible action to the evidence that supports it.",
+    "Observations become geometry, then meaning, then a grounded decision.",
     "A bounded reasoning layer turns missing information into an explicit goal.",
     "Our target architecture separates memory, intent, motion and execution.",
     "Active perception earned priority in a synthetic evidence-acquisition task.",
@@ -100,7 +100,7 @@
     section.dataset.main = "true";
     section.innerHTML = `<p class="eyebrow"><span class="chapter">${String(index + 1).padStart(2, "0")} / 11</span>${slide.kicker}</p>
       <h1>${titles[index]}</h1><p class="subtitle">${subtitles[index]}</p>
-      <div class="scene ${slide.visual === "memory" ? "memory-scene" : ""}" data-step="0">${window.DeckVisuals[slide.visual]()}</div>
+      <div class="scene ${slide.visual === "memory" ? "memory-scene" : ""}" data-step="0">${index === 3 ? window.ContinuousScene.markup() : window.DeckVisuals[slide.visual]()}</div>
       <p class="takeaway"><span class="cue">↳</span>${slide.takeaway}</p>
       <div class="citation"><span>${sourceLinks(slide.sources)}</span><span class="scope">${scopeLabels[index]}</span></div>
       <aside class="notes"><p><b>${slide.time} seconds · ${slide.kicker}</b></p><p>${slide.notes}</p><p>${explanation[index]}</p><p><b>Transition:</b> ${transitions[index]}</p><p><b>Click cues:</b> ${slide.builds.join(" → ")}</p><p>Sources: ${sourceLinks(slide.sources)}</p></aside>`;
@@ -110,6 +110,9 @@
   window.slides.forEach((slide, index) =>
     deck.append(createMainSlide(slide, index)),
   );
+  window.ContinuousScene.mount(document.querySelector(".continuous-scene"), {
+    staticMode,
+  });
   window.appendixSlides.forEach((slide, index) => {
     const section = document.createElement("section");
     section.id = `question-${index + 1}`;
@@ -137,14 +140,17 @@
       ? "Motion reduced"
       : "Reduce motion";
     Reveal.configure({ transition: motionReduced ? "none" : "fade" });
+    window.ContinuousScene.setReduced(motionReduced);
   }
   function advance() {
+    if (window.ContinuousScene.step(1)) return;
     const { h } = Reveal.getIndices();
     if (h === mainSlideCount - 1 && !Reveal.availableFragments().next) return;
     if (h >= mainSlideCount) return;
     Reveal.next();
   }
   function retreat() {
+    if (window.ContinuousScene.step(-1)) return;
     if (Reveal.getIndices().h >= mainSlideCount) {
       Reveal.slide(mainSlideCount - 1, 0, 2);
       return;
@@ -163,6 +169,7 @@
       );
     }
     const { h } = Reveal.getIndices();
+    window.ContinuousScene.setActive(h === 3);
     document.getElementById("position").textContent =
       h < mainSlideCount
         ? `${String(h + 1).padStart(2, "0")} / 11`
@@ -241,4 +248,8 @@
   Reveal.on("slidechanged", syncScene);
   Reveal.on("fragmentshown", syncScene);
   Reveal.on("fragmenthidden", syncScene);
+  Reveal.on("overviewshown", () => window.ContinuousScene.pause());
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) window.ContinuousScene.pause();
+  });
 })();

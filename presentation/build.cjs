@@ -8,6 +8,7 @@ const assets = [
   "style.css",
   "slides.js",
   "visuals.js",
+  "continuous-scene.js",
   "appendix.js",
   "player.js",
 ];

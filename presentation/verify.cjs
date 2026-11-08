@@ -35,6 +35,60 @@ async function verify() {
   assert.equal(await page.evaluate(() => Reveal.getIndices().f), 0);
   await page.keyboard.press("ArrowLeft");
   assert.equal(await page.evaluate(() => Reveal.getIndices().f), -1);
+  await page.evaluate(() => Reveal.slide(3, 0, -1));
+  assert.equal(await page.evaluate(() => ContinuousScene.playing), true);
+  await page.evaluate(() => ContinuousScene.seek(6.5));
+  assert.equal(await page.locator(".observation-sample").count(), 64);
+  const geometryPositions = await page
+    .locator(".observation-sample")
+    .evaluateAll((points) =>
+      points.map((point) => [
+        point.getAttribute("cx"),
+        point.getAttribute("cy"),
+      ]),
+    );
+  await page.evaluate(() => ContinuousScene.seek(11.8));
+  const graphPositions = await page
+    .locator(".observation-sample")
+    .evaluateAll((points) =>
+      points.map((point) => [
+        point.getAttribute("cx"),
+        point.getAttribute("cy"),
+      ]),
+    );
+  assert.notDeepEqual(geometryPositions, graphPositions);
+  await page.evaluate(() => ContinuousScene.seek(6.5));
+  assert.deepEqual(
+    await page
+      .locator(".observation-sample")
+      .evaluateAll((points) =>
+        points.map((point) => [
+          point.getAttribute("cx"),
+          point.getAttribute("cy"),
+        ]),
+      ),
+    geometryPositions,
+  );
+  await page.evaluate(() => ContinuousScene.seek(17.5));
+  assert.equal(
+    await page.locator("#decision-output").getAttribute("opacity"),
+    "1",
+  );
+  await page.evaluate(() => {
+    ContinuousScene.seek(19.9);
+    ContinuousScene.play();
+  });
+  await page.waitForTimeout(350);
+  assert.equal(await page.evaluate(() => ContinuousScene.playing), false);
+  assert.equal(await page.evaluate(() => ContinuousScene.time), 20);
+  await page.evaluate(() => ContinuousScene.seek(17.5));
+  await page.keyboard.press("ArrowLeft");
+  assert.equal(await page.evaluate(() => ContinuousScene.time), 12);
+  await page.keyboard.press("ArrowRight");
+  assert.equal(await page.evaluate(() => ContinuousScene.time), 20);
+  await page.keyboard.press("ArrowRight");
+  assert.equal(await page.evaluate(() => Reveal.getIndices().h), 4);
+  assert.equal(await page.evaluate(() => ContinuousScene.playing), false);
   await page.evaluate(() => Reveal.slide(1, 0, 2));
   assert.equal(
     await page.locator(".memory-scene").getAttribute("data-step"),

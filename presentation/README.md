@@ -2,6 +2,8 @@
 
 An animated, speaker-paced presentation for hackathon and industry judges: 11 main slides, a 600-second pacing plan, and six separate Q&A slides. Built on the GitHub `presentation` branch. All visuals are original SVG illustrations inspired by explanatory mathematical animation; they are not flight telemetry or copied 3Blue1Brown assets.
 
+Slide 4 is the central continuous explanation: the same sensor samples settle into wall geometry, gather into a semantic graph, and support an `observe_more` decision. Its 20-second sequence plays once on entry, then holds. Pause, replay, scrub or choose a stage with the on-slide controls. Arrow keys step through its stages before moving to the next slide. Reduced-motion mode shows the final state and allows static stage selection. Other slides retain restrained, speaker-paced reveals.
+
 ![World semantics preview](exports/preview.png)
 
 ## Present
@@ -24,6 +26,8 @@ The normal forward path stops on slide 11. Use the Q&A menu to visit appendix to
 ## Edit, build and verify
 
 Read `RESEARCH.md` first for evidence boundaries, then `slides.js` for the narrative and pacing. `player.js` supplies audience titles, transitions and reveal.js navigation. `visuals.js` contains one SVG scene function per concept; `style.css` defines the visual language. `appendix.js` holds Q&A material. The renderer uses design pixels, not real course dimensions.
+
+`continuous-scene.js` owns the central scene's deterministic clock and interpolation. Sample identities persist as their coordinates move from observations to fitted geometry to graph nodes. The animation pauses when leaving the slide, opening overview or hiding the tab; it never advances the talk automatically.
 
 ```sh
 npm ci
