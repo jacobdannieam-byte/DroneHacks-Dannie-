@@ -155,6 +155,20 @@ class Alignment:
     bracket_ns: tuple
 
 
+@dataclass(frozen=True, eq=False)
+class AlignedDepth:
+    """Opt-in capture bundle emitted only after SpatialWorld accepts the input."""
+
+    reference: SpatialReference
+    capture_ns: int
+    received_ns: int
+    processed_ns: int
+    observation_id: str
+    calibration: DepthCalibration
+    depth_m: np.ndarray
+    pose: Alignment
+
+
 class PoseBuffer:
     """Bounded, monotonic pose input. A later bracket must already have arrived."""
 
