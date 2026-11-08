@@ -123,7 +123,6 @@ class NativeInputs:
         self.source_stamps = {}
         self.reset_identity = None
         self.fault = None
-        self.heading = None
 
     def offer(self, role, source_us, publish_us, value, ros_ns, wall_ns):
         if ros_ns < self.mapping.valid_from_ns or ros_ns <= 0:
@@ -175,10 +174,9 @@ class NativeInputs:
         if self.reset_identity is not None and reset != self.reset_identity:
             self.fault = 'estimator_reset'
         self.reset_identity = reset
-        self.heading = getattr(msg, 'heading', None)
         valid = all(getattr(msg, field, False) for field in ('xy_valid', 'z_valid', 'v_xy_valid', 'v_z_valid'))
         self.offer('position', msg.timestamp_sample, msg.timestamp,
-                   ((msg.x, msg.y, msg.z), (msg.vx, msg.vy, msg.vz)) if valid else None, ros_ns, wall_ns)
+                   ((msg.x, msg.y, msg.z), (msg.vx, msg.vy, msg.vz), getattr(msg, 'heading', None)) if valid else None, ros_ns, wall_ns)
 
     def observe(self, ros_ns, wall_ns):
         self.advance(ros_ns, wall_ns)
@@ -194,8 +192,8 @@ class NativeInputs:
         armed, nav = self.samples['authority'][2]
         if pos is None or type(armed) is not bool or not self.samples['flags'][2] or not self.samples['health'][2]:
             return None
-        return Observation(*pos, self.samples['position'][0], self.samples['authority'][0], armed,
-                           self.samples['landed'][2], nav, self.heading)
+        return Observation(pos[0], pos[1], self.samples['position'][0], self.samples['authority'][0], armed,
+                           self.samples['landed'][2], nav, pos[2])
 
 
 def position_messages(intent, stamp):

@@ -107,3 +107,22 @@ def test_model_fault_lands_without_classical_fallback(tmp_path):
     assert intent.command=='land' and intent.position_ned_m is None
     assert driver.recovery_reason=='model_rejected:inference_failure'
     log.close()
+
+
+def test_heading_is_joined_to_position_capture_not_latest_callback():
+    from types import SimpleNamespace
+    from examples.calibration_trial_owner import NativeInputs
+    from examples.calibration_trial_probe import Fixture
+    from examples.h1_observation import RESET_FIELDS
+    inputs=NativeInputs(Fixture().mapping,1.)
+    def msg(stamp,heading):
+        return SimpleNamespace(timestamp_sample=stamp,timestamp=stamp,x=0.,y=0.,z=0.,vx=0.,vy=0.,vz=0.,
+            heading=heading,xy_valid=True,z_valid=True,v_xy_valid=True,v_z_valid=True,
+            **{name:0 for name in RESET_FIELDS})
+    inputs.position(msg(1_000_000,.1),NS,NS)
+    inputs.position(msg(1_004_000,.2),NS,NS)
+    assert inputs.samples['position'][2][2]==.1
+    inputs.advance(NS+4_000_000,NS+4_000_000)
+    assert inputs.samples['position'][2][2]==.2
+    inputs.position(msg(1_004_000,.9),NS+5_000_000,NS+5_000_000)
+    assert inputs.samples['position'][2][2]==.2
