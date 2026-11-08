@@ -1,0 +1,152 @@
+{
+  "scope": "single_C0_offline_review_not_stopping_or_hardware_qualification",
+  "faults": [],
+  "bag_sha256": "0e4d2e4e054f93209795827d80d4a4236fa68d3150c8c08033c16ccb95264957",
+  "topic_counts": {
+    "/fmu/out/vehicle_local_position": 4583,
+    "/fmu/out/vehicle_land_detected": 70,
+    "/fmu/out/vehicle_command_ack": 3,
+    "/fmu/out/vehicle_status_v1": 99,
+    "/fmu/in/vehicle_command": 3,
+    "/fmu/in/trajectory_setpoint": 330,
+    "/fmu/in/offboard_control_mode": 330,
+    "/qualification/events": 1
+  },
+  "flight_window_us": [
+    22628000,
+    48584000
+  ],
+  "land_us": 38808000,
+  "land_to_disarm_s": 9.776,
+  "auto_land_us": [
+    38828000,
+    38840000,
+    38840000,
+    39344000,
+    39848000,
+    40352000,
+    40856000,
+    41360000,
+    41864000,
+    42368000,
+    42872000,
+    43376000,
+    43880000,
+    44384000,
+    44888000,
+    45392000,
+    45896000,
+    46400000,
+    46904000,
+    47408000,
+    47912000,
+    48416000
+  ],
+  "landed_near_disarm_us": [
+    48572000
+  ],
+  "full_rate_samples": 2596,
+  "max_speed_mps_and_stamp_us": [
+    0.3449159294688602,
+    39972000
+  ],
+  "position_bounds_ned_m": {
+    "x": [
+      -0.0019384176703169942,
+      0.06995668262243271
+    ],
+    "y": [
+      -0.003911539446562529,
+      0.010295724496245384
+    ],
+    "z": [
+      -0.8733141422271729,
+      -0.0036955755203962326
+    ]
+  },
+  "sample_gap_us": [
+    8000,
+    16000
+  ],
+  "invalid_samples": [],
+  "reset_changes": [],
+  "status_gap_us": [
+    0,
+    504000
+  ],
+  "status_duplicates": [
+    {
+      "stamp_us": 38840000,
+      "identical_all_fields": true,
+      "changed_fields": []
+    }
+  ],
+  "pre_land_settling_check": true,
+  "recorder_samples": 3437,
+  "recorder_raw_mismatches": [],
+  "commands": [
+    {
+      "stamp_us": 22576000,
+      "command": 176,
+      "param1": 1.0,
+      "param2": 6.0
+    },
+    {
+      "stamp_us": 22628000,
+      "command": 400,
+      "param1": 1.0,
+      "param2": 0.0
+    },
+    {
+      "stamp_us": 38808000,
+      "command": 21,
+      "param1": 0.0,
+      "param2": 0.0
+    }
+  ],
+  "command_acks": [
+    {
+      "stamp_us": 22592000,
+      "command": 176,
+      "result": 0
+    },
+    {
+      "stamp_us": 22640000,
+      "command": 400,
+      "result": 0
+    },
+    {
+      "stamp_us": 38816000,
+      "command": 21,
+      "result": 0
+    }
+  ],
+  "status_transitions": [
+    {
+      "stamp_us": 8204000,
+      "armed": 1,
+      "nav": 4
+    },
+    {
+      "stamp_us": 22604000,
+      "armed": 1,
+      "nav": 14
+    },
+    {
+      "stamp_us": 22640000,
+      "armed": 2,
+      "nav": 14
+    },
+    {
+      "stamp_us": 38828000,
+      "armed": 2,
+      "nav": 18
+    },
+    {
+      "stamp_us": 48584000,
+      "armed": 1,
+      "nav": 14
+    }
+  ],
+  "geometry_contact_proof": false
+}

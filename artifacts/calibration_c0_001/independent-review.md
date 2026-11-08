@@ -1,0 +1,14 @@
+# Independent C0 evidence review
+
+Verdict: the single approved isolated SITL C0 attempt meets the reviewed takeoff, bounded hover, native LAND and reported landed/disarmed criteria. This is not stopping-envelope, policy-course, C1 or hardware qualification. No retry is authorized by this result.
+
+Reviewed source: `32dd89c21e95b45c497856b1c52f453947e7dac3`. Final raw database SHA256: `0e4d2e4e054f93209795827d80d4a4236fa68d3150c8c08033c16ccb95264957`. Offline decoder initializes no ROS context and publishes nothing. It opens the finalized database read-only/immutable, verifies integrity, unchanged hash/file set and absent nonempty WAL. The initial decoder result is preserved in `c0_raw_review_initial.json`; the final result is `c0_raw_review.json`.
+
+- Native ARM command 22.628 s, LAND command 38.808 s, accepted LAND command acknowledgment 38.816 s, armed AUTO_LAND 38.828 s, landed 48.572 s and disarmed 48.584 s. LAND-to-disarm 9.776 s. Exactly mode/ARM/LAND commands were recorded, each accepted; no forced disarm or retry.
+- All 2,596 full-rate flight-window positions are valid, finite and reset-stable, with 8–16 ms sample gaps. Maximum measured 3D speed is 0.344915929 m/s, below 0.50 m/s.
+- Flight NED bounds: north -0.001938..0.069957 m, east -0.003912..0.010296 m, down -0.873314..-0.003696 m. These remain inside the approved box. The immediate pre-LAND sampled settling interval meets the height/speed criteria. All 330 setpoints have zero horizontal velocity and end before LAND.
+- The recorder contains 3,437 samples and 75 status reports, no faults or pending samples, and complete LAND/native-disarm events. Every recorded position and velocity matches its raw native sample exactly. The separate raw command correlation audit passes.
+- Native status has one identical repeated message at 38.840 s: every ROS field compares equal, with no changed fields. The initial audit flagged its zero timestamp gap; the final audit explicitly reports it as an identical duplicate, still rejecting regressions, changed same-stamp messages or gaps above 750 ms. Maximum status gap is 504 ms. Duplicate delivery is not counted as fresh advancing evidence.
+- The final truth JSONL contains 2,240 fresh samples, zero side/roof sphere intrusion and zero center-below-floor samples. Its peak speed is 0.355894306 m/s. The periodic summary covers the first 2,225 rows; the extra 15 JSONL tail rows remain valid. This is sampled geometric evidence, not physical contact sensing; the conservative sphere overlaps the floor at rest.
+
+The source, profile and recorder contract remained pinned during the attempt. The approved isolated landing-speed tightening is part of this experiment; it does not alter the protected Classical baseline or establish an automatic offboard-loss landing guarantee. The native recovery check reports landed/disarmed and an idle command graph. Further calibration movement requires its own reviewed plan and approval.

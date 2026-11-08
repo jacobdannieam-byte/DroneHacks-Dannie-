@@ -1,6 +1,11 @@
 # C0: isolated simulated takeoff, hover and native landing
 
-**Ready for user review; not authorized or executed.** Final disarmed composition
+**Execution update:** The user subsequently approved this exact C0 scope. One
+attempt completed with native landing/disarm; see [C0 flight result](C0_FLIGHT_RESULT.md)
+and its independent evidence review. No C1 or additional flight is authorized.
+The preparation wording below is retained as the original approval record.
+
+**Original preparation status: ready for user review; not authorized or executed.** Final disarmed composition
 evidence is attached below. One trial, `calibration-c0-001`, in the explicitly separate empty
 calibration lane. This is not a policy flight, stopping measurement, course test,
 or physical flight. Classic/S1, the phone-scan course, map control and background

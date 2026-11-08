@@ -1,0 +1,257 @@
+[
+  {
+    "path": "approval.json",
+    "bytes": 1111,
+    "sha256": "cec2b91400a39ce790c926f148e921635ab87127193679c064b4c003b6a1addf"
+  },
+  {
+    "path": "evidence/approved_landing_speed.txt",
+    "bytes": 156,
+    "sha256": "37ff3ed3cd01858560c7de7b4b069d4d86f89f8b15fd36a7958b9fecebf3509d"
+  },
+  {
+    "path": "evidence/calibration_authorization.json",
+    "bytes": 719,
+    "sha256": "d12d596e8552c61b1c20d1e61e94bc72ef96b9089baf45149a91454a5df7d68d"
+  },
+  {
+    "path": "evidence/calibration_owner.json",
+    "bytes": 2143,
+    "sha256": "f8c42d1e9fc435124a4ed1507b061f86c60d3ac4ad83bf3a9db25f153ea46880"
+  },
+  {
+    "path": "evidence/calibration_profile.json",
+    "bytes": 1767,
+    "sha256": "509fd32722abc0701d79bfd66b5c9c76b59380360da2f46a6a3f423635cd66d9"
+  },
+  {
+    "path": "evidence/calibration_recorder_ready.json",
+    "bytes": 344,
+    "sha256": "9bf5ac5c5e9e92f4889d9c74bfc041d0b495f7c37554b40d62512c23cb5be1df"
+  },
+  {
+    "path": "evidence/calibration_recorder.txt",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "evidence/calibration_recording.json",
+    "bytes": 2554872,
+    "sha256": "85add8300d545d076c2c481faeea8b8c1a1afacaa319a33c9761b31ddd7b0463"
+  },
+  {
+    "path": "evidence/colcon.txt",
+    "bytes": 342,
+    "sha256": "892a821321ef432b1e08c6b5e36a3850f008ea0a06c11757b1ae07f47b8d8bfc"
+  },
+  {
+    "path": "evidence/disarmed-1.json",
+    "bytes": 78051,
+    "sha256": "d266cb0a92b07b1a56c7981c633ed2764851b64a2f42d4d23f58dd4f776a778a"
+  },
+  {
+    "path": "evidence/native_recovery_parameters.txt",
+    "bytes": 765,
+    "sha256": "ef75c5851da193d0be3f4174bf868121f562882dc2f8bf9fc1736270c92ea493"
+  },
+  {
+    "path": "evidence/recorder_contract.json",
+    "bytes": 775,
+    "sha256": "723da769e5bf11bb45999bddd8a7016dbaa316b3f782f39ee1762b4738ca8610"
+  },
+  {
+    "path": "evidence/recording_final.json",
+    "bytes": 2800,
+    "sha256": "22337a1e46dc346999c4d2836b4892b1d625074809139fec806e11b8bdcc79b4"
+  },
+  {
+    "path": "evidence/recording_ready.json",
+    "bytes": 2158,
+    "sha256": "74c6b79fe211794a10da7f76c2e6ce20b61bf1c233489e55badd6b0984f0a06e"
+  },
+  {
+    "path": "evidence/recording_startup.json",
+    "bytes": 21,
+    "sha256": "0f9732071aabc96662979198c067859ad0bf8058fe95745ce8da23df1428a44c"
+  },
+  {
+    "path": "evidence/recovery-1.json",
+    "bytes": 79384,
+    "sha256": "5da7fc03a741cc2badd3d5b2485bddc058b7d98b2fdd30b78e359bd0a76ba336"
+  },
+  {
+    "path": "evidence/resources_start.txt",
+    "bytes": 561,
+    "sha256": "95a55e76e31a525b3087a16ed016e72d117d29cffc63cfe38cadf4b2e3d13194"
+  },
+  {
+    "path": "evidence/rosbag.txt",
+    "bytes": 3225,
+    "sha256": "dccbbf001bf8f94b71e19a7315eec87749f6d990e1ad889ea78c3c1ee1f7db41"
+  },
+  {
+    "path": "evidence/stack.txt",
+    "bytes": 40496,
+    "sha256": "0bdd7a12c8cc3278b9fd506ebc54b46261394efc50e2817fa9df2b9e1fb5c9f5"
+  },
+  {
+    "path": "evidence/versions.txt",
+    "bytes": 106,
+    "sha256": "a478715fff5086d9262835a5f9a229e7aa7010d466b8307b1ce0a1545c292a1d"
+  },
+  {
+    "path": "evidence/flight_records/calibration_1794130738417851527_summary.json",
+    "bytes": 2376,
+    "sha256": "b7308fc2044c178ea709f8887c350a2fd8e9a4f97e8b5de7eeac8eff0d4eb4ce"
+  },
+  {
+    "path": "evidence/flight_records/calibration_1794130738417851527_truth.jsonl",
+    "bytes": 3156328,
+    "sha256": "81b39c5bffdd531465b7ab4b840018b6f5516ef7aef8c08b0a21712c4b238f13"
+  },
+  {
+    "path": "evidence/gazebo_generated/last_route_run/gazebo.txt",
+    "bytes": 2332,
+    "sha256": "262ef1ae29de69f5145aa640e862c7d48a9e5c4cfc58bdd232ed6e4b8c8d5571"
+  },
+  {
+    "path": "evidence/gazebo_generated/last_route_run/px4_settings_in_use.txt",
+    "bytes": 1530,
+    "sha256": "c33111fea4550ecddefcfe97578d773d25509cc11eb4ac996ecc1c6465d02315"
+  },
+  {
+    "path": "evidence/gazebo_generated/last_route_run/px4.txt",
+    "bytes": 6583,
+    "sha256": "5fad6d6360b5a940a2ef28fd5676e8a8cabe4bd44a1324c5cc7faeb0eadfe0be"
+  },
+  {
+    "path": "evidence/gazebo_generated/last_route_run/px4_flight_log/2026-11-08/09_39_07.ulg",
+    "bytes": 12619528,
+    "sha256": "4bb321aaa08d641a237fd35123c79c9ff8febc0153b974498853bda4e8f0a9ed"
+  },
+  {
+    "path": "evidence/gazebo_generated/models/drone_16_like/model.config",
+    "bytes": 254,
+    "sha256": "ee64d0aff0ba80cbc3f110fdf6307d9d8631520a576d23913633b039d05ae8a5"
+  },
+  {
+    "path": "evidence/gazebo_generated/models/drone_16_like/model.sdf",
+    "bytes": 18277,
+    "sha256": "f8cc362929337eb37e8649632ce3426d86a029a80932cee06a1a80f2d1e169f3"
+  },
+  {
+    "path": "evidence/gazebo_generated/models/drone_16_like/px4_settings.txt",
+    "bytes": 76,
+    "sha256": "f303004455f6de125b4aeed873d23c827a598ccc4514c4a7b78d561191ff33f3"
+  },
+  {
+    "path": "evidence/gazebo_generated/worlds/straight_lane_v1_full_simulator.sdf",
+    "bytes": 5906,
+    "sha256": "d64be312bb5479c529acf2dd6ba559f50d4bf2dd224fbb31cd69be1b5f93dd07"
+  },
+  {
+    "path": "evidence/observations/metadata.yaml",
+    "bytes": 11486,
+    "sha256": "775b57246c4b44e657b650a2bcc8aca97cc1fb27a0e7a9d2ea667080bc179009"
+  },
+  {
+    "path": "evidence/observations/observations_0.db3",
+    "bytes": 306327552,
+    "sha256": "0e4d2e4e054f93209795827d80d4a4236fa68d3150c8c08033c16ccb95264957"
+  },
+  {
+    "path": "evidence/observations/observations_0.db3-shm",
+    "bytes": 32768,
+    "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+  },
+  {
+    "path": "evidence/observations/observations_0.db3-wal",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "evidence/ros/python3_1739_1794130749473.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "evidence/ros/python3_1752_1794130750053.log",
+    "bytes": 3166,
+    "sha256": "4575d17bac4df00fc8abcbe82ae51dd2c4999cd724df702dca672098e3ca9eec"
+  },
+  {
+    "path": "evidence/ros/python3_1770_1794130752363.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "evidence/ros/python3_1803_1794130761117.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "evidence/ros/python3_1839_1794130762252.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "evidence/ros/python3_1854_1794130791385.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "evidence/ros/python3_582_1794130738604.log",
+    "bytes": 2007,
+    "sha256": "a9d57d9d5595211a7598dec52fef5a409047dc945db92916eca8a7afe1d202da"
+  },
+  {
+    "path": "evidence/ros/python3_584_1794130738293.log",
+    "bytes": 461,
+    "sha256": "ec2193feeedeb0e9ef57896ea91822fc7bef97e250f91c0ba91c4f26a9c21395"
+  },
+  {
+    "path": "evidence/ros/python3_586_1794130738341.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "evidence/ros/python3_588_1794130738338.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "evidence/ros/python3_591_1794130738362.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "evidence/ros/2026-11-08-09-38-55-020898-ccaf38a5a5e7-569/launch.log",
+    "bytes": 727,
+    "sha256": "2bf40c755b9b1faf719be24db1ef2268419482c2a795d8e6f865ee408730e2e2"
+  },
+  {
+    "path": "review/c0_raw_review_initial.json",
+    "bytes": 2682,
+    "sha256": "b158ff591b57439512160f172a7c6f7b46adf566dae6660367b8dcf3bc0a83cc"
+  },
+  {
+    "path": "review/c0_raw_review.json",
+    "bytes": 2766,
+    "sha256": "e22e4252ddfa7df1ec8aadec9bfab10bdd80fb2c8eaf4d7480bedc6d477865bb"
+  },
+  {
+    "path": "review/c0_raw_review.py",
+    "bytes": 8139,
+    "sha256": "d08b639f227ea22e18d5b8503ce6f6f04776f4e4716c96afcd4e844526c8e51c"
+  },
+  {
+    "path": "review/independent-review.md",
+    "bytes": 2953,
+    "sha256": "a064642989c605ee028e33cbffdadc40f94074f2038e07f20342c92b63c00e4f"
+  },
+  {
+    "path": "review/raw-command-correlation.json",
+    "bytes": 309,
+    "sha256": "1c106ea3558f9235eed7e3ea21349e9d90149c3c9820d0dab0d264a12059766d"
+  }
+]
