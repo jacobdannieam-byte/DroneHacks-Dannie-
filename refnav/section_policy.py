@@ -6,6 +6,7 @@ it does not certify unobserved rear space or authorize an observation rotation.
 import math
 import numpy as np
 from refnav.world_model.observations import Config, validate, project
+from refnav.world_model.geometry import _planes
 
 
 class SectionPolicy:
@@ -58,7 +59,7 @@ class SectionPolicy:
         # observation/discretization reserve is conservative, not calibrated sigma.
         stations = np.arange(.35, max(.8, min(length+.35, 1.2))+.001, .05)
         reserve = .05 + 3*obs.position_sigma_m + 1.2*obs.angle_sigma_rad
-        half_width, half_height = .35+reserve, .20+reserve
+        half_width, half_height = .35+reserve+.10, .20+reserve+.05
         offsets = np.array([(x, y, z) for x in stations
                             for y in np.linspace(-half_width,half_width,math.ceil(2*half_width/.05)+1)
                             for z in np.linspace(-half_height,half_height,math.ceil(2*half_height/.05)+1)])
@@ -82,20 +83,38 @@ class SectionPolicy:
         result.update(observation_id=obs.observation_id, capture_s=obs.stamp,
                       forward_volume_coverage=coverage, sampled_volume_points=len(world),
                       observation_reserve_m=reserve, uncertainty_basis='3sigma_reported_pose_plus_design_reserve_not_hardware_bound')
+        result['admitted_center_volume'] = dict(origin=np.asarray(position).tolist(),direction=direction.tolist(),
+            lateral_limit_m=.10,vertical_limit_m=.05,forward_limit_m=float(stations[-1]-.35-reserve))
         if not clear.all():
             self.confirmations = 0
             return dict(result, reason='swept_forward_volume_unknown_or_blocked')
         points = project(obs, self.config).points()-np.asarray(position)
         along, across = points@direction, points@lateral
+        # Restrict fitting to flight-height returns, so floor/ceiling points on
+        # either side cannot impersonate two corridor walls.
+        walls = list(_planes(points[np.abs(points[:,2])<.35],self.config))
         side_support = []
         tunnel = 'tunnel' in section.lower()
         for low in (.35,.6):
             band = (along>=low)&(along<low+.3)
-            side_support.append(bool(np.sum(band&(across<-.4))>=5 and np.sum(band&(across>.4))>=5))
+            sides=set()
+            for normal,offset,hits in walls:
+                if abs(normal@lateral)<.95:
+                    continue
+                supported=hits[((hits@direction)>=low)&((hits@direction)<low+.3)]
+                if len(supported)>=5 and np.ptp(supported[:,2])>=.4:
+                    side=float(np.median(supported@lateral))
+                    if abs(side)>half_width:
+                        sides.add(1 if side>0 else -1)
+            side_support.append(sides=={-1,1})
             if tunnel:
                 center = band&(np.abs(across)<.4)
                 # NED: roof negative, floor positive. Curved surfaces supported.
-                if np.sum(center&(points[:,2]<-.25))<5 or np.sum(center&(points[:,2]>.25))<5:
+                roof=center&(points[:,2]<-half_height)
+                floor=center&(points[:,2]>half_height)
+                supported = all(np.sum(surface&(across>=left)&(across<left+.2))>=3
+                                for surface in (roof,floor) for left in (-.3,-.1,.1))
+                if not supported:
                     self.confirmations = 0
                     return dict(result, reason='tunnel_floor_or_roof_unobserved')
         if ('corridor' in section.lower() or tunnel) and not all(side_support):

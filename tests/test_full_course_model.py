@@ -40,3 +40,33 @@ def test_full_course_approval_cannot_be_prefix_approval(tmp_path):
     path=tmp_path/'approval.json'
     path.write_text(json.dumps(dict(mode='hybrid_model_trial',expires_utc='2099-01-01T00:00:00Z',trial_id='hybrid-pinn-classical-prefix-001')))
     with pytest.raises(ValueError):approval_for(path,{'trial_id':'hybrid-pinn-full-course-001'},'scenarios/model_flight/full_course_recorder.json')
+
+
+def test_model_requires_current_observed_center_volume_when_native_guard_enabled():
+    raw=config();selector=FullCourseSelector(raw['model_flight'],monotonic=lambda:0.)
+    state=DroneState(REFERENCE,1.,(0.,0.,-.8),(0.,0.,0.),0.,0.)
+    selector.require_depth=True
+    goal=raw['model_flight']['waypoints_ned_m'][0]
+    with pytest.raises(ValueError,match='No model candidate'):
+        selector.choose(state,goal,1_000_000_000)
+    selector.depth_admission={'allowed':True,'admitted_center_volume':{
+        'origin':[0,0,-.8],'direction':[1,0,0],'lateral_limit_m':.1,
+        'vertical_limit_m':.05,'forward_limit_m':.5}}
+    target,_=selector.choose(state,goal,1_000_000_000)
+    outside=replace(target,position_m=(.1,.15,-.8))
+    assert not selector.evaluate(selector.model,state,outside,goal)['eligible']
+
+
+def test_missing_depth_holds_then_lands_without_model_fallback(tmp_path):
+    from refnav.full_course_model import FullCourseFlight
+    from refnav.model_flight import DecisionLog
+    from refnav.calibration_trial import Observation
+    raw=config();log=DecisionLog(tmp_path/'decisions')
+    driver=FullCourseFlight(FullCoursePlan(**raw['plan']),raw['model_flight'],log)
+    obs=Observation((0,0,-.8),(0,0,0),1_000_000_000,1_000_000_000,True,False,14,0.)
+    goal=raw['model_flight']['waypoints_ned_m'][0]
+    first=driver.admit_goal(obs,goal,1_000_000_000,1_000_000_000)
+    assert first.velocity_ned_mps==(0,0,0) and driver.model_commands==0
+    last=driver.admit_goal(obs,goal,4_000_000_000,4_000_000_000)
+    assert last.command=='land'
+    log.close()

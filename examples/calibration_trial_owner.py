@@ -367,6 +367,12 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
                 continue
             next_tick = wall_ns + 50_000_000
             observation = observe(now_ns, wall_ns)
+            if observation is not None and hasattr(driver,'prepare_section'):
+                driver.prepare_section(observation,now_ns)
+                # Perception has no command authority. Re-read time and validate
+                # native inputs before starting the unchanged publication fence.
+                now_ns,wall_ns=clocks()
+                observation=observe(now_ns,wall_ns)
             intent = driver.step(now_ns, wall_ns, observation, admitted=admitted())
             if intent is None:
                 continue

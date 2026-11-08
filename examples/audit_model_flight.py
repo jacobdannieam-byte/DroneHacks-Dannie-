@@ -39,6 +39,9 @@ def audit(rows, raw_commands, config):
                 or section['waypoint']!=row['waypoint']
                 or not 0<=row['decision_ros_ns']/1e9-section['capture_s']<=.25):
                 faults.append('model_without_depth_section_admission')
+            if config.get('depth_sections_enabled'):
+                selector.require_depth=True
+                selector.depth_admission=section
             number=row['sequence']
             if number in decisions or number!=len(decisions)+1: faults.append('decision_sequence')
             if row['model_sha256']!=config['checkpoint_sha256'] or row['fallback'] or row['registration_enabled']:

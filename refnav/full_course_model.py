@@ -52,6 +52,8 @@ class FullCourseSelector(ModelSelector):
         self.blocking_shapes=shapes_blocking_between_heights
         # Entire approved navigation-height band plus the Classical body/slab margin.
         self.shapes=shapes_blocking_between_heights(self.course,.45,1.15)
+        self.require_depth = False
+        self.depth_admission = None
 
     def margin(self, points):
         points=np.asarray(points,dtype=float)
@@ -72,6 +74,17 @@ class FullCourseSelector(ModelSelector):
         last=predictions[-1].state
         score=math.dist(last.position_m,goal)+.15*math.hypot(*last.velocity_mps)
         allowed=inside and margin>=0 and peak<=.35
+        if self.require_depth:
+            evidence = self.depth_admission
+            observed = False
+            if evidence is not None and evidence.get('allowed'):
+                volume=evidence['admitted_center_volume'];direction=np.asarray(volume['direction'])
+                lateral=np.array([-direction[1],direction[0],0.]);offset=samples-volume['origin']
+                along=offset@direction
+                observed=bool(np.all(along>=-.01) and np.all(along<=volume['forward_limit_m'])
+                    and np.all(np.abs(offset@lateral)<=volume['lateral_limit_m'])
+                    and np.all(np.abs(offset[:,2])<=volume['vertical_limit_m']))
+            allowed = allowed and observed
         return dict(score=score,eligible=allowed,peak_speed_mps=peak,endpoint_ned_m=last.position_m,
             endpoint_velocity_mps=last.velocity_mps,reason='eligible' if allowed else 'map_clearance_height_or_speed',
             map_margin_m=margin,trajectory_ned_m=[p.state.position_m for p in predictions])
@@ -82,10 +95,28 @@ class FullCourseFlight(ModelFlight):
         super().__init__(plan,config,log,selector=selector or FullCourseSelector(config))
         from refnav.section_policy import SectionPolicy
         self.section_policy = SectionPolicy(self.selector.route.checkpoints_cleared)
+        self.selector.require_depth = True
         self.section_wait = None
         self.section_result = None
         self.turn_wait = None
         self.policy_hold = None
+        self.prepared_section = None
+        self.prepared_key = None
+
+    def prepare_section(self,obs,ros_ns):
+        """Read-only perception before the native command/publication timing fence.
+
+        Decisions still check capture age and the current predicted path against
+        the fixed observed volume; preparation never grants command authority.
+        """
+        if self.phase!='transit' or self.waypoint>=len(self.config['waypoints_ned_m']):
+            return
+        capture=self.section_policy.observation
+        key=(self.waypoint,None if capture is None else capture.observation_id)
+        if key!=self.prepared_key:
+            self.prepared_section=self.section_policy.assess(self.waypoint,np.array(obs.position),
+                self.config['waypoints_ned_m'][self.waypoint],ros_ns/1e9)
+            self.prepared_key=key
 
     def hold_for_section(self,obs,ros_ns,reason,yaw_rate=None):
         from refnav.calibration_trial import Intent, ZERO
@@ -114,8 +145,13 @@ class FullCourseFlight(ModelFlight):
                 yaw = math.copysign(.25,error)
             return self.hold_for_section(obs,ros_ns,'bounded_heading_alignment',yaw)
         self.turn_wait = None
-        report = self.section_policy.assess(self.waypoint,np.array(obs.position),goal,ros_ns/1e9)
+        report = self.prepared_section
+        if (report is None or report['waypoint']!=self.waypoint or self.section_policy.fault
+            or not 0<=ros_ns/1e9-report.get('capture_s',-1)<=.25):
+            report=dict(section='unconfirmed',waypoint=self.waypoint,allowed=False,
+                        reason=self.section_policy.fault or 'await_fresh_prepared_depth',registration_enabled=False)
         self.section_result = report
+        self.selector.depth_admission = report
         self.log.write(dict(kind='section_check',ros_ns=ros_ns,**report))
         if report['allowed']:
             self.section_wait = None

@@ -12,6 +12,7 @@ class SectionDepthInput:
         self.info = self.extrinsics = self.pending = None
         self.transforms_by_child = {}
         self.resets = None
+        self.attitude_reset = None
         self.last_depth_stamp = None
         self.rejected = {}
 
@@ -27,14 +28,21 @@ class SectionDepthInput:
         self.resets = resets
         t = msg.timestamp_sample*1e-6+self.mapping.offset_ns/1e9
         error = max(float(msg.eph),float(msg.epv))
-        if not np.isfinite(error) or error<=0:
+        angular_variance = max(float(msg.heading_var),float(msg.tilt_var))
+        if not np.isfinite([error,angular_variance]).all() or error<=0 or angular_variance<=0:
             self.reject('position_uncertainty_unavailable'); return
-        self.positions.append((t, np.array([msg.x,msg.y,msg.z]),error))
+        self.positions.append((t, np.array([msg.x,msg.y,msg.z]),error,float(np.sqrt(angular_variance))))
 
     def attitude(self, msg):
         q = np.array(msg.q)
         if not np.isfinite(q).all() or abs(np.linalg.norm(q)-1)>.001:
             return
+        reset = getattr(msg,'quat_reset_counter',None)
+        if reset is None:
+            self.reject('attitude_reset_counter_missing'); return
+        if self.attitude_reset is not None and reset!=self.attitude_reset:
+            self.policy.fault='section_attitude_reset'
+        self.attitude_reset=reset
         t = msg.timestamp_sample*1e-6+self.mapping.offset_ns/1e9
         self.attitudes.append((t, quat_to_mat(*q) @ np.diag([1.,-1.,-1.])))
 
@@ -89,7 +97,7 @@ class SectionDepthInput:
             depth = decode_depth(msg.encoding,height,width,msg.step,msg.data)
             obs = Observation(depth,k,self.extrinsics[1],self.extrinsics[2],attitude[1],position[1],
                               stamp,position[0],f'depth-{stamp:.9f}',frame_id='px4_local_ned',
-                              clock_id=self.mapping.ros_clock_id,position_sigma_m=position[2])
+                              clock_id=self.mapping.ros_clock_id,position_sigma_m=position[2],angle_sigma_rad=position[3])
             self.policy.offer(obs)
             self.last_depth_stamp = stamp
         except (ValueError,TypeError):

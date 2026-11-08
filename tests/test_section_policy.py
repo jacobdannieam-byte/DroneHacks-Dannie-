@@ -51,3 +51,14 @@ def test_open_space_cannot_be_classified_as_tunnel():
     result=policy.assess(0,np.zeros(3),[1,0,0],1.)
     assert not result['allowed']
     assert result['reason']=='tunnel_floor_or_roof_unobserved'
+
+
+def test_floor_returns_cannot_impersonate_corridor_walls():
+    policy=SectionPolicy([('First corridor','exit',2)])
+    obs=room()
+    u,v=np.meshgrid(np.arange(160),np.arange(120))
+    obs.depth_m=np.minimum(4.,.7/np.maximum(np.abs((v-60)/30),1e-9))
+    policy.offer(obs)
+    result=policy.assess(0,np.zeros(3),[1,0,0],1.)
+    assert not result['allowed']
+    assert result['reason']=='passage_side_surfaces_unconfirmed'
