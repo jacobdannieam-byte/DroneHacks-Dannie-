@@ -43,7 +43,7 @@ What stops the run (run_safety.py)
     stopped using the laser. Land where it is, finding the floor with the laser's raw reading if
     we have it, else with PX4's distance to the ground if PX4 still reports one, else by
     descending gently until PX4 says it has landed (flight_steps.choose_landing_height_source).
-  - Camera tracking silent for 0.2 s or reporting it is lost: hold still; after 5 s, land.
+  - Camera tracking silent for 0.5 s or reporting it is lost: hold still; after 5 s, land.
   - A target outside the course: refused, and the drone lands where it is.
   - Control no longer ours (disarmed, or PX4 left Offboard): stop sending targets and finish.
   - Any error in this program, or Ctrl+C: if control is ours and the motors are on, land where

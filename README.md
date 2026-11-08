@@ -9,6 +9,7 @@ This repository holds the code for our drone. Each folder has one purpose.
 | [`drone_code/`](drone_code/README.md) | The code that flies drone 16. Also the scripts that copy it to the drone and copy the records back. | The drone. The scripts run on the Mac. |
 | [`simulator/`](simulator/README.md) | The 3D rendered sim and the Gazebo environment. We test the drone code here before we fly. | The Mac only. |
 | [`course_map_tools/`](course_map_tools/README.md) | Tools that make the course maps from our phone scan and from the organizers' drawing. | The Mac only. |
+| [`telemetry/`](telemetry/README.md) | The flight records of drone 16, packed for Git by `drone_code/sync_telemetry.sh`. | Read only. |
 | [`docs/`](docs/) | Our plans and guides. `docs/from_the_organizers/` holds the organizers' guides. | Read only. |
 | [`archive/`](archive/README.md) | Code that we do not use. We keep it only for reference. | Nothing runs it. |
 

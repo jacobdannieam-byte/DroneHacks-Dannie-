@@ -194,7 +194,7 @@ class DroneLink:
 
     def _listen_to_camera_tracking(self):
         """drone_reports.py only has camera tracking's position from the organizers' summary,
-        which arrives 5 times a second. To notice a 0.2 s silence we need its own reports."""
+        which arrives 5 times a second. To notice a 0.5 s silence we need its own reports."""
         from nav_msgs.msg import Odometry
         self.tracked_position_metres = None
         self.tracked_position_arrival_seconds = None
@@ -263,8 +263,20 @@ class DroneLink:
         return tracked - self.launch.tracked_position_metres
 
     def send_position_from_launch(self, forward_left_up_metres):
-        """Sends a position target given in the launch frame."""
-        self.targets.send_position(self.launch.tracked_position_metres + np.asarray(forward_left_up_metres, dtype=float))
+        """Sends a position target given in the launch frame.
+
+        The height needs a correction. flight_interface turns our target's "up" straight into
+        PX4's height (from the organizers' code, frames.setpoint_position_enu_to_ned: PX4 z is
+        minus our up, with no shift). But PX4's height and camera tracking's height have
+        different zero points. Measured on drone 16 on 2026-11-08: on the launch mark, camera
+        tracking said up 0.00 m and PX4 said z = -0.15 m. A target of 0.80 m up then stopped the
+        drone 0.65 m above the floor, and the climb timed out. So we give the height as PX4 will
+        read it: PX4's launch height plus the height we want. Forward and left need no
+        correction, because PX4 takes them from camera tracking (they agreed within 2 cm)."""
+        target = self.launch.tracked_position_metres + np.asarray(forward_left_up_metres, dtype=float)
+        px4_launch_height_up_metres = -self.launch.px4_z_metres
+        target[2] = px4_launch_height_up_metres + float(forward_left_up_metres[2])
+        self.targets.send_position(target)
 
     # ---- Heights -------------------------------------------------------------------------------
 

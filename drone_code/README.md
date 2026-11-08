@@ -103,6 +103,7 @@ Put a setting before the command. Example:
 | [`TEST_SEQUENCE.md`](TEST_SEQUENCE.md) | The commands for each test, in order. |
 | [`install_on_drone_16.sh`](install_on_drone_16.sh) | Mac. Copies our two packages to the drone and builds them. |
 | [`collect_flight_records.sh`](collect_flight_records.sh) | Mac. Copies the records from the drone. [`COLLECTING_RECORDS.md`](COLLECTING_RECORDS.md) explains it. |
+| [`sync_telemetry.sh`](sync_telemetry.sh) | Mac. Copies the records, packs them into `telemetry/` for Git, and can commit and push them. |
 | [`team_nav/`](team_nav/README.md) | Our main package. `team_nav/drone.sh` is the helper. |
 | [`smoke_flights/`](smoke_flights/README.md) | The hover-and-land flight. |
 | [`hardware_checks/`](hardware_checks/README.md) | A quick check of the drone from the Mac, over the USB cable. |

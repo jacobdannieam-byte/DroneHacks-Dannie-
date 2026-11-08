@@ -391,7 +391,7 @@ If everything else works and time remains, we could try a small neural network t
 
 The mission program checks the following all the time:
 
-- If position updates stop for more than 0.2 seconds, or camera tracking reports a problem, the drone holds.
+- If position updates stop for more than 0.5 seconds, or camera tracking reports a problem, the drone holds.
 - Every target is checked against the course boundaries, because the organizers' software doesn't limit horizontal movement.
 - The target stays close to the drone, so the speed can't suddenly jump.
 - If our automatic control has ended for any reason, the code stops sending the drone onward.

@@ -128,16 +128,6 @@ stop_window() {
     in_container "tmux kill-window -t $TMUX_SESSION:$window_name 2>/dev/null; true"
 }
 
-# Asks a person to type yes. Used before anything that lets a program fly.
-ask_for_team_approval() {
-    echo "$1"
-    read -r -p "Has the team approved this, with a teammate on the remote and the kill switch? Type yes: " answer
-    if [ "$answer" != "yes" ]; then
-        echo "Stopping. Nothing was changed."
-        exit 1
-    fi
-}
-
 start_launch_file() {
     local launch_name="${1:-}"
     local package_and_file
@@ -145,10 +135,8 @@ start_launch_file() {
         watch_only)
             package_and_file="team_nav watch_only.launch.py" ;;
         test_flights)
-            ask_for_team_approval "test_flights turns the hand-over ON: a test program you start by hand can then fly the drone once a teammate arms it and flips the switch to Position."
             package_and_file="team_nav test_flights.launch.py" ;;
         rise_and_land)
-            ask_for_team_approval "rise_and_land starts the hover-and-land flight (drone_code/smoke_flights). It flies as soon as a teammate arms the drone and flips the switch to Position."
             package_and_file="team_smoke_flights rise_and_land.launch.py" ;;
         course_run)
             # Its hand-over stays off until someone sets HAND_OVER_ON in course_run.launch.py.

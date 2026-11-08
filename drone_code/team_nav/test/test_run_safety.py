@@ -58,11 +58,11 @@ def test_a_sudden_tilt_lands_the_drone_using_px4s_height():
 
 def test_silent_camera_tracking_holds_then_lands_using_the_laser():
     safety = RunSafety(SCAN)
-    first = safety.check(normal_condition(0.0, camera_tracking_age_seconds=0.5))
+    first = safety.check(normal_condition(0.0, camera_tracking_age_seconds=0.6))
     still_holding = safety.check(normal_condition(LONGEST_HOLD_SECONDS - 0.1, camera_tracking_age_seconds=5.0))
     gave_up = safety.check(normal_condition(LONGEST_HOLD_SECONDS + 0.1, camera_tracking_age_seconds=5.1))
 
-    assert first.action == HOLD and "0.50 s old" in first.reason
+    assert first.action == HOLD and "0.60 s old" in first.reason
     assert still_holding.action == HOLD
     assert gave_up.action == LAND_HERE and gave_up.land_using_laser
 
@@ -87,7 +87,7 @@ def test_px4s_height_disagreeing_with_the_laser_over_clear_floor_lands_using_the
 
 def test_the_height_check_keeps_running_while_the_drone_holds_for_camera_tracking():
     safety = RunSafety(SCAN)
-    first = safety.check(normal_condition(0.0, camera_tracking_age_seconds=0.5, px4_height_risen_metres=1.05))
+    first = safety.check(normal_condition(0.0, camera_tracking_age_seconds=0.6, px4_height_risen_metres=1.05))
     decision = safety.check(normal_condition(1.1, camera_tracking_age_seconds=1.6, px4_height_risen_metres=1.05))
 
     assert first.action == HOLD
@@ -162,7 +162,7 @@ def test_camera_trackings_height_is_not_compared_while_camera_tracking_is_late()
     safety = RunSafety(SCAN)
     for tenth in range(20):
         decision = safety.check(no_raw_laser(tenth / 10.0, uses_laser=True, px4_height_risen_metres=0.30,
-                                             camera_tracking_age_seconds=0.5))
+                                             camera_tracking_age_seconds=0.6))
         assert decision.action == HOLD
 
 

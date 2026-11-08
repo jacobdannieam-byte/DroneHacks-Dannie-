@@ -55,9 +55,13 @@ from team_nav.drone_dimensions import DRONE_HALF_HEIGHT_METRES, DRONE_RADIUS_MET
 from team_nav.height_check import CameraHeightCheck, HeightCheck
 from team_nav.touch_detector import TouchDetector
 
-# From docs/ARCHITECTURE.md section 11 (the team's own choice there). Camera tracking reports
-# about 30 times a second, so 0.2 s is several missed reports in a row.
-CAMERA_TRACKING_LONGEST_SILENCE_SECONDS = 0.2
+# Measured on drone 16 on 2026-11-08 (the out-and-back flight's recorder, 24330 reports).
+# Camera tracking reports about 30 times a second on average, but the reports arrive in bursts:
+# 782 gaps were longer than 0.15 s, 1 in 100 gaps was longer than 0.29 s, and the longest was
+# 0.35 s. With the old limit of 0.2 s the drone held still dozens of times in each flight for
+# no real problem. 0.5 s is above every gap that we saw, and our checks run every 0.1 s, so a
+# real silence is still found within 0.6 s.
+CAMERA_TRACKING_LONGEST_SILENCE_SECONDS = 0.5
 
 # Our own choice. A short gap in camera tracking is worth waiting out. After this long the drone
 # has been flying on PX4's guess alone for too long, and landing is safer than waiting.

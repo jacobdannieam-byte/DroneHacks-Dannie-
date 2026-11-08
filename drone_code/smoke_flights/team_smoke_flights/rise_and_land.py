@@ -118,6 +118,7 @@ class RiseAndLand(Node):
         # Remembered on the ground, just before the hand-over.
         self.start_position = None
         self.floor_laser_reading_metres = None
+        self.start_px4_height_up_metres = None   # PX4's own height on the floor, with up positive.
 
         self.stage = Stage.WAITING_ON_THE_GROUND
         self.time_stage_began_seconds = time.monotonic()
@@ -196,7 +197,11 @@ class RiseAndLand(Node):
         target.header.frame_id = "odom"
         target.pose.position.x = self.start_position[0]
         target.pose.position.y = self.start_position[1]
-        target.pose.position.z = self.start_position[2] + height_metres
+        # The organizers' interface gives our "up" to PX4 as its height with no shift, but PX4's
+        # height and camera tracking's height have different zero points. Measured on drone 16
+        # on 2026-11-08: a 0.80 m target stopped 0.65 m above the floor, because PX4 read
+        # 0.15 m on the floor. So we give the height as PX4 reads it.
+        target.pose.position.z = self.start_px4_height_up_metres + height_metres
         # An orientation of all zeros tells the organizers' interface to keep the current heading.
         target.pose.orientation.w = 0.0
         self.pose_publisher.publish(target)
@@ -244,6 +249,7 @@ class RiseAndLand(Node):
         # Keep the floor reference fresh until the moment of the hand-over.
         self.start_position = self.tracked_position
         self.floor_laser_reading_metres = self.laser_reading_metres()
+        self.start_px4_height_up_metres = -float(self.px4_position.z)   # PX4's z points down.
         self.send_target_above_start(self.rise_height_metres)
         if self.state_says("offboard_active"):
             self.say(f"Control handed to us. Floor laser reading {self.floor_laser_reading_metres:.3f} m.")

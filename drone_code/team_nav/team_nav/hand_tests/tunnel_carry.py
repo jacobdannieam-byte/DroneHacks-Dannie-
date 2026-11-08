@@ -26,9 +26,10 @@ from team_nav.hand_tests.hand_test_tools import combine, failed, heading_change_
 # From the organizers' code (px4_odom_bridge.py): the status value that means tracking is lost.
 TRACKING_LOST_STATE = 2
 
-# From our plan (docs/ARCHITECTURE.md, section 11): the flight code holds if position updates
-# stop for more than 0.2 s. A longer gap here means the flight would have stopped there.
-LONGEST_GAP_BETWEEN_REPORTS_SECONDS = 0.2
+# The same limit as the flight code (run_safety.py, 0.5 s, measured on 2026-11-08): the flight
+# holds still if position updates stop for longer. A longer gap here means the flight would
+# have held still there.
+LONGEST_GAP_BETWEEN_REPORTS_SECONDS = 0.5
 # Our own choice. Carried at a slow walk (under 1 m/s) and about 30 reports a second, the drone
 # moves about 3 cm between reports. A step of more than 10 cm is a jump, not a movement.
 LARGEST_STEP_BETWEEN_REPORTS_METRES = 0.10
