@@ -64,7 +64,10 @@ def configured(path):
         measurement = root / envelope.pop('measurement_file')
         if hashlib.sha256(measurement.read_bytes()).hexdigest() != envelope['evidence_sha256']:
             raise ValueError('stopping measurement identity mismatch')
-        runtime.executor.stopping_envelope = StoppingEnvelope(**envelope)
+        from refnav.stopping_measurement import validate_measurement
+        measured_envelope = StoppingEnvelope(**envelope)
+        validate_measurement(_read(measurement), measured_envelope)
+        runtime.executor.stopping_envelope = measured_envelope
     return strategy, runtime
 
 

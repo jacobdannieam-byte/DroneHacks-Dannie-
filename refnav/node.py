@@ -65,6 +65,8 @@ class RefNav(Node):
     def __init__(self, *, hybrid_runtime=None, hybrid_approval=None):
         super().__init__("refnav")
         self._hybrid_runtime, self._hybrid_approval = hybrid_runtime, hybrid_approval
+        from refnav.owner_timing import OwnerTiming
+        self._owner_timing = OwnerTiming.for_runtime(hybrid_runtime) if hybrid_runtime else OwnerTiming()
         if hybrid_runtime is not None:
             from examples.gazebo_hybrid_adapter import IsolationApproval
             if (hybrid_runtime.strategy != "hybrid_sitl" or hybrid_runtime.adapter is None
@@ -72,6 +74,7 @@ class RefNav(Node):
                 raise ValueError("native owner needs a reviewed Hybrid SITL composition")
             if hybrid_runtime.executor.stopping_envelope is None:
                 raise ValueError('native owner requires a reviewed measured stopping envelope')
+            self._owner_timing.validate_stopping_budget(hybrid_runtime.executor.stopping_envelope)
         route, doc = load_route(self) if hybrid_runtime is None else ([], {})
         prm = C.Params(route=route)
         for k, v in vars(C.Params()).items():
@@ -174,7 +177,7 @@ class RefNav(Node):
                 self._hybrid_reports.pop(key, None)
                 self._invalidate_hybrid()
                 return
-            if now - capture + clock.max_error_ns > 300_000_000:
+            if not self._owner_timing.fresh(key, capture, now, clock.max_error_ns):
                 self._hybrid_reports.pop(key, None)
                 self._invalidate_hybrid()
                 return
@@ -321,11 +324,11 @@ class RefNav(Node):
                     admission = False
             authority = self._hybrid_reports.get("authority")
             if self.mission.t_cmd is not None or self.mission.phase in C.AIRBORNE + ("land",):
-                admission = admission and authority is not None and 0 <= now_ns - authority[0] <= 300_000_000
+                admission = admission and authority is not None and self._owner_timing.fresh('authority', authority[0], now_ns)
             now = now_ns * 1e-9
             health = self.mission.health
             ready = (len(self._hybrid_reports) == 3 and
-                     all(0 <= now_ns - stamp <= 300_000_000 for stamp, _ in self._hybrid_reports.values())
+                      all(self._owner_timing.fresh(key, stamp, now_ns) for key, (stamp, _) in self._hybrid_reports.items())
                      and health.last_ok is True and health.last_t is not None
                      and 0 <= now - health.last_t <= health.stale_s and self.mission.depth_fresh(now)
                      and self.mission.depth_t <= now
