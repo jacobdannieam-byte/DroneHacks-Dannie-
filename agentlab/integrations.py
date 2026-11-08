@@ -43,21 +43,24 @@ class CodexWorker:
     def __init__(self,activation=None,runner=None): self.activation=activation; self.runner=runner or ProcessRunner()
     def plan(self,role,source_sha,prompt):
         if role not in NAMES or not re.fullmatch('[0-9a-f]{40}',source_sha): raise ValueError('Invalid worker identity')
-        return dict(role=role,source_sha=source_sha,prompt=prompt)
+        from .models import profile
+        return dict(role=role,source_sha=source_sha,prompt=prompt,**profile(role))
     def execute(self,plan=None,worktree=None,timeout=180):
         if self.activation is None: raise PermissionError('Workers disabled')
         self.activation.require('agents_enabled',plan)
-        role=plan['role']; self.plan(role,plan['source_sha'],plan['prompt'])
+        role=plan['role']
+        expected=self.plan(role,plan['source_sha'],plan['prompt'])
+        if plan!=expected: raise ValueError('Worker plan differs from pinned role profile')
         cwd=Path(worktree).resolve()
         if self.runner.run(['git','rev-parse','HEAD'],cwd).strip()!=plan['source_sha']: raise ValueError('Worker source mismatch')
         import tomllib
         contract=tomllib.loads((cwd/'.codex/agents'/f'{role}.toml').read_text())['developer_instructions']
         # Workers return proposed patches as data; none receives write authority.
         prompt=contract+'\nReturn proposed changes as a unified diff in your report, never apply them.\n'+plan['prompt']
-        out=self.runner.run(['codex','exec','--json','--sandbox','read-only','--ignore-user-config','-'],cwd,timeout,prompt)
+        out=self.runner.run(['codex','exec','--json','--sandbox','read-only','--ignore-user-config','--model',plan['model'],'-c','model_reasoning_effort='+json.dumps(plan['reasoning_effort']),'-'],cwd,timeout,prompt)
         events=[json.loads(line) for line in out.splitlines() if line.strip()]
         if not any(e.get('type')=='turn.completed' for e in events) or any(e.get('type') in ('turn.failed','error') for e in events): raise ValueError('Incomplete Codex turn')
-        return dict(source_sha=plan['source_sha'],role=role,events=events,evidence_sha256=digest(events))
+        return dict(source_sha=plan['source_sha'],role=role,model=plan['model'],reasoning_effort=plan['reasoning_effort'],events=events,evidence_sha256=digest(events))
 
 class GazeboRunner:
     def __init__(self,activation=None,runner=None): self.activation=activation; self.runner=runner or ProcessRunner()

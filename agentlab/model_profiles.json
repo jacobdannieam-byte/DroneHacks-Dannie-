@@ -1,0 +1,46 @@
+{
+  "analyst": {
+    "model": "gpt-6-astra",
+    "reasoning_effort": "low"
+  },
+  "documenter": {
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "high"
+  },
+  "experiment_designer": {
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "high"
+  },
+  "implementer": {
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "xhigh"
+  },
+  "performance_auditor": {
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "high"
+  },
+  "policy_diagnostician": {
+    "model": "gpt-6-astra",
+    "reasoning_effort": "low"
+  },
+  "policy_repairer": {
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "xhigh"
+  },
+  "regression_guard": {
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "xhigh"
+  },
+  "researcher": {
+    "model": "gpt-6-astra",
+    "reasoning_effort": "low"
+  },
+  "reviewer": {
+    "model": "gpt-6-astra",
+    "reasoning_effort": "low"
+  },
+  "simulator_triage": {
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "high"
+  }
+}

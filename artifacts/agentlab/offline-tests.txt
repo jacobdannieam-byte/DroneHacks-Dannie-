@@ -6,6 +6,8 @@ test_worker_transport_fake_only (test_integrations.Integrations.test_worker_tran
 test_worktree_command (test_integrations.Integrations.test_worktree_command) ... ok
 test_independent_review_expiry_cancel (test_jobs.JobTests.test_independent_review_expiry_cancel) ... ok
 test_timeout_budget (test_jobs.JobTests.test_timeout_budget) ... ok
+test_all_roles_pinned (test_models.Models.test_all_roles_pinned) ... ok
+test_plan_binds_model (test_models.Models.test_plan_binds_model) ... ok
 test_disabled (test_offline.Tests.test_disabled) ... ok
 test_evidence (test_offline.Tests.test_evidence) ... ok
 test_flags (test_offline.Tests.test_flags) ... ok
@@ -20,6 +22,6 @@ test_existing_first (test_strategy_workflow.StrategyTests.test_existing_first) .
 test_new_requires_existing_and_research (test_strategy_workflow.StrategyTests.test_new_requires_existing_and_research) ... ok
 
 ----------------------------------------------------------------------
-Ran 20 tests in 0.231s
+Ran 22 tests in 0.241s
 
 OK

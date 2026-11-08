@@ -1,0 +1,61 @@
+DroneHacks: finalized integration and qualification plan
+Status: ready for offline implementation planning; NOT released for agents or simulation.
+
+1. Source reconciliation
+Working/delivery branch remains codex/hybrid-integration as requested in this chat.
+Lab plan base: 8c64e24ca98eda38ac37366dacb17cf8f48da50e.
+Spatial donor: code-integration-hybrid at 3d7818e41b56982d857ca93da66bfbaaa452a4b9.
+The attached brief's instruction to push to the donor branch is not adopted: preserve that branch and integrate reviewed changes into the established delivery branch. No reset or force push. Re-fetch both heads before integration, inspect merge ancestry and tree changes, preserve collaborators, then merge the donor into the delivery branch in a reviewable commit. Do not copy individual P2 files blindly. Rerun tests from repository root before reporting a combined test count.
+The donor reports 604 tests; our lab previously reports 20. Neither is a fresh combined result.
+
+2. Baseline and strategy order
+S1 Classical is the team's physically tested protected baseline, not a redevelopment task. Pin its actual revision/configuration and physical records when available. Preserve the separate historical simulator run run-AdMalPxA/ad31ae55... (84.3 s, four checkpoints, landed/disarmed, zero recorded touches). Do not confuse that run with physical proof or transfer Classical owner qualification to Hybrid.
+Evaluate existing S0, S2, S3, S4 first: existing Hybrid, information gain, learned goal ranking, physics-informed prediction. Freeze model hashes and compare identical recordings, geometry, uncertainty, start state and seed against S1 where comparable and against S0 to isolate incremental effects. No new strategy implementation before evidence-backed existing-portfolio dispositions. Research addressing an existing blocker is allowed immediately.
+
+3. Spatial design to retain
+Keep four distinct layers: authorized immutable reference geometry; persistent current-run belief; fresh free/occupied/unknown collision evidence; semantic/topological relationships. Smooth odometry remains the control frame. Map-relative transforms support diagnostic reasoning and must carry identity, frame, uncertainty, capture time and epoch. Invalidate stale/wrong-map/reset results; do not translate old body poses into current poses or move free voxels blindly.
+Existing donor P2 includes reference processing, registration/localization, bounded asynchronous worker, diagnostic H2 consumer and swept-volume checks. Inspect and reuse these, not rebuild them. Map control and background registration stay OFF in qualification profiles. Synchronous offline P2 replay may test contracts without activating background registration. Native registration/map-control experiments require a separate future gate.
+
+4. Work packages and owners (no agents started)
+A: Integration and authority — implementer (Sol xhigh), simulator_triage (Sol high).
+ Audit admission, report freshness, source/receipt clocks, wall-clock expiry, held leases, landing acknowledgement and disarm through actual composition. Preserve simulator authority 750 ms/landed 1.5 s/position 300 ms and hardware 300 ms unless new evidence supports a separately reviewed change. Account for complete worst-case reaction/transport/braking budget, not mean callback rates.
+ Build pre-fault-valid fixtures for missing/stale streams, future/rewind, ROS stall, wall expiry, takeover and unexpected disarm. Require zero inappropriate post-loss publication and no replay after recovery. Private ROS fixtures are not airborne PX4 proof.
+B: Sensing/clearance — implementer in a separate sequential change, experiment_designer (Sol high), policy_diagnostician (Astra low).
+ Pin provided Gazebo source, world, vehicle, camera intrinsics/TF, clipping, uncertainty and clock mapping. Review genuine observed full-body and all-direction stopping coverage. Replay identical native input through four strategies with pinned models. Require a legitimate positive candidate plus unknown/occupied/expired/insufficient-clearance refusals and no model fallback. Diagnose refusal without lowering uncertainty to manufacture a pass.
+C: Calibration/recording — policy_repairer (Sol xhigh), performance_auditor (Sol high).
+ Complete one-owner bounded fault/calibration driver, watchdog and designated recovery. Harden event provenance, publication-time brake/land stamps, independent native disarm, clock mapping and raw-bag binding. Reject resets, duplicates, missing/future/stale data and interrupted recordings. Use exclusive output creation, immutable raw files, and separate reanalysis directories. Test rejection paths before native disarmed rehearsal.
+D: Independent review — reviewer (Astra low), regression_guard (Sol xhigh).
+ Review frozen source and raw evidence before reading author conclusions. Neither edits or approves its own candidate. Assess all three gates on one exact candidate; record dissent and unresolved claims.
+E: Research/analysis/documentation — researcher and analyst (Astra low), documenter (Sol high).
+ Read Notion before tasks; reconcile historical statuses against source. Maintain linked research, strategy, issue, experiment, integration and decision records. All publication remains off during preparation; produce reviewed drafts. Primary citations and falsifiable hypotheses required for research proposals.
+Concurrency limit remains four, but shared owner/clock/recorder changes integrate sequentially. No concurrent simulator mutation or competing command owners.
+
+5. Fix lab readiness before worker activation
+Model/effort now explicitly pinned and bound into worker plans; never fall back silently.
+Remaining lab prerequisites: authenticated external approval identity, sanitized worker environment and OS isolation, real worktree qualification, live-process cancellation, complete structured outputs, verified Notion context retrieval/publication and repair-patch application boundary. Current read-only workers propose patches; they do not automatically implement them. Do not call the autonomous lab complete before these close. The controller must validate gates; role prose alone is not enforcement.
+
+6. Validation sequence
+First: focused tests for each changed module and immutable artifacts, then full repository suite plus lab tests from root. Keep failures and corrections separately.
+Second: identical recorded replay, including all four strategies and adverse cases; raw recording required for independent regrading.
+Third: after the supplied Gazebo is identified and separately authorized to start, run isolated disarmed observation and private-topic composition checks. Confirm no unexpected motion publisher, fresh landed/disarmed telemetry, map control OFF and registration OFF from runtime evidence.
+Fourth: independent review of exact bounded moving package; no movement during preparation.
+
+7. Bounded trial package (blocked, not executable approval)
+Trials are separate: 0.20 m/s calibration; then 0.35; then at most 0.50 after prior review; authority takeover; held-target expiry; then strategy-specific policy segments. Actual 3D speed <=0.50 including climb/descent. Landing command to disarm <=30 seconds. Stop batch on first failure. One owner; no airborne forced disarm or PX4 safety relaxation.
+Each row must pin source/image/world/vehicle/profile/model hashes, approved geometry, exact command, lane/altitude/travel/duration, fault trigger, watchdog, recording paths, acceptance and recovery. Do not populate geometry or stopping values from guesses. No ready status with placeholders, unfinished driver or missing disarmed checks.
+
+8. External dependencies / release gates
+OPEN: user's Gazebo implementation and exact source/image identity.
+OPEN: raw native recordings referenced outside the donor repository.
+OPEN: reviewed vehicle/protrusion envelope, lane/overhead clearance, sensor/TF uncertainty and clock mapping.
+OPEN: positive native whole-body clearance case.
+OPEN: measured braking envelope (requires separately approved movement after driver/disarmed checks).
+OPEN: native authority/expiry fallback qualification (moving gate).
+The offline work plan is finalized. Agent activation, simulator startup and moving approval are distinct; none is granted by this plan.
+
+Sources reviewed
+Notion P2: https://app.notion.com/p/412f393aa768816ea9c1f05ab405503c
+Notion roadmap: https://app.notion.com/p/411f393aa76881c79ae2fb7f6d7d96f7
+Notion strategy tracker: https://app.notion.com/p/411f393aa768816abd1bd8651fbb4a90
+Donor docs/POLICY_INTEGRATION_HANDOFF.txt and artifacts/policy_gate_qualification/BOUNDED_TRIAL_REVIEW.txt.
+The donor handoff supersedes older qualification-status.json timing/code statements. Preserve that historical JSON; do not overwrite it with new outcomes.
