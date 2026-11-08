@@ -48,7 +48,11 @@ def geometry_review(raw):
     points = np.array([(e+config['route_east_per_north']*n+course.launch_mark_centre_metres[0], n+course.launch_mark_centre_metres[1]) for n in north for e in east])
     shapes = shapes_blocking_between_heights(course, 0., -low[2]+.20)
     rooms, _ = distance_to_shapes_metres(points, shapes)
-    margin = float(min(rooms)) - .45 - math.sqrt(2)*.005
+    # Nearest lattice vertex: half a north step and half an east step,
+    # including the east displacement induced by the sloped route.
+    cover_error = math.hypot(float(north[1]-north[0])/2,
+        float(east[1]-east[0])/2 + abs(config['route_east_per_north'])*float(north[1]-north[0])/2)
+    margin = float(min(rooms)) - .45 - cover_error
     if margin <= 0:
         raise ValueError('Full launch/transit/landing corridor fails participant-map reserve')
     for point in config['waypoints_ned_m']:
@@ -56,7 +60,7 @@ def geometry_review(raw):
             raise ValueError('Waypoint outside command corridor')
     return dict(scope='simulator static prior; not observed FREE or general D3 certification',
         minimum_remaining_horizontal_margin_m=margin, envelope_m=.35, additional_design_reserve_m=.10,
-        sample_cover_error_m=math.sqrt(2)*.005, floor='authored flat support plane; landing contact permitted',
+        sample_cover_error_m=cover_error, floor='authored flat support plane; landing contact permitted',
         height_slab_m=[0.,-low[2]+.20], registration_enabled=False,
         source_sha256={name:sha(ROOT/name) for name in SOURCES})
 
