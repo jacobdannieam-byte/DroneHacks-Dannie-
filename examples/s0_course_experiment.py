@@ -18,6 +18,7 @@ from examples.hybrid_native_shadow import ClockExecutorService
 from examples.hybrid_runtime import HybridRuntime
 from examples.s0_experiment_geometry import AuthoredObstacles, EXPERIMENT_EVIDENCE
 from examples.s0_owner_clock import ExperimentalOwnerClockMixin
+from examples.s0_image_transport import ExperimentalImageTransportMixin
 from onboard.adapters.geometry import R_ENU_NED, rot_z
 from refnav.dynamics import DynamicsModel, PositionSetpoint
 from refnav.dynamics.history import STEP_SECONDS
@@ -360,7 +361,7 @@ def run(runtime, output, ros_args):
     from onboard.diagnostics.sitl_graph import inspect
     from refnav.node import RefNav
 
-    class ExperimentalOwner(ExperimentalOwnerClockMixin, RefNav):
+    class ExperimentalOwner(ExperimentalImageTransportMixin, ExperimentalOwnerClockMixin, RefNav):
         legacy_depth_subscription = False
 
         def _validate_native_qualification(self, current):
