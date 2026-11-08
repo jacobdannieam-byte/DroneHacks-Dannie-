@@ -3,3 +3,12 @@ simulator/**/Dockerfile* text eol=lf
 artifacts/goal_comparison/** -text
 artifacts/strategy_comparison/** -text
 examples/run_recorded_strategy_inventory.sh text eol=lf
+# Calibration contracts hash exact bytes (historical LF and CRLF); preserve them.
+scenarios/calibration/*.json -text
+artifacts/taskforce_batch_003/native-lane-reviewed-v2/geometry-review.json -text
+# The historical geometry review pins these source files as CRLF. Preserve bytes.
+simulator/gazebo_trial/models/oak_d_s2_camera/model.sdf -text
+simulator/gazebo_trial/models/drone_16_with_oak_d_s2/model.sdf -text
+simulator/gazebo_trial/make_drone_16_model.py -text
+simulator/gazebo_trial/course_world_sdf.py -text
+simulator/gazebo_trial/calibration_lane.py text eol=lf
