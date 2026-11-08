@@ -48,3 +48,13 @@ def test_anchored_adapter_would_apply_origin_twice():
     target = position_target_metres(camera, px4_origin[2], (0.0, 0.0, 0.8))
     converted = frames.setpoint_position_enu_to_ned(target, camera, px4_origin)
     assert px4_origin[2] - converted[2] != pytest.approx(0.8)
+
+
+@pytest.mark.parametrize('camera,displacement,down', [
+    ([0, 0], [0, 0, .8], 0), ([0, 0, 0], [.8], 0),
+    ([0, 0, float('nan')], [0, 0, .8], 0),
+    ([0, 0, 0], [0, 0, .8], float('inf')),
+])
+def test_invalid_origins_and_displacements_are_refused(camera, displacement, down):
+    with pytest.raises(ValueError):
+        position_target_metres(camera, down, displacement)
