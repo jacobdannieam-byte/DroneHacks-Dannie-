@@ -92,7 +92,7 @@ class ModelSelector:
             return min(allowed, key=lambda r: (r[kind]['score'], r['candidate_id'])) if allowed else None
         chosen, nominal = best('pinn'), best('d0')
         elapsed = self.monotonic() - began
-        if elapsed >= .04:
+        if elapsed >= .04 and not self.config.get('simulator_diagnostic'):
             raise ValueError('Model decision deadline exceeded')
         if chosen is None:
             raise ValueError('No model candidate admissible')

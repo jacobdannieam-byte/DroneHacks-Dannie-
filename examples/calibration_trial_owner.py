@@ -224,9 +224,22 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
     rclpy.init(args=['--ros-args', '-p', 'use_sim_time:=true'])
     node = rclpy.create_node(OWNER_ID[1:])
     report = {'mode': 'calibration_trial' if owner else 'calibration_check', **identity}
+    clock_node = clock_executor = clock_thread = None
+    if getattr(driver, '_diagnostic_motion_unbounded', False):
+        # Humble's /clock subscription shares the normal single-thread executor.
+        # Model rollout must not delay clock callbacks and make current PX4 data
+        # appear to come from the future. Only the clock runs on this executor;
+        # observations, decisions, and publications remain serialized below.
+        from rclpy.executors import SingleThreadedExecutor
+        from threading import Thread
+        clock_node = rclpy.create_node('diagnostic_model_clock')
+        clock_executor = SingleThreadedExecutor()
+        clock_executor.add_node(clock_node)
+        clock_thread = Thread(target=clock_executor.spin, daemon=True)
+        clock_thread.start()
 
     def clocks():
-        return node.get_clock().now().nanoseconds, monotonic_ns()
+        return (clock_node or node).get_clock().now().nanoseconds, monotonic_ns()
 
     def native(role, msg, value):
         inputs.offer(role, msg.timestamp, msg.timestamp, value, *clocks())
@@ -440,6 +453,10 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
             report['recovery_lease'] = driver.recovery_lease
         return report, int(driver.result != 'complete')
     finally:
+        if clock_executor is not None:
+            clock_executor.shutdown()
+            clock_thread.join(timeout=2.)
+            clock_node.destroy_node()
         node.destroy_node()
         rclpy.try_shutdown()
 
