@@ -59,9 +59,19 @@ STOPPING_MARGIN_METRES = 0.15
 NOT_CHECKED_NEAR_DRONE_METRES = 0.1
 
 # Our own choice. If the drone has been turning toward one heading for this long without getting
-# there, PX4 is not turning it as asked (for example a wrong sign in the heading sent). A quarter
-# turn takes 3 s at live_flight.TURN_RATE_DEGREES_PER_SECOND, so 12 s is far too long.
-LONGEST_TURN_SECONDS = 12.0
+# there, PX4 is not turning it as asked (for example a wrong sign in the heading sent). A half
+# turn takes 12 s at live_flight.TURN_RATE_DEGREES_PER_SECOND (15 degrees a second), and the drone
+# lags the sent heading by a second or two, so 25 s is far too long.
+LONGEST_TURN_SECONDS = 25.0
+
+# Our own choice. After turning on the spot, the drone may slide away from the point it was told
+# to hold (measured on drone 16 on 2026-11-08: up to 0.5 m during a 90 degree turn). It does not
+# fly on, and does not count its look-around pause, until it is back within this distance.
+SETTLED_DISTANCE_METRES = 0.10
+
+# Our own choice. If the drone can't get back within SETTLED_DISTANCE_METRES in this long (for
+# example PX4 holds it a little off), it goes on anyway, so it can't wait for ever.
+LONGEST_SETTLING_SECONDS = 5.0
 
 # Our own choice. The furthest the target is put ahead of the drone. PX4 flies toward a position
 # target at about 0.95 m/s per metre of distance (docs/ARCHITECTURE.md section 9, measured in
@@ -87,6 +97,7 @@ LOOKING_STILL = "looking around, holding still to look"
 TURNING = "turning to face the path"
 FLYING = "flying along the path"
 HOLDING = "holding, no path yet"
+SETTLING = "holding, moving back to the hold point after a turn"
 
 
 class NoWayForward(Exception):
@@ -120,6 +131,7 @@ class LiveNavigator:
         self.hold_point = None
         self.previous_drone_point = None
         self.turning_since_seconds = None
+        self.settling_since_seconds = None
         self.now_seconds = 0.0
 
     @property
@@ -175,6 +187,8 @@ class LiveNavigator:
         if _angle_between(drone_heading_radians, wanted) > math.radians(TURN_DONE_DEGREES):
             self.look_pause_began_seconds = None
             return self._step(self._hold_target(drone_metres), wanted, LOOKING_AROUND)
+        if not self._settled(drone_metres):
+            return self._step(self._hold_target(drone_metres), wanted, SETTLING)
         if self.look_pause_began_seconds is None:
             self.look_pause_began_seconds = now_seconds
         if now_seconds - self.look_pause_began_seconds >= LOOK_PAUSE_SECONDS:
@@ -220,6 +234,8 @@ class LiveNavigator:
         wanted_heading = math.atan2(offset[1], offset[0])
         if _angle_between(drone_heading_radians, wanted_heading) > math.radians(TURN_FIRST_DEGREES):
             return self._step(self._hold_target(drone_metres), wanted_heading, TURNING)
+        if not self._settled(drone_metres):
+            return self._step(self._hold_target(drone_metres), wanted_heading, SETTLING)
         direction = offset / distance_to_aim
         free_metres = self.live_map.free_distance_metres(drone_metres, direction, ROOM_NEEDED_METRES, 2.0)
         seen_metres = self.live_map.seen_distance_metres(drone_metres, direction, 2.0, NOT_CHECKED_NEAR_DRONE_METRES)
@@ -236,6 +252,24 @@ class LiveNavigator:
         return self._step(target, wanted_heading, FLYING)
 
     # ---- Small helpers ---------------------------------------------------------------------------
+
+    def _settled(self, drone_metres):
+        """True if the drone is not holding a point, or is back within SETTLED_DISTANCE_METRES of
+        it. After LONGEST_SETTLING_SECONDS of trying, the place where the drone is becomes the
+        new hold point, so it counts as settled."""
+        if self.hold_point is None:
+            self.settling_since_seconds = None
+            return True
+        if np.linalg.norm(drone_metres[:2] - self.hold_point[:2]) <= SETTLED_DISTANCE_METRES:
+            self.settling_since_seconds = None
+            return True
+        if self.settling_since_seconds is None:
+            self.settling_since_seconds = self.now_seconds
+        if self.now_seconds - self.settling_since_seconds >= LONGEST_SETTLING_SECONDS:
+            self.hold_point = np.asarray(drone_metres, dtype=float).copy()
+            self.settling_since_seconds = None
+            return True
+        return False
 
     def _hold_target(self, drone_metres):
         """Where to stay while turning or holding: the point where holding began, so the drone

@@ -12,8 +12,8 @@ The three layers, from slow to fast
   - Middle, about 10 times a second: "what is around me?" depth_camera.py measures distances;
     depth_to_map.py places them on the live map (live_map.py). Camera tracking (cuVSLAM, the
     organizers' program) says where the drone is. wall_alignment.py corrects its slow drift by
-    lining up the depth points with the walls we are sure of, and height_keeper.py keeps the true
-    height if PX4's own height drifts (for example after flying over a boulder).
+    lining up the depth points with the walls we are sure of, height_keeper.py can keep the true
+    height if PX4's own height drifts (for example after flying over a boulder), but it is switched off (USE_HEIGHT_KEEPER).
   - Bottom, hundreds of times a second: PX4 keeps the drone level and flies it to our target.
     We don't change it.
 Between the middle and the bottom sits a reflex: every cycle, the target is put no further
@@ -40,9 +40,11 @@ from team_nav.live_navigation import LiveNavigator, NoWayForward
 from team_nav.live_planner import goals_from_mission
 
 # Our own choice, well under the touch check's limit (touch_detector.py: 120 degrees a second
-# counts as a hit). The nose is turned toward the wanted heading at most this fast, so PX4
-# never turns the drone fast enough to look like a crash.
-TURN_RATE_DEGREES_PER_SECOND = 30.0
+# counts as a hit). The nose is turned toward the wanted heading at most this fast. On drone 16
+# on 2026-11-08 (run 20261108_050406), a 90 degree turn at 30 degrees a second made the drone
+# slide about 0.5 m from the point it was told to hold: PX4 holds its place badly while it turns.
+# Turning half as fast gives it less to correct.
+TURN_RATE_DEGREES_PER_SECOND = 15.0
 
 # Our own choice. The whole live flight must end within this. The course is about 18 m; at
 # 0.3 m/s with turns and look-arounds that is about 2 minutes.
@@ -53,6 +55,14 @@ LONGEST_LIVE_FLIGHT_SECONDS = 300.0
 # up to 10 pictures a second (about 30 ms each on drone 16's GPU, measured 2026-11-08), so 1.5 s
 # means many have been missed.
 LONGEST_SECONDS_WITHOUT_DEPTH = 1.5
+
+# Our own choice, 2026-11-08: the height keeper is OFF. It trusts camera tracking's height, and
+# that was wrong by about 10 cm both in Gazebo (run 20261107_211724) and probably on drone 16
+# (correction 0.08 m within 4 s of run 20261108_050406). The correction then moved the drone away
+# from the height the bottom laser measures, and the height safety check stopped the run. Without
+# it, PX4 holds the height with the bottom laser; over a boulder it climbs about the boulder's
+# height for a moment, which is still far below the walls.
+USE_HEIGHT_KEEPER = False
 
 # Our own choice. The live map and the path are saved this often, to study the flight later.
 SECONDS_BETWEEN_SAVED_MAPS = 2.0
@@ -85,9 +95,10 @@ class LiveFlight:
 
     def fly(self):
         """Flies until the last goal is reached. Raises RunMustStop if there is no way forward."""
+        # No look-around at the start: the drone already faces the first corridor, and on drone 16
+        # every turn makes it slide (see TURN_RATE_DEGREES_PER_SECOND). The navigator still looks
+        # around if it finds no path.
         self.stage_records.begin_stage(self.navigator.current_goal.stage_name)
-        drone, heading = self._drone_now()
-        self.navigator.start_look_around(drone, heading, self.link.now_seconds())
         try:
             flight_steps.fly_until(self.link, lambda: self.finished, self._send_next_target,
                                    LONGEST_LIVE_FLIGHT_SECONDS, "live navigation to reach the landing pad", self.watch)
@@ -126,6 +137,8 @@ class LiveFlight:
     def _keep_true_height(self, camera_height_metres, now_seconds):
         """Updates the height correction (height_keeper.py) once per cycle. It uses the same
         cycle time as the turning, so it is called just before _turned_gently_toward."""
+        if not USE_HEIGHT_KEEPER:
+            return
         seconds = 0.0 if self.last_cycle_seconds is None else min(now_seconds - self.last_cycle_seconds,
                                                                    2.0 * flight_steps.CYCLE_SECONDS)
         self.link.height_correction_metres = self.height_keeper.update(self.cruise_height_metres,

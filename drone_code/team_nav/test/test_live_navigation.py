@@ -164,7 +164,7 @@ def test_a_drone_that_does_not_turn_as_asked_stops_the_run():
     start = open_point(live_map)
     navigator = navigator_with_one_goal(live_map, start + np.array([-1.0, 0.0]))
     try:
-        for cycle in range(200):
+        for cycle in range(400):
             navigator.next_step([start[0], start[1], FLYING_HEIGHT_METRES], 0.0, cycle * 0.1)
     except NoWayForward as stop:
         assert "turn" in str(stop)
@@ -199,6 +199,24 @@ def test_the_navigator_does_not_move_into_a_wall_just_ahead():
     step = navigator.next_step([start[0], start[1], FLYING_HEIGHT_METRES], 0.0, 0.0)
     moved_toward_wall = step.target_metres[0] - start[0]
     assert moved_toward_wall < 0.05
+
+
+def test_after_a_slide_the_drone_waits_to_get_back_but_not_for_ever():
+    # On drone 16 a turn made the drone slide 0.5 m from its hold point (2026-11-08).
+    live_map = scan_live_map()
+    start = open_point(live_map)
+    navigator = navigator_with_one_goal(live_map, start + np.array([1.0, 0.0]))
+    navigator.hold_point = np.array([start[0], start[1], FLYING_HEIGHT_METRES])
+    slid = np.array([start[0] - 0.3, start[1], FLYING_HEIGHT_METRES])
+    navigator.now_seconds = 0.0
+    assert not navigator._settled(slid)
+    navigator.now_seconds = 4.0
+    assert not navigator._settled(slid)
+    navigator.now_seconds = 5.5
+    assert navigator._settled(slid)
+    assert np.allclose(navigator.hold_point[:2], slid[:2])
+    navigator.hold_point = np.array([start[0], start[1], FLYING_HEIGHT_METRES])
+    assert navigator._settled(np.array([start[0] + 0.05, start[1], FLYING_HEIGHT_METRES]))
 
 
 def test_a_look_around_turns_a_full_circle_in_quarters():

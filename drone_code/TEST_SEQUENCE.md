@@ -202,9 +202,10 @@ its path again and again, and turns its nose to where it flies. The map file
 it works.
 
 What you will see:
-- After the climb, the drone turns a full circle in four quarter turns. It stops at each quarter
-  turn for 1 second. This is correct: it is looking around.
-- Before it moves, it turns slowly (30 degrees a second) to face its path.
+- After the climb, the drone does not look around. It turns slowly (15 degrees a second) to face
+  its path. It looks around (four quarter turns) only if it finds no path.
+- After each turn, it holds still until it is back within 10 cm of its hold point (at most 5 s).
+  This is correct: on drone 16 a turn makes it slide.
 - It stops and holds when something is close ahead, or when no depth picture comes for 1.5 s.
   Then it plans again.
 - If it finds no way forward for 20 s, it lands where it is.

@@ -46,8 +46,11 @@ TIGHT_ROOM_COST_FACTOR = 4.0
 UNSEEN_COST_FACTOR = 2.0
 
 # Our own choice. A metre near a boulder costs as much as this many metres elsewhere, so the
-# path goes well out of its way to avoid one, but still crosses one if it must.
-BOULDER_COST_FACTOR = 6.0
+# path goes well out of its way to avoid one, but still crosses one if it must. It was 6, and in
+# Gazebo run 20261107_212021 the path went straight over a boulder; after that PX4's height was
+# wrong by about 0.2 m and the height check stopped the run. Crossing a boulder (about 0.9 m
+# near it) now costs about 36 m, more than any way round inside the 6 m course.
+BOULDER_COST_FACTOR = 40.0
 
 # Our own choice. If the goal itself has too little room (the map was wrong), the nearest square
 # with enough room within this distance becomes the goal.
