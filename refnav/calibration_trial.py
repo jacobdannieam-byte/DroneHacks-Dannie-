@@ -194,7 +194,13 @@ class CalibrationTrial:
             return None
         if self._clock is not None:
             prior_ros, prior_wall = self._clock
-            if ros_ns < prior_ros or not 0 <= wall_ns - prior_wall < CLOCK_STALL_NS:
+            gap = wall_ns - prior_wall
+            progressing_diagnostic = (getattr(self,'_diagnostic_motion_unbounded',False)
+                                      and ros_ns > prior_ros and gap >= CLOCK_STALL_NS)
+            if progressing_diagnostic:
+                if not hasattr(self,'scheduler_delays'):self.scheduler_delays=[]
+                self.scheduler_delays.append(dict(wall_gap_ns=gap,ros_gap_ns=ros_ns-prior_ros,ros_ns=ros_ns))
+            if ros_ns < prior_ros or (not 0 <= gap < CLOCK_STALL_NS and not progressing_diagnostic):
                 self.stop('clock_stalled_or_rewound')
                 return None
             if ros_ns == prior_ros:

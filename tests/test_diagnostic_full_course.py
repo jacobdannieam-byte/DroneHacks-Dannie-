@@ -70,6 +70,15 @@ def test_diagnostic_waits_for_new_state_and_records_slow_inference(tmp_path,monk
     times=iter([0.,.06]);driver.selector.monotonic=lambda:next(times)
     intent=driver.step(stamp,stamp,obs,admitted=True)
     assert intent.position_ned_m is not None and driver.pending_model['elapsed_s']==.06
+    driver.published(intent,stamp,stamp//1000,wall_ns=stamp)
+    stamp+=400_000_000
+    obs=replace(obs,position_stamp_ns=stamp,authority_stamp_ns=stamp)
+    driver.selector.monotonic=lambda:0.
+    intent=driver.step(stamp,stamp,obs,admitted=True)
+    assert intent.position_ned_m is not None and len(driver.scheduler_delays)==1
+    driver.published(intent,stamp,stamp//1000,wall_ns=stamp)
+    assert driver.step(stamp,stamp+400_000_000,obs,admitted=True) is None
+    assert driver.result=='clock_stalled_or_rewound'
     log.close()
 
 

@@ -321,11 +321,17 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
     def approved_now():
         return (datetime.now(timezone.utc) < expires and monotonic_ns() < approval_wall_deadline)
 
+    admission_graph = (0, False)
+
     def admitted():
+        nonlocal admission_graph
+        stamp=monotonic_ns()
+        if not diagnostic or not admission_graph[1] or stamp-admission_graph[0]>=250_000_000:
+            admission_graph=(stamp,not inspect(node, OWNER_ID, strict_motion=True)['issues']
+                and len(node.get_publishers_info_by_topic(EVENTS)) == 1)
         return (isolated() and approved_now()
                 and recorders_running()
-                and not inspect(node, OWNER_ID, strict_motion=True)['issues']
-                and len(node.get_publishers_info_by_topic(EVENTS)) == 1
+                and admission_graph[1]
                 and event_pub.get_subscription_count() >= 1)
 
     section_input = None
@@ -523,6 +529,7 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
                       recovery_operator=approval['recovery_operator'], input_fault=inputs.fault)
         if diagnostic:
             now_ns, wall_ns = clocks()
+            report['scheduler_delays'] = getattr(driver,'scheduler_delays',[])
             with inputs.lock:
                 report['native_input_snapshot'] = dict(now_ros_ns=now_ns, now_wall_ns=wall_ns,
                     samples={role:dict(ros_age_ns=now_ns-row[0],wall_age_ns=wall_ns-row[1],value=row[2])
