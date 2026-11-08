@@ -206,3 +206,18 @@ def test_a_target_outside_the_course_is_refused(target, words):
 def test_a_target_far_from_the_drone_is_refused():
     with pytest.raises(TargetRefused, match="too fast"):
         RunSafety(SCAN).check_target(ABOVE_LAUNCH_MARK + [0.0, -1.5, 0.0], ABOVE_LAUNCH_MARK)
+
+
+def test_bare_bones_safety_suppresses_touch_and_height_aborts():
+    safety = RunSafety(SCAN, bare_bones_safety=True)
+    # Severe tilt and rotation that would normally trigger TouchDetector are ignored
+    tilt_decision = safety.check(normal_condition(tilt_degrees=45.0, rotation_degrees_per_second=200.0))
+    assert tilt_decision.action == CARRY_ON
+
+    # Severe height discrepancy that would normally trigger HeightCheck is ignored
+    height_decision = safety.check(normal_condition(px4_height_risen_metres=1.5, laser_height_risen_metres=0.5))
+    assert height_decision.action == CARRY_ON
+
+    # But loss of Offboard or RC disarm STILL immediately stops target streaming
+    assert safety.check(normal_condition(control_is_ours=False)).action == CONTROL_LOST
+    assert safety.check(normal_condition(is_armed=False)).action == CONTROL_LOST

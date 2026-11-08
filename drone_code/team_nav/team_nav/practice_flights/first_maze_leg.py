@@ -83,6 +83,8 @@ def parse_arguments(command_line_words):
                         help="Which way the drone's nose points, in degrees from the map's east towards north.")
     parser.add_argument("--ignore-raw-laser", action="store_true",
                         help="Behave as if the bottom laser's raw reading did not exist, as on the real drone.")
+    parser.add_argument("--bare-bones-safety", action="store_true",
+                        help="Disables touch detection and height divergence aborts, relying on the safety pilot's kill switch.")
     return parser.parse_args(command_line_words)
 
 
@@ -129,7 +131,7 @@ def fly_with_ros(course_map, start_frame, arguments, log):
     node = Node(f"practice_{FLIGHT_NAME}")
     try:
         link = flight_steps.DroneLink(node, log, ignore_raw_laser=arguments.ignore_raw_laser)
-        flight = FirstMazeLegFlight(course_map, start_frame, link)
+        flight = FirstMazeLegFlight(course_map, start_frame, link, bare_bones_safety=arguments.bare_bones_safety)
         return flight.run()
     except Exception:
         log.event("error", f"ERROR before the flight could begin:\n{traceback.format_exc()}")
@@ -141,12 +143,12 @@ def fly_with_ros(course_map, start_frame, arguments, log):
 
 class FirstMazeLegFlight:
 
-    def __init__(self, course_map, start_frame, link):
+    def __init__(self, course_map, start_frame, link, bare_bones_safety=False):
         self.course_map = course_map
         self.start_frame = start_frame
         self.link = link
         self.log = link.log
-        self.watch = SafetyWatch(link, RunSafety(course_map), start_frame)
+        self.watch = SafetyWatch(link, RunSafety(course_map, bare_bones_safety=bare_bones_safety), start_frame)
         self.flight_start_seconds = None
 
     def run(self):

@@ -137,10 +137,14 @@ class SafetyDecision:
 
 class RunSafety:
 
-    def __init__(self, course_map, other_possible_boulders=()):
+    def __init__(self, course_map, other_possible_boulders=(), bare_bones_safety=False):
         """course_map is the drone's map. other_possible_boulders are boulders from other maps of
-        the same course, which the bottom laser may see (height_check.py explains why)."""
+        the same course, which the bottom laser may see (height_check.py explains why).
+        If bare_bones_safety is True, touch and height divergence aborts are suppressed,
+        relying entirely on the pilot's RC kill switch while still stopping immediately if
+        Offboard mode ends or target is outside net boundaries."""
         self.course_map = course_map
+        self.bare_bones_safety = bare_bones_safety
         self.touch_detector = TouchDetector()
         self.height_check = HeightCheck(course_map, other_possible_boulders)
         self.laser_use_check = LaserUseCheck()
@@ -153,16 +157,17 @@ class RunSafety:
         if not condition.control_is_ours or not condition.is_armed:
             return SafetyDecision(CONTROL_LOST, _why_control_is_lost(condition))
 
-        touch = self._check_for_touch(condition)
-        if touch is not None:
-            return SafetyDecision(LAND_HERE, touch)
+        if not self.bare_bones_safety:
+            touch = self._check_for_touch(condition)
+            if touch is not None:
+                return SafetyDecision(LAND_HERE, touch)
 
-        # The height check runs before the camera tracking check, so it keeps running while the
-        # drone holds still for camera tracking. A wrong height is worse than a short hold: if both
-        # happen, the drone lands.
-        height_problem = self._check_height(condition)
-        if height_problem is not None:
-            return SafetyDecision(LAND_HERE, height_problem, land_using_laser=True)
+            # The height check runs before the camera tracking check, so it keeps running while the
+            # drone holds still for camera tracking. A wrong height is worse than a short hold: if both
+            # happen, the drone lands.
+            height_problem = self._check_height(condition)
+            if height_problem is not None:
+                return SafetyDecision(LAND_HERE, height_problem, land_using_laser=True)
         warning = self.laser_use_check.take_new_warning()
 
         tracking_problem = _camera_tracking_problem(condition)
