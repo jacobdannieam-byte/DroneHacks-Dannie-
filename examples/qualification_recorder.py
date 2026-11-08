@@ -8,6 +8,7 @@ import json
 import math
 import os
 import re
+import signal
 from dataclasses import asdict
 from hashlib import sha256
 from pathlib import Path
@@ -43,6 +44,16 @@ def initial_clock_ready(read_clock, spin, wall=monotonic, *, timeout_s=5.):
                     return True
             previous = now
     return False
+
+
+def drain_clock_pending(record, read_clock, spin, wall=monotonic_ns):
+    """After telemetry subscriptions close, finish already-received clock-fenced samples."""
+    deadline = wall() + 50_000_000
+    while record.pending and not record.faults and wall() <= deadline:
+        spin()
+        record.clock(read_clock(), wall_ns=wall())
+    if record.pending and not record.faults:
+        record.faults.append('recorder_shutdown_clock_pending')
 
 
 def event_publisher_identity(node, topic, owner_id):
@@ -369,8 +380,12 @@ def main():
     from rclpy.executors import ExternalShutdownException
     from rclpy.impl.implementation_singleton import rclpy_implementation
     from rclpy.utilities import try_shutdown
+    from rclpy.signals import SignalHandlerOptions
     from refnav.node import PX4_QOS
-    rclpy.init(args=['--ros-args','-p','use_sim_time:=true'])
+    rclpy.init(args=['--ros-args','-p','use_sim_time:=true'], signal_handler_options=SignalHandlerOptions.NO)
+    stopping = [False]
+    previous_handlers = {sig: signal.signal(sig, lambda *_: stopping.__setitem__(0, True))
+                         for sig in (signal.SIGINT, signal.SIGTERM)}
     node=rclpy.create_node('qualification_recorder')
     if not initial_clock_ready(lambda: node.get_clock().now().nanoseconds,
                                lambda: rclpy.spin_once(node, timeout_sec=.01)):
@@ -379,8 +394,10 @@ def main():
             json.dump(record.result(), stream, indent=2, allow_nan=False)
         node.destroy_node()
         try_shutdown()
+        for sig, handler in previous_handlers.items():
+            signal.signal(sig, handler)
         return 2
-    node.create_subscription(VehicleLocalPosition,topics['vehicle_local_position'],
+    position_subscription = node.create_subscription(VehicleLocalPosition,topics['vehicle_local_position'],
         lambda m: record.sample(m,node.get_clock().now().nanoseconds),PX4_QOS)
     def owner_event(message):
         receipt_ns = node.get_clock().now().nanoseconds
@@ -389,8 +406,8 @@ def main():
         except (ValueError, TypeError, AttributeError):
             record.faults.append('unverified_event_publisher'); return
         record.event(message.data, receipt_ns, publisher=publisher)
-    node.create_subscription(String,topics['events'],owner_event,10)
-    node.create_subscription(VehicleStatus,topics['vehicle_status'],
+    event_subscription = node.create_subscription(String,topics['events'],owner_event,10)
+    status_subscription = node.create_subscription(VehicleStatus,topics['vehicle_status'],
         lambda m: record.status(m,node.get_clock().now().nanoseconds),PX4_QOS)
     node.create_subscription(Clock,'/clock',
         lambda m: record.clock(min(m.clock.sec*10**9+m.clock.nanosec,
@@ -398,7 +415,7 @@ def main():
     try:
         deadline=monotonic()+args.seconds
         ready_written = False
-        while rclpy.ok() and monotonic()<deadline:
+        while rclpy.ok() and not stopping[0] and monotonic()<deadline:
             rclpy.spin_once(node,timeout_sec=.01)
             now_ns = node.get_clock().now().nanoseconds
             record._expire_pending(now_ns, monotonic_ns())
@@ -420,11 +437,19 @@ def main():
             raise
         record.document['shutdown_interrupted'] = True
     finally:
+        if rclpy.ok():
+            for subscription in (position_subscription, status_subscription, event_subscription):
+                node.destroy_subscription(subscription)
+            drain_clock_pending(record, lambda: node.get_clock().now().nanoseconds,
+                                lambda: rclpy.spin_once(node, timeout_sec=.001))
+        record.document['shutdown_requested'] = stopping[0]
         with args.output.open('x') as stream: json.dump(record.result(),stream,indent=2,allow_nan=False)
         try:
             node.destroy_node()
         finally:
             try_shutdown()
+            for sig, handler in previous_handlers.items():
+                signal.signal(sig, handler)
     return 0 if record.result()['recording_complete'] else 2
 
 if __name__=='__main__': raise SystemExit(main())

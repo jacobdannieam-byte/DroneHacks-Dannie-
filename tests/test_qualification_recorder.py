@@ -5,7 +5,7 @@ from hashlib import sha256
 import pytest
 from examples.h1_observation import ClockMapping
 from onboard.diagnostics.phase1_probe import RESET_FIELDS
-from examples.qualification_recorder import TrialRecording, event_publisher_identity, load_contract, write_ready
+from examples.qualification_recorder import TrialRecording, event_publisher_identity, load_contract, write_ready, drain_clock_pending
 
 def message(**changes):
     values=dict(timestamp_sample=1_000_000,x=0.,y=0.,z=-.8,vx=.2,vy=0.,vz=0.,
@@ -71,6 +71,29 @@ def mapped_record(*, error=0, until=20_000_000_000):
                            1_000_000_000, until, 'reviewed-clock-fixture')
     return TrialRecording('ros_sim_time', 'px4_local_ned', clock_mapping=mapping,
                           trial_id='trial-1', owner_id='/calibration_trial_owner', profile_sha256='a'*64)
+
+
+def test_shutdown_finishes_pending_sample_without_rewriting_receipt():
+    record = mapped_record(error=4_000_000)
+    record.sample(message(timestamp=1_000_000), 2_996_000_000, wall_ns=1_000_000_000)
+    wall = [1_000_000_000]
+    def spin():
+        wall[0] += 4_000_000
+    drain_clock_pending(record, lambda: 3_004_000_000, spin, lambda: wall[0])
+    assert not record.pending and not record.faults
+    assert record.document['samples'][0]['receipt_ns'] == 2_996_000_000
+    assert record.document['samples'][0]['ingestion_ns'] == 3_004_000_000
+
+
+def test_shutdown_stalled_clock_preserves_failure_instead_of_dropping_sample():
+    record = mapped_record()
+    record.sample(message(timestamp=1_000_000), 2_996_000_000, wall_ns=1_000_000_000)
+    wall = [1_000_000_000]
+    def spin():
+        wall[0] += 10_000_000
+    drain_clock_pending(record, lambda: 2_996_000_000, spin, lambda: wall[0])
+    assert record.faults and not record.document['samples']
+    assert not record.result()['recording_complete']
 
 
 def owner_event(record, name='brake_command', stamp=3_000_000_000):
