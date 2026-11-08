@@ -18,8 +18,11 @@ from examples.gazebo_sensor_contract import (
 from examples.h1_fixture import HEALTH, MS, profile, setup, tick
 from examples.h1_observation import TRACKING, HybridBagReplay
 from examples.hybrid_shadow_loop import ShadowLoop
+from examples.spatial_bag_input import RecordedSpatialReplay
 from onboard.adapters.geometry import mat_to_quat, quat_to_mat
 from onboard.diagnostics.sitl_graph import inspect
+from refnav.world_model.spatial_input import DepthCapture, PoseSample
+from refnav.world_model.spatial_volume import Cell
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,6 +55,35 @@ def test_rig_uses_authored_mount_and_optical_axes():
     assert depth_layout(image, rig, float32_enum=13)
     image.step -= 4
     assert not depth_layout(image, rig, float32_enum=13)
+
+
+def test_native_near_clip_blocks_false_free_voxel_in_legacy_profile():
+    rig = read_camera_rig(ROOT / "simulator/gazebo_trial/models")
+    original = profile()
+    cal = replace(original.spatial.calibration, width=rig.width, height=rig.height,
+                  K=(317.25329318784304, 317.25329318784304, 256., 160.),
+                  R_body_optical=OPTICAL_TO_FLU, t_body_optical_m=rig.translation)
+    spatial = replace(original.spatial, calibration=cal)
+    sim = replace(original, spatial=spatial, tracking_source=SIM_ESTIMATOR)
+    now = 100 * MS
+    body = (.115, .1, .9)
+    pose = PoseSample(spatial.reference, now, now, True, body, (1., 0., 0., 0.), .03, .02)
+    depth = DepthCapture(spatial.reference, now, now, cal.camera_frame, "synthetic-far-plane",
+                         np.full((cal.height, cal.width), 5., dtype=np.float32))
+
+    # The uncertainty-inflated near face is about 0.309 m from the optical
+    # origin. Distant returns cannot clear the part below the 0.35 m clip.
+    voxel = (.7, .1, .9)
+    for replay, expected in ((RecordedSpatialReplay(spatial), Cell.FREE),
+                             (HybridBagReplay(sim), Cell.UNKNOWN)):
+        assert replay.world.push_pose(pose)
+        assert replay.world.process(depth, now_ns=now).accepted
+        metric = replay.world.snapshot(now_ns=now).metric
+        assert metric.cell_at(voxel, now_ns=now, reference=spatial.reference) == expected
+        assert metric.cell_at((2.1, .1, .9), now_ns=now, reference=spatial.reference) == Cell.FREE
+        assert metric.cell_at(body, now_ns=now, reference=spatial.reference) == Cell.UNKNOWN
+    assert metric.policy.min_depth_m == rig.near_m == .35
+    assert metric.policy.max_depth_m == 6.
 
 
 def test_simulated_clock_and_command_invert_only_in_reviewed_epoch():

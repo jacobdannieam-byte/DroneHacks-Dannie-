@@ -10,6 +10,7 @@ from refnav.integration_timing import measure
 from refnav.world_model.spatial_input import DepthCalibration, DepthCapture, PoseSample, SpatialReference
 from refnav.world_model.spatial_input import decode_rectified_depth, stamp_ok
 from refnav.world_model.spatial_pipeline import SpatialWorld
+from refnav.world_model.spatial_volume import MapPolicy
 
 TOPICS = {
     "/clock": "rosgraph_msgs/msg/Clock",
@@ -85,10 +86,10 @@ class RecordedSpatialReplay:
 
     topics = TOPICS
 
-    def __init__(self, profile, *, timings=None, retain_aligned_depth=False):
+    def __init__(self, profile, *, policy=MapPolicy(), timings=None, retain_aligned_depth=False):
         self.profile = profile
         self.timings = timings
-        self.world = SpatialWorld(profile.reference, profile.calibration, timings=timings)
+        self.world = SpatialWorld(profile.reference, profile.calibration, policy=policy, timings=timings)
         self._retain_aligned_depth = retain_aligned_depth
         self.aligned_depth = None
         self.rows = []

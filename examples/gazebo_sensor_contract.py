@@ -1,6 +1,6 @@
 """Pure provenance and clock contracts for the imported Gazebo depth rig."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import math
 from pathlib import Path
 import xml.etree.ElementTree as ET
@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 from examples.spatial_bag_input import _ns
 from onboard.vio.frames import WORLD_FLU, align_to_enu
 from refnav.world_model.spatial_input import NS
+from refnav.world_model.spatial_volume import MapPolicy
 
 
 SIM_ESTIMATOR = "simulated_estimator"
@@ -58,6 +59,16 @@ def read_camera_rig(models: Path) -> CameraRig:
                      int(lens.findtext("image/width")), int(lens.findtext("image/height")),
                      float(sensor.findtext("update_rate")), float(lens.findtext("clip/near")),
                      float(lens.findtext("clip/far")))
+
+
+def native_depth_policy():
+    """Constrain the map to the authored sensor range and its existing work limit."""
+    rig = read_camera_rig(Path(__file__).resolve().parents[1] / "simulator/gazebo_trial/models")
+    if not math.isfinite(rig.near_m) or not math.isfinite(rig.far_m) or not 0 < rig.near_m < rig.far_m:
+        raise ValueError("invalid Gazebo depth clip range")
+    policy = MapPolicy()
+    return replace(policy, min_depth_m=max(policy.min_depth_m, rig.near_m),
+                   max_depth_m=min(policy.max_depth_m, rig.far_m))
 
 
 def simulated_health(*, now_ns, sample_ns, status, vehicle_status, flags):

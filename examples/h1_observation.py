@@ -22,6 +22,7 @@ from refnav.reasoning.inspection import make_inputs, Attempt, HISTORY_SECONDS
 from refnav.strategies import StrategyConfig
 from refnav.trajectory_evaluation import EvaluationPolicy, FrameAlignment, GoalBinding, MetricGoal, VehicleBounds
 from refnav.world_model.spatial_input import NS, PoseSample, stamp_ok, vector
+from refnav.world_model.spatial_volume import MapPolicy
 
 TF = "/tf_static"
 TRACKING = "/visual_slam/processing_status"
@@ -133,7 +134,11 @@ class HybridBagReplay(RecordedSpatialReplay):
 
     def __init__(self, profile, *, planner_budget_s=.025, monotonic=None, continuous=False, timings=None,
                  retain_aligned_depth=False):
-        super().__init__(profile.spatial, timings=timings, retain_aligned_depth=retain_aligned_depth)
+        policy = MapPolicy()
+        if profile.tracking_source == "simulated_estimator":
+            from examples.gazebo_sensor_contract import native_depth_policy
+            policy = native_depth_policy()
+        super().__init__(profile.spatial, policy=policy, timings=timings, retain_aligned_depth=retain_aligned_depth)
         self.continuous = continuous
         self.dropped_depth = 0
         self.startup_depth_discarded = 0
