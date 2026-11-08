@@ -5,6 +5,7 @@ param(
     [string]$ApprovalFile,
     [switch]$DisarmedCheck,
     [switch]$FullCourse,
+    [switch]$Diagnostic,
     [ValidateRange(10,180)][int]$ObservationSeconds = 60
 )
 $ErrorActionPreference = 'Stop'
@@ -17,6 +18,7 @@ if (Test-Path -LiteralPath $OutputDirectory) { throw 'Evidence output must be ne
 $mode = 'model_check'
 $profilePath = 'scenarios/model_flight/h1_pinn_prefix.json'
 if ($FullCourse) { $profilePath = 'scenarios/model_flight/full_course.json' }
+if ($Diagnostic) { $profilePath = 'scenarios/model_flight/full_course_diagnostic.json' }
 $mounts = @()
 $approvalArgument = ''
 if (-not $DisarmedCheck) {

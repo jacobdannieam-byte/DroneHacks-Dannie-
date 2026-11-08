@@ -74,6 +74,9 @@ class FullCourseSelector(ModelSelector):
         last=predictions[-1].state
         score=math.dist(last.position_m,goal)+.15*math.hypot(*last.velocity_mps)
         allowed=inside and margin>=0 and peak<=.35
+        would_admit=allowed
+        if self.config.get('simulator_diagnostic'):
+            allowed=True
         if self.require_depth:
             evidence = self.depth_admission
             observed = False
@@ -87,7 +90,8 @@ class FullCourseSelector(ModelSelector):
             allowed = allowed and observed
         return dict(score=score,eligible=allowed,peak_speed_mps=peak,endpoint_ned_m=last.position_m,
             endpoint_velocity_mps=last.velocity_mps,reason='eligible' if allowed else 'map_clearance_height_or_speed',
-            map_margin_m=margin,trajectory_ned_m=[p.state.position_m for p in predictions])
+            map_margin_m=margin,would_admit_with_bounds=would_admit,
+            diagnostic=self.config.get('simulator_diagnostic',False),trajectory_ned_m=[p.state.position_m for p in predictions])
 
 
 class FullCourseFlight(ModelFlight):
@@ -96,6 +100,11 @@ class FullCourseFlight(ModelFlight):
         from refnav.section_policy import SectionPolicy
         self.section_policy = SectionPolicy(self.selector.route.checkpoints_cleared)
         self.selector.require_depth = True
+        self._diagnostic_motion_unbounded=bool(config.get('simulator_diagnostic'))
+        if self._diagnostic_motion_unbounded:
+            from examples.gazebo_container import isolated
+            if not isolated():raise ValueError('Diagnostic motion is isolated-simulator only')
+            self.selector.require_depth=False
         self.section_wait = None
         self.section_result = None
         self.turn_wait = None
@@ -127,6 +136,10 @@ class FullCourseFlight(ModelFlight):
 
     def admit_goal(self,obs,goal,ros_ns,wall_ns):
         from refnav.calibration_trial import Intent, ZERO
+        if self._diagnostic_motion_unbounded:
+            self.log.write(dict(kind='diagnostic_section_observation',ros_ns=ros_ns,waypoint=self.waypoint,
+                observation=self.prepared_section,enforced=False,registration_enabled=False))
+            return None
         heading = math.atan2(goal[1]-obs.position[1],goal[0]-obs.position[0])
         error = math.atan2(math.sin(heading-obs.heading_rad),math.cos(heading-obs.heading_rad))
         if math.dist(obs.position,goal)>.06 and abs(error)>.10:
@@ -172,12 +185,14 @@ class FullCourseFlight(ModelFlight):
         return result
 
     def step(self,ros_ns,wall_ns,observation,*,admitted):
-        if observation is not None and self.phase in ('climb','transit','brake'):
+        if not self._diagnostic_motion_unbounded and observation is not None and self.phase in ('climb','transit','brake'):
             if self.selector.margin([observation.position])<0:
                 self._operator_land=True
         return CalibrationTrial.step(self,ros_ns,wall_ns,observation,admitted=admitted)
 
     def transit(self,obs,offset,vertical_target,ros_ns,wall_ns):
+        if self._diagnostic_motion_unbounded:
+            return super().transit(obs,offset,vertical_target,ros_ns,wall_ns)
         distance=math.dist(obs.position,self.config['waypoints_ned_m'][self.waypoint])
         old=getattr(self,'_progress',None)
         if old is None or old[0]!=self.waypoint or distance<old[1]-.02:

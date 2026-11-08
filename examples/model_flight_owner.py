@@ -21,6 +21,7 @@ from refnav.model_flight import DecisionLog, ModelFlight, ModelSelector, REFEREN
 ROOT = Path(__file__).resolve().parents[1]
 PROFILE = 'scenarios/model_flight/h1_pinn_prefix.json'
 FULL_PROFILE = 'scenarios/model_flight/full_course.json'
+DIAGNOSTIC_PROFILE = 'scenarios/model_flight/full_course_diagnostic.json'
 SOURCES = ('simulator/gazebo_trial/make_drone_16_model.py',
            'simulator/gazebo_trial/course_world_sdf.py', 'simulator/gazebo_trial/make_gazebo_world.py',
            'simulator/gazebo_trial/models/drone_16_with_oak_d_s2/model.sdf',
@@ -101,10 +102,13 @@ def main():
     args=parser.parse_args()
     if not isolated() or not re.fullmatch('[0-9a-f]{40}',args.revision) or not re.fullmatch('sha256:[0-9a-f]{64}',args.image_sha256):
         raise ValueError('Isolated pinned SITL required')
-    if args.profile.resolve() not in ((ROOT/PROFILE).resolve(), (ROOT/FULL_PROFILE).resolve()):
+    if args.profile.resolve() not in ((ROOT/PROFILE).resolve(), (ROOT/FULL_PROFILE).resolve(),(ROOT/DIAGNOSTIC_PROFILE).resolve()):
         raise ValueError('Only the bounded PINN prefix profile is supported')
     raw=_read(args.profile);config=raw['model_flight']
-    full=args.profile.resolve()==(ROOT/FULL_PROFILE).resolve()
+    full=args.profile.resolve() in ((ROOT/FULL_PROFILE).resolve(),(ROOT/DIAGNOSTIC_PROFILE).resolve())
+    diagnostic=args.profile.resolve()==(ROOT/DIAGNOSTIC_PROFILE).resolve()
+    if bool(config.get('simulator_diagnostic'))!=diagnostic:
+        raise ValueError('Diagnostic mode requires its separate profile')
     if full:
         from refnav.full_course_model import FullCoursePlan, FullCourseSelector, FullCourseFlight
         plan=FullCoursePlan(**raw['plan']);selector=FullCourseSelector(config)
@@ -123,6 +127,7 @@ def main():
         checkpoint_sha256=config['checkpoint_sha256'],participant_map_sha256=config['participant_map_sha256'],
         registration_enabled=False,command_selection='physics_informed_residual_model',fallback_allowed=False)
     if full:identity['trial_id']=config['trial_id']
+    if diagnostic:identity['simulator_diagnostic']=True
     approval=expires=contract=ready=None
     if args.authorize_only and args.approval is None:
         raise ValueError('Authorize-only requires explicit approval')
@@ -145,7 +150,7 @@ def main():
     with args.output.open('x') as out:
         if args.authorize_only:
             json.dump(dict(identity,authorized_artifact=True,geometry=geometry),out,indent=2);return 0
-        log=DecisionLog(args.output.with_suffix('.decisions.jsonl'))
+        log=DecisionLog(Path('/tmp/model_decisions.jsonl') if diagnostic else args.output.with_suffix('.decisions.jsonl'))
         try:
             driver=(FullCourseFlight if full else ModelFlight)(plan,config,log,selector=selector)
             report,code=_run(plan,mapping,approval=approval,expires=expires,contract=contract,identity=identity,

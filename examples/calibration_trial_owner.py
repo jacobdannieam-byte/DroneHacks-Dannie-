@@ -288,7 +288,7 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
         for role, (kind, callback) in bindings.items():
             node.create_subscription(kind, topics[role], callback, PX4_QOS)
         node.create_subscription(Bool, SIM_HEALTH, lambda m: inputs.health(m.data, *clocks()), 10)
-        if getattr(driver, 'config', {}).get('full_course'):
+        if getattr(driver, 'config', {}).get('full_course') and not getattr(driver,'_diagnostic_motion_unbounded',False):
             node.create_subscription(String, '/simulator_only/touches', lambda _: driver.request_land(), 10)
         if hasattr(driver, 'section_policy'):
             from examples.section_depth_input import attach

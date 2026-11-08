@@ -224,12 +224,13 @@ class CalibrationTrial:
         self.max_observed_speed_mps = max(self.max_observed_speed_mps, speed)
         in_lane = all(lo <= x <= hi for x, lo, hi in zip(offset, self.plan.minimum_offset_m,
                                                         self.plan.maximum_offset_m))
-        if not in_lane:
+        diagnostic=getattr(self,'_diagnostic_motion_unbounded',False)
+        if not in_lane and not diagnostic:
             self.stop('lane_exceeded')
             return None
 
         if self.phase == 'land':
-            if speed > self.plan.actual_speed_limit_mps:
+            if speed > self.plan.actual_speed_limit_mps and not diagnostic:
                 self.recovery_reason = self.recovery_reason or 'speed_limit_during_land'
             if max(self._elapsed(ros_ns, wall_ns)) >= 30.:
                 self.stop('landing_deadline')
@@ -296,7 +297,7 @@ class CalibrationTrial:
         if obs.nav_state != NAV_OFFBOARD or not obs.armed:
             self.stop('native_authority_lost')
             return None
-        if speed > self.plan.actual_speed_limit_mps:
+        if speed > self.plan.actual_speed_limit_mps and not diagnostic:
             return self._land('speed_limit', ros_ns, wall_ns)
         height_error = self.plan.height_m + offset[2]
         # C1 must center before translating and maintain that target in transit.
@@ -316,13 +317,13 @@ class CalibrationTrial:
                     self._enter('transit', ros_ns, wall_ns)
                 else:
                     return self._issue(Intent((0., 0., vertical_target) if maintain_height else ZERO), ros_ns)
-            elif height_error < -self.plan.hover_tolerance_m:
+            elif height_error < -self.plan.hover_tolerance_m and not diagnostic:
                 return self._land('hover_height_exceeded', ros_ns, wall_ns)
             else:
                 self._settling = None
                 climb = min(self.plan.climb_speed_mps, max(0., height_error))
                 return self._issue(Intent((0., 0., vertical_target if maintain_height else -climb)), ros_ns)
-        if obs.landed or abs(height_error) > self.plan.hover_tolerance_m:
+        if obs.landed or (abs(height_error) > self.plan.hover_tolerance_m and not diagnostic):
             return self._land('left_navigation_height_band', ros_ns, wall_ns)
         if self.phase == 'transit':
             return self.transit(obs, offset, vertical_target, ros_ns, wall_ns)

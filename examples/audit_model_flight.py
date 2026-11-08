@@ -108,6 +108,8 @@ def main():
     config=json.loads((root/'calibration_profile.json').read_text())['model_flight']
     rows=[json.loads(line) for line in (root/'model_owner.decisions.jsonl').read_text().splitlines()]
     report=audit(rows,commands,config)
+    report.update(simulator_diagnostic=bool(config.get('simulator_diagnostic')),
+                  safety_qualification=False)
     owner=json.loads((root/'model_owner.json').read_text())
     recorder=json.loads((root/'calibration_recording.json').read_text())
     bag_gate=json.loads((root/'recording_final.json').read_text())

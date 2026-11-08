@@ -1,0 +1,24 @@
+{
+  "review_status": "reviewed",
+  "trial_kind": "stopping",
+  "clock_id": "ros_sim_time",
+  "frame_id": "px4_local_ned",
+  "clock_mapping": {
+    "source_clock_id": "px4_sitl_lockstep",
+    "ros_clock_id": "ros_sim_time",
+    "offset_ns": 0,
+    "max_error_ns": 0,
+    "valid_from_ns": 0,
+    "valid_until_ns": 1200000000000,
+    "evidence_id": "pinned-gazebo-px4-shared-clock-v1"
+  },
+  "trial_id": "hybrid-pinn-full-course-diagnostic-001",
+  "owner_id": "/calibration_trial_owner",
+  "profile_sha256": "5f7d7b618074bca182115b4f76c060d5d7457c0ca0668d4d07e75199ebd8e3a4",
+  "topics": {
+    "vehicle_local_position": "/fmu/out/vehicle_local_position",
+    "vehicle_status": "/fmu/out/vehicle_status_v1",
+    "events": "/qualification/events"
+  },
+  "clock_source_contract_sha256": "246e7d5b5e62f494179e1be6bc29fe753d6437728cc65696e51704d3dd98ff1a"
+}

@@ -6,11 +6,12 @@ recorder_seconds=240
 cd /repository
 if [[ "$mode" == model_check || "$mode" == model_trial ]]; then
     [[ "$world" == drone_code/team_nav/course_maps/phone_scan_2026-11-06.json ]] || exit 2
-    [[ "$profile" == scenarios/model_flight/h1_pinn_prefix.json || "$profile" == scenarios/model_flight/full_course.json ]] || exit 2
+    [[ "$profile" == scenarios/model_flight/h1_pinn_prefix.json || "$profile" == scenarios/model_flight/full_course.json || "$profile" == scenarios/model_flight/full_course_diagnostic.json ]] || exit 2
     : "${CALIBRATION_IMAGE_SHA256:?Pinned image required}"
     contract=scenarios/model_flight/h1_recorder.json
-    if [[ "$profile" == scenarios/model_flight/full_course.json ]]; then
+    if [[ "$profile" == scenarios/model_flight/full_course*.json ]]; then
         contract=scenarios/model_flight/full_course_recorder.json
+        if [[ "$profile" == scenarios/model_flight/full_course_diagnostic.json ]]; then contract=scenarios/model_flight/full_course_diagnostic_recorder.json; fi
         owner_timeout=610; recorder_seconds=900
         export FULLCOURSE_VIDEO=1
         export EXACT_SITL_CLOCK_CONTRACT_SHA256="$(python3 -c 'import json; print(json.load(open("scenarios/model_flight/full_course.json"))["clock_source_contract_sha256"])')"
@@ -111,6 +112,9 @@ YAML
 
 cleanup() {
     local status=$? bag_status=0 pid
+    if [ -f /tmp/model_decisions.jsonl ]; then
+        cp /tmp/model_decisions.jsonl /evidence/model_owner.decisions.jsonl || bag_status=1
+    fi
     for pid in "$video_pid" "$calibration_recorder_pid" "$bag_pid" "$stack_pid"; do
         [ -n "$pid" ] || continue
         kill -INT "$pid" 2>/dev/null || true
