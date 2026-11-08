@@ -35,4 +35,3 @@ def repair(m):
     if any(m.get(k) for k in ('run_gazebo','auto_merge','alter_safety','alter_scoring')):
         raise ValueError('Forbidden repair authority')
     return digest(m)
-
