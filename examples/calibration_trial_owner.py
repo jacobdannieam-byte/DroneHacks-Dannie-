@@ -210,19 +210,44 @@ def position_messages(intent, stamp):
                 velocity=[math.nan] * 3, acceleration=[math.nan] * 3, yaw=float(intent.yaw_rad), yawspeed=math.nan))
 
 
-def publication_reason(observation, latest, elapsed, now_ns, issued_ns, *, diagnostic_native=False):
+class ConcurrentNativeInputs(NativeInputs):
+    """Serialize native snapshots while ROS receives independently of inference."""
+    def __init__(self,*args):
+        from threading import RLock
+        self.lock=RLock()
+        super().__init__(*args)
+
+    def offer(self,*args):
+        with self.lock:return super().offer(*args)
+
+    def position(self,*args):
+        with self.lock:return super().position(*args)
+
+    def health(self,*args):
+        with self.lock:return super().health(*args)
+
+    def advance(self,*args):
+        with self.lock:return super().advance(*args)
+
+    def observe(self,*args):
+        with self.lock:return super().observe(*args)
+
+
+def publication_reason(observation, latest, elapsed, now_ns, issued_ns, *, diagnostic_native=False, diagnostic_model=False):
     if issued_ns < now_ns or elapsed < 0:
         return 'clock_rewind'
     if latest is None:
         return 'native_observation_lost'
     changed = latest != observation
-    if diagnostic_native and observation is not None:
+    if (diagnostic_native or diagnostic_model) and observation is not None:
         # A fresh position does not revoke an already computed native lifecycle
         # command. Authority changes still do; model intents replan separately.
         changed = any(getattr(latest,k)!=getattr(observation,k) for k in ('armed','landed','nav_state'))
     if changed:
         return 'observation_superseded'
-    if elapsed >= (300_000_000 if diagnostic_native else 50_000_000):
+    if diagnostic_model and not 0<=issued_ns-observation.position_stamp_ns<=100_000_000:
+        return 'model_state_expired'
+    if elapsed >= (300_000_000 if diagnostic_native or diagnostic_model else 50_000_000):
         return 'computation_deadline'
     return None
 
@@ -237,11 +262,13 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
 
     owner = approval is not None
     driver = CalibrationTrial(plan) if driver is None else driver
-    inputs = NativeInputs(mapping, plan.receipt_wall_limit_s)
+    diagnostic = getattr(driver, '_diagnostic_motion_unbounded', False)
+    inputs = (ConcurrentNativeInputs if diagnostic else NativeInputs)(mapping, plan.receipt_wall_limit_s)
     rclpy.init(args=['--ros-args', '-p', 'use_sim_time:=true'])
     node = rclpy.create_node(OWNER_ID[1:])
     report = {'mode': 'calibration_trial' if owner else 'calibration_check', **identity}
     clock_node = clock_executor = clock_thread = None
+    input_executor = input_thread = input_stop = None
     if getattr(driver, '_diagnostic_motion_unbounded', False):
         # Humble's /clock subscription shares the normal single-thread executor.
         # Model rollout must not delay clock callbacks and make current PX4 data
@@ -257,6 +284,12 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
 
     def clocks():
         return (clock_node or node).get_clock().now().nanoseconds, monotonic_ns()
+
+    def spin(timeout=.02):
+        if input_stop is not None:
+            input_stop.wait(min(timeout,.005))
+        else:
+            rclpy.spin_once(node,timeout_sec=timeout)
 
     def native(role, msg, value):
         inputs.offer(role, msg.timestamp, msg.timestamp, value, *clocks())
@@ -346,13 +379,25 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
             publishers = identity
             return observation
 
+        if diagnostic:
+            from threading import Event
+            input_stop=Event()
+            input_executor=SingleThreadedExecutor()
+            input_executor.add_node(node)
+            def receive_native():
+                while not input_stop.is_set():
+                    input_executor.spin_once(timeout_sec=.005)
+                    inputs.advance(*clocks())
+            input_thread=Thread(target=receive_native,daemon=True)
+            input_thread.start()
+
         first_ready = None
         stable_checked = False
         diagnostic = getattr(driver, '_diagnostic_motion_unbounded', False)
         deadline = monotonic_ns() + seconds * NS
         obs = None
         while rclpy.ok() and monotonic_ns() < deadline:
-            rclpy.spin_once(node, timeout_sec=.02)
+            spin()
             now_ns, wall_ns = clocks()
             obs = observe(now_ns, wall_ns)
             if not ready(obs):
@@ -408,27 +453,13 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
         node.create_subscription(String, CONTROL, control, 10)
         discovery_deadline = monotonic_ns() + 3 * NS
         while rclpy.ok() and not admitted() and monotonic_ns() < discovery_deadline:
-            rclpy.spin_once(node, timeout_sec=.02)
+            spin()
         next_tick = monotonic_ns()
         while rclpy.ok() and driver.phase != 'done':
-            rclpy.spin_once(node, timeout_sec=.02)
+            spin()
             now_ns, wall_ns = clocks()
-            if diagnostic:
-                inputs.advance(now_ns, wall_ns)
             if wall_ns < next_tick:
                 continue
-            if getattr(driver, '_diagnostic_motion_unbounded', False):
-                # Drain the depth-one native subscriptions after inference. A
-                # single spin can select a camera/clock callback and leave a
-                # newer position queued while the next rollout starts.
-                for _ in range(16):
-                    rclpy.spin_once(node, timeout_sec=0.)
-                now_ns, wall_ns = clocks()
-                inputs.advance(now_ns, wall_ns)
-                if inputs.pending and inputs.fault is None:
-                    # Resolve clock-fenced receipts before starting synchronous
-                    # inference. Do not let its work consume a deferral's lease.
-                    continue
             next_tick = wall_ns + 50_000_000
             observation = observe(now_ns, wall_ns)
             if observation is not None and hasattr(driver,'prepare_section') and not diagnostic:
@@ -449,9 +480,10 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
             elapsed = issued_wall_ns - wall_ns
             reason = publication_reason(observation, latest, elapsed, now_ns, issued_ros_ns,
                 diagnostic_native=(getattr(driver, '_diagnostic_motion_unbounded', False)
-                                   and intent.position_ned_m is None))
+                                   and intent.position_ned_m is None),
+                diagnostic_model=diagnostic and intent.position_ned_m is not None)
             if reason is not None:
-                if (reason in ('observation_superseded', 'computation_deadline')
+                if (reason in ('observation_superseded', 'computation_deadline', 'model_state_expired')
                         and hasattr(driver, 'discard_model_intent')
                         and driver.discard_model_intent(intent, reason=reason,
                             ros_ns=issued_ros_ns, elapsed_wall_ns=elapsed)):
@@ -491,13 +523,19 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
                       recovery_operator=approval['recovery_operator'], input_fault=inputs.fault)
         if diagnostic:
             now_ns, wall_ns = clocks()
-            report['native_input_snapshot'] = dict(now_ros_ns=now_ns, now_wall_ns=wall_ns,
-                samples={role:dict(ros_age_ns=now_ns-row[0],wall_age_ns=wall_ns-row[1],value=row[2])
-                         for role,row in inputs.samples.items()},pending_roles=list(inputs.pending))
+            with inputs.lock:
+                report['native_input_snapshot'] = dict(now_ros_ns=now_ns, now_wall_ns=wall_ns,
+                    samples={role:dict(ros_age_ns=now_ns-row[0],wall_age_ns=wall_ns-row[1],value=row[2])
+                             for role,row in inputs.samples.items()},pending_roles=list(inputs.pending))
         if plan.trial_kind == 'authority_expiry':
             report['recovery_lease'] = driver.recovery_lease
         return report, int(driver.result != 'complete')
     finally:
+        if input_executor is not None:
+            input_stop.set()
+            input_executor.wake()
+            input_thread.join(timeout=2.)
+            input_executor.shutdown()
         if clock_executor is not None:
             clock_executor.shutdown()
             clock_thread.join(timeout=2.)

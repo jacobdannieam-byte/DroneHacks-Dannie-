@@ -12,7 +12,7 @@ from refnav.model_flight import ModelSelector
 
 def audit(rows, raw_commands, config):
     previous='0'*64; decisions={}; receipts={}; faults=[]; differences=0
-    section=None; holds={}; discarded=set()
+    section=None; holds={}; discarded=set(); publication_delays=[]
     if config.get('full_course'):
         from refnav.full_course_model import FullCourseSelector
         selector=FullCourseSelector(config,monotonic=lambda:0.)
@@ -61,16 +61,21 @@ def audit(rows, raw_commands, config):
             number=row['sequence']
             if (not config.get('simulator_diagnostic') or number not in decisions
                 or number in discarded or number in receipts
-                or row.get('reason') not in ('observation_superseded','computation_deadline')):
+                or row.get('reason') not in ('observation_superseded','computation_deadline','model_state_expired')):
                 faults.append('invalid_discarded_decision')
             discarded.add(number)
         if row['kind']=='published':
             number=row['sequence']
             if number in receipts or number in discarded or number not in decisions:faults.append('unbound_publication');continue
             decision,target=decisions[number]
+            delay=row['stamp_ns']-decision['decision_ros_ns']
+            publication_delays.append(delay)
+            timing_ok=(0<=delay<=50_000_000)
+            if config.get('simulator_diagnostic'):
+                timing_ok=(delay>=0 and 0<=row['stamp_ns']-round(decision['state']['timestamp_s']*1e9)<=100_000_000)
             if (math.dist(row['position_ned_m'],target.position_m)>1e-9 or abs(row['yaw_rad']-target.yaw_rad)>1e-9
-                or not 0<=row['stamp_ns']-decision['decision_ros_ns']<=50_000_000
                 or row['model_sha256']!=config['checkpoint_sha256']):faults.append('published_command_differs')
+            if not timing_ok:faults.append('published_command_timing')
             receipts[number]=row
     if set(decisions)!=set(receipts)|discarded:faults.append('unpublished_model_decision')
     position_commands=[r for r in raw_commands if all(math.isfinite(x) for x in r['position'])]
@@ -96,6 +101,8 @@ def audit(rows, raw_commands, config):
     return dict(model_command_proof='PASS' if not faults else 'FAIL',faults=faults,
                 selected_commands=len(receipts),pinn_d0_different_selections=differences,
                 section_hold_commands=len(holds), discarded_decisions=len(discarded),
+                max_publication_delay_ms=max(publication_delays,default=0)/1e6,
+                publication_delays_over_normal_50ms=sum(d>50_000_000 for d in publication_delays),
                 interpretation='Model selected and raw PX4 position commands match; not proof of superior flight performance')
 
 

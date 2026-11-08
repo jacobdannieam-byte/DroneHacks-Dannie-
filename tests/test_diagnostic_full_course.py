@@ -83,3 +83,6 @@ def test_native_diagnostic_fence_accepts_fresh_position_but_not_authority_change
     assert publication_reason(obs,fresh,6_000_000,NS,NS+8_000_000)=='observation_superseded'
     assert publication_reason(obs,replace(fresh,armed=False),6_000_000,NS,NS+8_000_000,diagnostic_native=True)=='observation_superseded'
     assert publication_reason(obs,None,6_000_000,NS,NS+8_000_000,diagnostic_native=True)=='native_observation_lost'
+    assert publication_reason(obs,fresh,60_000_000,NS,NS+60_000_000,diagnostic_model=True) is None
+    assert publication_reason(obs,fresh,101_000_000,NS,NS+101_000_000,diagnostic_model=True)=='model_state_expired'
+    assert publication_reason(obs,replace(fresh,armed=False),60_000_000,NS,NS+60_000_000,diagnostic_model=True)=='observation_superseded'
