@@ -1,0 +1,10 @@
+{
+  "merge_sha": "e6dd62301ffbf03c186648a678f221db1a18e018",
+  "scope": "offline fixtures; not flight",
+  "files": {
+    "artifacts\\taskforce_batch_001\\hybrid_existing.json": "e34b294a15c7a6dca1bed18cbdc1463911b08e6aa0b494d880cd5a2a1519647d",
+    "artifacts\\taskforce_batch_001\\hybrid_information_gain.json": "27e4f6da90deb3664931da8aa0668bde8fec4a0cb3952ac390dc8c47b512f0c7",
+    "artifacts\\taskforce_batch_001\\hybrid_learned_ranker.json": "2bbc49c8d90dc0a01ebe0e14be46bfe319bce95a301d6bc911c144cd67020332",
+    "artifacts\\taskforce_batch_001\\hybrid_physics_informed.json": "ff148075ca692df9bc2d66b6d168d2e2c7a63eb8baeee972af87095b81238c12"
+  }
+}

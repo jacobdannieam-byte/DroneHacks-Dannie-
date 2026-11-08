@@ -11,6 +11,8 @@ class JobTests(unittest.TestCase):
    j.approve(key,'reviewer'); first=j.claim_offline(key,now=0,seconds=1)
    with self.assertRaises(ValueError): j.claim_offline(key,now=0)
    j.recover(now=2); second=j.claim_offline(key,now=2)
+   j.fail(key,first,now=3)
+   self.assertTrue(j.lease_active(key,second,now=3))
    with self.assertRaises(ValueError): j.finish(key,first,'c'*64,now=3)
    j.cancel(key)
    with self.assertRaises(ValueError): j.finish(key,second,'c'*64,now=3)

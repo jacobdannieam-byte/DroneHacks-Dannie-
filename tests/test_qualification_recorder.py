@@ -23,3 +23,38 @@ def test_event_duplicates_and_future_rejected():
     event=json.dumps(dict(event='brake_command',stamp_ns=1_000_000_000))
     record.event(event,1_000_000_000); record.event(event,1_000_000_000)
     assert record.result()['recording_faults']==['invalid_or_duplicate_event']
+
+
+def test_event_topic_cannot_claim_native_disarm():
+    record=TrialRecording('fixture','ned')
+    record.event(json.dumps(dict(event='disarm',stamp_ns=1_000_000_000)),1_000_000_000)
+    assert 'disarm_s' not in record.document
+    assert record.faults
+
+
+def test_only_fresh_native_disarmed_transition_counts():
+    record=TrialRecording('fixture','ned')
+    record.status(SimpleNamespace(arming_state=1,timestamp=1_000_000),1_000_000_000)
+    assert 'disarm_s' not in record.document
+    record.status(SimpleNamespace(arming_state=2,timestamp=1_100_000),1_100_000_000)
+    record.status(SimpleNamespace(arming_state=0,timestamp=1_200_000),1_200_000_000)
+    assert 'disarm_s' not in record.document
+    record.status(SimpleNamespace(arming_state=1,timestamp=1_300_000),1_300_000_000)
+    assert record.document['disarm_s']==1.3
+    assert record.document['events'][-1]['source']=='native_vehicle_status'
+
+
+def test_stale_native_disarm_refused():
+    record=TrialRecording('fixture','ned')
+    record.status(SimpleNamespace(arming_state=2,timestamp=1_000_000),1_000_000_000)
+    record.status(SimpleNamespace(arming_state=1,timestamp=1_100_000),2_000_000_000)
+    assert 'disarm_s' not in record.document
+    assert 'status_clock_or_age' in record.faults
+
+
+def test_rewound_native_status_does_not_create_disarm():
+    record=TrialRecording('fixture','ned')
+    record.status(SimpleNamespace(arming_state=2,timestamp=1_000_000),1_000_000_000)
+    record.status(SimpleNamespace(arming_state=1,timestamp=990_000),1_010_000_000)
+    assert 'disarm_s' not in record.document
+    assert 'nonadvancing_status' in record.faults

@@ -358,8 +358,14 @@ class HybridBagReplay(RecordedSpatialReplay):
             entity = next((e for e in context.entities if e.entity_id == prior[3]), None)
             if entity is not None:
                 acquired = bool(set(prior[4]) - set(entity.missing_evidence))
-                attempt = Attempt(entity.entity_id, now, 'acquired' if acquired else 'failed')
-                self._inspection_attempts = (*self._inspection_attempts, attempt)[-32:]
+                # A new frame is not a completed inspection: the proposed
+                # viewpoint may still be moving, or D3 may have refused it.
+                # Only changed evidence supports an observed outcome here.
+                # Failed attempts require a separate completed-action outcome;
+                # the course inspection timeout still bounds unavailable data.
+                if acquired:
+                    attempt = Attempt(entity.entity_id, now, 'acquired')
+                    self._inspection_attempts = (*self._inspection_attempts, attempt)[-32:]
             self._inspection_last = None
         return prior[3]
 

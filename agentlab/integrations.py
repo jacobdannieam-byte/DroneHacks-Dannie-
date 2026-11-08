@@ -1,66 +1,203 @@
 """Explicit one-shot adapters. Construction and plan generation have no side effects."""
 import hashlib,json,os,re,signal,sqlite3,subprocess,time,urllib.request,uuid
 from pathlib import Path
+from types import MappingProxyType
 from .gates import digest,manifest
+from .models import profile
 from .roles import NAMES
 
+
+# Worker subprocesses receive an explicit environment. A deployment may provide
+# a dedicated worker home for CLI credentials, separate from the controller.
+_WORKER_ENV = {
+    'PATH': '/usr/local/bin:/usr/bin:/bin',
+    'LANG': 'C.UTF-8',
+    'HOME': '/nonexistent',
+    'CODEX_HOME': '/nonexistent',
+    'GIT_CONFIG_NOSYSTEM': '1',
+    'GIT_CONFIG_GLOBAL': os.devnull,
+    'GIT_CONFIG_COUNT': '1',
+    'GIT_CONFIG_KEY_0': 'core.hooksPath',
+    'GIT_CONFIG_VALUE_0': os.devnull,
+}
+
+
 class Activation:
-    def __init__(self,config,approval=None): self.config=config; self.approval=approval or {}
+    def __init__(self,config,approval=None,*,verify_approval=None):
+        self.config=dict(config)
+        self.approval=dict(approval or {})
+        # The trusted controller supplies the verifier. It must authenticate the
+        # entire record and resolve author/reviewer to canonical identities.
+        self.verify_approval=verify_approval
+
     def require(self,capability,payload):
-        a=self.approval
+        approval=MappingProxyType(dict(self.approval))
+        author=approval.get('author')
+        reviewer=approval.get('reviewer')
+        expires=approval.get('expires')
         if (self.config.get('mode')!='reviewed_execution' or self.config.get(capability) is not True
-            or a.get('capability')!=capability or a.get('payload_sha256')!=digest(payload)
-            or not a.get('reviewer') or a.get('reviewer')==a.get('author')
-            or type(a.get('expires')) not in (int,float) or a['expires']<=time.time()):
+            or approval.get('capability')!=capability or approval.get('payload_sha256')!=digest(payload)
+            or not all(isinstance(identity,str) and identity and identity==identity.strip()
+                       for identity in (author,reviewer)) or reviewer==author
+            or type(expires) not in (int,float) or not time.time()<expires<float('inf')
+            or self.verify_approval is None or self.verify_approval(approval) is not True
+            or expires<=time.time()):
             raise PermissionError('Separate current approval and execution configuration required')
+        return approval
+
 
 class ProcessRunner:
-    def run(self,argv,cwd,timeout=180,input_text=None):
+    def run(self,argv,cwd,timeout=180,input_text=None,*,env=None,check_active=None):
         if not 0<timeout<=180: raise ValueError('Bounded timeout required')
         # POSIX process groups terminate child workers as well as the immediate process.
         if os.name=='nt': raise RuntimeError('Live execution requires qualified Linux process isolation')
-        process=subprocess.Popen(argv,cwd=cwd,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,start_new_session=True)
-        try: out,err=process.communicate(input_text,timeout=timeout)
+        if check_active is not None:
+            check_active()
+        deadline=time.monotonic()+timeout
+        process=subprocess.Popen(argv,cwd=cwd,env=env,stdin=subprocess.PIPE,stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,text=True,encoding='utf-8',start_new_session=True)
+        try:
+            while True:
+                if check_active is not None:
+                    check_active()
+                remaining=deadline-time.monotonic()
+                if remaining<=0:
+                    raise subprocess.TimeoutExpired(argv,timeout)
+                try:
+                    interval=min(remaining,0.25) if check_active is not None else remaining
+                    out,err=process.communicate(input_text,timeout=interval)
+                    break
+                except subprocess.TimeoutExpired:
+                    input_text=None  # communicate keeps the input buffer between calls.
         except BaseException:
-            os.killpg(process.pid,signal.SIGKILL); process.communicate(); raise
+            try:
+                os.killpg(process.pid,signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            # A detached descendant can retain a pipe after the process group is
+            # gone. Close the streams and bound reaping the immediate child.
+            for stream in (process.stdin,process.stdout,process.stderr):
+                stream.close()
+            process.wait(timeout=1)
+            raise
+        if check_active is not None:
+            check_active()
         if process.returncode: raise RuntimeError(f'Process failed ({process.returncode}): {err[-2000:]}')
         return out
 
 class Worktrees:
     def __init__(self,repo,root,runner=None):
         self.repo=Path(repo).resolve(); self.root=Path(root).resolve(); self.runner=runner or ProcessRunner()
-    def create(self,sha,job_id):
+    def create(self,sha,job_id,*,check_active=None):
         if not re.fullmatch('[0-9a-f]{40}',sha) or not re.fullmatch('[a-zA-Z0-9_-]{1,64}',job_id): raise ValueError('Invalid immutable worktree identity')
         target=self.root/job_id
         if target.exists(): raise ValueError('Worktree already exists; preserve it')
         self.root.mkdir(parents=True,exist_ok=True)
-        self.runner.run(['git','worktree','add','--detach',str(target),sha],self.repo)
-        actual=self.runner.run(['git','rev-parse','HEAD'],target).strip()
+        self.runner.run(['git','worktree','add','--detach',str(target),sha],self.repo,
+                        env=_WORKER_ENV,check_active=check_active)
+        actual=self.runner.run(['git','rev-parse','HEAD'],target,
+                               env=_WORKER_ENV,check_active=check_active).strip()
         if actual!=sha: raise ValueError('Source mismatch')
         return target
 
 class CodexWorker:
-    def __init__(self,activation=None,runner=None): self.activation=activation; self.runner=runner or ProcessRunner()
-    def plan(self,role,source_sha,prompt):
-        if role not in NAMES or not re.fullmatch('[0-9a-f]{40}',source_sha): raise ValueError('Invalid worker identity')
-        from .models import profile
-        return dict(role=role,source_sha=source_sha,prompt=prompt,**profile(role))
-    def execute(self,plan=None,worktree=None,timeout=180):
+    def __init__(self,activation=None,runner=None,*,worker_home=None):
+        self.activation=activation
+        self.runner=runner or ProcessRunner()
+        self.environment=dict(_WORKER_ENV)
+        if worker_home is not None:
+            home=Path(worker_home).resolve()
+            self.environment.update(HOME=str(home),CODEX_HOME=str(home/'.codex'))
+
+    def plan(self,role,source_sha,prompt,*,job_id=None):
+        if role not in NAMES or not isinstance(source_sha,str) or not re.fullmatch('[0-9a-f]{40}',source_sha):
+            raise ValueError('Invalid worker identity')
+        if not isinstance(prompt,str) or not prompt.strip():
+            raise ValueError('Worker prompt required')
+        plan=dict(role=role,source_sha=source_sha,prompt=prompt,**profile(role))
+        if job_id is not None:
+            if not isinstance(job_id,str) or not re.fullmatch('[0-9a-f]{64}',job_id):
+                raise ValueError('Invalid worker job identity')
+            plan['job_id']=job_id
+        return plan
+
+    def validate_plan(self,plan):
+        if not isinstance(plan,dict):
+            raise ValueError('Worker plan required')
+        expected=self.plan(plan.get('role'),plan.get('source_sha'),plan.get('prompt'),job_id=plan.get('job_id'))
+        if plan!=expected:
+            raise ValueError('Worker plan differs from pinned role profile')
+        return expected
+
+    def execute(self,plan=None,worktree=None,timeout=180,*,check_active=None):
         if self.activation is None: raise PermissionError('Workers disabled')
-        self.activation.require('agents_enabled',plan)
+        plan=self.validate_plan(plan)
+        if 'job_id' in plan and check_active is None:
+            raise PermissionError('Job-bound workers require a controller lease check')
+        approval=self.activation.require('agents_enabled',plan)
+
+        def require_active():
+            # Pipeline supplies the trusted controller's cancellable lease check.
+            # Approval is authenticated at admission and remains time-bounded.
+            if time.time()>=approval['expires']:
+                raise PermissionError('Worker approval expired')
+            if check_active is not None:
+                check_active()
+
         role=plan['role']
-        expected=self.plan(role,plan['source_sha'],plan['prompt'])
-        if plan!=expected: raise ValueError('Worker plan differs from pinned role profile')
         cwd=Path(worktree).resolve()
-        if self.runner.run(['git','rev-parse','HEAD'],cwd).strip()!=plan['source_sha']: raise ValueError('Worker source mismatch')
+        options=dict(env=self.environment,check_active=require_active)
+        if self.runner.run(['git','rev-parse','HEAD'],cwd,**options).strip()!=plan['source_sha']:
+            raise ValueError('Worker source mismatch')
+        if self.runner.run(['git','status','--porcelain','--untracked-files=all','--ignored'],cwd,**options).strip():
+            raise ValueError('Worker source has local changes')
         import tomllib
-        contract=tomllib.loads((cwd/'.codex/agents'/f'{role}.toml').read_text())['developer_instructions']
+        contract_path=(cwd/'.codex/agents'/f'{role}.toml').resolve()
+        if not contract_path.is_relative_to(cwd):
+            raise ValueError('Role contract outside worker source')
+        contract=tomllib.loads(contract_path.read_text(encoding='utf-8'))['developer_instructions']
         # Workers return proposed patches as data; none receives write authority.
-        prompt=contract+'\nReturn proposed changes as a unified diff in your report, never apply them.\n'+plan['prompt']
-        out=self.runner.run(['codex','exec','--json','--sandbox','read-only','--ignore-user-config','--model',plan['model'],'-c','model_reasoning_effort='+json.dumps(plan['reasoning_effort']),'-'],cwd,timeout,prompt)
+        prompt=(f'{contract}\n\nTask:\n{plan["prompt"]}\n\n'
+                f'Return exactly one JSON object with role {role!r} and source_sha {plan["source_sha"]!r}. '
+                'Use arrays of nonempty strings for evidence, findings and limitations, and a nonempty '
+                'string for proposed_next_step. Include any proposed unified diff as a proposed_patch '
+                'string. Do not apply changes.')
+        out=self.runner.run(['codex','exec','--json','--sandbox','read-only','--ignore-user-config','--model',plan['model'],'-c','model_reasoning_effort='+json.dumps(plan['reasoning_effort']),'-'],cwd,timeout,prompt,**options)
+        require_active()
         events=[json.loads(line) for line in out.splitlines() if line.strip()]
-        if not any(e.get('type')=='turn.completed' for e in events) or any(e.get('type') in ('turn.failed','error') for e in events): raise ValueError('Incomplete Codex turn')
-        return dict(source_sha=plan['source_sha'],role=role,model=plan['model'],reasoning_effort=plan['reasoning_effort'],events=events,evidence_sha256=digest(events))
+        report=_worker_report(events,plan)
+        return dict(source_sha=plan['source_sha'],role=role,model=plan['model'],
+                    reasoning_effort=plan['reasoning_effort'],events=events,
+                    evidence_sha256=digest(events),report=report,evidence_verified=False)
+
+
+def _worker_report(events,plan):
+    if any(not isinstance(event,dict) for event in events):
+        raise ValueError('Invalid Codex event')
+    lifecycle=[event.get('type') for event in events if event.get('type') in (
+        'thread.started','turn.started','turn.completed','turn.failed','error')]
+    if (lifecycle!=['thread.started','turn.started','turn.completed']
+        or events[0].get('type')!='thread.started' or events[1].get('type')!='turn.started'
+        or events[-1].get('type')!='turn.completed' or not events[0].get('thread_id')):
+        raise ValueError('Incomplete Codex turn')
+    messages=[event['item'] for event in events[2:-1] if event.get('type')=='item.completed'
+              and isinstance(event.get('item'),dict) and event['item'].get('type')=='agent_message']
+    if not messages or not isinstance(messages[-1].get('text'),str):
+        raise ValueError('Missing worker report')
+    report=json.loads(messages[-1]['text'])
+    required={'role','source_sha','evidence','findings','limitations','proposed_next_step'}
+    if (not isinstance(report,dict) or not required<=report.keys()
+        or report.keys()-required-{'proposed_patch'}
+        or report['role']!=plan['role'] or report['source_sha']!=plan['source_sha']):
+        raise ValueError('Invalid worker report identity or fields')
+    for field in ('evidence','findings','limitations'):
+        if not isinstance(report[field],list) or any(not isinstance(value,str) or not value.strip()
+                                                    for value in report[field]):
+            raise ValueError('Invalid worker report '+field)
+    for field in ('proposed_next_step','proposed_patch'):
+        if field in report and (not isinstance(report[field],str) or not report[field].strip()):
+            raise ValueError('Invalid worker report '+field)
+    return report
 
 class GazeboRunner:
     def __init__(self,activation=None,runner=None): self.activation=activation; self.runner=runner or ProcessRunner()

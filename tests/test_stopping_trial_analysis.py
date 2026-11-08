@@ -3,6 +3,9 @@ from examples.stopping_trial_analysis import analyze
 
 def recording():
     return dict(clock_id='fixture',frame_id='fixture',brake_command_s=1.,land_command_s=3.,disarm_s=4.,
+        recording_complete=True, recording_faults=[],
+        events=[dict(event=n,stamp_ns=t,receipt_ns=t,source=source) for n,t,source in
+                [('brake_command',1_000_000_000,'owner_event_topic'),('land_command',3_000_000_000,'owner_event_topic'),('disarm',4_000_000_000,'native_vehicle_status')]],
         samples=[dict(time_s=i/20,position_m=[min(i/20,1.5)*.2,0.,0.],
                       velocity_mps=[.2 if i<30 else 0.,0.,0.]) for i in range(81)])
 
@@ -25,3 +28,23 @@ def test_bad_recording_cannot_qualify(fault):
     if fault=='coverage': doc['samples']=doc['samples'][:-5]
     if fault=='landing': doc['disarm_s']=34.
     with pytest.raises(ValueError): analyze(doc)
+
+@pytest.mark.parametrize('fault', ['no_complete','no_events','spoof_disarm','mismatch','duplicate'])
+def test_missing_or_spoofed_provenance_refused(fault):
+    doc=recording()
+    if fault=='no_complete': del doc['recording_complete']
+    if fault=='no_events': del doc['events']
+    if fault=='spoof_disarm': doc['events'][-1]['source']='owner_event_topic'
+    if fault=='mismatch': doc['events'][-1]['stamp_ns']-=1
+    if fault=='duplicate': doc['events'].append(dict(doc['events'][-1]))
+    with pytest.raises(ValueError): analyze(doc)
+
+
+def test_motion_resuming_after_initial_settle_is_not_a_qualified_stop():
+    doc=recording()
+    for row in doc['samples']:
+        t=row['time_s']
+        row['position_m'][0]+=.4*max(0,min(t,3)-2.1)
+        if 2.1<t<3: row['velocity_mps'][0]=.4
+    with pytest.raises(ValueError,match='motion resumed'):
+        analyze(doc)

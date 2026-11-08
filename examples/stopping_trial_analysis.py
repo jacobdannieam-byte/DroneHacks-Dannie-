@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 def analyze(document):
-    if document.get('recording_faults') or document.get('recording_complete') is False:
+    if document.get('recording_faults') or document.get('recording_complete') is not True:
         raise ValueError('recording incomplete or faulted')
     rows = document['samples']
     brake = document['brake_command_s']
@@ -20,6 +20,18 @@ def analyze(document):
     for value in (brake, land, disarm):
         if isinstance(value, bool) or not isinstance(value, (float, int)) or not math.isfinite(value):
             raise ValueError('invalid event time')
+    events = document.get('events', [])
+    for name, event_time in (('brake_command', brake), ('land_command', land), ('disarm', disarm)):
+        matches = [e for e in events if e.get('event') == name]
+        if len(matches) != 1:
+            raise ValueError('missing or duplicate causal event')
+        event = matches[0]
+        stamp, receipt = event.get('stamp_ns'), event.get('receipt_ns')
+        source = 'native_vehicle_status' if name == 'disarm' else 'owner_event_topic'
+        if (type(stamp) is not int or type(receipt) is not int or
+                not 0 <= receipt-stamp <= 100_000_000 or
+                stamp/1e9 != event_time or event.get('source') != source):
+            raise ValueError('event provenance or clock mismatch')
     if not rows or not brake < land < disarm or disarm-land > 30:
         raise ValueError('missing samples or invalid landing timing')
     if not document.get('clock_id') or not document.get('frame_id'):
@@ -56,7 +68,10 @@ def analyze(document):
             break
     if stop is None:
         raise ValueError('no sustained stop before landing')
-    interval = [r for r in after if r['time_s'] <= stop['time_s'] + .5]
+    settled_until_land = [r for r in after if stop['time_s'] <= r['time_s'] <= land]
+    if any(math.hypot(*r['velocity_mps']) > .05 for r in settled_until_land):
+        raise ValueError('motion resumed before landing')
+    interval = [r for r in after if r['time_s'] <= land]
     excursion = max(math.dist(before[-1]['position_m'], r['position_m']) for r in interval)
     # Use the entire command-to-settle interval as a conservative delay bound;
     # do not infer actuator onset from noisy acceleration.
