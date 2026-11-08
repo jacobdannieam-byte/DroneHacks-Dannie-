@@ -99,7 +99,10 @@ PICTURES_PER_SECOND_PER_CAMERA = 1.0
 # topic is skipped, so that extra picture streams cannot add to the processor's load. The
 # setting TEAM_NAV_PICTURE_TOPICS, a comma-separated list, replaces this list, for example for
 # the simulator's pretend cameras.
-DRONE_16_CAMERA_TOPICS = ("/oak/left/image_raw", "/oak/right/image_raw")
+# Switched off on 2026-11-08: every program that reads the 2 MB pictures makes camera tracking's
+# reports late (team_nav/transport/pictures_over_network.xml), and saved pictures are not needed
+# to fly. To save them again, put back ("/oak/left/image_raw", "/oak/right/image_raw").
+DRONE_16_CAMERA_TOPICS = ()
 PICTURE_TOPICS_SETTING = "TEAM_NAV_PICTURE_TOPICS"
 
 

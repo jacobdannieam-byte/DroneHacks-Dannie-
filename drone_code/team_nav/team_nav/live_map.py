@@ -86,6 +86,7 @@ class LiveMap:
         self.shape = (grid.squares_east, grid.squares_north)
         self.lowest_counted_height_metres = lowest - HEIGHT_BAND_MARGIN_METRES
         self.highest_counted_height_metres = highest + HEIGHT_BAND_MARGIN_METRES
+        self.mapped_room_metres = grid.room_metres
         # A square whose centre is within half a square of a map shape is under that shape.
         under_a_map_shape = grid.room_metres < GRID_SQUARE_METRES * 0.75
         self.scores = np.where(under_a_map_shape, PRIOR_WALL_SCORE, 0.0).astype(np.float32)
@@ -117,9 +118,13 @@ class LiveMap:
     def seen_free(self):
         return self.scores < FREE_SCORE
 
-    def room_metres(self, trust_map_walls=True):
+    def room_metres(self, trust_map_walls=True, keep_mapped_walls=False):
         """For every square: the distance from its centre to the nearest blocked square's centre."""
-        return distance_transform_edt(~self.blocked(trust_map_walls)) * GRID_SQUARE_METRES
+        room_metres = distance_transform_edt(~self.blocked(trust_map_walls)) * GRID_SQUARE_METRES
+        if keep_mapped_walls:
+            # Rays can hit a real surface beyond a web. Those returns do not clear the web itself.
+            np.minimum(room_metres, self.mapped_room_metres, out=room_metres)
+        return room_metres
 
     def square_of(self, point_metres):
         """(east index, north index) of the square holding an (east, north) point, or None if outside."""

@@ -20,7 +20,7 @@ import signal
 import sys
 
 from team_nav.course_run import EXIT_REFUSED_TO_START, treat_terminate_as_ctrl_c
-from team_nav.practice_flights import mock_gap_and_window, out_and_back
+from team_nav.practice_flights import mock_gap_and_window, out_and_back, turn_in_place
 from team_nav.run_log import RunLog
 from team_nav.run_mode import RUN_MODE_SETTING, read_run_mode
 
@@ -28,6 +28,8 @@ from team_nav.run_mode import RUN_MODE_SETTING, read_run_mode
 FLIGHTS = [
     (out_and_back.FLIGHT_NAME, out_and_back,
      "from a low hover, 1 m forward as a step and back as a slide: measures the response delay and trailing distance"),
+    (turn_in_place.FLIGHT_NAME, turn_in_place,
+     "hover above the launch mark and turn 90 left, 90 right, one full circle: measures how far the drone slides"),
     (mock_gap_and_window.FLIGHT_NAME, mock_gap_and_window,
      "the competition program on the practice course: through a gap, through a window over a 0.4 m box, land on a pad"),
 ]

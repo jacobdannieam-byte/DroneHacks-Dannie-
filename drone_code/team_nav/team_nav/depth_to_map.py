@@ -33,12 +33,13 @@ POINTS_QUEUE_LENGTH = 2
 
 class DepthToMap:
 
-    def __init__(self, link, start_frame, live_map, course_map):
+    def __init__(self, link, start_frame, live_map, course_map, align_to_walls=True):
         from sensor_msgs.msg import PointCloud2
         self.link = link
         self.start_frame = start_frame
         self.live_map = live_map
         self.wall_alignment = WallAlignment(course_map)
+        self.align_to_walls = align_to_walls
         self.pictures_used = 0
         self.pictures_without_pose = 0
         self.last_picture_monotonic_seconds = None    # When the last picture was put on the map.
@@ -58,7 +59,8 @@ class DepthToMap:
         camera_odom = position_odom + turn @ np.array([CAMERA_FORWARD_OF_CENTRE_METRES, 0.0, 0.0])
         points_on_course = self.course_from_odom(points_odom)
         camera_on_course = self.course_from_odom(camera_odom[None, :])[0]
-        self.correct_drift(camera_on_course, points_on_course)
+        if self.align_to_walls:
+            self.correct_drift(camera_on_course, points_on_course)
         self.live_map.add_points(camera_on_course, points_on_course)
         self.pictures_used += 1
         self.last_picture_monotonic_seconds = time.monotonic()
@@ -84,7 +86,7 @@ class DepthToMap:
     def course_from_odom(self, points_odom):
         """N x 3 points in camera tracking's frame -> N x 3 (east, north, height) on the course.
         The same sum as start_frame.course_from_start_frame, for many points at once."""
-        from_launch = points_odom - self.link.launch.tracked_position_metres
+        from_launch = self.link.launch_frame_from_tracking(points_odom - self.link.launch.tracked_position_metres)
         on_floor = (self.start_frame.launch_mark_centre_metres
                     + from_launch[:, 0:1] * self.start_frame.forward_on_course
                     + from_launch[:, 1:2] * self.start_frame.left_on_course

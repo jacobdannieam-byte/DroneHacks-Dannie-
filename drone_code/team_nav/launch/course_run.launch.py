@@ -38,6 +38,7 @@ Launch arguments
                         file names in team_nav's course_maps and missions folders, or full paths.
                         other_boulder_map_files is a space-separated list.
   start_heading_degrees which way the drone's nose points on the launch mark (course_run.py).
+  navigation            waypoint planning with live clearance checks by default.
 The number PX4 answers to (16 on drone 16) is set in team_nav/launch_pieces.py.
 """
 from launch import LaunchDescription
@@ -60,6 +61,7 @@ def generate_launch_description():
         DeclareLaunchArgument("map_file", default_value="sketch_2026-11-08.json"),
         DeclareLaunchArgument("mission_file", default_value="dronehacks_2026_side_gap_first.json"),
         DeclareLaunchArgument("other_boulder_map_files", default_value="organizers_drawing.json"),
+        DeclareLaunchArgument("navigation", default_value="waypoints"),
         DeclareLaunchArgument("start_heading_degrees", default_value="90.0",
                               description="Which way the drone's nose points on the launch mark, in degrees "
                                           "from the course's east towards north. 90 is down the first corridor."),
@@ -80,6 +82,7 @@ def generate_launch_description():
             "--mission", LaunchConfiguration("mission_file"),
             "--start-heading-degrees", LaunchConfiguration("start_heading_degrees"),
             "--other-boulder-maps", LaunchConfiguration("other_boulder_map_files"),
+            "--navigation", LaunchConfiguration("navigation"),
         ],
         # Our own choice. On Ctrl+C, give course_run time to land before launch forces it to stop.
         # It only helps if flight_interface is still running, which launch stops at the same time.

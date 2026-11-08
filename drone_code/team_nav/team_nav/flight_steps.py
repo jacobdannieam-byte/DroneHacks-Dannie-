@@ -173,6 +173,10 @@ class LaunchReadings:
     px4_z_metres: float                      # PX4's height as z, which points down.
     px4_distance_to_ground_metres: float     # PX4's laser-based distance to the floor.
     raw_laser_metres: float                  # The bottom laser's raw reading.
+    # Both headings at the same moment, while PX4 used camera tracking for heading. Later, the
+    # gap between how far each has turned since shows whether PX4 still follows the camera.
+    px4_heading_radians: object = None
+    tracked_heading_radians: object = None
 
 
 # =================================================================================================
@@ -292,12 +296,39 @@ class DroneLink:
 
     # ---- Positions from the launch mark ---------------------------------------------------------
 
+    # The launch frame: forward is where the nose pointed on the launch mark, left is to its left,
+    # and the origin is the launch mark. Camera tracking's own frame starts where and how the drone
+    # was when the drone's software started, which is not the launch mark if the drone was moved or
+    # turned after that. Measured on 2026-11-08: at the 10:23 launch, camera tracking's heading
+    # was -26.5 degrees, so a frame without this turn put the whole course 26.5 degrees round.
+
+    def launch_heading_in_tracking_radians(self):
+        """Camera tracking's heading on the launch mark (0 if it was not recorded)."""
+        heading = None if self.launch is None else self.launch.tracked_heading_radians
+        return 0.0 if heading is None else heading
+
+    def launch_frame_from_tracking(self, offsets_metres):
+        """Turns offsets (one, or N x 3) from camera tracking's directions into the launch frame's.
+        Heights are not changed."""
+        return _turned_about_up(offsets_metres, -self.launch_heading_in_tracking_radians())
+
+    def tracking_from_launch_frame(self, offsets_metres):
+        """The opposite of launch_frame_from_tracking."""
+        return _turned_about_up(offsets_metres, self.launch_heading_in_tracking_radians())
+
     def position_from_launch(self):
         """The drone's (forward, left, up) in metres from where it sat on the launch mark."""
         tracked = self.tracked_position()
         if tracked is None or self.launch is None:
             return None
-        return tracked - self.launch.tracked_position_metres
+        return self.launch_frame_from_tracking(tracked - self.launch.tracked_position_metres)
+
+    def heading_from_launch_radians(self):
+        """How far the nose has turned since the launch mark, toward the left, or None."""
+        heading = self.tracked_heading_radians()
+        if heading is None:
+            return None
+        return _wrapped_radians(heading - self.launch_heading_in_tracking_radians())
 
     def send_position_from_launch(self, forward_left_up_metres, heading_radians=None):
         """Sends a position target given in the launch frame.
@@ -310,10 +341,14 @@ class DroneLink:
         drone 0.65 m above the floor, and the climb timed out. So we give the height as PX4 will
         read it: PX4's launch height plus the height we want. Forward and left need no
         correction, because PX4 takes them from camera tracking (they agreed within 2 cm)."""
-        target = self.launch.tracked_position_metres + np.asarray(forward_left_up_metres, dtype=float)
+        offset_in_tracking = self.tracking_from_launch_frame(np.asarray(forward_left_up_metres, dtype=float))
+        target = self.launch.tracked_position_metres + offset_in_tracking
         px4_launch_height_up_metres = -self.launch.px4_z_metres
         target[2] = px4_launch_height_up_metres + float(forward_left_up_metres[2]) + self.height_correction_metres
-        # The launch frame has camera tracking's directions, so a heading needs no change.
+        # PX4 takes its heading from camera tracking, so a heading in the launch frame is turned
+        # into camera tracking's frame in the same way as the position.
+        if heading_radians is not None:
+            heading_radians = _wrapped_radians(heading_radians + self.launch_heading_in_tracking_radians())
         self.targets.send_position(target, heading_radians)
 
     # ---- Heights -------------------------------------------------------------------------------
@@ -343,6 +378,31 @@ class DroneLink:
         """True while PX4 reports a working height estimate, recently enough to land with."""
         fresh = self.reports.seconds_since("px4_position") <= PX4_POSITION_LONGEST_AGE_SECONDS
         return fresh and self.reports.px4_height_estimate_is_working()
+
+    def px4_heading_gap_degrees(self):
+        """How far PX4's heading has turned away from camera tracking's since the launch mark, in
+        degrees from -180 to 180, or None if a heading is missing. 0 while PX4 follows the camera.
+
+        The two headings are measured differently: camera tracking's turns counter-clockwise
+        (toward left) and PX4's clockwise. So when the drone turns, one grows and the other shrinks
+        by the same amount, and their changes add up to zero. This was checked against four flights
+        of drone 16 on 2026-11-08 (run_safety.py, HEADING_GAP_LIMIT_DEGREES)."""
+        if self.launch is None or self.launch.px4_heading_radians is None or self.launch.tracked_heading_radians is None:
+            return None
+        px4_heading = self.reports.px4_heading_radians()
+        tracked_heading = self.tracked_heading_radians()
+        if px4_heading is None or tracked_heading is None:
+            return None
+        px4_turned = px4_heading - self.launch.px4_heading_radians
+        tracked_turned = tracked_heading - self.launch.tracked_heading_radians
+        gap = px4_turned + tracked_turned
+        return math.degrees(math.atan2(math.sin(gap), math.cos(gap)))
+
+    def px4_uses_camera_position(self):
+        """PX4's flag cs_ev_pos, or None if PX4's estimator flags are missing or stale."""
+        if self.reports.seconds_since("estimator_flags") > ESTIMATOR_FLAGS_LONGEST_AGE_SECONDS:
+            return None
+        return self.reports.px4_uses_camera_position()
 
     def px4_laser_flags(self):
         """(PX4 uses the laser for height, PX4 says the laser is faulty), each None if PX4's
@@ -419,6 +479,9 @@ def _height_columns(link):
         "raw_laser_metres": link.reports.raw_laser_reading_metres(),
         "laser_height_risen_metres": link.laser_height_risen_metres(),
         "px4_uses_laser_for_height": link.reports.px4_uses_laser_for_height(),
+        "px4_uses_camera_position": link.reports.px4_uses_camera_position(),
+        "px4_uses_camera_heading": link.reports.px4_uses_camera_heading(),
+        "px4_heading_gap_degrees": link.px4_heading_gap_degrees(),
         "tilt_degrees": link.tilt_degrees(),
         "rotation_degrees_per_second": link.rotation_degrees_per_second(),
     }
@@ -476,7 +539,7 @@ class SafetyWatch:
 
     def drone_heading_on_course(self):
         """Which way the nose points on the course, from east toward north, in radians, or None."""
-        heading = self.link.tracked_heading_radians()
+        heading = self.link.heading_from_launch_radians()
         return None if heading is None else self.start_frame.course_heading_from_start_frame(heading)
 
     def send_target_on_course(self, target_on_course_metres, check_distance_from_drone=True,
@@ -557,6 +620,8 @@ class SafetyWatch:
             px4_uses_laser_for_height=uses_laser,
             px4_says_laser_is_faulty=laser_is_faulty,
             height_correction_metres=link.height_correction_metres,
+            px4_uses_camera_position=link.px4_uses_camera_position(),
+            px4_heading_gap_degrees=link.px4_heading_gap_degrees(),
         )
 
     def _record(self, condition, decision):
@@ -674,6 +739,22 @@ def what_is_not_ready(link):
         problems.append("The drone is armed. Disarm it: the hand-over only follows an arming that starts after this.")
     if not reports.px4_height_estimate_is_working() or not reports.latest["px4_position"].xy_valid:
         problems.append("PX4 has no valid position or height estimate yet.")
+    problems.extend(_camera_tracking_not_used_by_px4(link))
+    return problems
+
+
+def _camera_tracking_not_used_by_px4(link):
+    """Sentences, if PX4 is not using camera tracking for both position and heading. Without the
+    camera's heading on the launch mark, the launch readings would hold a compass heading, and
+    the heading check in the air (run_safety.py rule 5) would compare against the wrong one."""
+    if link.reports.seconds_since("estimator_flags") > ESTIMATOR_FLAGS_LONGEST_AGE_SECONDS:
+        return []   # announce_which_checks_can_run says loudly that the flags are missing.
+    problems = []
+    if not link.reports.px4_uses_camera_position():
+        problems.append("PX4 is not using camera tracking's position (cs_ev_pos is off).")
+    if not link.reports.px4_uses_camera_heading():
+        problems.append("PX4 is not using camera tracking's heading (cs_ev_yaw is off); it may be on the compass, "
+                        "which is wrong indoors. Wait, or restart test_flights if it lasts.")
     return problems
 
 
@@ -708,6 +789,21 @@ def announce_which_checks_can_run(link):
                    missing_optional_reports=link.reports.reports_older_than(OPTIONAL_REPORTS, ESTIMATOR_FLAGS_LONGEST_AGE_SECONDS))
 
 
+def _turned_about_up(offsets_metres, angle_radians):
+    """Turns (forward, left, up) offsets by angle_radians toward the left, about the up axis."""
+    offsets = np.array(offsets_metres, dtype=float)
+    cosine, sine = math.cos(angle_radians), math.sin(angle_radians)
+    forward, left = offsets[..., 0].copy(), offsets[..., 1].copy()
+    offsets[..., 0] = cosine * forward - sine * left
+    offsets[..., 1] = sine * forward + cosine * left
+    return offsets
+
+
+def _wrapped_radians(angle_radians):
+    """The same angle, between -pi and pi."""
+    return math.atan2(math.sin(angle_radians), math.cos(angle_radians))
+
+
 def remember_launch_mark(link):
     """Records what the drone's reports say on the launch mark. Returns the LaunchReadings and
     keeps them in link.launch. Call it only when what_is_not_ready(link) is empty."""
@@ -717,6 +813,8 @@ def remember_launch_mark(link):
         px4_z_metres=reports.px4_z_metres(),
         px4_distance_to_ground_metres=reports.px4_distance_to_ground_metres(),
         raw_laser_metres=reports.raw_laser_reading_metres(),
+        px4_heading_radians=reports.px4_heading_radians(),
+        tracked_heading_radians=link.tracked_heading_radians(),
     )
     return link.launch
 
@@ -761,7 +859,11 @@ def log_launch_readings(link):
 
 def _arming_summary(link):
     state = link.reports.state() or {}
-    return f"Armed: {state.get('armed')}. Mode: {state.get('nav_state_name')}. Landed: {state.get('landed')}."
+    # The tests' pretend reports have no battery, so a missing one reads as unknown.
+    battery = getattr(link.reports, "latest", {}).get("battery")
+    battery_text = "unknown" if battery is None else f"{battery.remaining * 100:.0f}% ({battery.voltage_v:.1f} V)"
+    return (f"Armed: {state.get('armed')}. Mode: {state.get('nav_state_name')}. Landed: {state.get('landed')}. "
+            f"Battery: {battery_text}.")
 
 
 def climb_above_launch(link, watch, height_metres):

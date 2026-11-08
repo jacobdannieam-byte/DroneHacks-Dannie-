@@ -153,7 +153,8 @@ class _FloorCrossing:
     towards_far_side: np.ndarray        # A unit vector at right angles to the line.
 
 
-def plan_route(course_map, mission, start_metres=None, checkpoints_already_cleared=0, other_possible_boulders=()):
+def plan_route(course_map, mission, start_metres=None, checkpoints_already_cleared=0, other_possible_boulders=(),
+               checkpoint_margin_metres=0.0, keep_clear_of_boulders=False):
     """Plans a route from start_metres (the launch mark if not given) that clears the mission's
     remaining checkpoints in order and ends above the centre of the landing pad. Returns a
     PlannedRoute, or raises RoutePlanningError.
@@ -176,7 +177,8 @@ def plan_route(course_map, mission, start_metres=None, checkpoints_already_clear
     reasons = []
     for line_names in choices_in_order:
         try:
-            return _plan_through_lines(course_map, mission, cruise_grid, start_metres, remaining_checkpoints, line_names)
+            return _plan_through_lines(course_map, mission, cruise_grid, start_metres, remaining_checkpoints,
+                                       line_names, checkpoint_margin_metres, keep_clear_of_boulders)
         except _NoRouteThroughTheseLines as reason:
             reasons.append(f"Through {', then '.join(line_names)}: {reason}")
     raise RoutePlanningError(f"Found no route on the map '{course_map.name}'. " + " ".join(reasons))
@@ -201,10 +203,12 @@ def _boulders_not_already_known(known_boulders, other_possible_boulders):
     return new_ones
 
 
-def _plan_through_lines(course_map, mission, cruise_grid, start_metres, checkpoints, line_names):
-    stages = [_make_stage(course_map, line_name, mission.cruise_height_metres) for line_name in line_names]
+def _plan_through_lines(course_map, mission, cruise_grid, start_metres, checkpoints, line_names,
+                        checkpoint_margin_metres, keep_clear_of_boulders):
+    stages = [_make_stage(course_map, line_name, mission.cruise_height_metres, checkpoint_margin_metres)
+              for line_name in line_names]
     goal_metres = course_map.landing_pad_centre_metres
-    square_path = _search_for_square_path(cruise_grid, stages, start_metres, goal_metres)
+    square_path = _search_for_square_path(cruise_grid, stages, start_metres, goal_metres, keep_clear_of_boulders)
     waypoints_metres, cleared_at = _straighten_and_join(square_path, stages, cruise_grid, start_metres, goal_metres, mission.cruise_height_metres)
     waypoints_metres, cleared_at = _keep_stops_away_from_boulders(waypoints_metres, cleared_at, stages, cruise_grid, course_map)
     least_room_metres, least_room_near = _least_room_on_route(waypoints_metres, stages, cleared_at, cruise_grid)
@@ -225,7 +229,7 @@ def _plan_through_lines(course_map, mission, cruise_grid, start_metres, checkpoi
     )
 
 
-def _make_stage(course_map, line_name, cruise_height_metres):
+def _make_stage(course_map, line_name, cruise_height_metres, checkpoint_margin_metres=0.0):
     line = course_map.checkpoint_line_named(line_name)
     if line.opening_name is not None:
         try:
@@ -237,17 +241,26 @@ def _make_stage(course_map, line_name, cruise_height_metres):
     towards_far_side = np.array([-along[1], along[0]])
     if np.dot(line.far_side_point_metres - line.start_metres, towards_far_side) < 0:
         towards_far_side = -towards_far_side
-    shift = towards_far_side * DRONE_RADIUS_METRES
-    return _FloorCrossing(line.name, line.start_metres + shift, line.end_metres + shift, towards_far_side)
+    shift = towards_far_side * (DRONE_RADIUS_METRES + checkpoint_margin_metres)
+    # Waypoint flight needs room for the propellers at both ends of the line, and for its
+    # arrival tolerance. The original planner's crossing convention stays available to its callers.
+    inset = DRONE_RADIUS_METRES + checkpoint_margin_metres if checkpoint_margin_metres else 0.0
+    if np.linalg.norm(line.end_metres - line.start_metres) <= 2.0 * inset:
+        raise _NoRouteThroughTheseLines(f"'{line.name}' is too narrow for the drone and its arrival tolerance")
+    return _FloorCrossing(line.name, line.start_metres + shift + along * inset,
+                          line.end_metres + shift - along * inset, towards_far_side)
 
 
 # ---- Step 2: searching the grid --------------------------------------------------------------
 
-def _search_for_square_path(grid, stages, start_metres, goal_metres):
+def _search_for_square_path(grid, stages, start_metres, goal_metres, keep_clear_of_boulders=False):
     """Dijkstra's search over one copy of the grid per stage, plus one for the last leg to the
     pad. Returns the path as a list of (copy number, square number)."""
     square_count = grid.squares_east * grid.squares_north
-    is_free = (grid.room_metres >= REQUIRED_ROOM_METRES).ravel().tolist()
+    free = grid.room_metres >= REQUIRED_ROOM_METRES
+    if keep_clear_of_boulders:
+        free &= grid.boulder_distance_metres >= LASER_KEEP_OFF_BOULDER_METRES
+    is_free = free.ravel().tolist()
     cost_per_metre = _cost_per_metre(grid.room_metres, grid.boulder_distance_metres).ravel().tolist()
     crossing_tests = [_crossing_test(grid, stage, is_free) for stage in stages]
 
@@ -379,6 +392,8 @@ def _free_square_number(grid, point_metres, is_free, what_it_is):
         raise RoutePlanningError(f"{what_it_is.capitalize()} ({point_metres[0]:.2f}, {point_metres[1]:.2f}) is outside the course.")
     east, north = square
     if not is_free[east * grid.squares_north + north]:
+        if grid.room_metres[east, north] >= REQUIRED_ROOM_METRES:
+            raise RoutePlanningError(f"{what_it_is.capitalize()} is too close to a mapped boulder.")
         raise RoutePlanningError(
             f"{what_it_is.capitalize()} ({point_metres[0]:.2f}, {point_metres[1]:.2f}) has only "
             f"{grid.room_metres[east, north]:.2f} m of room, next to the {grid.nearest_shape_names[east, north]}, "

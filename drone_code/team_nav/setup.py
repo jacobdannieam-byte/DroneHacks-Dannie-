@@ -27,6 +27,7 @@ setup(
         (f"share/{PACKAGE_NAME}/launch", glob("launch/*.launch.py")),
         (f"share/{PACKAGE_NAME}/course_maps", glob("course_maps/*.json")),
         (f"share/{PACKAGE_NAME}/missions", glob("missions/*.json")),
+        (f"share/{PACKAGE_NAME}/transport", glob("transport/*.xml")),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
@@ -41,6 +42,7 @@ setup(
             "flight_recorder = team_nav.flight_recorder:main",
             "hand_test = team_nav.hand_tests.run_hand_test:main",
             "practice_flight = team_nav.practice_flights.run_practice_flight:main",
+            "preflight_check = team_nav.preflight_check:main",
         ],
     },
 )

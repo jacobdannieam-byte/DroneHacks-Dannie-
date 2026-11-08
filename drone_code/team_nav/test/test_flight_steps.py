@@ -7,6 +7,9 @@ starts, or a longer time after the drone reaches the floor without one. It is fa
 
 How to run these tests is in the package's README.
 """
+import math
+
+import numpy as np
 import pytest
 
 from team_nav import flight_steps
@@ -284,3 +287,28 @@ def test_fly_until_stops_the_run_when_it_takes_too_long():
     link = PretendLink(height_metres=0.8)
     with pytest.raises(RunMustStop, match="the impossible"):
         flight_steps.fly_until(link, lambda: False, lambda: None, 1.0, "the impossible")
+
+
+# ---- The launch frame turned by camera tracking's launch heading -------------------------------------
+
+def _link_launched_at(tracked_position_metres, tracked_heading_degrees):
+    """A DroneLink with only what the launch frame needs: no ROS node."""
+    link = flight_steps.DroneLink.__new__(flight_steps.DroneLink)
+    link.launch = flight_steps.LaunchReadings(
+        tracked_position_metres=np.array(tracked_position_metres, dtype=float), px4_z_metres=0.0,
+        px4_distance_to_ground_metres=0.1, raw_laser_metres=None,
+        tracked_heading_radians=math.radians(tracked_heading_degrees))
+    return link
+
+
+def test_moving_where_the_nose_pointed_at_launch_is_forward_even_when_tracking_was_turned():
+    # As at 10:23 on 2026-11-08: camera tracking read -26.5 degrees on the launch mark.
+    link = _link_launched_at([0.18, -0.09, 0.01], -26.5)
+    nose = math.radians(-26.5)
+    link.tracked_position = lambda: np.array([0.18 + math.cos(nose), -0.09 + math.sin(nose), 0.51])
+    np.testing.assert_allclose(link.position_from_launch(), [1.0, 0.0, 0.5], atol=1e-9)
+
+
+def test_a_target_ahead_in_the_launch_frame_is_sent_where_the_nose_pointed():
+    link = _link_launched_at([0.0, 0.0, 0.0], 90.0)
+    np.testing.assert_allclose(link.tracking_from_launch_frame([1.0, 0.0, 0.3]), [0.0, 1.0, 0.3], atol=1e-9)

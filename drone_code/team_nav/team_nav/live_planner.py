@@ -30,7 +30,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from team_nav.clearance_grid import GRID_SQUARE_METRES
-from team_nav.drone_dimensions import REQUIRED_ROOM_METRES
+from team_nav.drone_dimensions import DRONE_RADIUS_METRES, REQUIRED_ROOM_METRES
 
 # From drone_dimensions.py: the drone's radius (0.30 m, propeller tips) plus a 5 cm margin.
 ROOM_NEEDED_METRES = REQUIRED_ROOM_METRES
@@ -68,6 +68,7 @@ class Goal:
     point_metres: np.ndarray   # (east, north) to fly to.
     line_start_metres: object  # The checkpoint line's ends, or None for the landing pad.
     line_end_metres: object
+    straight_heading_radians: float | None = None
 
 
 def goals_from_mission(course_map, mission, landing_stage_name):
@@ -78,8 +79,17 @@ def goals_from_mission(course_map, mission, landing_stage_name):
     goals = []
     for checkpoint in mission.checkpoints:
         line = _first_line_without_an_opening(course_map, checkpoint)
-        goals.append(Goal(checkpoint.name.lower(), np.asarray(line.far_side_point_metres, dtype=float),
-                          np.asarray(line.start_metres, dtype=float), np.asarray(line.end_metres, dtype=float)))
+        stage_name = checkpoint.name.lower()
+        point_metres = np.asarray(line.far_side_point_metres, dtype=float)
+        line_start_metres = np.asarray(line.start_metres, dtype=float)
+        line_end_metres = np.asarray(line.end_metres, dtype=float)
+        straight_heading_radians = None
+        if not goals and stage_name == "first corridor":
+            # Face straight through the opening. A small offset from the launch mark to the
+            # opening's middle is corrected by position targets, with the nose facing forward.
+            east, north = _toward_exit(line_end_metres - line_start_metres, point_metres - line_start_metres)
+            straight_heading_radians = math.atan2(north, east)
+        goals.append(Goal(stage_name, point_metres, line_start_metres, line_end_metres, straight_heading_radians))
     goals.append(Goal(landing_stage_name, np.asarray(course_map.landing_pad_centre_metres[:2], dtype=float), None, None))
     return goals
 
@@ -101,6 +111,26 @@ def has_reached(goal, previous_point_metres, drone_point_metres):
         return False
     return _segments_cross(goal.line_start_metres, goal.line_end_metres,
                            np.asarray(previous_point_metres[:2]), np.asarray(drone_point_metres[:2]))
+
+
+def corridor_exit_reached(goal, drone_point_metres, progress_past_line_metres=DRONE_RADIUS_METRES):
+    """Check forward progress across the line and room for both sides of the drone."""
+    line = goal.line_end_metres - goal.line_start_metres
+    width_metres = np.linalg.norm(line)
+    if width_metres < 2.0 * DRONE_RADIUS_METRES:
+        return False
+    across = line / width_metres
+    forward = _toward_exit(across, goal.point_metres - goal.line_start_metres)
+    offset_metres = drone_point_metres[:2] - goal.line_start_metres
+    across_metres = offset_metres @ across
+    return (offset_metres @ forward >= progress_past_line_metres
+            and DRONE_RADIUS_METRES <= across_metres <= width_metres - DRONE_RADIUS_METRES)
+
+
+def _toward_exit(along_line, offset_to_exit):
+    """Turn the checkpoint line into a forward direction that points to the exit side."""
+    forward = np.array([-along_line[1], along_line[0]])
+    return -forward if offset_to_exit @ forward < 0.0 else forward
 
 
 def find_path(live_map, start_metres, goal_metres, room=None):

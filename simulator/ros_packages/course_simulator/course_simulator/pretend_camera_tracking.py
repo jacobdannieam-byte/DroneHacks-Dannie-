@@ -49,8 +49,9 @@ REPORTS_PER_SECOND = 30.0
 # Our own choice: how often this program says whether tracking is working.
 STATUS_REPORTS_PER_SECOND = 10.0
 
-# How late each report is. It matches the drone's setting for this delay, EKF2_EV_DELAY.
-# The organizers' documents suggest the true value could be up to about 106 ms.
+# How late each report is. Measured on drone 16 on 2026-11-08: usually 57 to 69 ms, with bursts
+# of 200 to 400 ms that this simulator does not copy. (PX4's EKF2_EV_DELAY is now 0, because the
+# report's own time stamp already says when its picture was taken.)
 REPORT_DELAY_SECONDS = 0.060
 
 # Estimated: about 5 mm of jitter, from the drone at rest moving 0.3 to 2 mm in its reports.

@@ -13,8 +13,9 @@ descent finds the floor with the laser's raw reading.
 
 The rules, in the order they are checked
 ----------------------------------------
-Rule 4 (the height) is checked before rule 3 (camera tracking), so it keeps running while the
-drone holds still waiting for camera tracking.
+Rule 5 (PX4 trusts camera tracking) is checked right after rule 2. Rule 4 (the height) is checked
+before rule 3 (camera tracking), so it keeps running while the drone holds still waiting for
+camera tracking.
 1. Control is no longer ours. "Offboard" is the PX4 mode in which the drone follows our
    targets. If it has ended (the teammate flipped the mode switch, PX4 failed safe, or the
    motors were switched off), our targets do nothing, so we stop sending onward targets, write
@@ -48,6 +49,20 @@ drone holds still waiting for camera tracking.
    still worked. PX4's height then still agreed with camera tracking's within about 8 cm, but the
    old rule landed the drone halfway back from the out-and-back flight. PX4 did not start to use
    the laser again before the end of that flight.
+
+5. PX4 no longer trusts camera tracking. PX4 works out the drone's position and heading itself,
+   from camera tracking's reports. On drone 16 those reports often arrive 200 to 400 ms late
+   instead of the expected 60 ms (measured 2026-11-08). PX4 then stops using them, for position
+   or for heading. Without the camera, PX4 falls back to the compass for heading. Indoors the
+   compass is disturbed and points 135 to 180 degrees away from the camera's heading. PX4's whole
+   idea of "forward" then swings round, and it pushes the drone the wrong way: the 06:15 flight
+   slid 0.9 m and hit a wall. CameraTrustCheck below watches for this. If PX4's heading and camera
+   tracking's heading disagree by more than HEADING_GAP_LIMIT_DEGREES for
+   HEADING_GAP_LONGEST_SECONDS, or PX4 has not used camera tracking's position for
+   CAMERA_POSITION_UNUSED_LONGEST_SECONDS, the drone lands where it is. Holding still would not
+   help: the hold point itself is in the wrong place. The landing sends PX4 only a downward speed
+   with no sideways part, which stays right even when PX4's idea of direction is wrong. This rule
+   runs from the moment our program has control, even on the floor (CameraTrustCheck says why).
 
 Separately, check_target asks whether a target is inside the course, before it is sent. A target
 outside the course (beyond the safety net, or above the wall tops) is refused, which stops the
@@ -90,6 +105,22 @@ AIRBORNE_HEIGHT_METRES = 0.3
 # estimator flags about twice a second on drone 16, so this is two reports in a row.
 LASER_UNUSED_LONGEST_SECONDS = 1.0
 
+# Measured on drone 16 on 2026-11-08 (four flights, 34000 reports): while PX4 used camera
+# tracking for heading, its heading and the camera's differed by at most 2 to 11 degrees in 95 of
+# 100 reports. While PX4 used the compass, they differed by 135 to 180 degrees. 20 degrees is well
+# above the first and well below the second.
+HEADING_GAP_LIMIT_DEGREES = 20.0
+
+# Our own choice. A gap this short can be a single late report; the swing to the compass lasts
+# much longer. At 30 degrees a second of turning (live_flight.py turns at 15), even a late report
+# moves the gap by only 9 degrees in 0.3 s.
+HEADING_GAP_LONGEST_SECONDS = 0.3
+
+# Our own choice. Without camera tracking's position, PX4 guesses from its motion sensors alone,
+# and on 2026-11-08 the drone slid 0.3 to 0.5 m within 2 s of that. PX4 reports its estimator
+# flags about twice a second, so this is two reports in a row.
+CAMERA_POSITION_UNUSED_LONGEST_SECONDS = 1.0
+
 # The two laser problems that LaserUseCheck reports.
 LASER_FAULTY = "PX4 reports that the bottom laser is faulty"
 LASER_STOPPED = "PX4 reports that it has stopped using the bottom laser for height"
@@ -125,6 +156,10 @@ class DroneCondition:
     # How much higher than wanted the flight program asks PX4 to fly, to make up for PX4's height
     # going wrong (height_keeper.py). The height checks expect PX4 to be off by this much.
     height_correction_metres: float = 0.0
+    px4_uses_camera_position: object = None  # PX4's own flag (cs_ev_pos), or None if not reported recently.
+    # How far PX4's heading has turned away from camera tracking's since the launch mark, in
+    # degrees, or None if either is missing. 0 while PX4 follows the camera's heading.
+    px4_heading_gap_degrees: object = None
 
 
 @dataclass
@@ -145,6 +180,7 @@ class RunSafety:
         self.height_check = HeightCheck(course_map, other_possible_boulders)
         self.laser_use_check = LaserUseCheck()
         self.camera_height_check = CameraHeightCheck()
+        self.camera_trust_check = CameraTrustCheck()
         # When the current hold began, or None if the drone isn't holding.
         self.hold_began_at_seconds = None
 
@@ -156,6 +192,10 @@ class RunSafety:
         touch = self._check_for_touch(condition)
         if touch is not None:
             return SafetyDecision(LAND_HERE, touch)
+
+        distrust = self.camera_trust_check.check(condition)
+        if distrust is not None:
+            return SafetyDecision(LAND_HERE, distrust)
 
         # The height check runs before the camera tracking check, so it keeps running while the
         # drone holds still for camera tracking. A wrong height is worse than a short hold: if both
@@ -328,6 +368,53 @@ class LaserUseCheck:
         if stopped_using:
             return LASER_STOPPED
         return None
+
+
+class CameraTrustCheck:
+    """Rule 5: notices when PX4 stops trusting camera tracking. Each problem must last its own
+    time limit to count.
+
+    It runs from the moment our program has control, even with the drone still on the floor: in
+    the 05:42 and 06:15 flights of 2026-11-08 the swing to the compass (about 165 degrees) came
+    right after arming and in the first 0.3 m of the climb, and the 06:15 slide began there. A
+    landing that starts on the floor only waits for the motors to stop, which is safe."""
+
+    def __init__(self):
+        self.heading_gap_began_at_seconds = None
+        self.position_unused_began_at_seconds = None
+
+    def check(self, condition):
+        """Returns None while all is well, or a sentence saying why the run must stop."""
+        heading_problem = self._check_heading(condition)
+        if heading_problem is not None:
+            return heading_problem
+        return self._check_position_use(condition)
+
+    def _check_heading(self, condition):
+        gap = condition.px4_heading_gap_degrees
+        if gap is None or abs(gap) <= HEADING_GAP_LIMIT_DEGREES:
+            self.heading_gap_began_at_seconds = None
+            return None
+        if self.heading_gap_began_at_seconds is None:
+            self.heading_gap_began_at_seconds = condition.now_seconds
+        if condition.now_seconds - self.heading_gap_began_at_seconds < HEADING_GAP_LONGEST_SECONDS:
+            return None
+        return (f"PX4's heading differs from camera tracking's by {abs(gap):.0f} degrees, more than the "
+                f"{HEADING_GAP_LIMIT_DEGREES:.0f} we allow. PX4 has probably switched to the compass, which is "
+                f"disturbed indoors, so it will push the drone the wrong way. The drone lands where it is.")
+
+    def _check_position_use(self, condition):
+        if condition.px4_uses_camera_position is not False:
+            self.position_unused_began_at_seconds = None
+            return None
+        if self.position_unused_began_at_seconds is None:
+            self.position_unused_began_at_seconds = condition.now_seconds
+        seconds_unused = condition.now_seconds - self.position_unused_began_at_seconds
+        if seconds_unused < CAMERA_POSITION_UNUSED_LONGEST_SECONDS:
+            return None
+        return (f"PX4 has not used camera tracking's position for {seconds_unused:.1f} s, so it is guessing the "
+                f"drone's position from its motion sensors alone, and the drone drifts. Camera tracking's reports "
+                f"are probably arriving too late for PX4. The drone lands where it is.")
 
 
 def _refuse_if_far_from_the_drone(target, drone):

@@ -213,6 +213,24 @@ class DroneReports:
         flags = self.latest.get("estimator_flags")
         return None if flags is None else bool(flags.cs_rng_hgt)
 
+    def px4_uses_camera_position(self):
+        """True if PX4's estimator is using camera tracking's position right now (cs_ev_pos),
+        None if unknown."""
+        flags = self.latest.get("estimator_flags")
+        return None if flags is None else bool(flags.cs_ev_pos)
+
+    def px4_uses_camera_heading(self):
+        """True if PX4's estimator is using camera tracking's heading right now (cs_ev_yaw),
+        None if unknown. When it isn't, PX4 may be using the compass instead."""
+        flags = self.latest.get("estimator_flags")
+        return None if flags is None else bool(flags.cs_ev_yaw)
+
+    def px4_heading_radians(self):
+        """PX4's own heading estimate: clockwise from its north, as PX4 measures it. None if
+        unknown."""
+        position = self.latest.get("px4_position")
+        return None if position is None else float(position.heading)
+
     def battery_volts(self):
         battery = self.latest.get("battery")
         return None if battery is None else float(battery.voltage_v)

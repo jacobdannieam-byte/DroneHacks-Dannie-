@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  How our two picture-reading programs (depth_camera and flight_recorder) receive ROS messages.
+  REAL DRONE. launch_pieces.py points only those two programs at this file. Every other program
+  keeps the organizers' file, /etc/skybeta/fastdds.xml, which we do not change.
+
+  Why this file exists (measured on drone 16, 2026-11-08, drone on the floor, 60 s per test):
+  ROS normally passes messages between programs on one computer through "shared memory", a block
+  of memory both programs can read. Each program's block is 549 KB, but one camera picture is
+  1.97 MB (1024 x 640 pixels x 3 colours). So each picture goes in pieces, and the camera program
+  waits until our slower program has taken the pieces out. While it waits, camera tracking gets
+  no new pictures either, and its reports to PX4 arrive up to 0.4 s late. After 0.4 s PX4 stops
+  using camera tracking.
+
+      Programs reading the pictures          Tracking reports over 180 ms late
+      none of ours                           5.7 % and 6.7 % (two tests)
+      flight_recorder, shared memory         25.1 %
+      depth_camera, shared memory            25.7 %
+      depth_camera, this file                 8.1 %  (same number of depth pictures made)
+
+  With this file our programs receive over the computer's internal network connection
+  (127.0.0.1, which never leaves the Jetson). The camera program then hands each piece to the
+  operating system and carries on, instead of waiting for us.
+
+  The rest copies the organizers' file: only 127.0.0.1, and up to 32 programs found
+  (see the comment in /etc/skybeta/fastdds.xml).
+-->
+<dds xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+  <profiles>
+    <transport_descriptors>
+      <transport_descriptor>
+        <transport_id>team_udp_loopback</transport_id>
+        <type>UDPv4</type>
+        <maxInitialPeersRange>32</maxInitialPeersRange>
+        <interfaceWhiteList>
+          <address>127.0.0.1</address>
+        </interfaceWhiteList>
+      </transport_descriptor>
+    </transport_descriptors>
+
+    <participant profile_name="team_pictures_over_network" is_default_profile="true">
+      <rtps>
+        <userTransports>
+          <transport_id>team_udp_loopback</transport_id>
+        </userTransports>
+        <useBuiltinTransports>false</useBuiltinTransports>
+        <builtin>
+          <initialPeersList>
+            <locator>
+              <udpv4>
+                <address>127.0.0.1</address>
+              </udpv4>
+            </locator>
+          </initialPeersList>
+        </builtin>
+      </rtps>
+    </participant>
+  </profiles>
+</dds>

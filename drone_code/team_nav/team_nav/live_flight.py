@@ -38,6 +38,7 @@ from team_nav.height_keeper import HeightKeeper
 from team_nav.live_map import LiveMap
 from team_nav.live_navigation import LiveNavigator, NoWayForward
 from team_nav.live_planner import goals_from_mission
+from team_nav.waypoint_route import WaypointNavigator
 
 # Our own choice, well under the touch check's limit (touch_detector.py: 120 degrees a second
 # counts as a hit). The nose is turned toward the wanted heading at most this fast. On drone 16
@@ -47,7 +48,7 @@ from team_nav.live_planner import goals_from_mission
 TURN_RATE_DEGREES_PER_SECOND = 15.0
 
 # Our own choice. The whole live flight must end within this. The course is about 18 m; at
-# 0.3 m/s with turns and look-arounds that is about 2 minutes.
+# 0.3 m/s with turns and holds that is about 2 minutes.
 LONGEST_LIVE_FLIGHT_SECONDS = 300.0
 
 # Our own choice. If no depth picture has reached the live map for this long, the drone may turn
@@ -70,16 +71,25 @@ SECONDS_BETWEEN_SAVED_MAPS = 2.0
 
 class LiveFlight:
 
-    def __init__(self, link, watch, course_map, mission, landing_stage_name, stop_after_stage, stage_records):
+    def __init__(self, link, watch, course_map, mission, landing_stage_name, stop_after_stage, stage_records,
+                 waypoint_route=None, latest_navigation_end_seconds=None, *, full_course_practice=False):
         """stage_records is an object with begin_stage(name) and finish_stage(), as CourseRun has."""
         self.link = link
         self.watch = watch
         self.stage_records = stage_records
         cruise_height_metres = mission.cruise_height_metres
         self.live_map = LiveMap(course_map, cruise_height_metres, DRONE_HALF_HEIGHT_METRES)
-        goals = goals_from_mission(course_map, mission, landing_stage_name)
-        self.navigator = LiveNavigator(self.live_map, goals, cruise_height_metres, stop_after_stage)
-        self.depth = DepthToMap(link, watch.start_frame, self.live_map, course_map)
+        if waypoint_route is None:
+            goals = goals_from_mission(course_map, mission, landing_stage_name)
+            self.navigator = LiveNavigator(self.live_map, goals, cruise_height_metres, stop_after_stage,
+                                           full_course_practice=full_course_practice)
+        else:
+            self.navigator = WaypointNavigator(self.live_map, course_map, waypoint_route, landing_stage_name,
+                                               stop_after_stage, watch.start_frame.start_heading_radians)
+        self.latest_navigation_end_seconds = latest_navigation_end_seconds
+        # A return from behind a mesh wall cannot tell us where the wall itself is.
+        self.depth = DepthToMap(link, watch.start_frame, self.live_map, course_map,
+                                align_to_walls=waypoint_route is None and not full_course_practice)
         self.commanded_heading_radians = None
         self.waiting_for_depth_at = None       # Where the drone holds while depth is missing.
         self.height_keeper = HeightKeeper()
@@ -91,17 +101,20 @@ class LiveFlight:
         self.maps_folder = os.path.join(link.log.folder, "live_maps")
         os.makedirs(self.maps_folder, exist_ok=True)
         self.link.log.event("live_navigation", "Live navigation goals: " + ", ".join(
-            f"{goal.stage_name} at ({goal.point_metres[0]:.2f}, {goal.point_metres[1]:.2f})" for goal in goals))
+            f"{goal.stage_name} at ({goal.point_metres[0]:.2f}, {goal.point_metres[1]:.2f})"
+            for goal in self.navigator.goals))
 
     def fly(self):
         """Flies until the last goal is reached. Raises RunMustStop if there is no way forward."""
-        # No look-around at the start: the drone already faces the first corridor, and on drone 16
-        # every turn makes it slide (see TURN_RATE_DEGREES_PER_SECOND). The navigator still looks
-        # around if it finds no path.
         self.stage_records.begin_stage(self.navigator.current_goal.stage_name)
+        timeout_seconds = LONGEST_LIVE_FLIGHT_SECONDS
+        if self.latest_navigation_end_seconds is not None:
+            timeout_seconds = self.latest_navigation_end_seconds - self.link.now_seconds()
+            if timeout_seconds <= 0:
+                raise RunMustStop("The time reserved for navigation ran out during the climb.")
         try:
             flight_steps.fly_until(self.link, lambda: self.finished, self._send_next_target,
-                                   LONGEST_LIVE_FLIGHT_SECONDS, "live navigation to reach the landing pad", self.watch)
+                                   timeout_seconds, "navigation to reach the landing pad", self.watch)
         except NoWayForward as reason:
             raise RunMustStop(str(reason)) from reason
         finally:
@@ -111,7 +124,7 @@ class LiveFlight:
     def _send_next_target(self):
         now = self.link.now_seconds()
         drone, heading = self._drone_now()
-        step = self.navigator.next_step(drone, heading, now)
+        step = self.navigator.next_step(drone, heading, now, self.live_map.updates)
         for _name in step.stages_finished:
             if not step.finished:
                 self.stage_records.finish_stage()
@@ -121,7 +134,8 @@ class LiveFlight:
         self.link.stage = self.stage_records.stage_name
         target, activity = self._held_if_depth_is_missing(step, drone)
         self._keep_true_height(drone[2], now)
-        heading_to_send = self._turned_gently_toward(step.heading_radians, heading, now)
+        wanted_heading = heading if self.waiting_for_depth_at is not None else step.heading_radians
+        heading_to_send = self._turned_gently_toward(wanted_heading, heading, now)
         self.watch.send_target_on_course(target, heading_on_course_radians=heading_to_send)
         self.link.log.sample("live_navigation", activity=activity,
                              wanted_heading_degrees=round(math.degrees(step.heading_radians), 1),

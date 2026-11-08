@@ -12,7 +12,9 @@ A fourth, team_nav.launch.py, only starts watch_only:
     course_run.launch.py     the competition: hand-over (OFF until the team approves it), and the
                              course program starts by itself.
 
-This file builds the two programs they share, so the three can't drift apart.
+This file builds the programs the launch files share. The picture readers use their own message
+transport settings to reduce interference with camera tracking. Depth reads the raw camera
+streams so it can process images independently of the tracker’s grayscale converters.
 
 The hand-over
 -------------
@@ -27,6 +29,9 @@ This file does not decide which launch file runs. After a restart, the drone sta
 team_nav.launch.py, which starts watch_only. To start a different one, type
 "./drone.sh start <name>" on the drone (team_nav/drone.sh).
 """
+import os
+
+from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
 
 # From the organizers' fleet settings file for drone 16 (px4/params/fleet/drone16-vio-2026-11-03.params,
@@ -35,6 +40,12 @@ from launch_ros.actions import Node
 # default is 1, which would make the hand-over silently fail on drone 16. The simulator's PX4 uses
 # 1 and starts its own flight_interface, so this value has never been exercised.
 DRONE_16_PX4_SYSTEM_NUMBER = 16
+
+# Our own file (transport/pictures_over_network.xml), which explains itself. The two programs that
+# read the 2 MB camera pictures use it so the camera program never waits for them. Measured on
+# drone 16 on 2026-11-08: without it, camera tracking's reports to PX4 were over 180 ms late
+# 25% of the time; with it, 8% (6% with neither program running).
+PICTURE_READER_TRANSPORT_FILE = "transport/pictures_over_network.xml"
 
 
 def organizers_flight_interface(hand_over_on, px4_system_number=DRONE_16_PX4_SYSTEM_NUMBER):
@@ -55,6 +66,16 @@ def organizers_flight_interface(hand_over_on, px4_system_number=DRONE_16_PX4_SYS
     )
 
 
+def picture_reader_settings(mode_settings):
+    """mode_settings plus the setting that makes ROS use our transport file for this one program.
+    Fast DDS (the part of ROS that moves messages) reads both names, old and new."""
+    transport_file = os.path.join(get_package_share_directory("team_nav"), PICTURE_READER_TRANSPORT_FILE)
+    settings = dict(mode_settings)
+    settings["FASTRTPS_DEFAULT_PROFILES_FILE"] = transport_file
+    settings["FASTDDS_DEFAULT_PROFILES_FILE"] = transport_file
+    return settings
+
+
 def depth_camera(mode_settings):
     """Our depth camera program (team_nav/depth_camera.py). It only reads the stereo pictures and
     publishes obstacle points, so it is safe in every launch file. respawn restarts it if it
@@ -64,7 +85,7 @@ def depth_camera(mode_settings):
         executable="depth_camera",
         name="team_nav_depth_camera",
         output="log",
-        additional_env=mode_settings,
+        additional_env=picture_reader_settings(mode_settings),
         # Our own choice, as for the recorder: wait 2 seconds before restarting.
         respawn=True,
         respawn_delay=2.0,
@@ -79,7 +100,7 @@ def flight_recorder(mode_settings):
         executable="flight_recorder",
         name="flight_recorder",
         output="log",
-        additional_env=mode_settings,
+        additional_env=picture_reader_settings(mode_settings),
         # Our own choice: wait 2 seconds before restarting, so a recorder that crashes at once
         # doesn't fill the log by restarting many times a second.
         respawn=True,

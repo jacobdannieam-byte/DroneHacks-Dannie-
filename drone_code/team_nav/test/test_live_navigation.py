@@ -7,13 +7,14 @@ Run:  python3 -m pytest test/test_live_navigation.py -q
 import math
 
 import numpy as np
+import pytest
 
 from our_files import load_our_map, load_side_gap_first_mission, SCAN_MAP
 from team_nav import stereo_depth
 from team_nav.drone_dimensions import DRONE_HALF_HEIGHT_METRES
 from team_nav.flight_steps import heading_from_rotation, rotation_matrix
 from team_nav.live_map import LiveMap
-from team_nav.live_navigation import FLYING, HOLDING, LOOKING_AROUND, TURNING, LiveNavigator, NoWayForward
+from team_nav.live_navigation import FLYING, HOLDING, TURNING, LiveNavigator, NoWayForward
 from team_nav.live_planner import Goal, find_path, goals_from_mission
 from team_nav.start_frame import StartFrame
 
@@ -172,22 +173,6 @@ def test_a_drone_that_does_not_turn_as_asked_stops_the_run():
     raise AssertionError("The navigator kept asking for a turn that never happened.")
 
 
-def test_a_full_look_around_is_not_mistaken_for_a_failed_turn():
-    live_map = scan_live_map()
-    start = open_point(live_map)
-    navigator = navigator_with_one_goal(live_map, start + np.array([1.0, 0.0]))
-    navigator.start_look_around([start[0], start[1], FLYING_HEIGHT_METRES], 0.0, 0.0)
-    heading = 0.0
-    for cycle in range(300):
-        step = navigator.next_step([start[0], start[1], FLYING_HEIGHT_METRES], heading, cycle * 0.1)
-        # A drone that turns at 30 degrees a second toward what it is asked.
-        difference = math.atan2(math.sin(step.heading_radians - heading), math.cos(step.heading_radians - heading))
-        heading += max(-math.radians(3), min(math.radians(3), difference))
-        if not navigator.look_headings:
-            return
-    raise AssertionError("The look-around did not finish in 30 seconds.")
-
-
 def test_the_navigator_does_not_move_into_a_wall_just_ahead():
     live_map = scan_live_map()
     start = open_point(live_map)
@@ -201,7 +186,7 @@ def test_the_navigator_does_not_move_into_a_wall_just_ahead():
     assert moved_toward_wall < 0.05
 
 
-def test_after_a_slide_the_drone_waits_to_get_back_but_not_for_ever():
+def test_after_a_slide_the_drone_waits_to_get_back():
     # On drone 16 a turn made the drone slide 0.5 m from its hold point (2026-11-08).
     live_map = scan_live_map()
     start = open_point(live_map)
@@ -213,21 +198,9 @@ def test_after_a_slide_the_drone_waits_to_get_back_but_not_for_ever():
     navigator.now_seconds = 4.0
     assert not navigator._settled(slid)
     navigator.now_seconds = 5.5
-    assert navigator._settled(slid)
-    assert np.allclose(navigator.hold_point[:2], slid[:2])
-    navigator.hold_point = np.array([start[0], start[1], FLYING_HEIGHT_METRES])
+    with pytest.raises(NoWayForward, match="could not return to its hold point"):
+        navigator._settled(slid)
     assert navigator._settled(np.array([start[0] + 0.05, start[1], FLYING_HEIGHT_METRES]))
-
-
-def test_a_look_around_turns_a_full_circle_in_quarters():
-    live_map = scan_live_map()
-    start = open_point(live_map)
-    navigator = navigator_with_one_goal(live_map, start + np.array([1.0, 0.0]))
-    navigator.start_look_around([start[0], start[1], FLYING_HEIGHT_METRES], 0.0, 0.0)
-    step = navigator.next_step([start[0], start[1], FLYING_HEIGHT_METRES], 0.0, 0.0)
-    assert step.activity == LOOKING_AROUND
-    assert abs(step.heading_radians - math.pi / 2) < 1e-6
-    assert len(navigator.look_headings) == 4
 
 
 # ---- Heading sums ---------------------------------------------------------------------------------

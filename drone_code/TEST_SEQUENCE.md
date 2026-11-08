@@ -202,10 +202,19 @@ its path again and again, and turns its nose to where it flies. The map file
 it works.
 
 What you will see:
-- After the climb, the drone does not look around. It turns slowly (15 degrees a second) to face
-  its path. It looks around (four quarter turns) only if it finds no path.
-- After each turn, it holds still until it is back within 10 cm of its hold point (at most 5 s).
-  This is correct: on drone 16 a turn makes it slide.
+- In the first corridor, the drone faces straight up the course map at 90 degrees and makes
+  small position corrections toward the middle of the opening. Depth can stop it, and mapped
+  net walls stay blocked even if depth sees through them. During full-course practice the
+  drone starts looking for the next leg when its centre reaches the sketch's Q1 line. That
+  line guides navigation. The referee determines checkpoint credit during a scored run.
+  If the map and depth cannot confirm enough room ahead, the drone holds and eventually lands.
+- For a Q1-only flight, `./drone.sh fly corridor` lands when the drone's centre reaches the
+  checkpoint line. This is the stopping point for practice and does not confirm checkpoint credit.
+- After the first corridor, it turns slowly (15 degrees a second) to face its path. It can
+  advance to a nearby, visible spot with more turning room. Without a usable path it holds.
+- After settling from a turn, it waits for a new depth frame before continuing.
+- After a turn, it must get back within 10 cm of its hold point. It lands if it cannot regain
+  the hold point within 5 s. Sharp turns reserve an extra 50 cm based on drone 16's recorded slide.
 - It stops and holds when something is close ahead, or when no depth picture comes for 1.5 s.
   Then it plans again.
 - If it finds no way forward for 20 s, it lands where it is.
@@ -213,23 +222,21 @@ What you will see:
 Get the team's approval before the flight. Use Reset world if keyboard RC was used. Hold the
 kill switch.
 
-First start test_flights. It now also starts the depth program:
+On the Jetson, the helper starts the test services and runs preflight before asking for handover:
 
 ```bash
-./drone.sh start test_flights
+cd ~/team_ws
+./drone.sh fly course
 ```
 
-Then start the run:
+The program attempts all four quadrants through Gate B and aims to land and disarm inside the
+pad ring. It can land early if it runs out of clear space. The first turn is a likely stop with
+the current sketch because the drone has previously slid during a turn.
 
-```bash
-TEAM_NAV_RUN_MODE=practice ./drone.sh course_run
-```
-
-The drone flies the whole course and lands on the pad. The route goes through the side gap, not
-the window (`docs/HANDOFF_boulders_and_height.md` says why).
-
-Before the first flight, check that the depth program runs: in the records folder, the newest
-`*_depth_camera/depth_camera.csv` must grow by about 8 lines a second, with GPU in the last column.
+Before the first flight, check that the newest `*_depth_camera/depth_camera.csv` grows by about
+8 rows a second and reports GPU in the `calculator` column. The hardware launch reads raw stereo
+images. For 1024 × 640 three-byte images, `input_bytes_per_pair` should be about 3.93 MB.
+The `picture_age_at_publish_seconds` column shows the delay from image capture to depth output.
 
 After the flight, copy the records to the Mac (Step 11). The folder `live_maps` holds what the drone
 saw and planned every 2 seconds. To compare with the old way of flying (follow the map route, never
@@ -238,6 +245,32 @@ turn), add `--navigation map_route`.
 The result is correct if the drone lands on the pad and touches nothing. When the program ends, it shows a number: 0 finished, 1 stopped or failed, 2 did not start, 130 Ctrl+C.
 
 ## Step 9. The competition run (fly test)
+
+The waypoint mode plans on the drone from the selected course map and the mission. It keeps
+mapped nets blocked, checks live depth before advancing, and goes through Gate B at cruise
+height. It refuses to take off if the map gives no route or a sharp turn lacks room. It checks
+the estimated drone footprint inside the pad ring before descent and after PX4 disarms.
+
+To check the route on the Mac before any flight, with NumPy and SciPy installed:
+
+```bash
+PYTHONPATH=drone_code/team_nav python3 -m team_nav.waypoint_route \
+  drone_code/team_nav/course_maps/sketch_2026-11-08.json \
+  drone_code/team_nav/missions/dronehacks_2026_side_gap_first.json \
+  --other-boulder-map drone_code/team_nav/course_maps/organizers_drawing.json
+```
+
+The current sketch fails the Q1 crossing check. Use the organizer-confirmed current geometry
+before running this mode. Rule 6.4 permits a preloaded layout and forbids using data recorded
+during one flight as direct input to another. Use `./drone.sh fly waypoints --map <course-map.json>`
+with the confirmed map installed in the package or accessible inside the flight container.
+The helper checks the full route before starting the test flight launch or running preflight.
+To check it on the drone without flight, run
+`./drone.sh course_run --navigation waypoints --map <course-map.json> --plan-only`.
+
+For a scored run, arm on the launch mark with the referee present and confirm the organizer's
+handover is the single start action on the referee's signal. After that, only abort inputs are
+allowed. The referee determines checkpoint credit and the official time.
 
 The competition launch file keeps the hand-over off. Change one line to switch it on.
 

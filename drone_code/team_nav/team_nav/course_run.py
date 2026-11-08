@@ -82,6 +82,7 @@ through openings that need a height change (such as the window) with live naviga
 """
 import argparse
 import json
+import math
 import os
 import signal
 import sys
@@ -90,15 +91,17 @@ import traceback
 import numpy as np
 
 from team_nav.course_map import CourseMapError, load_course_map
+from team_nav.drone_dimensions import REQUIRED_ROOM_METRES
 from team_nav.live_flight import LiveFlight
 from team_nav.mission import MissionError, load_mission
 from team_nav.route_follower import RouteFollower
 from team_nav.route_planner import RoutePlanningError, plan_route
 from team_nav.run_mode import STOP_AFTER_STAGE_SETTING, read_run_mode
-from team_nav.run_safety import RunSafety
+from team_nav.run_safety import CAMERA_TRACKING_LONGEST_SILENCE_SECONDS, RunSafety
 from team_nav.start_frame import StartFrame
 from team_nav import flight_steps
 from team_nav.flight_steps import ControlIsNoLongerOurs, RunMustStop, SafetyWatch
+from team_nav.waypoint_route import plan_waypoint_route
 
 PROGRAM_NAME = "course_run"
 
@@ -121,6 +124,12 @@ TO_THE_PAD_STAGE = "to the landing pad"
 
 LIVE_NAVIGATION = "live"
 MAP_ROUTE_NAVIGATION = "map_route"
+WAYPOINT_NAVIGATION = "waypoints"
+
+# Rule 7.9 gives the run three minutes. Start the timer at handover, before liftoff, and
+# reserve time for descent and PX4 disarming. The referee keeps the official clock.
+SCORED_RUN_LIMIT_SECONDS = 180.0
+WAYPOINT_LANDING_RESERVE_SECONDS = 25.0
 
 # Our own choice. An 18 m route at 0.5 m/s takes under a minute, plus about 2.5 seconds at each of
 # up to 30 corners. The scan route took about 80 s in the simulator.
@@ -178,7 +187,8 @@ def plan_the_course(arguments, run_mode, log):
         other_possible_boulders += load_course_map(path).low_obstacles
 
     announce_the_inputs(log, map_path, mission_path, other_map_paths, arguments.start_heading_degrees)
-    route = plan_a_route_if_needed(arguments.navigation, course_map, mission, other_possible_boulders, log)
+    route = plan_a_route_if_needed(arguments.navigation, course_map, mission, other_possible_boulders, log,
+                                   arguments.start_heading_degrees)
     plan = CoursePlan(course_map, mission, other_possible_boulders, route, arguments.start_heading_degrees)
     if route is not None:
         record_the_route(log, plan)
@@ -186,10 +196,13 @@ def plan_the_course(arguments, run_mode, log):
     return plan
 
 
-def plan_a_route_if_needed(navigation, course_map, mission, other_possible_boulders, log):
+def plan_a_route_if_needed(navigation, course_map, mission, other_possible_boulders, log,
+                           start_heading_degrees=DEFAULT_START_HEADING_DEGREES):
     """map_route needs a route from the map, and refuses to start without one. Live navigation
     plans in flight, so a map route that fails (for example because the map is out of date)
     is only written down."""
+    if navigation == WAYPOINT_NAVIGATION:
+        return plan_waypoint_route(course_map, mission, other_possible_boulders, math.radians(start_heading_degrees))
     if navigation == MAP_ROUTE_NAVIGATION:
         return plan_route(course_map, mission, other_possible_boulders=other_possible_boulders)
     try:
@@ -271,6 +284,7 @@ class CourseRun:
         self.link = link
         self.log = link.log
         self.stop_after_stage = run_mode.stop_after_stage.lower()
+        self.full_course_practice = run_mode.is_practice and navigation == LIVE_NAVIGATION and not self.stop_after_stage
         self.watch = SafetyWatch(link, RunSafety(plan.course_map, plan.other_possible_boulders), plan.start_frame)
         self.stage_name = None
         self.stage_start_seconds = None
@@ -309,7 +323,12 @@ class CourseRun:
             pass
         elif self.navigation == LIVE_NAVIGATION:
             LiveFlight(self.link, self.watch, self.plan.course_map, self.plan.mission, TO_THE_PAD_STAGE,
-                       self.stop_after_stage, self).fly()
+                       self.stop_after_stage, self, full_course_practice=self.full_course_practice).fly()
+        elif self.navigation == WAYPOINT_NAVIGATION:
+            latest_navigation_end = self.flight_start_seconds + SCORED_RUN_LIMIT_SECONDS - WAYPOINT_LANDING_RESERVE_SECONDS
+            LiveFlight(self.link, self.watch, self.plan.course_map, self.plan.mission, TO_THE_PAD_STAGE,
+                       self.stop_after_stage, self, waypoint_route=self.plan.route,
+                       latest_navigation_end_seconds=latest_navigation_end).fly()
         else:
             self.follow_the_route()
         self.land_where_the_route_ends()
@@ -351,17 +370,36 @@ class CourseRun:
     def land_where_the_route_ends(self):
         self.link.stage = "settling before the landing"
         flight_steps.hold_still_for(self.link, self.watch, flight_steps.SECONDS_TO_SETTLE)
+        check_pad = (self.navigation == WAYPOINT_NAVIGATION or self.full_course_practice) and not self.stop_after_stage
+        if check_pad:
+            self.check_position_on_pad()
         self.begin_stage("landing")
         height_source = flight_steps.choose_landing_height_source(self.link, self.watch.px4_height_is_in_doubt())
         flight_steps.land(self.link, height_source, self.watch)
+        if check_pad:
+            if not self.link.is_landed() or self.link.is_armed():
+                raise RunMustStop("PX4 did not confirm both landing and disarm.")
+            self.check_position_on_pad()
         self.finish_stage()
         total_seconds = self.link.now_seconds() - self.flight_start_seconds
+        if self.navigation == WAYPOINT_NAVIGATION and check_pad and total_seconds > SCORED_RUN_LIMIT_SECONDS:
+            raise RunMustStop("The drone disarmed after the onboard three-minute limit.")
         if self.stop_after_stage:
             self.log.event("result", f"PRACTICE RUN FINISHED: landed after the stage '{self.stop_after_stage}', as asked. "
                                      f"{total_seconds:.1f} s from the hand-over to motors off.", total_seconds=total_seconds)
             return
         self.log.event("result", f"RUN FINISHED: landed above the pad and the motors are off, {total_seconds:.1f} s "
                                  f"after the hand-over.", total_seconds=total_seconds)
+
+    def check_position_on_pad(self):
+        """Check the estimated footprint against the ring. Only the referee awards credit."""
+        position_metres = self.watch.drone_on_course()
+        course_map = self.plan.course_map
+        if (position_metres is None or not np.all(np.isfinite(position_metres))
+                or self.link.camera_tracking_age_seconds() > CAMERA_TRACKING_LONGEST_SILENCE_SECONDS
+                or np.linalg.norm(position_metres[:2] - course_map.landing_pad_centre_metres)
+                > course_map.landing_pad_outer_radius_metres - REQUIRED_ROOM_METRES):
+            raise RunMustStop("A fresh position could not confirm the whole drone was inside the landing ring.")
 
     # ---- Stage records ------------------------------------------------------------------------------
 
@@ -417,13 +455,19 @@ def parse_arguments(command_line_words):
     parser.add_argument("--start-heading-degrees", type=float, default=DEFAULT_START_HEADING_DEGREES,
                         help="Which way the drone's nose points on the launch mark, in degrees from the course's "
                              "east towards north. 90 means straight down the first corridor.")
-    parser.add_argument("--navigation", choices=[LIVE_NAVIGATION, MAP_ROUTE_NAVIGATION], default=LIVE_NAVIGATION,
+    parser.add_argument("--navigation", choices=[LIVE_NAVIGATION, MAP_ROUTE_NAVIGATION, WAYPOINT_NAVIGATION],
+                        default=LIVE_NAVIGATION,
                         help="live (default): look with the depth camera, re-plan in flight and face where the drone "
-                             "flies. map_route: follow the route planned once from the map file.")
+                             "flies. waypoints: plan the full course before launch and check clearance with live depth. "
+                             "map_route: follow the original preplanned route.")
     parser.add_argument("--ignore-raw-laser", action="store_true",
                         help="Behave as if the bottom laser's raw reading did not exist, as on the real drone. "
                              "For testing that form of the safety checks in the simulator.")
+    parser.add_argument("--plan-only", action="store_true",
+                        help="Print and record the waypoint route without opening a flight connection.")
     arguments = parser.parse_args(command_line_words)
+    if arguments.plan_only and arguments.navigation != WAYPOINT_NAVIGATION:
+        parser.error("--plan-only requires --navigation waypoints.")
     arguments.other_boulder_maps = split_file_names(arguments.other_boulder_maps)
     return arguments
 
@@ -444,8 +488,15 @@ def plan_then_fly(arguments, run_mode, log):
     except (OSError, CourseMapError, MissionError, RoutePlanningError, ValueError) as problem:
         log.event("refused", f"REFUSING TO START, before anything was sent to the drone. {problem}")
         return EXIT_REFUSED_TO_START
+    if arguments.plan_only:
+        log.event("plan_only", "Waypoint route checked. No flight targets were sent.")
+        return EXIT_FINISHED
     log.event("stages", "The stages of this run: " + ", ".join(plan.stage_names()) + ", then the landing.",
               stages=plan.stage_names())
+    if run_mode.is_practice and not run_mode.stop_after_stage and arguments.navigation == LIVE_NAVIGATION:
+        log.event("flight_plan", "FULL-COURSE PRACTICE. The sketch guides the order of the openings. Reaching the Q1 "
+                                 "line starts looking for the next leg. If the drone cannot confirm room to turn or "
+                                 "move, it holds and can land before the pad.")
 
     import rclpy
     from rclpy.node import Node

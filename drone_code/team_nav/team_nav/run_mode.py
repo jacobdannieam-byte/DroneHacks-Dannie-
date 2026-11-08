@@ -6,12 +6,13 @@ they can never disagree.
 Why there is a switch at all
 ----------------------------
 Before the competition run we fly the course many times to collect data and tune the program.
-That is practice mode. Section 11 of docs/ARCHITECTURE.md describes it. The flying itself is
-the same in both modes, so practice data is representative. The only differences are:
+That is practice mode. Section 11 of docs/ARCHITECTURE.md describes it. Practice options include:
   - a practice run can be told to stop after a chosen stage and land, to practise one stage at
     a time;
   - the recorder may save more data in practice mode, such as camera pictures, because the
-    processor has less to do when nothing is at stake.
+    processor has less to do when nothing is at stake;
+  - the full live course practice uses the approximate Q1 line as a cue to look for the next
+    leg. It still checks for room to turn and fly.
 
 The setting
 -----------

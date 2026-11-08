@@ -46,6 +46,7 @@ Read the files in `team_nav/` in this order:
 | `flight_steps.py` | The connection to the drone and the steps every flight uses: wait until ready, wait for the start switch, climb, hold, land. |
 | `course_run.py` | The competition program: plans the route and flies the whole course. |
 | `launch_pieces.py`, `launch/*.launch.py` | What starts on the drone: `watch_only`, `test_flights` or `course_run`. |
+| `transport/pictures_over_network.xml` | How our two picture-reading programs receive messages, so they never make camera tracking late. The file explains the measurements. |
 | `drone.sh` | The one command typed on the drone's computer (`../TEST_SEQUENCE.md`). |
 
 ### The maps we keep

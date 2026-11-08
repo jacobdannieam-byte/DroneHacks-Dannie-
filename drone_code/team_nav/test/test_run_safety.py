@@ -8,8 +8,8 @@ import pytest
 
 from our_files import SCAN_MAP, load_our_map
 from team_nav.run_safety import (
-    CARRY_ON, CONTROL_LOST, HOLD, LAND_HERE, LASER_UNUSED_LONGEST_SECONDS, LONGEST_HOLD_SECONDS, DroneCondition,
-    RunSafety, TargetRefused,
+    CAMERA_POSITION_UNUSED_LONGEST_SECONDS, CARRY_ON, CONTROL_LOST, HEADING_GAP_LONGEST_SECONDS, HOLD, LAND_HERE,
+    LASER_UNUSED_LONGEST_SECONDS, LONGEST_HOLD_SECONDS, DroneCondition, RunSafety, TargetRefused,
 )
 
 SCAN = load_our_map(SCAN_MAP)
@@ -206,3 +206,50 @@ def test_a_target_outside_the_course_is_refused(target, words):
 def test_a_target_far_from_the_drone_is_refused():
     with pytest.raises(TargetRefused, match="too fast"):
         RunSafety(SCAN).check_target(ABOVE_LAUNCH_MARK + [0.0, -1.5, 0.0], ABOVE_LAUNCH_MARK)
+
+
+# ---- Rule 5: PX4 stops trusting camera tracking (drone 16, 2026-11-08) --------------------------
+
+def test_px4_swinging_to_the_compass_heading_lands_the_drone():
+    # In the 06:15 flight PX4's heading swung about 190 degrees away from the camera's.
+    safety = RunSafety(SCAN)
+    assert safety.check(normal_condition(0.0, px4_heading_gap_degrees=-170.0)).action == CARRY_ON
+    decision = safety.check(normal_condition(HEADING_GAP_LONGEST_SECONDS + 0.05, px4_heading_gap_degrees=-170.0))
+    assert decision.action == LAND_HERE
+    assert "compass" in decision.reason
+    assert not decision.land_using_laser
+
+
+def test_a_small_heading_gap_while_turning_carries_on():
+    # Measured: while PX4 used the camera's heading, the gap stayed within 11 degrees in 95 of 100 reports.
+    safety = RunSafety(SCAN)
+    for step in range(30):
+        assert safety.check(normal_condition(step * 0.1, px4_heading_gap_degrees=12.0)).action == CARRY_ON
+
+
+def test_a_short_heading_blip_does_not_land_the_drone():
+    safety = RunSafety(SCAN)
+    safety.check(normal_condition(0.0, px4_heading_gap_degrees=40.0))
+    assert safety.check(normal_condition(0.1, px4_heading_gap_degrees=3.0)).action == CARRY_ON
+    assert safety.check(normal_condition(0.2, px4_heading_gap_degrees=40.0)).action == CARRY_ON
+
+
+def test_px4_not_using_the_camera_position_for_a_second_lands_the_drone():
+    safety = RunSafety(SCAN)
+    assert safety.check(normal_condition(0.0, px4_uses_camera_position=False)).action == CARRY_ON
+    assert safety.check(normal_condition(0.5, px4_uses_camera_position=False)).action == CARRY_ON
+    decision = safety.check(normal_condition(CAMERA_POSITION_UNUSED_LONGEST_SECONDS + 0.05, px4_uses_camera_position=False))
+    assert decision.action == LAND_HERE
+    assert "motion sensors" in decision.reason
+
+
+def test_camera_trust_is_checked_from_takeoff_even_on_the_floor():
+    # In the 06:15 flight the swing to the compass came 2.4 s after arming, before the drone rose.
+    on_floor = np.array([ABOVE_LAUNCH_MARK[0], ABOVE_LAUNCH_MARK[1], 0.0])
+    safety = RunSafety(SCAN)
+    first = normal_condition(0.0, position_on_course_metres=on_floor, px4_heading_gap_degrees=166.0,
+                             px4_height_risen_metres=0.0, laser_height_risen_metres=0.0)
+    later = normal_condition(HEADING_GAP_LONGEST_SECONDS + 0.05, position_on_course_metres=on_floor,
+                             px4_heading_gap_degrees=166.0, px4_height_risen_metres=0.0, laser_height_risen_metres=0.0)
+    assert safety.check(first).action == CARRY_ON
+    assert safety.check(later).action == LAND_HERE

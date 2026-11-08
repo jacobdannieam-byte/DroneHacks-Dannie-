@@ -97,10 +97,11 @@ HOLD_STAGE = "back: hold above the launch mark"
 # Before anything moves
 # =================================================================================================
 
-def parse_arguments(command_line_words):
+def parse_arguments(command_line_words, flight_name=FLIGHT_NAME):
+    """The settings of out_and_back and of turn_in_place, which hover in the same way."""
     parser = argparse.ArgumentParser(
-        prog="practice_flight out_and_back",
-        description="From a low hover, fly 1 m forward and back, measure the response delay, and land.")
+        prog=f"practice_flight {flight_name}",
+        description="Hover above the launch mark, do this flight's moves (its file says which), and land.")
     parser.add_argument("--map", default=DEFAULT_MAP_FILE,
                         help="The map of where the drone flies: a path, or a file name in team_nav's course_maps folder. "
                              "Its launch mark must be where the drone sits.")
@@ -307,7 +308,14 @@ class OutAndBack:
 
 def run(command_line_words, run_mode, log):
     """Checks everything that can be checked on the ground, then flies. Returns the exit code."""
-    arguments = parse_arguments(command_line_words)
+    return run_flight(command_line_words, run_mode, log, FLIGHT_NAME, problems_with_the_line_flown, OutAndBack)
+
+
+def run_flight(command_line_words, run_mode, log, flight_name, problems_with_the_place, flight_class):
+    """Shared with turn_in_place.py, which hovers in the same way: reads the settings and the map,
+    refuses to start if problems_with_the_place(course_map, start_frame, hover height) finds a
+    problem, then flies flight_class. Returns the exit code."""
+    arguments = parse_arguments(command_line_words, flight_name)
     try:
         map_path = find_package_file(arguments.map, "course_maps")
         course_map = load_course_map(map_path)
@@ -316,29 +324,28 @@ def run(command_line_words, run_mode, log):
         return EXIT_REFUSED_TO_START
     start_frame = StartFrame(course_map.launch_mark_centre_metres, arguments.start_heading_degrees)
     problems = problems_with_the_settings(arguments, run_mode)
-    problems += problems_with_the_line_flown(course_map, start_frame, arguments.hover_height_metres)
+    problems += problems_with_the_place(course_map, start_frame, arguments.hover_height_metres)
     if problems:
         log.event("refused", "REFUSING TO START, before anything was sent to the drone. " + " ".join(problems))
         return EXIT_REFUSED_TO_START
-    log.event("inputs", f"Map: {map_path}. Start heading {arguments.start_heading_degrees:.1f} degrees. Hover at "
-                        f"{arguments.hover_height_metres:.2f} m. Out {OUT_DISTANCE_METRES:.1f} m as a step, back as a "
-                        f"slide at {SLIDE_SPEED_METRES_PER_SECOND:.2f} m/s.",
+    log.event("inputs", f"Flight {flight_name}. Map: {map_path}. Start heading {arguments.start_heading_degrees:.1f} "
+                        f"degrees. Hover at {arguments.hover_height_metres:.2f} m.", flight=flight_name,
               map_file=map_path, start_heading_degrees=arguments.start_heading_degrees,
               hover_height_metres=arguments.hover_height_metres)
-    return fly_with_ros(course_map, start_frame, arguments, log)
+    return fly_with_ros(course_map, start_frame, arguments, log, flight_name, flight_class)
 
 
-def fly_with_ros(course_map, start_frame, arguments, log):
+def fly_with_ros(course_map, start_frame, arguments, log, flight_name, flight_class):
     import rclpy
     from rclpy.node import Node
     from rclpy.signals import SignalHandlerOptions
     # As in course_run.py: without rclpy's own Ctrl+C handler, Ctrl+C raises KeyboardInterrupt,
     # which OutAndBack.run handles by landing.
     rclpy.init(signal_handler_options=SignalHandlerOptions.NO)
-    node = Node(f"practice_{FLIGHT_NAME}")
+    node = Node(f"practice_{flight_name}")
     try:
         link = flight_steps.DroneLink(node, log, ignore_raw_laser=arguments.ignore_raw_laser)
-        return OutAndBack(course_map, start_frame, arguments.hover_height_metres, link).run()
+        return flight_class(course_map, start_frame, arguments.hover_height_metres, link).run()
     except Exception:
         log.event("error", f"ERROR before the flight could begin:\n{traceback.format_exc()}")
         return EXIT_STOPPED_OR_FAILED

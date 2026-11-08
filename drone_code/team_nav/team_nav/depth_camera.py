@@ -83,6 +83,7 @@ class DepthCamera(Node):
         self.recent_right = deque(maxlen=PICTURES_KEPT_PER_EYE)
         self.last_used_stamp_seconds = 0.0
         self.calibration = None
+        self.reported_calibration_mismatch = False
         self.eye_spacing_metres = None
         self.last_depth_seconds = 0.0
         self.last_saved_picture_seconds = 0.0
@@ -92,7 +93,9 @@ class DepthCamera(Node):
         self.create_subscription(CameraInfo, RIGHT_CALIBRATION_TOPIC, self.on_right_calibration, 10)
         self.publisher = self.create_publisher(PointCloud2, OBSTACLE_POINTS_TOPIC, 2)
         self.records = DepthRecords()
-        self.get_logger().info(f"Depth camera started. Calculator: {stereo_depth.which_calculator()}. "
+        self.get_logger().info(f"Depth reads {self.resolve_topic_name(LEFT_PICTURE_TOPIC)} and "
+                               f"{self.resolve_topic_name(RIGHT_PICTURE_TOPIC)}. "
+                               f"Calculator: {stereo_depth.which_calculator()}. "
                                f"Records in {self.records.folder}.")
 
     # ---- Receiving -------------------------------------------------------------------------------
@@ -133,6 +136,14 @@ class DepthCamera(Node):
             return
         self.last_depth_seconds = now
         self.last_used_stamp_seconds = _stamp_seconds(pair[0])
+        calibrated_size = (self.calibration.width, self.calibration.height)
+        if any((picture.width, picture.height) != calibrated_size for picture in pair):
+            if not self.reported_calibration_mismatch:
+                self.get_logger().error(f"Stereo image sizes differ from CameraInfo {calibrated_size}. "
+                                        "Check that the image topics and CameraInfo use the same resolution.")
+                self.reported_calibration_mismatch = True
+            return
+        self.reported_calibration_mismatch = False
         self.make_depth(*pair)
 
     def newest_unused_pair(self):
@@ -163,7 +174,11 @@ class DepthCamera(Node):
         points[:, 2] += CAMERA_ABOVE_CENTRE_METRES
         self.publisher.publish(_point_message(points, left_message.header.stamp))
         calculation_seconds = time.monotonic() - start
-        self.records.write_line(_stamp_seconds(left_message), calculation_seconds, distances, len(points))
+        picture_seconds = _stamp_seconds(left_message)
+        picture_age_seconds = self.get_clock().now().nanoseconds * 1e-9 - picture_seconds
+        input_bytes = len(left_message.data) + len(right_message.data)
+        self.records.write_line(picture_seconds, calculation_seconds, distances, len(points),
+                                picture_age_seconds, input_bytes)
         if start - self.last_saved_picture_seconds >= SECONDS_BETWEEN_SAVED_PICTURES:
             self.last_saved_picture_seconds = start
             self.records.save_picture(_stamp_seconds(left_message), distances)
@@ -178,16 +193,18 @@ class DepthRecords:
         self.file = open(os.path.join(self.folder, "depth_camera.csv"), "w", newline="")
         self.writer = csv.writer(self.file)
         self.writer.writerow(["picture_time_seconds", "calculation_seconds", "trusted_fraction",
-                              "nearest_ahead_metres", "points_published", "calculator"])
+                              "nearest_ahead_metres", "points_published", "calculator",
+                              "picture_age_at_publish_seconds", "input_bytes_per_pair"])
         self.calculator = stereo_depth.which_calculator()
 
-    def write_line(self, picture_seconds, calculation_seconds, distances, point_count):
+    def write_line(self, picture_seconds, calculation_seconds, distances, point_count, picture_age_seconds, input_bytes):
         height, width = distances.shape
         # The middle third of the picture: what is straight ahead of the drone.
         ahead = distances[height // 3: 2 * height // 3, width // 3: 2 * width // 3]
         nearest = float(np.nanmin(ahead)) if np.isfinite(ahead).any() else ""
         self.writer.writerow([f"{picture_seconds:.3f}", f"{calculation_seconds:.4f}",
-                              f"{float(np.isfinite(distances).mean()):.3f}", nearest, point_count, self.calculator])
+                              f"{float(np.isfinite(distances).mean()):.3f}", nearest, point_count, self.calculator,
+                              f"{picture_age_seconds:.4f}", input_bytes])
         self.file.flush()
 
     def save_picture(self, picture_seconds, distances):

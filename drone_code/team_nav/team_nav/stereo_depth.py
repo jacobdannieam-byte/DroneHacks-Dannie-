@@ -18,15 +18,26 @@ with the patch that many pixels to the left in the right picture, and add up the
 removed, so the two eyes can have slightly different exposure. The shift with the smallest
 difference wins. A pixel is thrown away when:
   - its patch has almost no texture (a plain wall or a dark corner can match anywhere), or
-  - the best shift is not clearly better than the second best (an unsure match).
+  - the best shift is not clearly better than the second best (an unsure match), or
+  - matching the other way, from the right picture to the left, gives a different shift (the
+    "left-right check"), or
+  - it belongs to a small speck: fewer than SMALLEST_SPECK_PIXELS neighbouring pixels with about
+    the same shift. Real walls, poles and people make large patches; wrong matches make specks.
 Thrown-away pixels have no distance (NaN). Fewer, trustworthy distances are better than many
 wrong ones, because a wrong near distance makes the drone stop or turn for nothing.
+
+Why the last two checks exist: on 2026-11-08 every depth picture in flight had thousands of
+wrong near points, scattered as small white specks. The live map blocks a square after two hits,
+so the drone found no path and turned on the spot or went the wrong way. On 20 picture pairs
+taken in flight (record 20261108_010857), the two checks removed about 90% of the points nearer
+than 1.2 m, and kept the net, the poles and the people.
 
 Two ways to run the same calculation
 ------------------------------------
 On the drone, PyTorch runs it on the Jetson's graphics processor (GPU), in a few milliseconds.
 Where PyTorch is missing (the simulator box), NumPy runs the identical steps on the main
-processor, more slowly. Both give the same answer; test_stereo_depth.py checks this.
+processor, more slowly. Both give the same answer. test_live_navigation.py checks the NumPy
+version; we have not written a test that compares the two.
 
 What it does not do: read ROS messages, or decide anything. depth_camera.py does the ROS part.
 """
@@ -55,6 +66,20 @@ SMALLEST_TEXTURE = 4.0
 # Our own choice. The best match must be at least this much better than the second best match
 # (more than one pixel away from it), or we don't trust it.
 UNIQUENESS_RATIO = 0.9
+
+# Our own choice. The left-right check: matching from the right picture must give a shift within
+# this many pixels of the shift found from the left picture.
+LEFT_RIGHT_AGREEMENT_PIXELS = 1.0
+
+# Our own choice, checked on flight pictures of 2026-11-08 (see the top of this file). A group of
+# neighbouring pixels with about the same shift must have at least this many pixels, out of the
+# 512 x 320 working picture. A 0.5 m wide wall 3 m away is about 50 pixels wide, so it passes.
+SMALLEST_SPECK_PIXELS = 150
+# Our own choice. "About the same shift": two touching pixels are in the same group if their
+# shifts differ by at most this much. A wall seen at an angle changes its shift slowly.
+SPECK_NEIGHBOUR_SHIFT_PIXELS = 2
+# Marks "no shift" for OpenCV's speck filter: -1 pixel, in sixteenths. Real shifts are positive.
+NO_SHIFT_SIXTEENTHS = -16
 
 
 def gray_from_colour(picture):
@@ -90,8 +115,10 @@ def disparity_pixels(left_gray, right_gray, use_gpu=True):
     """The shift between the two pictures, in pixels with fractions, or NaN where untrusted."""
     torch = _torch_with_gpu() if use_gpu else None
     if torch is not None:
-        return _disparity_with_torch(torch, left_gray, right_gray)
-    return _disparity_with_numpy(left_gray, right_gray)
+        disparity = _disparity_with_torch(torch, left_gray, right_gray)
+    else:
+        disparity = _disparity_with_numpy(left_gray, right_gray)
+    return _without_small_specks(disparity)
 
 
 def which_calculator():
@@ -168,6 +195,7 @@ def _best_shift_torch(torch, costs, texture):
     second_best_cost = masked.min(dim=0).values
     trusted = (best >= 1) & (best < last) & (texture >= SMALLEST_TEXTURE)
     trusted &= best_cost < UNIQUENESS_RATIO * second_best_cost
+    trusted &= _left_and_right_agree_torch(torch, costs, best)
     before = costs.gather(0, (best - 1).clamp(0, last)[None])[0]
     after = costs.gather(0, (best + 1).clamp(0, last)[None])[0]
     curvature = before - 2.0 * best_cost + after
@@ -176,6 +204,18 @@ def _best_shift_torch(torch, costs, texture):
     disparity = best.float() + fraction
     disparity[~trusted] = float("nan")
     return disparity.cpu().numpy()
+
+
+def _left_and_right_agree_torch(torch, costs, best):
+    """The same left-right check as _left_and_right_agree_numpy, on the GPU."""
+    shift_count, height, width = costs.shape
+    costs_from_right = torch.full_like(costs, float("inf"))
+    for shift in range(1, shift_count):
+        costs_from_right[shift, :, :width - shift] = costs[shift, :, shift:]
+    best_from_right = costs_from_right.argmin(dim=0)
+    columns = torch.arange(width, device=costs.device).expand(height, width)
+    matched_columns = (columns - best).clamp(0, width - 1)
+    return (best_from_right.gather(1, matched_columns) - best).abs() <= LEFT_RIGHT_AGREEMENT_PIXELS
 
 
 def _remove_local_average_torch(torch, gray):
@@ -206,9 +246,40 @@ def _best_shift(costs, texture, numbers):
     second_best_cost = masked.min(axis=0)
     trusted = (best >= 1) & (best < costs.shape[0] - 1) & (texture >= SMALLEST_TEXTURE)
     trusted &= best_cost < UNIQUENESS_RATIO * second_best_cost
+    trusted &= _left_and_right_agree_numpy(costs, best, rows, columns)
     disparity = best.astype(np.float32) + _fraction_of_a_pixel(costs, best, rows, columns)
     disparity[~trusted] = np.nan
     return disparity
+
+
+def _left_and_right_agree_numpy(costs, best, rows, columns):
+    """The left-right check. costs[shift, row, column] compares left pixel `column` with right
+    pixel `column - shift`. So for right pixel x, its costs are costs[shift, row, x + shift]. We
+    find each right pixel's best shift, and keep a left pixel only if the right pixel it matched
+    chose (about) the same shift back."""
+    shift_count, _height, width = costs.shape
+    costs_from_right = np.full_like(costs, np.inf)
+    for shift in range(1, shift_count):
+        costs_from_right[shift, :, :width - shift] = costs[shift, :, shift:]
+    best_from_right = costs_from_right.argmin(axis=0)
+    matched_columns = np.clip(columns - best, 0, width - 1)
+    return np.abs(best_from_right[rows, matched_columns] - best) <= LEFT_RIGHT_AGREEMENT_PIXELS
+
+
+def _without_small_specks(disparity):
+    """Removes groups of neighbouring pixels, with about the same shift, that are smaller than
+    SMALLEST_SPECK_PIXELS. Done on the main processor for both versions, with OpenCV's
+    filterSpeckles (installed with the organizers' drone software), which is written in C++ and
+    fast. OpenCV wants whole numbers, so the shifts are stored in sixteenths of a pixel, as
+    OpenCV's own stereo code does; pixels without a shift get a value OpenCV skips."""
+    import cv2  # Imported here so that the rest of this file works without OpenCV.
+    sixteenths = np.full(disparity.shape, NO_SHIFT_SIXTEENTHS, dtype=np.int16)
+    has_shift = np.isfinite(disparity)
+    sixteenths[has_shift] = np.round(disparity[has_shift] * 16.0).astype(np.int16)
+    cv2.filterSpeckles(sixteenths, NO_SHIFT_SIXTEENTHS, SMALLEST_SPECK_PIXELS, SPECK_NEIGHBOUR_SHIFT_PIXELS * 16)
+    cleaned = disparity.copy()
+    cleaned[sixteenths == NO_SHIFT_SIXTEENTHS] = np.nan
+    return cleaned
 
 
 def _fraction_of_a_pixel(costs, best, rows, columns):
