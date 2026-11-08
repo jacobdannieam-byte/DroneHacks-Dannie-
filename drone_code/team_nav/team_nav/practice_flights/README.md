@@ -324,3 +324,16 @@ What this shows:
 - Neither flight has flown on the real drone. The real drone wobbles more, its camera tracking is real, and its response delay is what we want to measure.
 - Nobody has built the mock course, so its sizes are untested proposals.
 - In the simulator the walls are not solid: a touch is counted by the referee, but the drone flies on. On the real course a touch is a real collision.
+
+### full_course on real_course_2026-11-08.json (fixed route, 2026-11-08)
+
+The default map is now built from `simulator/course_model/corrected_dronehacks.obj` by
+`course_map_tools/make_map_from_corrected_model.py` (start diagonal wall shortened 0.30 m so it no
+longer overlaps a drone on the launch mark; tube cradles and maze dividers left out). full_course
+flies the team's fixed route in `full_course_fixed_route.py`, nose north at 0.75 m, 18 legs.
+
+Gazebo run `20261108_141542` (no heading error, no tracking drift, the only run of this version so
+far): all 4 checkpoints, landed on the pad, 0 touches, motors off 140.3 s after takeoff, largest PX4
+height error 7.5 cm. Closest true propeller gap 0.083 m, from the west net at (-2.717, 0.901),
+11.9 s after takeoff: just above the 0.08 m limit. The runs with a 2 degree launch heading error,
+10 cm of tracking drift and the tunnel stop have not been flown yet.
