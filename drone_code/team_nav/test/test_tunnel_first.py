@@ -164,7 +164,7 @@ def test_the_route_reaches_s_and_flies_the_go_line_with_room_on_our_maps(map_nam
 
 def test_the_height_holds_correction_counts_as_deliberate_in_the_camera_height_comparison(monkeypatch):
     from team_nav.run_safety import DroneCondition
-    from team_nav.tunnel_first_run import TunnelFirstSafetyWatch
+    from team_nav.tunnel_first_watch import TunnelFirstSafetyWatch
     monkeypatch.setattr(SafetyWatch, "_gather_condition",
                         lambda self: DroneCondition(now_seconds=0.0, control_is_ours=True, is_armed=True,
                                                     camera_tracking_age_seconds=0.0, camera_tracking_says_lost=False,
@@ -278,7 +278,6 @@ def test_with_depth_points_the_widest_pair_at_the_right_distance_is_the_tunnel_m
 def test_the_look_backs_0_26_m_north_of_s_and_keeps_0_62_m_from_the_net(map_name, monkeypatch):
     from team_nav.tunnel_first_route import TunnelFirstRouteError
     monkeypatch.delenv("TEAM_NAV_LOOK_BACKUP_METRES", raising=False)
-    monkeypatch.delenv("TEAM_NAV_S_NORTH_METRES", raising=False)
     course_map = load_our_map(map_name)
     route = plan_tunnel_first_route(course_map)
     assert np.allclose(route.s_metres, S_METRES)
@@ -287,3 +286,88 @@ def test_the_look_backs_0_26_m_north_of_s_and_keeps_0_62_m_from_the_net(map_name
     monkeypatch.setenv("TEAM_NAV_LOOK_BACKUP_METRES", "0.40")
     with pytest.raises(TunnelFirstRouteError, match="north net"):
         plan_tunnel_first_route(course_map)
+
+
+# ---- The height gate and the height watch ---------------------------------------------------------
+
+def run_gate(readings, mode="strict"):
+    """Feeds the gate one reading per 0.1 s: (uses laser, consistent, z reset counter, disagreement)."""
+    from team_nav.tunnel_height import HeightGate
+    gate = HeightGate(0.0, mode, z_reset_counter_at_start=3)
+    for number, reading in enumerate(readings):
+        if gate.update(0.1 * (number + 1), *reading):
+            return gate
+        if gate.failed_because:
+            return gate
+    return gate
+
+
+def test_the_height_gate_passes_after_2_s_of_good_readings():
+    gate = run_gate([(True, True, 3, 0.05)] * 25)
+    assert gate.passed and gate.failed_because is None
+
+
+def test_the_height_gate_fails_on_each_bad_condition():
+    for bad, words in [((False, True, 3, 0.05), "cs_rng_hgt"), ((True, False, 3, 0.05), "cs_rng_kin_consistent"),
+                       ((True, True, 3, 0.12), "disagreement"), ((True, True, 3, None), "disagreement")]:
+        gate = run_gate([bad] * 45)
+        assert not gate.passed and words in gate.failed_because
+    # A height reset part-way restarts the 2 s; with 4 s in all it then can't pass in time.
+    gate = run_gate([(True, True, 3, 0.0)] * 15 + [(True, True, 4, 0.0)] + [(True, True, 4, 0.0)] * 30)
+    assert gate.passed                                                     # Reset at 1.6 s: 2 s good by 3.7 s.
+    gate = run_gate([(True, True, 3, 0.0)] * 19 + [(True, True, 4, 0.0)] + [(True, True, 4, 0.0)] * 30)
+    assert not gate.passed and gate.failed_because is not None             # Reset at 2.0 s: 2 s good only by 4.1 s.
+    assert any("z_reset_counter" in problem for problem in gate.fail_counts)
+
+
+def test_the_relaxed_gate_looks_only_at_the_disagreement():
+    assert run_gate([(False, False, 3, 0.14)] * 25, mode="relaxed").passed
+    assert not run_gate([(True, True, 3, 0.16)] * 45, mode="relaxed").passed
+
+
+def test_the_height_watch_warns_then_stops_and_only_above_1_5_m():
+    from team_nav.tunnel_height import WATCH_OK, WATCH_STOP, WATCH_WARN, HeightWatch
+    watch = HeightWatch(z_reset_counter_at_start=1)
+    assert watch.update(0.0, 1.4, 0.5, 1, True, True) == WATCH_OK          # Low: never.
+    assert watch.update(0.1, 2.4, 0.17, 1, True, True) == WATCH_OK
+    assert watch.update(0.45, 2.4, 0.17, 1, True, True) == WATCH_WARN
+    assert watch.update(0.5, 2.4, 0.21, 1, True, True) != WATCH_STOP
+    assert watch.update(0.75, 2.4, 0.21, 1, True, True) == WATCH_STOP
+    assert HeightWatch(1).update(0.0, 2.4, 0.0, 2, True, True) == WATCH_STOP   # A height reset up high.
+    assert HeightWatch(1).update(0.0, 2.4, 0.0, 1, False, True) == WATCH_STOP  # Vertical position not valid.
+
+
+@pytest.mark.parametrize("map_name", [DRAWING_MAP, SCAN_MAP])
+def test_the_height_watch_never_comes_down_over_a_wall(map_name):
+    from team_nav.tunnel_height import DESCENT_SEARCH_METRES, choose_descent_point, wall_or_tunnel_under
+    course_map = load_our_map(map_name)
+    route = plan_tunnel_first_route(course_map)
+    path = [np.asarray(point) for point in route.high_leg_metres]
+    checked = 0
+    for index in range(len(path) - 1):
+        for fraction in np.linspace(0.0, 1.0, 15):
+            here = path[index] + fraction * (path[index + 1] - path[index])
+            spot = choose_descent_point(course_map, [here[0], here[1], 2.4], path[index + 1:])
+            checked += 1
+            if spot is None:
+                continue
+            assert wall_or_tunnel_under(course_map, spot, 2.4) is None
+            assert np.linalg.norm(spot - here) <= DESCENT_SEARCH_METRES + 1e-6
+    assert checked > 20
+    # Right above the barrier, the drone must move off it before coming down.
+    barrier = course_map.walls[0]
+    middle = (barrier.start_metres + barrier.end_metres) / 2.0
+    spot = choose_descent_point(course_map, [middle[0], middle[1], 2.4], [middle + np.array([0.0, -1.5])])
+    assert spot is not None and wall_or_tunnel_under(course_map, spot, 2.4) is None
+
+
+def test_the_height_report_says_when_the_laser_dropped_and_came_back():
+    from team_nav.tunnel_height import HeightRecord
+    record = HeightRecord()
+    record.update(1.0, "climb", 0.7, True, 0.0, {"z_reset_counter": 1})
+    record.update(9.0, "to S", 2.4, False, 0.12, {"z_reset_counter": 1})
+    record.update(20.0, "descent", 1.9, True, -0.05, {"z_reset_counter": 2})
+    record.gate_result = "passed (strict)"
+    text = record.paragraph()
+    assert "dropped at 9.0 s (to S" in text and "back at 20.0 s (descent" in text
+    assert "+0.12 m" in text and "passed (strict)" in text and "z_reset_counter to 2" in text

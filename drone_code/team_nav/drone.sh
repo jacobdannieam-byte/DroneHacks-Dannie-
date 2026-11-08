@@ -45,12 +45,11 @@ FLIGHT_INTERFACE_PROCESS="skybeta_flight_interface/flight_interface"
 SECONDS_TO_WAIT_FOR_STOP=20
 SECONDS_TO_WAIT_FOR_START=40
 
-# Settings our programs read from the environment (run_mode.py, run_log.py, fallback_run.py and
-# tunnel_first_run.py for TEAM_NAV_MISSION, fallback_routes.py for TEAM_NAV_FALLBACK_CRUISE_METRES,
-# tunnel_first_run.py for TEAM_NAV_AFTER_TUNNEL, TEAM_NAV_TUNNEL_IF_UNSURE, TEAM_NAV_S_NORTH_METRES and
-# TEAM_NAV_LOOK_BACKUP_METRES). If you set one
-# before ./drone.sh, it is passed into the container.
-PASSED_SETTINGS="TEAM_NAV_RUN_MODE TEAM_NAV_STOP_AFTER_STAGE TEAM_NAV_RECORDS_FOLDER TEAM_NAV_MISSION TEAM_NAV_FALLBACK_CRUISE_METRES TEAM_NAV_AFTER_TUNNEL TEAM_NAV_TUNNEL_IF_UNSURE TEAM_NAV_S_NORTH_METRES TEAM_NAV_LOOK_BACKUP_METRES"
+# Settings our programs read from the environment (run_mode.py, run_log.py; fallback_run.py and
+# tunnel_first_run.py for TEAM_NAV_MISSION; fallback_routes.py and tunnel_first_route.py for
+# TEAM_NAV_FALLBACK_CRUISE_METRES; the tunnel_first files for the other TEAM_NAV_* names). If you set
+# one before ./drone.sh, it is passed into the container.
+PASSED_SETTINGS="TEAM_NAV_RUN_MODE TEAM_NAV_STOP_AFTER_STAGE TEAM_NAV_RECORDS_FOLDER TEAM_NAV_MISSION TEAM_NAV_FALLBACK_CRUISE_METRES TEAM_NAV_AFTER_TUNNEL TEAM_NAV_TUNNEL_IF_UNSURE TEAM_NAV_LOOK_BACKUP_METRES TEAM_NAV_TUNNEL_GATE TEAM_NAV_CROSS_CORRIDOR_END"
 
 
 # ---- Small helpers -------------------------------------------------------------------------------

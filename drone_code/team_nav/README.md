@@ -56,6 +56,10 @@ Read the files in `team_nav/` in this order:
 | `tunnel_look.py` | Finds the tunnel's opening in a picture (edges) and in stereo depth points, and judges whether five frames agree. |
 | `tunnel_look_camera.py` | Collects the left picture, its camera_info and depth_camera's points for the LOOK. |
 | `tunnel_first_look.py` | The LOOK step: look, slide if an edge is cut off, correct sideways, or fall back to the map's line. |
+| `tunnel_height.py` | The height gate before the turn, the height watch above 1.5 m, where to come down (never over a wall), and the after-run height report. |
+| `tunnel_first_readings.py` | The PX4 and camera tracking readings tunnel_first uses (headings, speeds, flags, reset counters, heights). |
+| `tunnel_first_turn.py` | The 180 degree turn at S, one 0.05 s step at a time. |
+| `tunnel_first_watch.py` | tunnel_first's safety watch: the heading guard, the height watch and the per-cycle height record. |
 | `tunnel_first_run.py` | Makes `course_run` fly `tunnel_first` when `TEAM_NAV_MISSION=tunnel_first` (`../TEST_SEQUENCE.md`, step 9T). |
 | `launch_pieces.py`, `launch/*.launch.py` | What starts on the drone: `watch_only`, `test_flights` or `course_run`. |
 | `drone.sh` | The one command typed on the drone's computer (`../TEST_SEQUENCE.md`). |

@@ -338,26 +338,26 @@ new diagonal wall is 0.08 m from the launch mark's centre, and the drone needs 0
 
 ## Step 9T. The tunnel_first mission (fly test)
 
-`TEAM_NAV_MISSION=tunnel_first` flies high to above the tunnel's north end, turns round slowly,
-comes down and flies straight through the tunnel. `team_nav/team_nav/tunnel_first_run.py` explains
-it stage by stage:
-- climb to 0.70 m on the launch mark, and wait until the drone is steady there (at most 8 s);
-- 0.8 m north, climb to 2.4 m, fly at 2.4 m to S = (2.17, 2.14), above open floor before the tunnel;
-- turn 180 degrees to the left, slowly (10 degrees a second, pausing if PX4 lags);
-- descend at S to 0.90 m;
-- back 0.26 m straight north (nose still south) at 0.10 m/s and settle 1 s, so the camera is about 1 m
-  from the tunnel's mouth (`TEAM_NAV_LOOK_BACKUP_METRES`; refused if the drone would come closer than
-  0.62 m to the north net);
-- LOOK: the camera finds the tunnel's centre and the drone corrects sideways by at most 0.35 m. If the
-  look is unsure, it flies the map's line instead (`TEAM_NAV_TUNNEL_IF_UNSURE=map`, the default; `=land`
-  lands instead). Without the backup (at S, north 2.14) the tunnel's mouth is wider than the camera's
-  picture;
-- fly south at 0.25 m/s along the tunnel through it, to north -0.95;
-- land there (the default, `TEAM_NAV_AFTER_TUNNEL=land`), or with `TEAM_NAV_AFTER_TUNNEL=pad` climb
-  back to 2.4 m and fly to the pad.
-
-It refuses to start if camera tracking puts the drone more than 0.3 m sideways or 0.1 m in height from
-the launch mark. Put the drone on the launch mark BEFORE the drone software starts, or restart it there.
+`TEAM_NAV_MISSION=tunnel_first` flies high to above the tunnel's north end, comes down, checks its
+height, turns round slowly, looks at the tunnel and flies straight through it.
+`team_nav/team_nav/tunnel_first_run.py` explains it stage by stage:
+- refuses to start if camera tracking puts the drone more than 0.3 m sideways or 0.1 m in height from
+  the launch mark: put the drone on the launch mark BEFORE the drone software starts, or restart it;
+- climbs to 0.70 m and waits until steady (at most 8 s), measuring the height baseline;
+- 0.8 m north, climbs to the cruise height (2.4 m; `TEAM_NAV_FALLBACK_CRUISE_METRES`), and flies at
+  0.6 m/s to S = (2.17, 2.14) (`TEAM_NAV_CROSS_CORRIDOR_END=on` first flies north to 2.34);
+- descends at S to 0.90 m (0.7 m/s down to 1.2 m, then 0.15 m/s);
+- the height gate: 2 s with PX4 on the laser, its laser check passing, no height reset and PX4's
+  height within 0.10 m of camera tracking's (after the baseline), within 4 s. If not, it lands straight
+  down at S (`TEAM_NAV_TUNNEL_GATE=relaxed` only checks the heights, within 0.15 m);
+- turns 180 degrees to the left at 0.90 m, slowly (10 degrees a second, pausing if PX4 lags);
+- backs 0.26 m north, nose still south (`TEAM_NAV_LOOK_BACKUP_METRES`), and LOOKs; if unsure it flies
+  the map's line (`TEAM_NAV_TUNNEL_IF_UNSURE=map`, the default; `=land` lands);
+- flies south at 0.25 m/s through the tunnel and lands about 0.5 m past it (`TEAM_NAV_AFTER_TUNNEL=land`,
+  the default), or with `=pad` slides to open floor, climbs straight up and flies to the pad.
+Above 1.5 m the height watch stops the run if PX4's height and camera tracking's disagree by more than
+0.20 m (after the baseline) for 0.2 s, or PX4 resets its height; the drone then never comes down over a
+wall. After every run course_run writes a one-paragraph height report.
 
 Each flight starts with:
 
@@ -365,34 +365,30 @@ Each flight starts with:
 ./drone.sh start test_flights
 ```
 
-1. Only as far as the turn (it lands at S after the turn):
+1. The gate test, the first real-drone test (it lands straight down at S after the gate, without turning):
+
+```bash
+TEAM_NAV_RUN_MODE=practice TEAM_NAV_MISSION=tunnel_first TEAM_NAV_STOP_AFTER_STAGE=gate ./drone.sh course_run
+```
+
+2. As far as the turn, then as far as the LOOK (`=turn`, `=look`; the LOOK records hold look_*.png and
+   look.jsonl). With the propellers off, `ros2 run team_nav hand_test tunnel_look` (inside the container)
+   prints what the LOOK sees twice a second while you hold the drone in front of the tunnel.
 
 ```bash
 TEAM_NAV_RUN_MODE=practice TEAM_NAV_MISSION=tunnel_first TEAM_NAV_STOP_AFTER_STAGE=turn ./drone.sh course_run
-```
-
-2. As far as the LOOK (it lands at S after looking; the records hold look_*.png and look.jsonl):
-
-```bash
 TEAM_NAV_RUN_MODE=practice TEAM_NAV_MISSION=tunnel_first TEAM_NAV_STOP_AFTER_STAGE=look ./drone.sh course_run
 ```
 
-   With the propellers off, `ros2 run team_nav hand_test tunnel_look` (inside the container) prints what the
-   LOOK sees twice a second while you hold the drone in front of the tunnel.
-
-3. The whole mission, in practice mode:
-
-```bash
-TEAM_NAV_RUN_MODE=practice TEAM_NAV_MISSION=tunnel_first ./drone.sh course_run
-```
-
-4. The scored run:
+3. The whole mission (add `TEAM_NAV_RUN_MODE=practice` for practice), landing past the tunnel or at the pad:
 
 ```bash
 TEAM_NAV_MISSION=tunnel_first ./drone.sh course_run
+TEAM_NAV_MISSION=tunnel_first TEAM_NAV_AFTER_TUNNEL=pad ./drone.sh course_run
 ```
 
-The result is correct if the drone lands past the tunnel's south end and the program ends with 0.
+The result is correct if the drone lands past the tunnel's south end (or on the pad) and the program ends
+with 0. Afterwards: `./drone.sh start watch_only`.
 
 ## Step 10. Make the drone safe after each flight (fly test)
 

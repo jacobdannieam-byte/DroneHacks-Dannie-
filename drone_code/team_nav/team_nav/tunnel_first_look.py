@@ -165,7 +165,7 @@ class LookStep:
         self.log.event("look", f"Edge pairs rejected by the depth check ({why}).")
 
     def drone_is_still(self):
-        from team_nav.tunnel_first_run import px4_speed_metres_per_second
+        from team_nav.tunnel_first_readings import px4_speed_metres_per_second
         rotation = self.link.rotation_degrees_per_second() or 0.0
         return px4_speed_metres_per_second(self.link) < STILL_SPEED_METRES_PER_SECOND and abs(rotation) < STILL_ROTATION_DEGREES_PER_SECOND
 
