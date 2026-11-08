@@ -1,5 +1,51 @@
 # Practice flights
 
+`five_waypoints` is the heading-aware version on `codex/attemptone-five-waypoints`.
+Read `missions/five_waypoints.json` for its five main targets: First corridor, Maze exit,
+Tunnel exit, Chicane exit, and Landing pad. Intermediate points avoid walls; connecting
+only the five endpoints with straight lines would cut through the course.
+
+| Main target | East (m) | North (m) | Cruise height (m) |
+|---|---:|---:|---:|
+| First corridor | -2.51 | 2.50 | 0.75 |
+| Maze exit | 1.65 | 2.12 | 0.75 |
+| Tunnel exit | 2.06 | -0.65 | 0.75 |
+| Chicane exit | -1.20 | -1.35 | 0.75 |
+| Landing pad | -2.0422 | -0.7925 | 0.75, then descend |
+
+Read `five_waypoints.py` for the controller. At each corner it holds position, changes the
+heading target at 15 degrees/second, waits for measured position and heading to settle, then advances at
+0.25 m/s. It does not advance to the next point until measured arrival. `five_waypoint_plan.py`
+checks the rotating airframe and every segment against the participant map before flight.
+The first checkpoint has insufficient turning room, so a bounded 0.4 m retreat along the
+just-flown corridor precedes the turn. Other segments face the direction of travel.
+
+The existing `HeightKeeper` closes the loop on measured camera height during turns and
+travel. This mode caps the added height target at 0.15 m. It compensates small offsets;
+it does not repair PX4's estimator or erase its error from the referee. Existing sensor,
+authority, contact and height checks remain active, including their documented handling
+of height compensation. Climb and landing keep their existing controllers.
+
+The final chicane corners provide extra clearance for tracking drift. A regression checks
+their turning and travel footprints with a 25 cm northward offset and 3 cm east/west error.
+This is a specific error margin, not a guarantee against arbitrary localization error.
+Wall matching is not used: its trial pulled the position estimate incorrectly near a wall tip.
+
+`forward_depth.py` requires recent depth with a matching tracked pose and pauses for nearby
+obstacles ahead. Missing/empty pictures are not treated as clear space. The retreat requires
+fresh depth but has no rear obstacle detection; its protection is the checked, recently flown
+path. The controller stops after a persistent hold rather than replanning around obstacles.
+Gazebo supplies simulated tracking; this does not validate real cuVSLAM tracking through turns.
+
+Run from the repository root in the supported Linux/Docker simulator environment:
+
+```bash
+bash simulator/gazebo_full/fly_course_in_gazebo.sh \
+  --world drone_code/team_nav/course_maps/sketch_2026-11-08.json \
+  --run-mode practice --longest-run-seconds 600 -- practice_flight five_waypoints \
+  --map sketch_2026-11-08.json
+```
+
 `full_course` extends the first-leg experiment through all four checkpoint lines and onto the
 landing pad on `sketch_2026-11-08.json`. It validates the fixed, north-facing airframe footprint
 and bottom-laser clearance before starting, then waits for measured arrival at each waypoint.
