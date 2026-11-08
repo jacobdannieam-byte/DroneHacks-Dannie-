@@ -1,0 +1,45 @@
+{
+  "candidate": "c08481f",
+  "image": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1",
+  "mode": "observe",
+  "map_control": false,
+  "background_registration": false,
+  "motion_publishers": 0,
+  "world": "drone_code/team_nav/course_maps/phone_scan_2026-11-06.json",
+  "world_sha256": "74a3b67ed942292d880c79cc43eb2d0740466d0c27bfa42cb5045210e05f9ccf",
+  "scope": "disarmed observation and private ROS fixtures; no moving trial",
+  "raw_files": {
+    "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-native-001\\inputs\\integrated.tar": {
+      "sha256": "1a3b2dbf3450a3018b0f329d69a90e26d5038cf36c456e8dbd3c80a403955ca3",
+      "bytes": 8540160
+    },
+    "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-native-001\\observe\\observations\\metadata.yaml": {
+      "sha256": "fa5c26916fbe7d2d6d5e8a4759015f9ec15e5ef39d61c47eb3587bfa82ca1c55",
+      "bytes": 8521
+    },
+    "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-native-001\\observe\\observations\\observations_0.db3": {
+      "sha256": "e6beb2b34d5eaf2f2e205c488dcac88edaad83a0367d6a839a71036ddac42432",
+      "bytes": 270225408
+    },
+    "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-native-001\\observe\\observations\\observations_0.db3-shm": {
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb",
+      "bytes": 32768
+    },
+    "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-native-001\\observe\\observations\\observations_0.db3-wal": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-native-001\\inputs\\ros_authority_probe.py": {
+      "sha256": "4cf593eb38c775bbb74358963055bef101f085e8bb131bfa9ff08784e4d9c975",
+      "bytes": 3189
+    },
+    "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-native-001\\inputs\\ros_recorder_probe.py": {
+      "sha256": "e8a1e754ccb6560996c7aad378356ed149e45352e16f0046aae98bf4b8bced65",
+      "bytes": 1825
+    },
+    "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\taskforce-native-001\\inputs\\ros_timing_probe.py": {
+      "sha256": "ad8b11d687729366a0c9fa560140d816f9066c04bdd6470641e42ed8f1ef8e0a",
+      "bytes": 1673
+    }
+  }
+}

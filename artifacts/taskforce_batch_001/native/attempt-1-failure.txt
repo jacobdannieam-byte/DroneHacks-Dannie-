@@ -1,0 +1,1 @@
+Attempt 1 failed before ROS checks: setting PYTHONPATH=/repository hid the ROS environment. No PX4/Gazebo was launched. Retry preserves sourced ROS paths.

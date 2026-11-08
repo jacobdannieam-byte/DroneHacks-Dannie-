@@ -1,3 +1,5 @@
+CURRENT ROUTING UPDATE: user subsequently selected code-integration-hybrid (policy-gates-integration checkout) as delivery branch, with Gazebo from codex/hybrid-integration/c550386. Histories reconciled at c08481f. See TASKFORCE_BATCH_001.md for fresh results. Earlier routing below is preserved as history.
+
 DroneHacks: finalized integration and qualification plan
 Status: ready for offline implementation planning; NOT released for agents or simulation.
 
