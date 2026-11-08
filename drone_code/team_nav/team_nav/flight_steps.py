@@ -52,6 +52,7 @@ from dataclasses import dataclass
 
 import numpy as np
 import rclpy
+from team_nav.launch_target import position_target_metres
 
 from team_nav.run_safety import CARRY_ON, CONTROL_LOST, HOLD, LAND_HERE, DroneCondition, TargetRefused
 from team_nav.target_sender import POSE_TARGET_TOPIC, SPEED_TARGET_TOPIC, TargetSender
@@ -273,9 +274,8 @@ class DroneLink:
         drone 0.65 m above the floor, and the climb timed out. So we give the height as PX4 will
         read it: PX4's launch height plus the height we want. Forward and left need no
         correction, because PX4 takes them from camera tracking (they agreed within 2 cm)."""
-        target = self.launch.tracked_position_metres + np.asarray(forward_left_up_metres, dtype=float)
-        px4_launch_height_up_metres = -self.launch.px4_z_metres
-        target[2] = px4_launch_height_up_metres + float(forward_left_up_metres[2])
+        target = position_target_metres(self.launch.tracked_position_metres,
+                                       self.launch.px4_z_metres, forward_left_up_metres)
         self.targets.send_position(target)
 
     # ---- Heights -------------------------------------------------------------------------------
