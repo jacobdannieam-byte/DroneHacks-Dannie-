@@ -5,6 +5,7 @@ import os
 from shutil import which
 from subprocess import SubprocessError, run as run_command
 from time import perf_counter_ns, process_time_ns, time_ns
+from threading import Event, Thread
 
 from examples.h1_observation import TF
 from onboard.diagnostics.sitl_graph import inspect
@@ -28,6 +29,42 @@ def optional_message_info(callback):
     return observe
 
 
+class ClockExecutorService:
+    """Service only a ROS TimeSource; never touch spatial or mission state.
+
+    The clock comes from delivered /clock callbacks, never a sensor's source
+    stamp. Keeping its executor independent prevents slow spatial callbacks from
+    freezing the receipt clock used to timestamp the next sensor callback.
+    """
+    def __init__(self, executor, clock, *, okay=lambda: True):
+        self.executor, self.clock, self.okay = executor, clock, okay
+        self.stop = Event()
+        self.failure = None
+        self.thread = Thread(target=self._spin, name='shadow-clock-reception', daemon=True)
+
+    def _spin(self):
+        try:
+            while not self.stop.is_set() and self.okay():
+                self.executor.spin_once(timeout_sec=.01)
+        except Exception as error:
+            if not self.stop.is_set():
+                self.failure = {'type': type(error).__name__, 'reason': str(error)}
+
+    def start(self):
+        self.thread.start()
+
+    def now_ns(self):
+        if self.failure is not None:
+            raise ValueError('native_clock_service_failed:' + self.failure['reason'])
+        return self.clock.now().nanoseconds
+
+    def close(self):
+        self.stop.set()
+        self.thread.join(timeout=1.)
+        if self.thread.is_alive():
+            raise RuntimeError('native_clock_service_shutdown_timeout')
+
+
 def _gpu_snapshot():
     executable = which("nvidia-smi")
     if executable is None:
@@ -44,7 +81,7 @@ def run(loop, *, seconds, report_tick):
     import resource
 
     import rclpy
-    from rclpy.executors import ExternalShutdownException
+    from rclpy.executors import ExternalShutdownException, SingleThreadedExecutor
     try:
         from rclpy.event_handler import SubscriptionEventCallbacks, UnsupportedEventTypeError
     except ModuleNotFoundError as error:
@@ -62,12 +99,21 @@ def run(loop, *, seconds, report_tick):
     clock_seen = False
     rclpy.init(args=[])
     node = None
+    clock_node = clock_executor = clock_service = None
     start = perf_counter_ns()
     cpu_start = process_time_ns()
     try:
-        node = rclpy.create_node("dronehacks_hybrid_shadow", enable_rosout=False,
+        clock_node = rclpy.create_node("dronehacks_shadow_receipt_clock", enable_rosout=False,
                                  start_parameter_services=False,
                                  parameter_overrides=[Parameter("use_sim_time", value=True)])
+        clock_executor = SingleThreadedExecutor()
+        clock_executor.add_node(clock_node)
+        clock_service = ClockExecutorService(clock_executor, clock_node.get_clock(), okay=rclpy.ok)
+        clock_service.start()
+        # This node's wall clock is not used for receipt stamps. The independent
+        # TimeSource above receives /clock while this node processes depth.
+        node = rclpy.create_node("dronehacks_hybrid_shadow", enable_rosout=False,
+                                 start_parameter_services=False)
         sensor = QoSProfile(depth=1, reliability=ReliabilityPolicy.BEST_EFFORT)
         static = QoSProfile(depth=16, reliability=ReliabilityPolicy.RELIABLE,
                             durability=DurabilityPolicy.TRANSIENT_LOCAL)
@@ -75,15 +121,22 @@ def run(loop, *, seconds, report_tick):
         def observe(topic):
             def callback(message, info):
                 nonlocal clock_seen
-                transport[topic].append(transport_metadata(info, callback_system_ns=time_ns()))
-                now = node.get_clock().now().nanoseconds
+                wall = perf_counter_ns()
+                now = clock_service.now_ns()
+                record = transport_metadata(info, callback_system_ns=time_ns())
+                record.update(callback_ros_ns=now, callback_monotonic_ns=wall)
+                transport[topic].append(record)
                 counts[topic] += 1
                 if topic != TF and (now <= 0 or (not clock_seen and topic != "/clock")):
                     counts["startup_discarded"] += 1
                     return
                 if topic == "/clock":
                     clock_seen = True
-                loop.feed(topic, message, now, perf_counter_ns())
+                try:
+                    loop.feed(topic, message, now, wall)
+                finally:
+                    record['feed_finished_monotonic_ns'] = perf_counter_ns()
+                    record['feed_duration_ns'] = record['feed_finished_monotonic_ns'] - wall
             return optional_message_info(callback)
 
         def on_lost(topic):
@@ -111,7 +164,7 @@ def run(loop, *, seconds, report_tick):
             while rclpy.ok() and perf_counter_ns() - start < seconds * 1e9:
                 rclpy.spin_once(node, timeout_sec=.01)
                 wall = perf_counter_ns()
-                now = node.get_clock().now().nanoseconds
+                now = clock_service.now_ns()
                 if not clock_seen:
                     continue
                 if first_clock is None:
@@ -159,10 +212,18 @@ def run(loop, *, seconds, report_tick):
                 "rmw": os.environ.get("RMW_IMPLEMENTATION"), "interrupted": interrupted,
                 "fault": loop.fault or (observation_error['reason'] if observation_error else None),
                 "observation_error": observation_error,
+                "receipt_clock_service": {"mode": "independent_ros_timesource_executor",
+                                          "failure": clock_service.failure},
                 "clock_ingestion": loop.clock_fence.report() if getattr(loop, 'clock_fence', None) else None,
                 "clock_observed": clock_seen}
     finally:
         loop.close()
+        if clock_service is not None:
+            clock_service.close()
+        if clock_executor is not None:
+            clock_executor.shutdown()
+        if clock_node is not None:
+            clock_node.destroy_node()
         if node is not None:
             node.destroy_node()
         try_shutdown()
