@@ -168,3 +168,41 @@ def test_expired_queue_reports_exact_original_and_current_clocks():
     assert detail['source_ready_ns']==1_004_000_000
     assert detail['original_receipt_ns']==1_000_000_000
     assert detail['wall_wait_ns']==WAIT_NS+1 and detail['ros_wait_ns']==0
+
+
+def test_native_same_tick_status_arm_transition_is_ordered_event_not_conflict():
+    # Attempt006 bag rows36545/36547: both source and receipt59.640s.
+    owner=Owner(); owner.now=owner.wall=59_640_000_000
+    owner._hybrid_runtime.loop.replay.hybrid.clock.valid_until_ns=100_000_000_000
+    before=N(timestamp=59_640_000,arming_state=1,nav_state=4)
+    after=N(timestamp=59_640_000,arming_state=2,nav_state=14)
+    owner._on_status(before); owner._on_status(after)
+    assert not owner._owner_clock_fault and owner.delivered==[before,after]
+    assert owner.v.armed is True and owner.v.nav_state==14
+    assert owner.invalidations==1
+    owner._on_status(N(timestamp=59_639_999,arming_state=1,nav_state=4))
+    assert owner._owner_clock_fault and owner.v.armed is None
+    detail=owner._owner_clock_fault_detail
+    assert detail['kind']=='status' and detail['source_publish_us']==59_639_999
+    assert detail['source_capture_ns']==59_639_999_000
+    assert detail['cause']=='source_rewound_or_conflicting'
+
+
+def test_same_tick_future_status_revokes_old_authority_until_delivered_clock():
+    owner=Owner(); owner._on_status(N(timestamp=1_000_000,arming_state=1,nav_state=4))
+    owner._hybrid_runtime.loop.replay.hybrid.clock.max_error_ns=2_000_000
+    after=N(timestamp=1_000_000,arming_state=2,nav_state=14)
+    owner._on_status(after)
+    assert not owner._owner_clock_fault and owner.v.armed is None
+    assert 'authority' not in owner._hybrid_reports
+    owner.now+=2_000_000; owner.wall+=2_000_000; owner._owner_clock_drain()
+    assert owner.delivered[-1] is after and owner.v.armed is True
+
+
+def test_invalid_source_diagnostic_retains_original_stamps():
+    owner=Owner(); bad=position(); bad.timestamp_sample=-1
+    owner._on_lpos(bad)
+    detail=owner._owner_clock_fault_detail
+    assert detail['kind']=='lpos' and detail['source_sample_repr']=='-1'
+    assert detail['source_publish_repr']=='1004000' and detail['receipt_ros_ns']==1_000_000_000
+    assert detail['cause']=='invalid_source_time'

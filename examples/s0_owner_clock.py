@@ -61,7 +61,8 @@ class ExperimentalOwnerClockMixin:
     def _owner_clock_fail(self, reason, detail=None):
         if self._owner_clock_fault is None:
             self._owner_clock_fault = reason
-            self._owner_clock_fault_detail = detail
+            self._owner_clock_fault_detail = (detail if detail is not None else
+                dict(reason=reason, pending_count=len(self._owner_clock_pending)))
         self._owner_clock_pending.clear()
         for kind in ('lpos','status','land','att','flags'):
             self._owner_clock_clear(kind)
@@ -88,7 +89,8 @@ class ExperimentalOwnerClockMixin:
         if self._owner_clock_fault:
             return
         if self._owner_clock_last is not None and (now < self._owner_clock_last[0] or wall < self._owner_clock_last[1]):
-            self._owner_clock_fail('experimental_owner_clock_rewind')
+            self._owner_clock_fail('experimental_owner_clock_rewind', dict(current_ros_ns=now,
+                current_wall_ns=wall, previous_ros_ns=self._owner_clock_last[0], previous_wall_ns=self._owner_clock_last[1]))
             return
         self._owner_clock_last = (now, wall)
         pending = self._owner_clock_pending
@@ -118,6 +120,10 @@ class ExperimentalOwnerClockMixin:
             return
         now, wall = self.get_clock().now().nanoseconds, self._owner_clock_wall()
         mapping = self._hybrid_runtime.loop.replay.hybrid.clock
+        detail = dict(kind=kind, receipt_ros_ns=now, receipt_wall_ns=wall,
+                      source_sample_repr=repr(getattr(message,'timestamp_sample',None)),
+                      source_publish_repr=repr(getattr(message,'timestamp',None)),
+                      pending_count=len(self._owner_clock_pending))
         try:
             sample = getattr(message, 'timestamp_sample', None) if kind in ('lpos','att') else message.timestamp
             publish = message.timestamp
@@ -125,6 +131,7 @@ class ExperimentalOwnerClockMixin:
                 raise ValueError('invalid_source_time')
             capture = sample*1000+mapping.offset_ns
             target = publish*1000+mapping.offset_ns+mapping.max_error_ns
+            detail.update(source_capture_ns=capture, source_publish_us=publish, source_ready_ns=target)
             if not mapping.valid_from_ns <= capture <= target <= mapping.valid_until_ns or target-now > WAIT_NS:
                 raise ValueError('source_outside_clock_bound')
             identity = self._owner_clock_identity(kind, message)
@@ -132,8 +139,14 @@ class ExperimentalOwnerClockMixin:
                         bool(message.heading_good_for_control)) if kind == 'lpos' else
                        tuple(message.q) if kind == 'att' else identity)
             previous = self._owner_clock_seen.get(kind)
+            detail.update(identity_repr=repr(identity), payload_repr=repr(payload),
+                          previous_repr=repr(previous))
+            # VehicleStatus is an ordered event stream: PX4 can arm and change
+            # mode within one simulator tick (native attempt006 at59.640s).
+            # Equal timestamp is not duplicate identity; backward time still fails.
             if previous and (capture < previous[0] or
-                             (capture == previous[0] and (identity != previous[1] or payload != previous[2]))):
+                             (kind != 'status' and capture == previous[0] and
+                              (identity != previous[1] or payload != previous[2]))):
                 raise ValueError('source_rewound_or_conflicting')
             # A newer mode/reset/contact report immediately revokes the old
             # admission even if its full payload must wait for delivered time.
@@ -148,7 +161,8 @@ class ExperimentalOwnerClockMixin:
             else:
                 callback(message)
         except (ValueError, TypeError, AttributeError, OverflowError) as error:
-            self._owner_clock_fail('experimental_owner_clock:'+str(error))
+            detail['cause'] = str(error)
+            self._owner_clock_fail('experimental_owner_clock:'+str(error), detail)
 
     def _on_lpos(self, message):
         self._owner_clock_receive('lpos', message, super()._on_lpos)
