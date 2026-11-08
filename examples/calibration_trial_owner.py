@@ -347,6 +347,8 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
             return observation
 
         first_ready = None
+        stable_checked = False
+        diagnostic = getattr(driver, '_diagnostic_motion_unbounded', False)
         deadline = monotonic_ns() + seconds * NS
         obs = None
         while rclpy.ok() and monotonic_ns() < deadline:
@@ -358,12 +360,20 @@ def _run(plan, mapping, *, approval=None, expires=None, contract=None, identity=
             elif first_ready is None:
                 first_ready = now_ns
             elif now_ns - first_ready >= NS:
+                if diagnostic:
+                    graph = inspect(node, strict_motion=True)
+                    now_ns, wall_ns = clocks()
+                    obs = observe(now_ns, wall_ns)
+                    if not ready(obs) or graph['issues']:
+                        continue
+                    stable_checked = True
                 break
-        graph = inspect(node, strict_motion=True)
+        if not stable_checked:
+            graph = inspect(node, strict_motion=True)
         now_ns, wall_ns = clocks()
-        checked = (rclpy.ok() and first_ready is not None and now_ns - first_ready >= NS
+        checked = stable_checked if diagnostic else (rclpy.ok() and first_ready is not None and now_ns - first_ready >= NS
                    and ready(observe(now_ns, wall_ns)) and not graph['issues'])
-        if section_input is not None:
+        if section_input is not None and not diagnostic:
             capture = driver.section_policy.observation
             checked = checked and capture is not None and driver.section_policy.fault is None and 0<=now_ns/NS-capture.stamp<=.25
         report.update(disarmed_check=bool(checked), graph=graph, ros_ns=now_ns, input_fault=inputs.fault,
