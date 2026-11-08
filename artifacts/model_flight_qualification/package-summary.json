@@ -1,0 +1,110 @@
+{
+  "revision": "32fe9f6f599360eb645310166633d61f2ed5382c",
+  "source_sha256": "34c9898096054c9faa14ac811dd406fe77ee47917cf1eaeb8d691a64fb60b223",
+  "image": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1",
+  "motion_authorized": false,
+  "ready_for_approval": true,
+  "registration_enabled": false,
+  "native_disarmed_audit": {
+    "passed": true,
+    "checks": {
+      "native_disarmed": true,
+      "zero_command_endpoints": true,
+      "raw_command_count": true,
+      "all_raw_status_disarmed": true,
+      "bag_integrity": true,
+      "recorder_clean": true,
+      "model_authority_off": true,
+      "registration_off": true
+    },
+    "revision": "32fe9f6f599360eb645310166633d61f2ed5382c",
+    "samples": 1265,
+    "raw_status_reports": 48,
+    "clock_duration_ns": 24044000000,
+    "model_preview": {
+      "command_authority": false,
+      "ground_state_rejected": "No model candidate admissible"
+    }
+  },
+  "protected_classical_hashes": {
+    "CLASSICAL_COURSE_RESULTS.md": "ae6d03448899308cea91eb5890ac0c24db1e8b0b19d0c29722ed442484544bb2",
+    "classical-course-summary.json": "0b198082eb7862a81a9b6cd97010665349c7551b4887e7956d80e5441f323590",
+    "trial_approval.json": "1e779f358b584e0a77639bd0aceeda3b5f7545c0c2310c77b4eb11e19f17266b",
+    "run.txt": "91c0ea222cdfe15a3e63b9d5007e807abe28858780682ebab89b2e80ddc09a2d",
+    "revision.txt": "2c86a95c23f118025d08b9867e45e6c89014693a7b5977a59a6dd183e1bc3284",
+    "versions.txt": "a34a4d93b7608e6fdcc7e7397e685a1625e9445efbc3d9284c3b98dd0f0d9d41",
+    "observations/metadata.yaml": "6752ae2d40ab2af5f78df61f7ef2d7b90ddeca7013156b25dfffa4bbef046a80",
+    "source.tar": "9f0c79717cceaf29db4fd617ab254a3b6b3bc60ab2bdd8d911819bb6c08a546d"
+  },
+  "ros_transport_rehearsals": [
+    {
+      "scope": "synthetic plant regression; not actual Gazebo flight",
+      "tau_s": 0.2,
+      "result": "complete",
+      "recovery_reason": null,
+      "waypoints_reached": 2,
+      "model_command_proof": "PASS",
+      "faults": [],
+      "selected_commands": 99,
+      "pinn_d0_different_selections": 0,
+      "interpretation": "Model selected and raw PX4 position commands match; not proof of superior flight performance",
+      "peak_speed_mps": 0.3,
+      "decision_p95_ms": 8.766472499701194
+    },
+    {
+      "scope": "synthetic plant regression; not actual Gazebo flight",
+      "tau_s": 0.35,
+      "result": "complete",
+      "recovery_reason": null,
+      "waypoints_reached": 2,
+      "model_command_proof": "PASS",
+      "faults": [],
+      "selected_commands": 104,
+      "pinn_d0_different_selections": 2,
+      "interpretation": "Model selected and raw PX4 position commands match; not proof of superior flight performance",
+      "peak_speed_mps": 0.3,
+      "decision_p95_ms": 8.539607348393474
+    },
+    {
+      "scope": "synthetic plant regression; not actual Gazebo flight",
+      "tau_s": 0.6,
+      "result": "complete",
+      "recovery_reason": null,
+      "waypoints_reached": 2,
+      "model_command_proof": "PASS",
+      "faults": [],
+      "selected_commands": 116,
+      "pinn_d0_different_selections": 0,
+      "interpretation": "Model selected and raw PX4 position commands match; not proof of superior flight performance",
+      "peak_speed_mps": 0.3,
+      "decision_p95_ms": 9.638642251957208
+    }
+  ],
+  "geometry": {
+    "scope": "simulator static prior; not observed FREE or general D3 certification",
+    "minimum_remaining_horizontal_margin_m": 0.0020107791664308464,
+    "envelope_m": 0.35,
+    "additional_design_reserve_m": 0.1,
+    "sample_cover_error_m": 0.007428624346558706,
+    "floor": "authored flat support plane; landing contact permitted",
+    "height_slab_m": [
+      0.0,
+      1.25
+    ],
+    "registration_enabled": false,
+    "source_sha256": {
+      "simulator/gazebo_trial/make_drone_16_model.py": "b92d4627991087c1f79896533a01fbd702c0f49a5ba4e1225f3747136442381b",
+      "simulator/gazebo_trial/course_world_sdf.py": "9cf254e6e4fb83fcaa728f086a30299eb96a6a406d52dcbfaa8f7e901cb2d465",
+      "simulator/gazebo_trial/make_gazebo_world.py": "3e37a4186125ea136641d5e05bada626d6bf7539ed408af6990ee652bf8eb464",
+      "simulator/gazebo_trial/models/drone_16_with_oak_d_s2/model.sdf": "12d2b065f4467456f58666c8d05733491859565445937a41603fe02b07e493de",
+      "simulator/gazebo_trial/models/oak_d_s2_camera/model.sdf": "abcfc9977bdc8fe29ec1f7a319d97470ea407a1ce2abf46796022dcffa2cb61c",
+      "simulator/px4_changes/drone_16_settings.sh": "ab875c5b8e1d3f44822c4c0e922675842ade72ec0d7277df7367409dc6e4e525"
+    }
+  },
+  "full_suite": {
+    "result": "850 passed in 41.48s",
+    "runtime_revision": "eddfd8e88ccd771f5be947143500d5dca0f226b5",
+    "final_change": "conservative sloped-lattice cover calculation; 24 focused tests and exact-source native disarmed rerun passed"
+  },
+  "raw_evidence_root": "C:\\Users\\Adity\\OneDrive\\Documents\\ChatGPT\\DroneHacks\\physical-gazebo-evidence\\hybrid-model-integration-001"
+}

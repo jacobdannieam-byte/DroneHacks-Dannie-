@@ -1,0 +1,28 @@
+{
+  "revision": "32fe9f6f599360eb645310166633d61f2ed5382c",
+  "image_sha256": "sha256:32650af6bc9424e7aa9a1977fe4f386ec201f23bef0c6cea587ba70e2c8ad5d1",
+  "world_sha256": "1bc7121fb721bcffe460055c90446f3aff72c31ba0946e86f76d87278182b00d",
+  "vehicle_sha256": "f8cc362929337eb37e8649632ce3426d86a029a80932cee06a1a80f2d1e169f3",
+  "profile_sha256": "ed9068b7302a6abf0b3933ca76a2d1d8ede1a27f2d1d17e92700719225fa675b",
+  "ros_domain_id": 62,
+  "checkpoint_sha256": "e935d56dfd0a9cf898c15ab2611afe9525fa9507f859f813121a9e181ed23375",
+  "participant_map_sha256": "74a3b67ed942292d880c79cc43eb2d0740466d0c27bfa42cb5045210e05f9ccf",
+  "registration_enabled": false,
+  "command_selection": "physics_informed_residual_model",
+  "fallback_allowed": false,
+  "mode": "hybrid_model_trial",
+  "trial_id": "hybrid-pinn-classical-prefix-001",
+  "expires_utc": "REVIEWER_MUST_SET_CURRENT_EXPIRY",
+  "reviewed_by": "",
+  "recovery_operator": "",
+  "recording_contract_sha256": "42da09f682a6abb1d5b894d094c934ce76dc6a4b77731a97ffc979bf3b6f5ff2",
+  "parameter_overrides": {
+    "MPC_LAND_SPEED": 0.3
+  },
+  "isolation_reviewed": false,
+  "recovery_reviewed": false,
+  "recording_ready": false,
+  "allow_failed_simulator_termination": false,
+  "experimental_model_control_reviewed": false,
+  "static_prior_corridor_reviewed": false
+}

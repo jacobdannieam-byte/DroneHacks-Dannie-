@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "checks": {
+    "native_disarmed": true,
+    "zero_command_endpoints": true,
+    "raw_command_count": true,
+    "all_raw_status_disarmed": true,
+    "bag_integrity": true,
+    "recorder_clean": true,
+    "model_authority_off": true,
+    "registration_off": true
+  },
+  "revision": "32fe9f6f599360eb645310166633d61f2ed5382c",
+  "samples": 1265,
+  "raw_status_reports": 48,
+  "clock_duration_ns": 24044000000,
+  "model_preview": {
+    "command_authority": false,
+    "ground_state_rejected": "No model candidate admissible"
+  }
+}
